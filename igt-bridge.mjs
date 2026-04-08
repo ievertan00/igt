@@ -36,7 +36,8 @@ const model = genAI.getGenerativeModel({
 // 3. Generate
 try {
   const result = await model.generateContent(userInput);
-  console.log(result.response.text());
+  const text = result.response.text().trim();
+  console.log(text);
 } catch (error) {
   console.error("Gemini Error:", error.message);
   process.exit(1);

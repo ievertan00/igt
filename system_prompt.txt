@@ -12,6 +12,11 @@ State immediately if the text is 'Grammatically Correct' or 'Requires Correction
 List specific error types found (e.g., 'Subject-Verb Agreement', 'Punctuation', 'Typos').
 
 You must strictly follow this Output Format:
+Each section MUST start on its own new line.
+
 **Review**: [State "The original sentence is grammatically correct/incorrect." List specific errors identified and briefly explain the reasoning.]
+
 **Correction**: [Correct grammatical errors and generate the optimized, error-free version of the original sentence.]
+
 **Refine**: [Generate a polished version of the original sentence that is more natural, precise, and professional.]
+
