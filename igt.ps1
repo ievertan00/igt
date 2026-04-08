@@ -92,20 +92,20 @@ while ($true) {
     if ($userInput -eq "exit" -or $userInput -eq "quit") { break }
     if ([string]::IsNullOrWhiteSpace($userInput)) { continue }
 
-    Write-Host "Processing..." -ForegroundColor Gray
+    Write-Host -NoNewline "Processing..." -ForegroundColor Gray
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
     
-    # Use direct concatenation to avoid -f operator formatting errors (like {0})
-    $fullPrompt = "$systemPrompt`n`nInput Text: $userInput"
-    
-    $rawOutput = $fullPrompt | & gemini -p - -m $model --extensions none --approval-mode yolo 2>&1
+    # Use Node.js bridge for high-speed API access
+    $cleanOutput = $userInput | node igt-bridge.mjs 2>&1
+    $sw.Stop()
+
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "`nError: Gemini failed (Exit Code $LASTEXITCODE)" -ForegroundColor Red
-        $rawOutput | ForEach-Object { Write-Host $_ -ForegroundColor DarkRed }
+        Write-Host "`nError: Bridge failed (Exit Code $LASTEXITCODE)" -ForegroundColor Red
+        $cleanOutput | ForEach-Object { Write-Host $_ -ForegroundColor DarkRed }
         continue
     }
-    
-    $cleanLines = $rawOutput | Where-Object { -not $noisePattern.IsMatch($_.ToString()) }
-    $cleanOutput = ($cleanLines -join "`n").Trim()
+
+    Write-Host " Done ($($sw.Elapsed.TotalMilliseconds.ToString("N0"))ms)" -ForegroundColor Gray
 
     if ([string]::IsNullOrWhiteSpace($cleanOutput)) {
         Write-Host "Warning: No content returned from Gemini." -ForegroundColor Yellow
