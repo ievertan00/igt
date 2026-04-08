@@ -1,10 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get script directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 1. Load config and input
-const config = JSON.parse(fs.readFileSync("./igt_config.json", "utf8"));
+const configPath = path.join(__dirname, "igt_config.json");
+const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const apiKey = process.env.GOOGLE_API_KEY || config.ApiKey;
-const systemPrompt = fs.readFileSync(config.SystemPromptPath, "utf8");
+
+// Handle system prompt path resolution
+let systemPromptPath = config.SystemPromptPath;
+if (!path.isAbsolute(systemPromptPath)) {
+  systemPromptPath = path.join(__dirname, systemPromptPath);
+}
+const systemPrompt = fs.readFileSync(systemPromptPath, "utf8");
+
 const userInput = fs.readFileSync(0, "utf8"); // Read from stdin
 
 if (!apiKey) {

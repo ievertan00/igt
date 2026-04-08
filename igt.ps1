@@ -96,7 +96,8 @@ while ($true) {
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     
     # Use Node.js bridge for high-speed API access
-    $cleanOutput = $userInput | node igt-bridge.mjs 2>&1
+    $bridgePath = Join-Path $scriptDir "igt-bridge.mjs"
+    $cleanOutput = $userInput | node $bridgePath 2>&1
     $sw.Stop()
 
     if ($LASTEXITCODE -ne 0) {
