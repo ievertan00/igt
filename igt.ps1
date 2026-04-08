@@ -97,14 +97,16 @@ while ($true) {
     
     # Use Node.js bridge for high-speed API access
     $bridgePath = Join-Path $scriptDir "igt-bridge.mjs"
-    $cleanOutput = $userInput | node $bridgePath 2>&1
+    $rawOutput = $userInput | node $bridgePath 2>&1
     $sw.Stop()
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "`nError: Bridge failed (Exit Code $LASTEXITCODE)" -ForegroundColor Red
-        $cleanOutput | ForEach-Object { Write-Host $_ -ForegroundColor DarkRed }
+        $rawOutput | ForEach-Object { Write-Host $_ -ForegroundColor DarkRed }
         continue
     }
+
+    $cleanOutput = if ($rawOutput -is [array]) { $rawOutput -join "`n" } else { $rawOutput }
 
     Write-Host " Done ($($sw.Elapsed.TotalMilliseconds.ToString("N0"))ms)" -ForegroundColor Gray
 
