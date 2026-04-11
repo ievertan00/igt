@@ -7,26 +7,26 @@
 IGT leverages the Google Gemini API to provide real-time linguistic audits, corrections, and refinements. Beyond simple grammar checking, it automatically collects your error patterns into a local SQLite database, enabling **personalized learning tools**: Anki flashcards, error handbooks, targeted practice, and proficiency assessments.
 
 ```
-Grammar Input > I goes to school every day.
+Grammar Input > She don't like the weather today.
 Processing... Done (1670ms)
 
 **Review**:
 - Incorrect. Subject-verb agreement error.
 
 **Correction**:
-- I go to school every day.
+- She doesn't like the weather today.
 
 **Refine**:
-- I attend school daily.
+- She isn't fond of today's weather.
 
 **Diagnosis**:
 - Subject-Verb Agreement (Minor)
 
 **Rule**:
-- First person singular "I" uses base form "go", not "goes".
+- Third person singular requires "doesn't", not "don't".
 
 **Tip**:
-- Say it aloud: "I goes" sounds wrong to native ears.
+- "She don't" is common in informal speech but incorrect in standard English.
 ```
 
 ## Features
@@ -114,21 +114,21 @@ Type a sentence at the `Grammar Input >` prompt. Type `exit` to quit.
 ### Interactive Mode
 
 ```
-Grammar Input > Please export the current results in Review_&_Feedback.md to the database.
+Grammar Input > He go to the store yesterday.
 Processing... Done (1523ms)
 
-**Review**: The original sentence requires corrections. Unnatural phrasing detected.
-**Correction**: Please export the current results from Review_&_Feedback.md to the database.
-**Refine**: Kindly export the current results from Review_&_Feedback.md to the database.
-**Diagnosis**: Phrasing (Minor)
-**Rule**: "From" is the standard preposition when indicating source of data export.
-**Tip**: Use "Kindly" or "Could you please" for more polite requests.
+**Review**: The original sentence requires corrections. Verb tense error detected.
+**Correction**: He went to the store yesterday.
+**Refine**: He visited the store yesterday.
+**Diagnosis**: Verb Tense (Minor)
+**Rule**: "Yesterday" indicates past time, requiring past tense "went".
+**Tip**: Time markers (yesterday, last week, ago) signal which tense to use.
 
-[Logged to: D:\Library\-06Notes\Obsidian Vault\02_Knowledge\EnglishGrammar\Review_&_Feedback.md]
+[Logged to: D:\Path\To\Your\Review_Log.md]
 
 Grammar Input > cards
 [Exporting Anki cards...]
-✅ Exported 46 cards to: D:\Library\-06Notes\Obsidian Vault\02_Knowledge\EnglishGrammar\igt_cards_2026-04-11.csv
+✅ Exported 46 cards to: D:\Path\To\Your\igt_cards_2026-04-11.csv
 
 Grammar Input > assess
 [Generating proficiency assessment...]
@@ -170,8 +170,8 @@ Create or edit `igt_config.json` in the project root:
 
 ```json
 {
-    "ReviewPath": "D:\\Library\\-06Notes\\Obsidian Vault\\02_Knowledge\\EnglishGrammar\\Review_&_Feedback.md",
-    "ReportPath": "D:\\Library\\-06Notes\\Obsidian Vault\\02_Knowledge\\EnglishGrammar",
+    "ReviewPath": "C:\\Users\\YourName\\Documents\\Review_Log.md",
+    "ReportPath": "C:\\Users\\YourName\\Documents\\Reports",
     "Model": "gemini-2.5-flash-lite",
     "SystemPromptPath": "system_prompt.txt",
     "DbPath": "igt_data.db",
