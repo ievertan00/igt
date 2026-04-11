@@ -5,12 +5,13 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
 
 // Load config
-const configPath = path.join(__dirname, "igt_config.json");
+const configPath = path.join(projectRoot, "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const dbPath = config.DbPath || "igt_data.db";
-const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(__dirname, dbPath);
+const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
 
 if (!fs.existsSync(resolvedDbPath)) {
   console.error("Error: Database file not found. Run IGT first to collect data.");
@@ -333,12 +334,12 @@ const report = generateReport();
 
 // Save to file
 const dateStr = new Date().toISOString().split("T")[0];
-const defaultOutputPath = path.join(__dirname, `docs`, `assessment_${dateStr}.md`);
+const defaultOutputPath = path.join(projectRoot, `docs`, `assessment_${dateStr}.md`);
 
 // Use ReportPath from config if available
 let outputPath;
 if (config.ReportPath) {
-  const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(__dirname, config.ReportPath);
+  const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath);
   if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, { recursive: true });
   }
@@ -346,7 +347,7 @@ if (config.ReportPath) {
 } else {
   outputPath = defaultOutputPath;
   // Ensure docs directory exists
-  const docsDir = path.join(__dirname, `docs`);
+  const docsDir = path.join(projectRoot, `docs`);
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }

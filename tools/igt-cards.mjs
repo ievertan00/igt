@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -12,10 +13,10 @@ const exportIndex = args.indexOf("--export");
 const outputFileName = exportIndex !== -1 ? args[exportIndex + 1] : null;
 
 // Load config
-const configPath = path.join(__dirname, "igt_config.json");
+const configPath = path.join(projectRoot, "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const dbPath = config.DbPath || "igt_data.db";
-const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(__dirname, dbPath);
+const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
 
 if (!fs.existsSync(resolvedDbPath)) {
   console.error("Error: Database file not found. Run IGT first to collect data.");
@@ -137,15 +138,15 @@ let outputPath;
 if (outputFileName) {
   outputPath = path.isAbsolute(outputFileName)
     ? outputFileName
-    : path.join(__dirname, outputFileName);
+    : path.join(projectRoot, outputFileName);
 } else {
   const dateStr = new Date().toISOString().split("T")[0];
   // Use ReportPath from config if available
   if (config.ReportPath) {
-    const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(__dirname, config.ReportPath);
+    const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath);
     outputPath = path.join(reportDir, `igt_cards_${dateStr}.csv`);
   } else {
-    outputPath = path.join(__dirname, `igt_cards_${dateStr}.csv`);
+    outputPath = path.join(projectRoot, `igt_cards_${dateStr}.csv`);
   }
 }
 

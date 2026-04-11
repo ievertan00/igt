@@ -7,9 +7,10 @@ import readline from "readline";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
 
 // Load config
-const configPath = path.join(__dirname, "igt_config.json");
+const configPath = path.join(projectRoot, "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const apiKey = process.env.GOOGLE_API_KEY || config.ApiKey;
 
@@ -20,7 +21,7 @@ if (!apiKey) {
 
 // Load database
 const dbPath = config.DbPath || "igt_data.db";
-const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(__dirname, dbPath);
+const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
 
 if (!fs.existsSync(resolvedDbPath)) {
   console.error("Error: Database file not found. Run IGT first to collect data.");

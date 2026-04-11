@@ -149,19 +149,19 @@ Grammar Input > assess
 
 ```powershell
 # Initialize database (first time only)
-node init-db.mjs
+node tools/init-db.mjs
 
 # Export flashcards with custom filename
-node igt-cards.mjs --export my_cards.csv
+node tools/igt-cards.mjs --export my_cards.csv
 
 # Generate handbook for last 7 days
-node igt-handbook.mjs --days=7
+node tools/igt-handbook.mjs --days=7
 
 # Practice a specific error type
-node igt-practice.mjs "Article Usage"
+node tools/igt-practice.mjs "Article Usage"
 
 # Generate 10 practice exercises
-node igt-practice.mjs --count=10
+node tools/igt-practice.mjs --count=10
 ```
 
 ## Configuration
@@ -229,14 +229,15 @@ Create or edit `igt_config.json` in the project root:
 | File | Role |
 |------|------|
 | `igt.ps1` | Main interactive loop, handles user I/O and command routing |
-| `igt-bridge.mjs` | Node.js bridge to Gemini API, parses output, writes to SQLite |
-| `error-types.mjs` | MECE error type classification system (13 predefined types) |
-| `system_prompt.txt` | Linguistic validator prompt with Diagnosis/Rule/Tip format |
-| `igt-cards.mjs` | Anki flashcard generator (CSV export) |
-| `igt-handbook.mjs` | Obsidian Dashboard report generator |
-| `igt-assess.mjs` | CEFR proficiency assessment engine |
-| `igt-practice.mjs` | Interactive practice with auto-grading |
-| `init-db.mjs` | Database initialization script |
+| `lib/igt-bridge.mjs` | Node.js bridge to Gemini API, parses output, writes to SQLite |
+| `lib/error-types.mjs` | MECE error type classification system (13 predefined types) |
+| `prompts/system_prompt.txt` | Linguistic validator prompt with Diagnosis/Rule/Tip format |
+| `tools/igt-cards.mjs` | Anki flashcard generator (CSV export) |
+| `tools/igt-handbook.mjs` | Obsidian Dashboard report generator |
+| `tools/igt-assess.mjs` | CEFR proficiency assessment engine |
+| `tools/igt-practice.mjs` | Interactive practice with auto-grading |
+| `tools/init-db.mjs` | Database initialization script |
+| `tools/import-review-to-db.mjs` | Import legacy Markdown logs into SQLite |
 
 ## Performance Benchmarks
 

@@ -5,14 +5,15 @@ import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
 
 // Load config to get database path
-const configPath = path.join(__dirname, "igt_config.json");
+const configPath = path.join(projectRoot, "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-const dbPath = config.DbPath || path.join(__dirname, "igt_data.db");
+const dbPath = config.DbPath || path.join(projectRoot, "igt_data.db");
 
 // Resolve relative path
-const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(__dirname, dbPath);
+const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
 
 console.log(`Initializing database: ${resolvedDbPath}`);
 

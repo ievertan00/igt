@@ -99,25 +99,25 @@ while ($true) {
     # Handle special commands
     if ($userInput -eq "cards") {
         Write-Host "`n[Exporting Anki cards...]" -ForegroundColor Yellow
-        node (Join-Path $scriptDir "igt-cards.mjs")
+        node (Join-Path $scriptDir "tools\igt-cards.mjs")
         Write-Host ""
         continue
     }
     if ($userInput -eq "handbook") {
         Write-Host "`n[Generating personal error handbook...]" -ForegroundColor Yellow
-        node (Join-Path $scriptDir "igt-handbook.mjs")
+        node (Join-Path $scriptDir "tools\igt-handbook.mjs")
         Write-Host ""
         continue
     }
     if ($userInput -eq "practice") {
         Write-Host "`n[Starting practice mode...]" -ForegroundColor Yellow
-        node (Join-Path $scriptDir "igt-practice.mjs")
+        node (Join-Path $scriptDir "tools\igt-practice.mjs")
         Write-Host ""
         continue
     }
     if ($userInput -eq "assess") {
         Write-Host "`n[Generating proficiency assessment...]" -ForegroundColor Yellow
-        node (Join-Path $scriptDir "igt-assess.mjs")
+        node (Join-Path $scriptDir "tools\igt-assess.mjs")
         Write-Host ""
         continue
     }
@@ -126,7 +126,7 @@ while ($true) {
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     
     # Use Node.js bridge for high-speed API access
-    $bridgePath = Join-Path $scriptDir "igt-bridge.mjs"
+    $bridgePath = Join-Path $scriptDir "lib\igt-bridge.mjs"
     $rawOutput = $userInput | node $bridgePath 2>&1
     $sw.Stop()
 
