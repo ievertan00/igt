@@ -3,3 +3,10 @@ package-lock.json
 igt_config.json
 .gemini/
 .env
+*.db
+*.db-wal
+*.db-shm
+igt_cards_*.csv
+docs/handbook_*.md
+docs/assessment_*.md
+import-review-to-db.mjs

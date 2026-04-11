@@ -79,18 +79,48 @@ function Log-Result {
     }
 }
 
-Write-Host "--- Interactive Grammar Tool (IGT) Started [Reliability Mode] ---" -ForegroundColor Yellow
+Write-Host "--- Interactive Grammar Tool (IGT) Started [Learning Mode] ---" -ForegroundColor Yellow
 Write-Host "Logging to: $targetPath" -ForegroundColor Gray
-Write-Host "Type 'exit' to stop.`n" -ForegroundColor Gray
+Write-Host "Type 'exit' to quit." -ForegroundColor Gray
+Write-Host "Type 'cards' to export Anki flashcards." -ForegroundColor DarkGray
+Write-Host "Type 'handbook' to generate personal error handbook." -ForegroundColor DarkGray
+Write-Host "Type 'practice' to start practice exercises." -ForegroundColor DarkGray
+Write-Host "Type 'assess' to view proficiency assessment.`n" -ForegroundColor DarkGray
 
 $noisePattern = [regex]::new('YOLO mode|Loaded cached|Loading extension|Scheduling MCP|Executing MCP|MCP context|Warning:', [System.Text.RegularExpressions.RegexOptions]::Compiled)
 
 while ($true) {
     Write-Host -NoNewline "Grammar Input > " -ForegroundColor Cyan
     $userInput = Read-Host
-    
+
     if ($userInput -eq "exit" -or $userInput -eq "quit") { break }
     if ([string]::IsNullOrWhiteSpace($userInput)) { continue }
+
+    # Handle special commands
+    if ($userInput -eq "cards") {
+        Write-Host "`n[Exporting Anki cards...]" -ForegroundColor Yellow
+        node (Join-Path $scriptDir "igt-cards.mjs")
+        Write-Host ""
+        continue
+    }
+    if ($userInput -eq "handbook") {
+        Write-Host "`n[Generating personal error handbook...]" -ForegroundColor Yellow
+        node (Join-Path $scriptDir "igt-handbook.mjs")
+        Write-Host ""
+        continue
+    }
+    if ($userInput -eq "practice") {
+        Write-Host "`n[Starting practice mode...]" -ForegroundColor Yellow
+        node (Join-Path $scriptDir "igt-practice.mjs")
+        Write-Host ""
+        continue
+    }
+    if ($userInput -eq "assess") {
+        Write-Host "`n[Generating proficiency assessment...]" -ForegroundColor Yellow
+        node (Join-Path $scriptDir "igt-assess.mjs")
+        Write-Host ""
+        continue
+    }
 
     Write-Host -NoNewline "Processing..." -ForegroundColor Gray
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
