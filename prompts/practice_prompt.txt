@@ -1,4 +1,0 @@
-Note: This file is no longer used by igt-practice.mjs.
-The practice module now uses an inline prompt that generates structured JSON exercises.
-
-See igt-practice.mjs for the exercise generation logic.

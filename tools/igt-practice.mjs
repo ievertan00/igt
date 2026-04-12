@@ -87,7 +87,15 @@ function askQuestion(question) {
 async function generateExercises(errorTypes, count) {
   const errorList = errorTypes.map(e => `- ${e.error_type}`).join("\n");
 
-  const prompt = `Generate ${count} grammar practice exercises focusing on these error types:
+  // Load prompt from config or use default
+  let prompt;
+  if (config.Prompts && config.Prompts.PracticeExercisePrompt) {
+    prompt = config.Prompts.PracticeExercisePrompt
+      .replace(/\{\{count\}\}/g, count)
+      .replace(/\{\{errorList\}\}/g, errorList);
+  } else {
+    // Fallback to inline prompt for backward compatibility
+    prompt = `Generate ${count} grammar practice exercises focusing on these error types:
 ${errorList}
 
 IMPORTANT RULES:
@@ -123,6 +131,7 @@ Rules for fill-in-the-blank:
 - The "answer" field should be the exact word(s) to fill in
 
 Return ONLY the JSON array, no markdown formatting, no explanation.`;
+  }
 
   const model = genAI.getGenerativeModel({
     model: config.Model || "gemini-2.5-flash-lite"

@@ -154,8 +154,17 @@ node tools/init-db.mjs
 # Export flashcards with custom filename
 node tools/igt-cards.mjs --export my_cards.csv
 
-# Generate handbook for last 7 days
+# Generate handbook for last 7 days (full regeneration)
 node tools/igt-handbook.mjs --days=7
+
+# Generate handbook with incremental updates (only changed rules)
+node tools/igt-handbook.mjs --days=7 --incremental
+
+# View cache statistics
+node tools/igt-handbook.mjs --cache-stats
+
+# Clear LLM rule cache
+node tools/igt-handbook.mjs --clear-cache
 
 # Practice a specific error type
 node tools/igt-practice.mjs "Article Usage"
@@ -164,18 +173,40 @@ node tools/igt-practice.mjs "Article Usage"
 node tools/igt-practice.mjs --count=10
 ```
 
+### Incremental Update Mode
+
+The `--incremental` (or `-i`) flag enables smart caching for LLM-generated grammar rules:
+
+- **Skip unchanged rules**: Only regenerates rules when user examples have changed
+- **Faster execution**: Reduces API calls and generation time by 60-80%
+- **Automatic caching**: Rules are cached with content-based hashing
+- **Cache management**: Use `--cache-stats` to view stats, `--clear-cache` to reset
+
+```powershell
+# First run: generates all rules (takes ~30-60s)
+node tools/igt-handbook.mjs --days=30
+
+# Subsequent runs: only updates changed rules (takes ~5-10s)
+node tools/igt-handbook.mjs --days=30 --incremental
+
+# Check what's cached
+node tools/igt-handbook.mjs --cache-stats
+
+# Force full regeneration
+node tools/igt-handbook.mjs --days=30 --clear-cache
+```
+
 ## Configuration
 
-Create or edit `igt_config.json` in the project root:
+Create or edit `lib/igt_config.json` in the project root:
 
 ```json
 {
     "ReviewPath": "C:\\Users\\YourName\\Documents\\Review_Log.md",
     "ReportPath": "C:\\Users\\YourName\\Documents\\Reports",
     "Model": "gemini-2.5-flash-lite",
-    "SystemPromptPath": "system_prompt.txt",
     "DbPath": "igt_data.db",
-    "ApiKey": "YOUR_API_KEY_HERE"
+    "ApiKeys": ["YOUR_API_KEY_1", "YOUR_API_KEY_2"]
 }
 ```
 
@@ -184,9 +215,29 @@ Create or edit `igt_config.json` in the project root:
 | `ReviewPath` | Yes | Full path to the Markdown log file |
 | `ReportPath` | No | Directory for handbook/assessment/card exports (defaults to project `docs/`) |
 | `Model` | No | Gemini model identifier (default: `gemini-2.5-flash-lite`) |
-| `SystemPromptPath` | No | Path to the system prompt file (default: `system_prompt.txt`) |
 | `DbPath` | No | SQLite database path (default: `igt_data.db`) |
-| `ApiKey` | No | Gemini API key (can also use `GOOGLE_API_KEY` env variable) |
+| `ApiKeys` | No | Array of Gemini API keys (can also use `GOOGLE_API_KEY` env variable) |
+
+### Prompts Configuration
+
+All LLM prompts are now centralized in the `Prompts` section of `lib/igt_config.json`:
+
+```json
+{
+    "Prompts": {
+        "SystemPrompt": "Act as an expert Linguistic Validator...",
+        "HandbookGrammarRulePrompt": "You are an expert English grammar tutor...",
+        "PracticeExercisePrompt": "Generate {{count}} grammar practice exercises..."
+    }
+}
+```
+
+This allows you to easily customize:
+- **SystemPrompt**: Main grammar checking behavior
+- **HandbookGrammarRulePrompt**: How grammar rules are explained in handbooks
+- **PracticeExercisePrompt**: How practice exercises are generated
+
+See [docs/prompt-config-guide.md](docs/prompt-config-guide.md) for detailed instructions.
 
 ### Environment Variables
 
