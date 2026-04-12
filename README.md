@@ -1,10 +1,12 @@
 # Interactive Grammar Tool (IGT)
 
-> A high-performance CLI grammar validator with a built-in **English Learning Suite** — transform every grammar check into a step toward fluency.
+> A high-performance CLI grammar validator with **multi-LLM support** and a built-in **English Learning Suite** — transform every grammar check into a step toward fluency.
 
 ## Overview
 
-IGT leverages the Google Gemini API to provide real-time linguistic audits, corrections, and refinements. Beyond simple grammar checking, it automatically collects your error patterns into a local SQLite database, enabling **personalized learning tools**: Anki flashcards, error handbooks, targeted practice, and proficiency assessments.
+IGT leverages **multiple LLM providers** (Google Gemini, Alibaba Qwen, Deepseek) to provide real-time linguistic audits, corrections, and refinements. Beyond simple grammar checking, it automatically collects your error patterns into a local SQLite database, enabling **personalized learning tools**: Anki flashcards, error handbooks, targeted practice, and proficiency assessments.
+
+**✨ NEW: Multi-LLM Support & Secure Configuration** — Switch between LLMs instantly, with API keys safely stored in `.env` (not in git). See [Quick Start](#quick-start) below.
 
 ```
 Grammar Input > She don't like the weather today.
@@ -84,7 +86,10 @@ Clarity ────┬── Sentence Fragment
 
 - **Node.js** v24+ (includes `npm`)
 - **PowerShell** (Windows) or any terminal
-- **Google AI Studio API Key** — [get one free](https://aistudio.google.com/)
+- **API Key** from one or more providers:
+  - **Google Gemini**: [Get free key](https://aistudio.google.com/)
+  - **Alibaba Qwen**: [Get DashScope key](https://dashscope.console.aliyun.com/apiKey)
+  - **Deepseek**: [Get API key](https://platform.deepseek.com/api_keys)
 
 ### Installation
 
@@ -96,9 +101,9 @@ cd igt
 # 2. Install dependencies
 npm install
 
-# 3. Configure
-cp igt_config.json.example igt_config.json
-# Edit igt_config.json: add your API key and set ReviewPath
+# 3. Configure (separated for security)
+cp .env.example .env
+# Edit .env: add your API keys (safe, not tracked by git)
 ```
 
 ### First Run
@@ -108,6 +113,11 @@ cp igt_config.json.example igt_config.json
 ```
 
 Type a sentence at the `Grammar Input >` prompt. Type `exit` to quit.
+
+**Or use interactive setup:**
+```
+llm setup  # Guides you through API key configuration
+```
 
 ## Usage
 
@@ -143,7 +153,18 @@ Grammar Input > assess
 | `handbook` | Inside IGT | Generate personal error handbook (Obsidian Dashboard format) |
 | `practice` | Inside IGT | Start interactive practice exercises |
 | `assess` | Inside IGT | View proficiency assessment and CEFR estimate |
+| `llm` | Inside IGT | Manage LLM providers (list, switch, status, setup) |
 | `exit` / `quit` | Inside IGT | Exit the tool |
+
+**LLM Management:**
+```
+llm list              # View all available LLM providers
+llm current           # Show current provider
+llm switch qwen       # Switch to Qwen (instant, no restart needed)
+llm switch deepseek   # Switch to Deepseek
+llm status            # Show detailed provider status & API key count
+llm setup             # Interactive API key setup wizard
+```
 
 ### Standalone Commands
 
@@ -198,25 +219,73 @@ node tools/igt-handbook.mjs --days=30 --clear-cache
 
 ## Configuration
 
-Create or edit `lib/igt_config.json` in the project root:
+IGT uses **separated configuration** for better security:
 
+- **`.env`** - Private data (API keys) - **Not tracked by git**
+- **`lib/igt_config.json`** - Shared settings (paths, models, prompts) - **Safe to commit**
+
+### Quick Setup
+
+1. **Copy the template:**
+   ```powershell
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` and add your API keys:**
+   ```powershell
+   notepad .env
+   ```
+
+3. **Or use interactive setup:**
+   ```
+   llm setup
+   ```
+
+### Configuration Files
+
+**`.env` (Private):**
+```env
+GOOGLE_API_KEYS=key1,key2,key3
+DASHSCOPE_API_KEYS=your-qwen-key
+DEEPSEEK_API_KEYS=your-deepseek-key
+IGT_LLM_PROVIDER=gemini
+```
+
+**`lib/igt_config.json` (Shared):**
 ```json
 {
     "ReviewPath": "C:\\Users\\YourName\\Documents\\Review_Log.md",
     "ReportPath": "C:\\Users\\YourName\\Documents\\Reports",
-    "Model": "gemini-2.5-flash-lite",
-    "DbPath": "igt_data.db",
-    "ApiKeys": ["YOUR_API_KEY_1", "YOUR_API_KEY_2"]
+    "LLMProvider": "gemini",
+    "GeminiFlashModel": "gemini-2.5-flash",
+    "GeminiProModel": "gemini-3.0-pro",
+    "QwenFlashModel": "qwen3.5-flash",
+    "QwenProModel": "qwen3-max",
+    "DeepseekFlashModel": "deepseek-chat",
+    "DeepseekProModel": "deepseek-reasoner",
+    "DbPath": "igt_data.db"
 }
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `ReviewPath` | Yes | Full path to the Markdown log file |
-| `ReportPath` | No | Directory for handbook/assessment/card exports (defaults to project `docs/`) |
-| `Model` | No | Gemini model identifier (default: `gemini-2.5-flash-lite`) |
-| `DbPath` | No | SQLite database path (default: `igt_data.db`) |
-| `ApiKeys` | No | Array of Gemini API keys (can also use `GOOGLE_API_KEY` env variable) |
+**Task-Based Model Routing:**
+- ⚡ **Flash models** — Grammar correction (fast, cost-effective)
+- 🏆 **Pro models** — Handbook generation & Practice exercises (highest quality)
+
+| Field | File | Description |
+|-------|------|-------------|
+| `ReviewPath` | config.json | Full path to the Markdown log file |
+| `ReportPath` | config.json | Directory for handbook/assessment/card exports |
+| `LLMProvider` | config.json/.env | Current provider (env takes priority) |
+| `GeminiFlashModel` | config.json | Gemini flash model for grammar correction |
+| `GeminiProModel` | config.json | Gemini pro model for handbook/practice |
+| `QwenFlashModel` | config.json | Qwen flash model for grammar correction |
+| `QwenProModel` | config.json | Qwen pro model for handbook/practice |
+| `DeepseekFlashModel` | config.json | Deepseek flash model for grammar correction |
+| `DeepseekProModel` | config.json | Deepseek pro model for handbook/practice |
+| `DbPath` | config.json | SQLite database path |
+| `GOOGLE_API_KEYS` | .env | Gemini API keys (comma-separated) |
+| `DASHSCOPE_API_KEYS` | .env | Qwen API keys |
+| `DEEPSEEK_API_KEYS` | .env | Deepseek API keys |
 
 ### Prompts Configuration
 
@@ -241,11 +310,21 @@ See [docs/prompt-config-guide.md](docs/prompt-config-guide.md) for detailed inst
 
 ### Environment Variables
 
+**Private (in `.env` file):**
 | Variable | Description |
 |----------|-------------|
-| `GOOGLE_API_KEY` | Alternative to `ApiKey` in config |
+| `GOOGLE_API_KEYS` | Gemini API keys (comma-separated for multiple keys) |
+| `DASHSCOPE_API_KEYS` | Qwen API keys (comma-separated) |
+| `DEEPSEEK_API_KEYS` | Deepseek API keys (comma-separated) |
+| `IGT_LLM_PROVIDER` | Default provider: `gemini`, `qwen`, or `deepseek` |
+
+**Shared (can also set in system environment):**
+| Variable | Description |
+|----------|-------------|
 | `GEMINI_SYSTEM_MD` | Set to `false` to disable system prompt overhead |
 | `NO_COLOR` | Set to `1` to disable colored output |
+
+**Note:** Environment variables take priority over `.env` file values.
 
 ## Architecture
 
@@ -257,22 +336,30 @@ See [docs/prompt-config-guide.md](docs/prompt-config-guide.md) for detailed inst
                             │ stdin/stdout
 ┌───────────────────────────▼─────────────────────────────────┐
 │                   igt-bridge.mjs                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │          LLM Provider Manager                        │  │
+│  │  ┌──────────────────────────────────────────────┐   │  │
+│  │  │         Task-Aware Model Router              │   │  │
+│  │  │  Grammar → Flash ⚡  |  Handbook/Practice → Pro 🏆 │  │
+│  │  └──────────────────────────────────────────────┘   │  │
+│  │  ┌──────────┐  ┌────────┐  ┌──────────┐            │  │
+│  │  │ Gemini   │  │  Qwen  │  │ Deepseek │            │  │
+│  │  └──────────┘  └────────┘  └──────────┘            │  │
+│  └──────────────────────────────────────────────────────┘  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │ Gemini API   │  │ Error Parser │  │ SQLite Writer    │  │
-│  │ (Async)      │  │ +Classifier  │  │ (Non-blocking)   │  │
-│  └──────────────┘  └──────────────┘  └────────┬─────────┘  │
-└────────────────────────────────────────────────┼────────────┘
-                                                 │
-                            ┌────────────────────┼────────────────────┐
-                            │                    │                    │
-                     ┌──────▼──────┐     ┌───────▼───────┐    ┌──────▼──────┐
-                     │ igt-cards   │     │ igt-handbook  │    │ igt-assess  │
-                     │ .mjs        │     │ .mjs          │    │ .mjs        │
-                     └─────────────┘     └───────────────┘    └─────────────┘
-                            │                    │                    │
-                     ┌──────▼──────┐     ┌───────▼───────┐    ┌──────▼──────┐
-                     │ Anki CSV    │     │ Obsidian MD   │    │ CEFR Report │
-                     └─────────────┘     └───────────────┘    └─────────────┘
+│  │ Error Parser │  │ SQLite Writer│  │  Multi-LLM Router│  │
+│  │ +Classifier  │  │ (Non-blocking)│  │                  │  │
+│  └──────────────┘  └────────────────┘  └──────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Learning Tools                          │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐     │
+│  │ igt-cards   │  │ igt-handbook │  │ igt-practice  │     │
+│  │ .mjs        │  │ .mjs (Pro 🏆)│  │ .mjs (Pro 🏆) │     │
+│  └─────────────┘  └──────────────┘  └───────────────┘     │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Components
@@ -280,9 +367,14 @@ See [docs/prompt-config-guide.md](docs/prompt-config-guide.md) for detailed inst
 | File | Role |
 |------|------|
 | `igt.ps1` | Main interactive loop, handles user I/O and command routing |
-| `lib/igt-bridge.mjs` | Node.js bridge to Gemini API, parses output, writes to SQLite |
-| `lib/error-types.mjs` | MECE error type classification system (13 predefined types) |
-| `prompts/system_prompt.txt` | Linguistic validator prompt with Diagnosis/Rule/Tip format |
+| `lib/igt-bridge.mjs` | Node.js bridge to LLM APIs, parses output, writes to SQLite |
+| `lib/llm-provider.mjs` | Core LLM provider manager (switching, routing) |
+| `lib/llm-gemini.mjs` | Google Gemini API implementation |
+| `lib/llm-qwen.mjs` | Alibaba Qwen (DashScope) API implementation |
+| `lib/llm-deepseek.mjs` | Deepseek API implementation |
+| `lib/config-loader.mjs` | Configuration loader (merges .env + config.json) |
+| `lib/llm-switch.mjs` | CLI tool for managing LLM providers |
+| `lib/error-types.mjs` | MECE error type classification system |
 | `tools/igt-cards.mjs` | Anki flashcard generator (CSV export) |
 | `tools/igt-handbook.mjs` | Obsidian Dashboard report generator |
 | `tools/igt-assess.mjs` | CEFR proficiency assessment engine |
@@ -307,6 +399,14 @@ Latency breakdown:
 ## License
 
 MIT
+
+## Documentation
+
+- **[QUICKSTART_LLM.md](QUICKSTART_LLM.md)** - Quick start for multi-LLM setup
+- **[docs/multi-llm-support.md](docs/multi-llm-support.md)** - Complete multi-LLM guide
+- **[docs/config-separation.md](docs/config-separation.md)** - Configuration architecture
+- **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)** - Migration from old configuration
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history
 
 ## Contributors
 

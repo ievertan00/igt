@@ -2,12 +2,15 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import initializeLLMProviders from "../lib/llm-init.mjs";
 import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
+
+// Initialize LLM providers
+const llmManager = initializeLLMProviders();
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -179,22 +182,6 @@ async function generateTailoredGrammarRule(errorType, examples) {
     }
   }
 
-  // Initialize LLM
-  const availableKeys = [];
-  if (process.env.GOOGLE_API_KEY) {
-    availableKeys.push(process.env.GOOGLE_API_KEY);
-  }
-  if (config.ApiKeys && Array.isArray(config.ApiKeys)) {
-    availableKeys.push(...config.ApiKeys);
-  } else if (config.ApiKey) {
-    availableKeys.push(config.ApiKey);
-  }
-
-  if (availableKeys.length === 0) {
-    console.warn("Warning: No API keys found. Using static rules.");
-    return getStaticGrammarRule(errorType);
-  }
-
   // Prepare user examples for LLM
   const examplesText = examples.map((ex, i) => {
     let text = `Example ${i + 1}:\n`;
@@ -240,61 +227,56 @@ ${examplesText}
 Keep the tone encouraging and educational. Focus on the patterns the user actually struggles with.`;
   }
 
-  // Try each API key with smart retry and rate limiting
-  for (const apiKey of availableKeys) {
-    let retryCount = 0;
-    const maxRetries = 3;
+  // Try generating with LLM using unified interface with smart retry and rate limiting
+  const maxRetries = 3;
+  let retryCount = 0;
 
-    while (retryCount <= maxRetries) {
-      try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-          model: config.Model || "gemini-2.5-flash-lite"
-        });
+  while (retryCount <= maxRetries) {
+    try {
+      const content = await llmManager.generate(prompt, "", {
+        taskType: "handbook",
+        systemPrompt: "" // Empty since prompt already contains instructions
+      });
 
-        const result = await model.generateContent(prompt);
-        const content = result.response.text().trim();
+      const rule = {
+        title: `${errorType} (Personalized)`,
+        content: content
+      };
 
-        const rule = {
-          title: `${errorType} (Personalized)`,
-          content: content
-        };
+      // Cache the result with hash
+      if (incremental) {
+        const hash = computeExamplesHash(examples);
+        saveCachedRule(errorType, hash, rule);
+        console.log(`✅ Generated and cached ${errorType}`);
+      } else {
+        console.log(`✅ Generated ${errorType}`);
+      }
 
-        // Cache the result with hash
-        if (incremental) {
-          const hash = computeExamplesHash(examples);
-          saveCachedRule(errorType, hash, rule);
-          console.log(`✅ Generated and cached ${errorType}`);
-        } else {
-          console.log(`✅ Generated ${errorType}`);
+      return rule;
+    } catch (error) {
+      // Check if it's a rate limit error (429)
+      if (error.message && (error.message.includes("429") || error.message.toLowerCase().includes("rate"))) {
+        // Try to extract retry delay from error message
+        let retryDelay = 5; // Default 5 seconds
+        const delayMatch = error.message.match(/retry in ([\d.]+)s/i);
+        if (delayMatch) {
+          retryDelay = parseFloat(delayMatch[1]) + 1; // Add 1s buffer
+        } else if (retryCount > 0) {
+          retryDelay = Math.pow(2, retryCount) * 5; // Exponential backoff
         }
 
-        return rule;
-      } catch (error) {
-        // Check if it's a rate limit error (429)
-        if (error.message && error.message.includes("429")) {
-          // Try to extract retry delay from error message
-          let retryDelay = 5; // Default 5 seconds
-          const delayMatch = error.message.match(/retry in ([\d.]+)s/i);
-          if (delayMatch) {
-            retryDelay = parseFloat(delayMatch[1]) + 1; // Add 1s buffer
-          } else if (retryCount > 0) {
-            retryDelay = Math.pow(2, retryCount) * 5; // Exponential backoff
-          }
-
-          if (retryCount < maxRetries) {
-            retryCount++;
-            console.log(`⏳ Rate limit hit. Waiting ${retryDelay.toFixed(1)}s before retry ${retryCount}/${maxRetries}...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay * 1000));
-          } else {
-            console.warn(`⚠️  Rate limit exceeded for this API key after ${maxRetries} retries.`);
-            break; // Try next API key
-          }
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`⏳ Rate limit hit. Waiting ${retryDelay.toFixed(1)}s before retry ${retryCount}/${maxRetries}...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay * 1000));
         } else {
-          // Non-rate-limit error, try next key immediately
-          console.warn(`LLM API key failed: ${error.message}`);
+          console.warn(`⚠️  Rate limit exceeded after ${maxRetries} retries.`);
           break;
         }
+      } else {
+        // Non-rate-limit error, try fallback
+        console.warn(`LLM generation failed: ${error.message}`);
+        break;
       }
     }
   }
@@ -799,12 +781,21 @@ const stats = db.prepare(`
 // Generate Obsidian Dashboard report
 async function generateReport() {
   const date = new Date().toISOString().split("T")[0];
-  let md = `# 📘 Personal English Error Handbook\n\n`;
+  const provider = llmManager.getCurrentProviderName();
+  const config = llmManager.config;
 
-  // Rate limiting: track total requests and add delays
-  let totalApiCalls = 0;
-  const maxDailyQuota = 18; // Stay under 20 to be safe
-  const requestDelay = 2000; // 2 seconds between requests
+  // Get the correct handbook model based on current provider
+  let handbookModel;
+  if (provider === "qwen") {
+    handbookModel = config.QwenProModel || "qwen3-max";
+  } else if (provider === "deepseek") {
+    handbookModel = config.DeepseekProModel || "deepseek-reasoner";
+  } else {
+    handbookModel = config.GeminiProModel || "gemini-3.0-pro";
+  }
+
+  let md = `# 📘 Personal English Error Handbook\n\n`;
+  md += `> [!INFO] Generated with: **${provider.toUpperCase()}** (${handbookModel}) on ${date}\n\n`;
 
   // 1. Overview Section (Abstract Callout)
   const topError = errorFrequency.length > 0 ? errorFrequency[0].error_type : "N/A";
@@ -931,74 +922,53 @@ async function generateReport() {
       categories[category].push(err);
     }
 
-    // Generate tailored rules for each category
+    // Collect all LLM generation promises for parallel execution
+    const allRules = new Map(); // error_type → rule
+    const pendingCalls = [];
+
+    for (const [category, errors] of Object.entries(categories)) {
+      for (const err of errors) {
+        const examples = getExamples(err.error_type, 5);
+        pendingCalls.push(
+          generateTailoredGrammarRule(err.error_type, examples)
+            .then(rule => ({ errorType: err.error_type, category, rule }))
+            .catch(error => {
+              console.warn(`⚠️  Failed to generate rule for ${err.error_type}: ${error.message}`);
+              return { errorType: err.error_type, category, rule: getStaticGrammarRule(err.error_type) };
+            })
+        );
+      }
+    }
+
+    // Execute all LLM calls in parallel
+    console.log(`\n🤖 Generating ${pendingCalls.length} grammar rules with ${provider.toUpperCase()} (${handbookModel})...`);
+    const results = await Promise.allSettled(pendingCalls);
+
+    // Collect results
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value) {
+        allRules.set(result.value.errorType, result.value);
+      }
+    }
+
+    // Build markdown from results (maintain category order)
     for (const [category, errors] of Object.entries(categories)) {
       md += `### ${getCategoryIcon(category)} ${category}\n\n`;
 
       for (const err of errors) {
-        // Check quota before making request
-        if (totalApiCalls >= maxDailyQuota) {
-          console.log(`\n⚠️  Approaching daily quota limit (${totalApiCalls}/${maxDailyQuota}). Using static rules for remaining items.`);
-          const examples = getExamples(err.error_type, 5);
-          const rule = getStaticGrammarRule(err.error_type);
-          if (rule) {
-            md += `> [!NOTE]- ${rule.title} (Static)\n`;
-            md += `> \n`;
-            const lines = rule.content.split("\n");
-            for (const line of lines) {
-              if (line.trim() === "") {
-                md += `> \n`;
-              } else {
-                md += `> ${line}\n`;
-              }
-            }
-            md += `\n`;
-          }
-          continue;
-        }
+        const ruleData = allRules.get(err.error_type);
+        const rule = ruleData ? ruleData.rule : null;
 
-        const examples = getExamples(err.error_type, 5);
-
-        // Show progress
-        const remaining = maxDailyQuota - totalApiCalls;
-        console.log(`\n📝 [${totalApiCalls + 1}/${errorFrequency.length}] Generating: ${err.error_type} (${remaining} API calls remaining today)`);
-
-        const rule = await generateTailoredGrammarRule(err.error_type, examples);
-
-        // Count API call if it was generated (not cached)
         if (rule && rule.content) {
-          totalApiCalls++;
-          // Add delay between requests
-          if (totalApiCalls < maxDailyQuota) {
-            console.log(`⏱️  Rate limiting: waiting ${requestDelay / 1000}s...`);
-            await new Promise(resolve => setTimeout(resolve, requestDelay));
-          }
-        }
-
-        if (rule) {
           md += `> [!NOTE]- ${rule.title}\n`;
           md += `> \n`;
-          // Split content by lines and format as callout content
           const lines = rule.content.split("\n");
           for (const line of lines) {
-            // Handle empty lines
             if (line.trim() === "") {
               md += `> \n`;
             } else {
-              // Strip any existing > to avoid nested callouts
               let cleanedLine = line.replace(/^>\s*/, "");
-              
-              // Escape characters that break callout syntax
-              // Tables: escape pipes
               cleanedLine = cleanedLine.replace(/\|/g, "\\|");
-              
-              // Ensure consistent spacing for list items
-              if (cleanedLine.match(/^[-*] /)) {
-                cleanedLine = cleanedLine; // Keep as-is
-              } else if (cleanedLine.match(/^\d+\. /)) {
-                cleanedLine = cleanedLine; // Keep numbered lists
-              }
-              
               md += `> ${cleanedLine}\n`;
             }
           }
@@ -1050,21 +1020,22 @@ function getCategoryIcon(category) {
 
 const report = await generateReport();
 
-// Save to file
+// Save to file with LLM provider in filename
 const dateStr = new Date().toISOString().split("T")[0];
-const defaultOutputPath = path.join(projectRoot, `docs`, `handbook_${dateStr}.md`);
+const provider = llmManager.getCurrentProviderName();
 
 // Use ReportPath from config if available
 let outputPath;
+const baseFilename = `handbook_${dateStr}_${provider}.md`;
+
 if (config.ReportPath) {
   const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath);
   if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, { recursive: true });
   }
-  outputPath = path.join(reportDir, `handbook_${dateStr}.md`);
+  outputPath = path.join(reportDir, baseFilename);
 } else {
-  outputPath = defaultOutputPath;
-  // Ensure docs directory exists
+  outputPath = path.join(projectRoot, `docs`, baseFilename);
   const docsDir = path.join(projectRoot, `docs`);
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
@@ -1085,10 +1056,6 @@ if (incremental) {
   }
 }
 
-console.log(`\n📈 API Usage Summary:`);
-console.log(`   - Total LLM-generated rules: Check console output above`);
-console.log(`   - Cached rules used: ${incremental ? 'Yes (see .cache/ directory)' : 'No'}`);
-console.log(`   - Daily quota remaining: Monitor at https://ai.dev/rate-limit`);
 console.log(`\n💡 Tip: Use --incremental flag to reduce API calls by 60-80%`);
 
 db.close();

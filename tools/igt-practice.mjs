@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import initializeLLMProviders from "../lib/llm-init.mjs";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -12,12 +12,9 @@ const projectRoot = path.join(__dirname, "..");
 // Load config
 const configPath = path.join(projectRoot, "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-const apiKey = process.env.GOOGLE_API_KEY || config.ApiKey;
 
-if (!apiKey) {
-  console.error("Error: API Key not found. Set GOOGLE_API_KEY env var or add to igt_config.json.");
-  process.exit(1);
-}
+// Initialize LLM providers
+const llmManager = initializeLLMProviders();
 
 // Load database
 const dbPath = config.DbPath || "igt_data.db";
@@ -59,28 +56,6 @@ function getErrorTypes(errorType) {
       LIMIT 3
     `).all();
   }
-}
-
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(apiKey);
-
-// Create readline interface
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: true
-});
-
-function askQuestion(question) {
-  return new Promise((resolve) => {
-    if (rl.closed) {
-      resolve("");
-      return;
-    }
-    rl.question(question, (answer) => {
-      resolve(answer);
-    });
-  });
 }
 
 // Generate exercises as structured JSON with answers
@@ -133,18 +108,34 @@ Rules for fill-in-the-blank:
 Return ONLY the JSON array, no markdown formatting, no explanation.`;
   }
 
-  const model = genAI.getGenerativeModel({
-    model: config.Model || "gemini-2.5-flash-lite"
+  const text = await llmManager.generateWithFallback(prompt, "", {
+    taskType: "practice"
   });
-
-  const result = await model.generateContent(prompt);
-  let text = result.response.text().trim();
-
+  
   // Clean up markdown code blocks if present
-  text = text.replace(/^```json\s*/i, "").replace(/```$/g, "").trim();
-  text = text.replace(/^```\s*/i, "").replace(/```$/g, "").trim();
+  let cleanedText = text.replace(/^```json\s*/i, "").replace(/```$/g, "").trim();
+  cleanedText = cleanedText.replace(/^```\s*/i, "").replace(/```$/g, "").trim();
 
-  return JSON.parse(text);
+  return JSON.parse(cleanedText);
+}
+
+// Create readline interface
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: true
+});
+
+function askQuestion(question) {
+  return new Promise((resolve) => {
+    if (rl.closed) {
+      resolve("");
+      return;
+    }
+    rl.question(question, (answer) => {
+      resolve(answer);
+    });
+  });
 }
 
 // Grade user answer against correct answer

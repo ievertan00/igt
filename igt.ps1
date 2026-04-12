@@ -85,7 +85,8 @@ Write-Host "Type 'exit' to quit." -ForegroundColor Gray
 Write-Host "Type 'cards' to export Anki flashcards." -ForegroundColor DarkGray
 Write-Host "Type 'handbook' to generate personal error handbook." -ForegroundColor DarkGray
 Write-Host "Type 'practice' to start practice exercises." -ForegroundColor DarkGray
-Write-Host "Type 'assess' to view proficiency assessment.`n" -ForegroundColor DarkGray
+Write-Host "Type 'assess' to view proficiency assessment." -ForegroundColor DarkGray
+Write-Host "Type 'llm' to manage LLM providers (switch, status, setup).`n" -ForegroundColor DarkCyan
 
 $noisePattern = [regex]::new('YOLO mode|Loaded cached|Loading extension|Scheduling MCP|Executing MCP|MCP context|Warning:', [System.Text.RegularExpressions.RegexOptions]::Compiled)
 
@@ -118,6 +119,18 @@ while ($true) {
     if ($userInput -eq "assess") {
         Write-Host "`n[Generating proficiency assessment...]" -ForegroundColor Yellow
         node (Join-Path $scriptDir "tools\igt-assess.mjs")
+        Write-Host ""
+        continue
+    }
+    if ($userInput -eq "llm" -or $userInput.StartsWith("llm ")) {
+        Write-Host "" -ForegroundColor DarkCyan
+        $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
+        if ($userInput -eq "llm") {
+            node $llmScript
+        } else {
+            $llmArgs = $userInput.Substring(4).Trim()
+            node $llmScript $llmArgs.Split(' ')
+        }
         Write-Host ""
         continue
     }
