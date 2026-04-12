@@ -115,7 +115,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **English Learning Suite** with SQLite-based error pattern tracking
-  - Anki flashcard export (`tools/igt-cards.mjs`)
   - Error handbook generation (`tools/igt-handbook.mjs`)
   - Interactive practice mode with auto-grading (`tools/igt-practice.mjs`)
   - Proficiency assessment with CEFR level estimation (`tools/igt-assess.mjs`)

@@ -1,4 +1,4 @@
-import initializeLLMProviders from "../lib/llm-init.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -9,12 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
-// Load config
-const configPath = path.join(projectRoot, "igt_config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-
-// Initialize LLM providers
+// Load config via unified config loader and initialize LLM providers
 const llmManager = initializeLLMProviders();
+const config = llmManager.config;
 
 // Load database
 const dbPath = config.DbPath || "igt_data.db";

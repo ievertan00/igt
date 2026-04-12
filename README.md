@@ -4,7 +4,7 @@
 
 ## Overview
 
-IGT leverages **multiple LLM providers** (Google Gemini, Alibaba Qwen, Deepseek) to provide real-time linguistic audits, corrections, and refinements. Beyond simple grammar checking, it automatically collects your error patterns into a local SQLite database, enabling **personalized learning tools**: Anki flashcards, error handbooks, targeted practice, and proficiency assessments.
+IGT leverages **multiple LLM providers** (Google Gemini, Alibaba Qwen, Deepseek) to provide real-time linguistic audits, corrections, and refinements. Beyond simple grammar checking, it automatically collects your error patterns into a local SQLite database, enabling **personalized learning tools**: error handbooks, targeted practice, and proficiency assessments.
 
 **✨ NEW: Multi-LLM Support & Secure Configuration** — Switch between LLMs instantly, with API keys safely stored in `.env` (not in git). See [Quick Start](#quick-start) below.
 
@@ -47,7 +47,6 @@ Processing... Done (1670ms)
 | Feature | Command | Description |
 |---------|---------|-------------|
 | **Auto Data Collection** | *(automatic)* | Every grammar check is logged to SQLite with structured error types |
-| **Anki Flashcards** | `cards` | Export errors as spaced-repetition study cards |
 | **Error Handbook** | `handbook` | Generate an Obsidian Dashboard report of your weak points |
 | **Practice Mode** | `practice` | Interactive exercises with auto-grading, targeting your top errors |
 | **Proficiency Assessment** | `assess` | Estimate your CEFR level and track progress over time |
@@ -136,10 +135,6 @@ Processing... Done (1523ms)
 
 [Logged to: D:\Path\To\Your\Review_Log.md]
 
-Grammar Input > cards
-[Exporting Anki cards...]
-✅ Exported 46 cards to: D:\Path\To\Your\igt_cards_2026-04-11.csv
-
 Grammar Input > assess
 [Generating proficiency assessment...]
 🎯 Estimated CEFR Level: C1 - Effective Operational Proficiency
@@ -149,7 +144,6 @@ Grammar Input > assess
 
 | Command | Context | Description |
 |---------|---------|-------------|
-| `cards` | Inside IGT | Export Anki-compatible flashcards |
 | `handbook` | Inside IGT | Generate personal error handbook (Obsidian Dashboard format) |
 | `practice` | Inside IGT | Start interactive practice exercises |
 | `assess` | Inside IGT | View proficiency assessment and CEFR estimate |
@@ -171,9 +165,6 @@ llm setup             # Interactive API key setup wizard
 ```powershell
 # Initialize database (first time only)
 node tools/init-db.mjs
-
-# Export flashcards with custom filename
-node tools/igt-cards.mjs --export my_cards.csv
 
 # Generate handbook for last 7 days (full regeneration)
 node tools/igt-handbook.mjs --days=7
@@ -355,10 +346,10 @@ See [docs/prompt-config-guide.md](docs/prompt-config-guide.md) for detailed inst
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                     Learning Tools                          │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐     │
-│  │ igt-cards   │  │ igt-handbook │  │ igt-practice  │     │
-│  │ .mjs        │  │ .mjs (Pro 🏆)│  │ .mjs (Pro 🏆) │     │
-│  └─────────────┘  └──────────────┘  └───────────────┘     │
+│  ┌──────────────┐  ┌───────────────┐  ┌──────────────────┐ │
+│  │ igt-handbook │  │ igt-practice  │  │  igt-assess      │ │
+│  │ .mjs (Pro 🏆)│  │ .mjs (Pro 🏆) │  │  .mjs            │ │
+│  └──────────────┘  └───────────────┘  └──────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -375,7 +366,6 @@ See [docs/prompt-config-guide.md](docs/prompt-config-guide.md) for detailed inst
 | `lib/config-loader.mjs` | Configuration loader (merges .env + config.json) |
 | `lib/llm-switch.mjs` | CLI tool for managing LLM providers |
 | `lib/error-types.mjs` | MECE error type classification system |
-| `tools/igt-cards.mjs` | Anki flashcard generator (CSV export) |
 | `tools/igt-handbook.mjs` | Obsidian Dashboard report generator |
 | `tools/igt-assess.mjs` | CEFR proficiency assessment engine |
 | `tools/igt-practice.mjs` | Interactive practice with auto-grading |

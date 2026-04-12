@@ -2,14 +2,14 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import configLoader from "../lib/config-loader.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
-// Load config
-const configPath = path.join(projectRoot, "igt_config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+// Load config via unified config loader
+const config = configLoader.load();
 const dbPath = config.DbPath || "igt_data.db";
 const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
 
@@ -318,9 +318,9 @@ function generateReport() {
   }
   
   if (persistentErrors.length > 3) {
-    md += `- 🎯 **Target Persistent Errors**: Use \`node igt-cards.mjs --export\` to create flashcards for your top errors.\n`;
+    md += `- 🎯 **Target Persistent Errors**: Use \`handbook\` command in IGT to review your error patterns.\n`;
   }
-  
+
   md += `- 📊 **Generate Handbook**: Run \`node igt-handbook.mjs\` for a detailed error analysis.\n`;
   md += `- 🎯 **Practice Mode**: Run \`node igt-practice.mjs\` for targeted exercises.\n`;
   
