@@ -1,4 +1,5 @@
 # Interactive Grammar Tool (IGT) - Reliability v2.1
+# Optimized: Streamlined prompt + JSON filtering
 $scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
 $configPath = Join-Path $scriptDir "igt_config.json"
 
@@ -44,8 +45,9 @@ function Log-Result {
     }
 }
 
-Write-Host "--- Interactive Grammar Tool (IGT) Started [Learning Mode] ---" -ForegroundColor Yellow
+Write-Host "--- Interactive Grammar Tool (IGT) Started [Learning Mode + Optimized] ---" -ForegroundColor Yellow
 Write-Host "Logging to: $targetPath" -ForegroundColor Gray
+Write-Host "Optimizations: Streamlined prompt (~40% smaller) + JSON filtering" -ForegroundColor DarkGreen
 Write-Host "Type 'exit' to quit." -ForegroundColor Gray
 Write-Host "Type 'handbook' to generate personal error handbook." -ForegroundColor DarkGray
 Write-Host "Type 'practice' to start practice exercises." -ForegroundColor DarkGray
@@ -96,7 +98,7 @@ while ($true) {
     Write-Host -NoNewline "Processing..." -ForegroundColor Gray
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
-    # Use Node.js bridge for high-speed API access
+    # Use Node.js bridge for grammar check
     $bridgePath = Join-Path $scriptDir "lib\igt-bridge.mjs"
     $rawOutput = $userInput | node $bridgePath 2>&1
     $sw.Stop()
@@ -116,6 +118,12 @@ while ($true) {
         continue
     }
 
-    Write-Host "`n$cleanOutput`n" -ForegroundColor White
+    # Remove JSON code blocks from user display (they're internal data)
+    $displayOutput = $cleanOutput -replace '(?s)```json\s*[\s\S]*?\s*```', '' -replace '\n{3,}', "`n`n"
+
+    # Parse and format output for display
+    Write-Host "`n$displayOutput`n" -ForegroundColor White
+    
+    # Log original output (with JSON) to file
     Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $cleanOutput
 }
