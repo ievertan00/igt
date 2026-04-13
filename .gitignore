@@ -1,0 +1,10 @@
+.env 
+.qwen/ 
+QWEN.md 
+docs/handbook_2026-04-11.md 
+igt_data.db 
+igt_data.db-shm 
+igt_data.db-wal 
+lib/ 
+node_modules/ 
+package-lock.json 
