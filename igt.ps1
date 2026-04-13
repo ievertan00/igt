@@ -1,5 +1,5 @@
-# Interactive Grammar Tool (IGT) - Reliability v2.1
-# Optimized: Streamlined prompt + JSON filtering
+# Interactive Grammar Tool (IGT) - Reliability v2.2
+# Optimized: HTTP resident server + Qwen default + JSON-to-text rendering
 $scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
 $configPath = Join-Path $scriptDir "igt_config.json"
 
@@ -16,13 +16,19 @@ $env:GEMINI_SYSTEM_MD = "false"
 $env:GEMINI_TELEMETRY_ENABLED = "false"
 $env:NO_COLOR = "1"
 
-# 3. Helper Function: Surgical Logging
+# 3. Server configuration
+$serverPort = 18964
+$serverHost = "127.0.0.1"
+$serverBaseUrl = "http://$serverHost`:$serverPort"
+$serverProcess = $null
+
+# 4. Helper Function: Surgical Logging
 function Log-Result {
     param([string]$targetPath, [string]$userInput, [string]$cleanOutput)
     if (-not $targetPath) { return }
 
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "`n---`n### [$timestamp]`n**User Input**: $userInput`n**Gemini Output**:`n$cleanOutput"
+    $logEntry = "`n---`n### [$timestamp]`n**User Input**: $userInput`n**Output**:`n$cleanOutput"
 
     $maxRetries = 2
     $retryCount = 0
@@ -32,35 +38,186 @@ function Log-Result {
         try {
             Add-Content -Path $targetPath -Value $logEntry -Encoding utf8 -ErrorAction Stop
             $success = $true
-            Write-Host "[Logged successfully]`n" -ForegroundColor DarkGray
         } catch {
             $retryCount++
             if ($retryCount -le $maxRetries) {
-                Write-Host "Log file locked. Retrying in 100ms... ($retryCount/$maxRetries)" -ForegroundColor Gray
                 Start-Sleep -Milliseconds 100
             } else {
-                Write-Host "Warning: Could not log entry. File locked by another process." -ForegroundColor Yellow
+                Write-Host "Warning: Could not log entry. File locked." -ForegroundColor Yellow
             }
         }
     }
 }
 
-Write-Host "--- Interactive Grammar Tool (IGT) Started [Learning Mode + Optimized] ---" -ForegroundColor Yellow
+# 5. Server management functions
+function Start-IGTServer {
+    $serverPath = Join-Path $scriptDir "lib\igt-http-server.mjs"
+    
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "node"
+    $psi.Arguments = "$serverPath"
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardError = $true
+    $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    $psi.CreateNoWindow = $true
+    $psi.EnvironmentVariables["IGT_SERVER_PORT"] = $serverPort
+    $psi.EnvironmentVariables["IGT_SERVER_HOST"] = $serverHost
+    
+    $script:serverProcess = New-Object System.Diagnostics.Process
+    $script:serverProcess.StartInfo = $psi
+    $script:serverProcess.EnableRaisingEvents = $true
+    
+    $script:serverProcess.Start() | Out-Null
+    
+    # Wait for server to be ready
+    $timeout = [DateTime]::Now.AddSeconds(8)
+    $ready = $false
+    
+    while ([DateTime]::Now -lt $timeout) {
+        if ($script:serverProcess.HasExited) {
+            Write-Host "Error: Server failed to start" -ForegroundColor Red
+            return $false
+        }
+        
+        # Try health check
+        try {
+            $response = Invoke-WebRequest -Uri "$serverBaseUrl/health" -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                $ready = $true
+                break
+            }
+        } catch {
+            # Server not ready yet
+        }
+        
+        Start-Sleep -Milliseconds 100
+    }
+    
+    if ($ready) {
+        Write-Host "[Server] Started (port $serverPort)" -ForegroundColor DarkGray
+        return $true
+    } else {
+        Write-Host "Error: Server startup timeout" -ForegroundColor Red
+        return $false
+    }
+}
+
+function Stop-IGTServer {
+    if ($script:serverProcess -and !$script:serverProcess.HasExited) {
+        $script:serverProcess.Kill()
+        Start-Sleep -Milliseconds 50
+        $script:serverProcess.Dispose()
+    }
+}
+
+function Invoke-HTTPGrammarCheck {
+    param([string]$inputText)
+    
+    # Ensure server is running
+    if (!$script:serverProcess -or $script:serverProcess.HasExited) {
+        if (!(Start-IGTServer)) {
+            return $null
+        }
+    }
+    
+    # Use non-streaming endpoint for reliability
+    $timeout = [DateTime]::Now.AddSeconds(15)
+    $startTime = [DateTime]::Now
+    
+    try {
+        $body = @{ text = $inputText } | ConvertTo-Json
+        $response = Invoke-WebRequest -Uri "$serverBaseUrl/grammar" `
+            -Method POST `
+            -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
+            -ContentType "application/json; charset=utf-8" `
+            -TimeoutSec 15 `
+            -UseBasicParsing
+        
+        $result = $response.Content | ConvertFrom-Json
+        
+        if ($result.error) {
+            Write-Host "Error: $($result.error)" -ForegroundColor Red
+            return $null
+        }
+        
+        $perfInfo = @()
+        if ($result.perf) {
+            if ($result.perf.llm_ms) {
+                $perfInfo += "LLM: $($result.perf.llm_ms.ToString('N0'))ms"
+            }
+            if ($result.perf.total_ms) {
+                $perfInfo += "Total: $($result.perf.total_ms.ToString('N0'))ms"
+            }
+        }
+        
+        return @{
+            Content = $result.content
+            Perf = $perfInfo
+        }
+    } catch {
+        Write-Host "Error: Request failed - $_" -ForegroundColor Red
+        return $null
+    }
+}
+
+# 6. Format output: JSON to text
+function Format-Output {
+    param([string]$cleanOutput)
+    
+    $diagnosesText = ""
+    $ruleText = ""
+    $tipText = ""
+    
+    $jsonMatch = [regex]::Match($cleanOutput, '(?s)```json\s*(.*?)\s*```')
+    
+    if ($jsonMatch.Success) {
+        try {
+            $jsonData = $jsonMatch.Groups[1].Value | ConvertFrom-Json -ErrorAction Stop
+            
+            if ($jsonData.diagnoses -and $jsonData.diagnoses.Count -gt 0) {
+                $diagLines = @()
+                foreach ($d in $jsonData.diagnoses) {
+                    $diagLines += "- $($d.error_type) ($($d.severity)): $($d.explanation)"
+                }
+                $diagnosesText = "`n**Diagnoses**:`n" + ($diagLines -join "`n")
+            }
+            
+            if ($jsonData.rule -and $jsonData.rule.Trim()) {
+                $ruleText = "`n**Rule**: $($jsonData.rule)"
+            }
+            
+            if ($jsonData.tip -and $jsonData.tip.Trim()) {
+                $tipText = "`n**Tip**: $($jsonData.tip)"
+            }
+        } catch {
+            # JSON parse failed
+        }
+    }
+    
+    # Remove JSON blocks
+    $displayOutput = $cleanOutput -replace '(?s)```json\s*[\s\S]*?\s*```', '' -replace '\n{3,}', "`n`n"
+    
+    return "$displayOutput$diagnosesText$ruleText$tipText"
+}
+
+# 7. Main loop
+Write-Host "--- Interactive Grammar Tool (IGT) Started [HTTP Server + Qwen Default] ---" -ForegroundColor Yellow
 Write-Host "Logging to: $targetPath" -ForegroundColor Gray
-Write-Host "Optimizations: Streamlined prompt (~40% smaller) + JSON filtering" -ForegroundColor DarkGreen
+Write-Host "Server: HTTP resident mode (port $serverPort) - eliminates startup overhead" -ForegroundColor DarkGreen
 Write-Host "Type 'exit' to quit." -ForegroundColor Gray
 Write-Host "Type 'handbook' to generate personal error handbook." -ForegroundColor DarkGray
 Write-Host "Type 'practice' to start practice exercises." -ForegroundColor DarkGray
 Write-Host "Type 'assess' to view proficiency assessment." -ForegroundColor DarkGray
 Write-Host "Type 'llm' to manage LLM providers (switch, status, setup).`n" -ForegroundColor DarkCyan
 
-$noisePattern = [regex]::new('YOLO mode|Loaded cached|Loading extension|Scheduling MCP|Executing MCP|MCP context|Warning:', [System.Text.RegularExpressions.RegexOptions]::Compiled)
-
 while ($true) {
     Write-Host -NoNewline "Grammar Input > " -ForegroundColor Cyan
     $userInput = Read-Host
 
-    if ($userInput -eq "exit" -or $userInput -eq "quit") { break }
+    if ($userInput -eq "exit" -or $userInput -eq "quit") { 
+        Stop-IGTServer
+        break 
+    }
     if ([string]::IsNullOrWhiteSpace($userInput)) { continue }
 
     # Handle special commands
@@ -98,66 +255,33 @@ while ($true) {
     Write-Host -NoNewline "Processing..." -ForegroundColor Gray
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
-    # Use Node.js bridge for grammar check
-    $bridgePath = Join-Path $scriptDir "lib\igt-bridge.mjs"
-    $rawOutput = $userInput | node $bridgePath 2>&1
+    # Use HTTP server for grammar check
+    $response = Invoke-HTTPGrammarCheck -inputText $userInput
     $sw.Stop()
 
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "`nError: Bridge failed (Exit Code $LASTEXITCODE)" -ForegroundColor Red
-        $rawOutput | ForEach-Object { Write-Host $_ -ForegroundColor DarkRed }
+    if (!$response) {
+        Write-Host "`nError: Failed to get response" -ForegroundColor Red
         continue
     }
 
-    $cleanOutput = if ($rawOutput -is [array]) { $rawOutput -join "`n" } else { $rawOutput }
+    $cleanOutput = $response.Content
+    $perfInfo = $response.Perf
 
     Write-Host " Done ($($sw.Elapsed.TotalMilliseconds.ToString("N0"))ms)" -ForegroundColor Gray
+    if ($perfInfo) {
+        foreach ($p in $perfInfo) {
+            Write-Host "  [$p]" -ForegroundColor DarkGray
+        }
+    }
 
     if ([string]::IsNullOrWhiteSpace($cleanOutput)) {
-        Write-Host "Warning: No content returned from Gemini." -ForegroundColor Yellow
+        Write-Host "Warning: No content returned." -ForegroundColor Yellow
         continue
     }
 
-    # Parse JSON data and convert to text format
-    $jsonMatch = [regex]::Match($cleanOutput, '(?s)```json\s*(.*?)\s*```')
-    $diagnosesText = ""
-    $ruleText = ""
-    $tipText = ""
-    
-    if ($jsonMatch.Success) {
-        try {
-            $jsonData = $jsonMatch.Groups[1].Value | ConvertFrom-Json -ErrorAction Stop
-            
-            # Format diagnoses
-            if ($jsonData.diagnoses -and $jsonData.diagnoses.Count -gt 0) {
-                $diagLines = @()
-                foreach ($d in $jsonData.diagnoses) {
-                    $diagLines += "- $($d.error_type) ($($d.severity)): $($d.explanation)"
-                }
-                $diagnosesText = "`n**Diagnoses**:`n" + ($diagLines -join "`n")
-            }
-            
-            # Format rule
-            if ($jsonData.rule -and $jsonData.rule.Trim()) {
-                $ruleText = "`n**Rule**: $($jsonData.rule)"
-            }
-            
-            # Format tip
-            if ($jsonData.tip -and $jsonData.tip.Trim()) {
-                $tipText = "`n**Tip**: $($jsonData.tip)"
-            }
-        } catch {
-            # JSON parse failed, skip
-        }
-    }
-    
-    # Remove JSON code blocks from output
-    $displayOutput = $cleanOutput -replace '(?s)```json\s*[\s\S]*?\s*```', '' -replace '\n{3,}', "`n`n"
-    
-    # Append formatted JSON data as text
-    $finalOutput = "$displayOutput$diagnosesText$ruleText$tipText"
+    # Format output (JSON to text)
+    $finalOutput = Format-Output -cleanOutput $cleanOutput
 
-    # Display and log (without JSON)
     Write-Host "`n$finalOutput`n" -ForegroundColor White
     Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $finalOutput
 }
