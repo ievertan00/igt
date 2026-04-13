@@ -118,12 +118,46 @@ while ($true) {
         continue
     }
 
-    # Remove JSON code blocks from user display (they're internal data)
-    $displayOutput = $cleanOutput -replace '(?s)```json\s*[\s\S]*?\s*```', '' -replace '\n{3,}', "`n`n"
-
-    # Parse and format output for display
-    Write-Host "`n$displayOutput`n" -ForegroundColor White
+    # Parse JSON data and convert to text format
+    $jsonMatch = [regex]::Match($cleanOutput, '(?s)```json\s*(.*?)\s*```')
+    $diagnosesText = ""
+    $ruleText = ""
+    $tipText = ""
     
-    # Log original output (with JSON) to file
-    Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $cleanOutput
+    if ($jsonMatch.Success) {
+        try {
+            $jsonData = $jsonMatch.Groups[1].Value | ConvertFrom-Json -ErrorAction Stop
+            
+            # Format diagnoses
+            if ($jsonData.diagnoses -and $jsonData.diagnoses.Count -gt 0) {
+                $diagLines = @()
+                foreach ($d in $jsonData.diagnoses) {
+                    $diagLines += "- $($d.error_type) ($($d.severity)): $($d.explanation)"
+                }
+                $diagnosesText = "`n**Diagnoses**:`n" + ($diagLines -join "`n")
+            }
+            
+            # Format rule
+            if ($jsonData.rule -and $jsonData.rule.Trim()) {
+                $ruleText = "`n**Rule**: $($jsonData.rule)"
+            }
+            
+            # Format tip
+            if ($jsonData.tip -and $jsonData.tip.Trim()) {
+                $tipText = "`n**Tip**: $($jsonData.tip)"
+            }
+        } catch {
+            # JSON parse failed, skip
+        }
+    }
+    
+    # Remove JSON code blocks from output
+    $displayOutput = $cleanOutput -replace '(?s)```json\s*[\s\S]*?\s*```', '' -replace '\n{3,}', "`n`n"
+    
+    # Append formatted JSON data as text
+    $finalOutput = "$displayOutput$diagnosesText$ruleText$tipText"
+
+    # Display and log (without JSON)
+    Write-Host "`n$finalOutput`n" -ForegroundColor White
+    Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $finalOutput
 }
