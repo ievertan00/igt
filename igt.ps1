@@ -121,7 +121,7 @@ function Invoke-HTTPGrammarCheck {
     }
     
     # Use non-streaming endpoint for reliability
-    $timeout = [DateTime]::Now.AddSeconds(15)
+    $timeout = [DateTime]::Now.AddSeconds(30)
     $startTime = [DateTime]::Now
     
     try {
@@ -130,7 +130,7 @@ function Invoke-HTTPGrammarCheck {
             -Method POST `
             -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
             -ContentType "application/json; charset=utf-8" `
-            -TimeoutSec 15 `
+            -TimeoutSec 30 `
             -UseBasicParsing
         
         $result = $response.Content | ConvertFrom-Json
