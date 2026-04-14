@@ -1,54 +1,133 @@
-# Interactive Grammar Tool (IGT) - Reliability v2.1
-$scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
-$configPath = Join-Path $scriptDir "igt_config.json"
+# Interactive Grammar Tool (IGT) - API Mode
+$scriptDir = $PSScriptRoot
+$configPath = Join-Path $scriptDir "lib\igt_config.json"
+$envPath = Join-Path $scriptDir ".env"
 
 # 1. Load Config Once
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: igt_config.json not found in $scriptDir" -ForegroundColor Red
+    Write-Host "Error: lib\igt_config.json not found" -ForegroundColor Red
     exit 1
 }
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
-$model = if ([string]::IsNullOrWhiteSpace($config.Model)) { "gemini-2.5-flash" } else { $config.Model }
+$systemPrompt = $config.Prompts.SystemPrompt
 $targetPath = $config.ReviewPath
 
-# 2. Optimized System Prompt (Load with Fallback)
-$defaultPrompt = @"
-Act as an expert 'Linguistic Validator,' 'Professional Editor,' and 'Master Wordsmith.' Your goal is to provide meticulous text reviews. Focus strictly on the latest input content; treat the input as a standalone text and ignore all historical conversation context.
+# 2. Load .env for API keys
+$apiKeys = @{}
+if (Test-Path $envPath) {
+    Get-Content $envPath | Where-Object { $_ -match '^([^=]+)=(.*)$' } | ForEach-Object {
+        $key = $Matches[1].Trim()
+        $value = $Matches[2].Trim()
+        # Split by comma to support primary and backup keys
+        $apiKeys[$key] = @($value -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    }
+} else {
+    Write-Host "Warning: .env file not found." -ForegroundColor Yellow
+}
 
-Purpose and Goals:
-Audit: Review user-provided text for all grammatical errors, including syntax, punctuation, spelling, and tense consistency.
+# Provider and Model selection
+$script:currentProvider = if ($config.LLMProvider) { $config.LLMProvider } else { "gemini" }
+$script:currentModel = $config.GeminiFlashModel
 
-Enhance: Improve clarity, conciseness, flow, and impact while strictly preserving the original meaning and intent.
-Deliver: Provide a polished, professional, and error-free final version of the user's text.
+function Set-Provider {
+    param([string]$provider)
+    $script:currentProvider = $provider.ToLower()
+    switch ($script:currentProvider) {
+        "gemini" { $script:currentModel = $config.GeminiFlashModel }
+        "qwen" { $script:currentModel = $config.QwenFlashModel }
+        "deepseek" { $script:currentModel = $config.DeepseekFlashModel }
+        default { Write-Host "Unknown provider: $provider" -ForegroundColor Red }
+    }
+    Write-Host "Switched to provider: $script:currentProvider (Model: $script:currentModel)" -ForegroundColor Green
+}
 
-Behaviors and Rules:
-Initial Assessment:
-State immediately if the text is 'Grammatically Correct' or 'Requires Corrections'.
-List specific error types found (e.g., 'Subject-Verb Agreement', 'Punctuation', 'Typos').
+Set-Provider $script:currentProvider
 
-You must strictly follow this Output Format:
-**Review**: [State "The original sentence is grammatically correct/incorrect." List specific errors identified and briefly explain the reasoning.]
-**Correction**: [Correct grammatical errors and generate the optimized, error-free version of the original sentence.]
-**Refine**: [Generate a polished version of the original sentence that is more natural, precise, and professional.]
-"@
+function Invoke-LLMAPI {
+    param([string]$systemPrompt, [string]$userInput)
+    
+    $provider = $script:currentProvider
+    $model = $script:currentModel
+    
+    $apiKeyEnvVar = switch ($provider) {
+        "gemini" { "GOOGLE_API_KEYS" }
+        "qwen" { "DASHSCOPE_API_KEYS" }
+        "deepseek" { "DEEPSEEK_API_KEYS" }
+    }
+    
+    $keys = $apiKeys[$apiKeyEnvVar]
+    if (-not $keys -or $keys.Count -eq 0) {
+        throw "No API key found for provider $provider in .env ($apiKeyEnvVar)"
+    }
+    
+    $primaryKey = $keys[0]
+    $backupKey = if ($keys.Count -gt 1) { $keys[1] } else { $null }
 
-$systemPrompt = $defaultPrompt
-if (-not [string]::IsNullOrWhiteSpace($config.SystemPromptPath)) {
-    $fullPromptPath = if ([System.IO.Path]::IsPathRooted($config.SystemPromptPath)) { $config.SystemPromptPath } else { Join-Path $scriptDir $config.SystemPromptPath }
-    if (Test-Path $fullPromptPath) {
-        try {
-            $systemPrompt = Get-Content -Path $fullPromptPath -Raw -ErrorAction Stop
-            Write-Host "[Loaded system prompt from: $($config.SystemPromptPath)]" -ForegroundColor DarkGray
-        } catch {
-            Write-Host "Warning: Could not read system prompt file. Using default." -ForegroundColor Yellow
+    $tryApiCall = {
+        param([string]$key)
+        
+        # Ensure TLS 1.2 is used for API calls
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        
+        switch ($provider) {
+            "gemini" {
+                $uri = "https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=$key"
+                $body = @{
+                    system_instruction = @{ parts = @( @{ text = $systemPrompt } ) }
+                    contents = @(
+                        @{ parts = @( @{ text = $userInput } ) }
+                    )
+                } | ConvertTo-Json -Depth 10 -Compress
+                $response = Invoke-RestMethod -Uri $uri -Method Post -Body $body -ContentType "application/json"
+                
+                if ($response.candidates -and $response.candidates.Count -gt 0) {
+                    return $response.candidates[0].content.parts[0].text
+                } else {
+                    throw "Unexpected response from Gemini API"
+                }
+            }
+            "qwen" {
+                $uri = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+                $headers = @{ "Authorization" = "Bearer $key" }
+                $messages = @(
+                    @{ role = "system"; content = $systemPrompt },
+                    @{ role = "user"; content = $userInput }
+                )
+                $body = @{
+                    model = $model
+                    messages = $messages
+                } | ConvertTo-Json -Depth 10 -Compress
+                $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -ContentType "application/json"
+                return $response.choices[0].message.content
+            }
+            "deepseek" {
+                $uri = "https://api.deepseek.com/chat/completions"
+                $headers = @{ "Authorization" = "Bearer $key" }
+                $messages = @(
+                    @{ role = "system"; content = $systemPrompt },
+                    @{ role = "user"; content = $userInput }
+                )
+                $body = @{
+                    model = $model
+                    messages = $messages
+                } | ConvertTo-Json -Depth 10 -Compress
+                $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -ContentType "application/json"
+                return $response.choices[0].message.content
+            }
+        }
+    }
+    
+    try {
+        return &$tryApiCall $primaryKey
+    } catch {
+        if ($backupKey) {
+            Write-Host "Primary key failed, trying backup key..." -ForegroundColor Yellow
+            return &$tryApiCall $backupKey
+        } else {
+            throw $_
         }
     }
 }
-
-# 3. Optimization Environment Variables
-$env:GEMINI_SYSTEM_MD = "false"
-$env:GEMINI_TELEMETRY_ENABLED = "false"
-$env:NO_COLOR = "1"
 
 # 4. Helper Function: Surgical Logging
 function Log-Result {
@@ -56,7 +135,7 @@ function Log-Result {
     if (-not $targetPath) { return }
 
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "`n---`n### [$timestamp]`n**User Input**: $userInput`n**Gemini Output**:`n$cleanOutput"
+    $logEntry = "`n---`n### [$timestamp]`n**User Input**: $userInput`n**Output**:`n$cleanOutput"
     
     $maxRetries = 2
     $retryCount = 0
@@ -64,6 +143,10 @@ function Log-Result {
 
     while (-not $success -and $retryCount -le $maxRetries) {
         try {
+            $dir = Split-Path $targetPath -Parent
+            if (-not (Test-Path $dir)) {
+                New-Item -ItemType Directory -Force -Path $dir | Out-Null
+            }
             Add-Content -Path $targetPath -Value $logEntry -Encoding utf8 -ErrorAction Stop
             $success = $true
             Write-Host "[Logged successfully]`n" -ForegroundColor DarkGray
@@ -79,39 +162,40 @@ function Log-Result {
     }
 }
 
-Write-Host "--- Interactive Grammar Tool (IGT) Started [Reliability Mode] ---" -ForegroundColor Yellow
+Write-Host "--- Interactive Grammar Tool (IGT) API Mode ---" -ForegroundColor Yellow
 Write-Host "Logging to: $targetPath" -ForegroundColor Gray
-Write-Host "Type 'exit' to stop.`n" -ForegroundColor Gray
-
-$noisePattern = [regex]::new('YOLO mode|Loaded cached|Loading extension|Scheduling MCP|Executing MCP|MCP context|Warning:', [System.Text.RegularExpressions.RegexOptions]::Compiled)
+Write-Host "Commands: /gemini, /qwen, /deepseek, /exit`n" -ForegroundColor Gray
 
 while ($true) {
-    Write-Host -NoNewline "Grammar Input > " -ForegroundColor Cyan
+    Write-Host -NoNewline "[$script:currentProvider] Grammar Input > " -ForegroundColor Cyan
     $userInput = Read-Host
     
-    if ($userInput -eq "exit" -or $userInput -eq "quit") { break }
+    if ($userInput -eq "/exit" -or $userInput -eq "exit" -or $userInput -eq "quit") { break }
+    if ($userInput -eq "/gemini" -or $userInput -eq "/qwen" -or $userInput -eq "/deepseek") {
+        Set-Provider $userInput.Substring(1)
+        continue
+    }
     if ([string]::IsNullOrWhiteSpace($userInput)) { continue }
 
     Write-Host "Processing..." -ForegroundColor Gray
     
-    # Use direct concatenation to avoid -f operator formatting errors (like {0})
-    $fullPrompt = "$systemPrompt`n`nInput Text: $userInput"
-    
-    $rawOutput = $fullPrompt | & gemini -p - -m $model --extensions none --approval-mode yolo 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "`nError: Gemini failed (Exit Code $LASTEXITCODE)" -ForegroundColor Red
-        $rawOutput | ForEach-Object { Write-Host $_ -ForegroundColor DarkRed }
-        continue
+    try {
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $cleanOutput = Invoke-LLMAPI -systemPrompt $systemPrompt -userInput $userInput
+        $sw.Stop()
+        
+        Write-Host "`n$($cleanOutput.Trim())`n" -ForegroundColor White
+        Write-Host "[Time taken: $($sw.ElapsedMilliseconds) ms]" -ForegroundColor DarkGray
+        
+        Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $cleanOutput
+    } catch {
+        Write-Host "`nError: API call failed" -ForegroundColor Red
+        Write-Host $_ -ForegroundColor DarkRed
+        if ($_.Exception -and $_.Exception.Response) {
+            try {
+                $errBody = (new-object System.IO.StreamReader($_.Exception.Response.GetResponseStream())).ReadToEnd()
+                Write-Host $errBody -ForegroundColor DarkRed
+            } catch {}
+        }
     }
-    
-    $cleanLines = $rawOutput | Where-Object { -not $noisePattern.IsMatch($_.ToString()) }
-    $cleanOutput = ($cleanLines -join "`n").Trim()
-
-    if ([string]::IsNullOrWhiteSpace($cleanOutput)) {
-        Write-Host "Warning: No content returned from Gemini." -ForegroundColor Yellow
-        continue
-    }
-
-    Write-Host "`n$cleanOutput`n" -ForegroundColor White
-    Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $cleanOutput
 }
