@@ -1,11 +1,11 @@
 # Interactive Grammar Tool (IGT) - Reliability v2.2
 # Optimized: HTTP resident server + Qwen default + JSON-to-text rendering
 $scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
-$configPath = Join-Path $scriptDir "igt_config.json"
+$configPath = Join-Path $scriptDir "lib\igt_config.json"
 
 # 1. Load Config Once
 if (-not (Test-Path $configPath)) {
-    Write-Host "Error: igt_config.json not found in $scriptDir" -ForegroundColor Red
+    Write-Host "Error: igt_config.json not found in $scriptDir\lib" -ForegroundColor Red
     exit 1
 }
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
@@ -110,7 +110,7 @@ function Stop-IGTServer {
     }
 }
 
-function Invoke-HTTPGrammarCheck {
+function Invoke-ParallelGrammarCheck {
     param([string]$inputText)
     
     # Ensure server is running
@@ -120,84 +120,60 @@ function Invoke-HTTPGrammarCheck {
         }
     }
     
-    # Use non-streaming endpoint for reliability
-    $timeout = [DateTime]::Now.AddSeconds(30)
-    $startTime = [DateTime]::Now
-    
+    $result = @{ 
+        FastText = ""
+        FullData = $null
+        Perf = @()
+    }
+
     try {
         $body = @{ text = $inputText } | ConvertTo-Json
-        $response = Invoke-WebRequest -Uri "$serverBaseUrl/grammar" `
-            -Method POST `
-            -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
-            -ContentType "application/json; charset=utf-8" `
-            -TimeoutSec 30 `
-            -UseBasicParsing
+        $request = [System.Net.WebRequest]::Create("$serverBaseUrl/grammar/parallel")
+        $request.Method = "POST"
+        $request.ContentType = "application/json; charset=utf-8"
+        $request.Timeout = 60000 # 60 seconds
         
-        $result = $response.Content | ConvertFrom-Json
-        
-        if ($result.error) {
-            Write-Host "Error: $($result.error)" -ForegroundColor Red
-            return $null
-        }
-        
-        $perfInfo = @()
-        if ($result.perf) {
-            if ($result.perf.llm_ms) {
-                $perfInfo += "LLM: $($result.perf.llm_ms.ToString('N0'))ms"
+        $requestStream = $request.GetRequestStream()
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($body)
+        $requestStream.Write($bytes, 0, $bytes.Length)
+        $requestStream.Close()
+
+        $response = $request.GetResponse()
+        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+
+        while (!$reader.EndOfStream) {
+            $line = $reader.ReadLine()
+            if ($line.StartsWith("data: ")) {
+                $jsonData = $line.Substring(6) | ConvertFrom-Json
+                
+                if ($jsonData.type -eq "fast_correction") {
+                    $result.FastText = $jsonData.text
+                    Write-Host "`n**Correction**: " -NoNewline -ForegroundColor Green
+                    Write-Host $result.FastText -ForegroundColor White
+                    Write-Host "  [LLM Fast: $($jsonData.ms.ToString('N0'))ms]" -ForegroundColor DarkGray
+                    Write-Host "Analyzing detailed grammar rules..." -NoNewline -ForegroundColor DarkYellow
+                }
+                elseif ($jsonData.type -eq "full_analysis") {
+                    # Clear the "Analyzing..." line
+                    Write-Host "`r                                    `r" -NoNewline
+                    $result.FullData = $jsonData
+                    $result.Perf += "LLM Full: $($jsonData.ms.ToString('N0'))ms"
+                }
+                elseif ($jsonData.type -eq "complete") {
+                    if ($jsonData.perf -and $jsonData.perf.total_ms) {
+                        $result.Perf += "Total: $($jsonData.perf.total_ms.ToString('N0'))ms"
+                    }
+                }
             }
-            if ($result.perf.total_ms) {
-                $perfInfo += "Total: $($result.perf.total_ms.ToString('N0'))ms"
-            }
         }
-        
-        return @{
-            Content = $result.content
-            Perf = $perfInfo
-        }
+        $reader.Close()
+        $response.Close()
+
+        return $result
     } catch {
-        Write-Host "Error: Request failed - $_" -ForegroundColor Red
+        Write-Host "`nError: Request failed - $_" -ForegroundColor Red
         return $null
     }
-}
-
-# 6. Format output: JSON to text
-function Format-Output {
-    param([string]$cleanOutput)
-    
-    $diagnosesText = ""
-    $ruleText = ""
-    $tipText = ""
-    
-    $jsonMatch = [regex]::Match($cleanOutput, '(?s)```json\s*(.*?)\s*```')
-    
-    if ($jsonMatch.Success) {
-        try {
-            $jsonData = $jsonMatch.Groups[1].Value | ConvertFrom-Json -ErrorAction Stop
-            
-            if ($jsonData.diagnoses -and $jsonData.diagnoses.Count -gt 0) {
-                $diagLines = @()
-                foreach ($d in $jsonData.diagnoses) {
-                    $diagLines += "- $($d.error_type) ($($d.severity)): $($d.explanation)"
-                }
-                $diagnosesText = "`n**Diagnoses**:`n" + ($diagLines -join "`n")
-            }
-            
-            if ($jsonData.rule -and $jsonData.rule.Trim()) {
-                $ruleText = "`n**Rule**: $($jsonData.rule)"
-            }
-            
-            if ($jsonData.tip -and $jsonData.tip.Trim()) {
-                $tipText = "`n**Tip**: $($jsonData.tip)"
-            }
-        } catch {
-            # JSON parse failed
-        }
-    }
-    
-    # Remove JSON blocks
-    $displayOutput = $cleanOutput -replace '(?s)```json\s*[\s\S]*?\s*```', '' -replace '\n{3,}', "`n`n"
-    
-    return "$displayOutput$diagnosesText$ruleText$tipText"
 }
 
 # 7. Main loop
@@ -255,8 +231,8 @@ while ($true) {
     Write-Host -NoNewline "Processing..." -ForegroundColor Gray
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
-    # Use HTTP server for grammar check
-    $response = Invoke-HTTPGrammarCheck -inputText $userInput
+    # Use Parallel HTTP server for grammar check
+    $response = Invoke-ParallelGrammarCheck -inputText $userInput
     $sw.Stop()
 
     if (!$response) {
@@ -264,24 +240,59 @@ while ($true) {
         continue
     }
 
-    $cleanOutput = $response.Content
+    $fullData = $response.FullData
     $perfInfo = $response.Perf
 
-    Write-Host " Done ($($sw.Elapsed.TotalMilliseconds.ToString("N0"))ms)" -ForegroundColor Gray
-    if ($perfInfo) {
-        foreach ($p in $perfInfo) {
-            Write-Host "  [$p]" -ForegroundColor DarkGray
-        }
-    }
-
-    if ([string]::IsNullOrWhiteSpace($cleanOutput)) {
-        Write-Host "Warning: No content returned." -ForegroundColor Yellow
+    if (!$fullData) {
+        Write-Host "`nWarning: Failed to get full analysis." -ForegroundColor Yellow
         continue
     }
 
-    # Format output (JSON to text)
-    $finalOutput = Format-Output -cleanOutput $cleanOutput
+    # Print remaining sections (Correction was already printed)
+    if ($fullData.refine) {
+        Write-Host "**Refine**: " -NoNewline -ForegroundColor Cyan
+        Write-Host $fullData.refine -ForegroundColor White
+    }
+    
+    if ($fullData.diagnoses -and $fullData.diagnoses.Count -gt 0) {
+        Write-Host "`n**Diagnoses**:" -ForegroundColor White
+        foreach ($d in $fullData.diagnoses) {
+            Write-Host "- $($d.error_type) ($($d.severity)): $($d.explanation)" -ForegroundColor White
+        }
+    }
+    
+    if ($fullData.rule) {
+        Write-Host "`n**Rule**: " -NoNewline -ForegroundColor Yellow
+        Write-Host $fullData.rule -ForegroundColor White
+    }
+    
+    if ($fullData.tip) {
+        Write-Host "`n**Tip**: " -NoNewline -ForegroundColor Magenta
+        Write-Host $fullData.tip -ForegroundColor White
+    }
 
-    Write-Host "`n$finalOutput`n" -ForegroundColor White
+    Write-Host ""
+    if ($perfInfo) {
+        $perfStr = $perfInfo -join " | "
+        Write-Host "  [$perfStr]" -ForegroundColor DarkGray
+    }
+
+    # Format for logging
+    $finalOutput = "**Correction**: $($response.FastText)`n"
+    if ($fullData.refine) { $finalOutput += "**Refine**: $($fullData.refine)`n" }
+    
+    $diagnosesText = ""
+    if ($fullData.diagnoses) {
+        $diagLines = @()
+        foreach ($d in $fullData.diagnoses) {
+            $diagLines += "- $($d.error_type) ($($d.severity)): $($d.explanation)"
+        }
+        $diagnosesText = "`n**Diagnoses**:`n" + ($diagLines -join "`n")
+    }
+    $finalOutput += $diagnosesText
+    
+    if ($fullData.rule) { $finalOutput += "`n**Rule**: $($fullData.rule)" }
+    if ($fullData.tip) { $finalOutput += "`n**Tip**: $($fullData.tip)" }
+
     Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $finalOutput
 }
