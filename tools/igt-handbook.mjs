@@ -213,12 +213,11 @@ ${examplesText}
 2. Reference the user's specific errors and show what they did wrong
 3. Provide the correct patterns with examples from the user's data
 4. Give 2-3 additional common examples that the user might encounter
-5. Include a "Key Takeaway" section with a memorable rule or tip
-6. Use both English and Chinese explanations where helpful
+5. Include a \"Key Takeaway\" section with a memorable rule or tip
+6. All explanations MUST be in English ONLY. Do NOT use Chinese.
 
 **Format** (use markdown):
-- Start with a brief overview of the rule
-- List specific patterns with ✅/❌ examples
+- Start with a brief overview of the rule- List specific patterns with ✅/❌ examples
 - Explain why the user made these errors
 - Provide clear rules to avoid these mistakes
 - End with a concise "Key Takeaway" box
