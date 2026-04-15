@@ -52,7 +52,7 @@ function Log-Result {
 # 5. Server management functions
 function Start-IGTServer {
     $serverPath = Join-Path $scriptDir "lib\igt-http-server.mjs"
-    
+
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = "node"
     $psi.Arguments = "$serverPath"
@@ -62,23 +62,23 @@ function Start-IGTServer {
     $psi.CreateNoWindow = $true
     $psi.EnvironmentVariables["IGT_SERVER_PORT"] = $serverPort
     $psi.EnvironmentVariables["IGT_SERVER_HOST"] = $serverHost
-    
+
     $script:serverProcess = New-Object System.Diagnostics.Process
     $script:serverProcess.StartInfo = $psi
     $script:serverProcess.EnableRaisingEvents = $true
-    
+
     $script:serverProcess.Start() | Out-Null
-    
+
     # Wait for server to be ready
     $timeout = [DateTime]::Now.AddSeconds(8)
     $ready = $false
-    
+
     while ([DateTime]::Now -lt $timeout) {
         if ($script:serverProcess.HasExited) {
             Write-Host "Error: Server failed to start" -ForegroundColor Red
             return $false
         }
-        
+
         # Try health check
         try {
             $response = Invoke-WebRequest -Uri "$serverBaseUrl/health" -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop
@@ -89,10 +89,10 @@ function Start-IGTServer {
         } catch {
             # Server not ready yet
         }
-        
+
         Start-Sleep -Milliseconds 100
     }
-    
+
     if ($ready) {
         Write-Host "[Server] Started (port $serverPort)" -ForegroundColor DarkGray
         return $true
@@ -110,66 +110,54 @@ function Stop-IGTServer {
     }
 }
 
-function Invoke-ParallelGrammarCheck {
-    param([string]$inputText)
+# 6. LLM Provider management
+function Get-CurrentProvider {
+    try {
+        $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
+        $output = node $llmScript current 2>&1 | Out-String
+        if ($output -match "Current LLM Provider:\s*(\w+)") {
+            return $matches[1].ToLower()
+        }
+    } catch {
+        # Fallback to config
+        return $config.LLMProvider
+    }
+    return $config.LLMProvider
+}
+
+function Get-CurrentModelName {
+    $provider = Get-CurrentProvider
+    $modelMap = @{
+        gemini = $config.GeminiFlashModel
+        qwen = $config.QwenFlashModel
+        deepseek = $config.DeepseekFlashModel
+    }
+    return $modelMap[$provider]
+}
+
+function Switch-LLMProvider {
+    param([string]$providerName)
     
+    $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
+    node $llmScript switch $providerName
+}
+
+function Invoke-GrammarCheck {
+    param([string]$inputText)
+
     # Ensure server is running
     if (!$script:serverProcess -or $script:serverProcess.HasExited) {
         if (!(Start-IGTServer)) {
             return $null
         }
     }
-    
-    $result = @{ 
-        FastText = ""
-        FullData = $null
-        Perf = @()
-    }
 
     try {
         $body = @{ text = $inputText } | ConvertTo-Json
-        $request = [System.Net.WebRequest]::Create("$serverBaseUrl/grammar/parallel")
-        $request.Method = "POST"
-        $request.ContentType = "application/json; charset=utf-8"
-        $request.Timeout = 60000 # 60 seconds
+        $response = Invoke-WebRequest -Uri "$serverBaseUrl/grammar" -Method POST -Body $body -ContentType "application/json; charset=utf-8" -TimeoutSec 60 -UseBasicParsing
         
-        $requestStream = $request.GetRequestStream()
-        $bytes = [System.Text.Encoding]::UTF8.GetBytes($body)
-        $requestStream.Write($bytes, 0, $bytes.Length)
-        $requestStream.Close()
-
-        $response = $request.GetResponse()
-        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
-
-        while (!$reader.EndOfStream) {
-            $line = $reader.ReadLine()
-            if ($line.StartsWith("data: ")) {
-                $jsonData = $line.Substring(6) | ConvertFrom-Json
-                
-                if ($jsonData.type -eq "fast_correction") {
-                    $result.FastText = $jsonData.text
-                    Write-Host "`n**Correction**: " -NoNewline -ForegroundColor Green
-                    Write-Host $result.FastText -ForegroundColor White
-                    Write-Host "  [LLM Fast: $($jsonData.ms.ToString('N0'))ms]" -ForegroundColor DarkGray
-                    Write-Host "Analyzing detailed grammar rules..." -NoNewline -ForegroundColor DarkYellow
-                }
-                elseif ($jsonData.type -eq "full_analysis") {
-                    # Clear the "Analyzing..." line
-                    Write-Host "`r                                    `r" -NoNewline
-                    $result.FullData = $jsonData
-                    $result.Perf += "LLM Full: $($jsonData.ms.ToString('N0'))ms"
-                }
-                elseif ($jsonData.type -eq "complete") {
-                    if ($jsonData.perf -and $jsonData.perf.total_ms) {
-                        $result.Perf += "Total: $($jsonData.perf.total_ms.ToString('N0'))ms"
-                    }
-                }
-            }
-        }
-        $reader.Close()
-        $response.Close()
-
-        return $result
+        $jsonData = $response.Content | ConvertFrom-Json
+        return $jsonData
     } catch {
         Write-Host "`nError: Request failed - $_" -ForegroundColor Red
         return $null
@@ -177,24 +165,43 @@ function Invoke-ParallelGrammarCheck {
 }
 
 # 7. Main loop
-Write-Host "--- Interactive Grammar Tool (IGT) Started [HTTP Server + Qwen Default] ---" -ForegroundColor Yellow
-Write-Host "Logging to: $targetPath" -ForegroundColor Gray
-Write-Host "Server: HTTP resident mode (port $serverPort) - eliminates startup overhead" -ForegroundColor DarkGreen
-Write-Host "Type 'exit' to quit." -ForegroundColor Gray
-Write-Host "Type 'handbook' to generate personal error handbook." -ForegroundColor DarkGray
-Write-Host "Type 'practice' to start practice exercises." -ForegroundColor DarkGray
-Write-Host "Type 'assess' to view proficiency assessment." -ForegroundColor DarkGray
-Write-Host "Type 'llm' to manage LLM providers (switch, status, setup).`n" -ForegroundColor DarkCyan
+Write-Host "--- Interactive Grammar Tool (IGT) ---" -ForegroundColor Yellow
+Write-Host "Type /qwen, /gemini, /deepseek to switch model" -ForegroundColor DarkGray
+Write-Host "Type 'handbook' to generate personalized error handbook from your review history" -ForegroundColor DarkGray
+Write-Host "Type 'practice' to start interactive grammar exercises with targeted questions" -ForegroundColor DarkGray
+Write-Host "Type 'assess' to evaluate your English proficiency level (CEFR A1-C2)" -ForegroundColor DarkGray
+Write-Host "Type 'exit' to quit.`n" -ForegroundColor Gray
+
+# Get initial model name
+$currentModel = Get-CurrentModelName
 
 while ($true) {
-    Write-Host -NoNewline "Grammar Input > " -ForegroundColor Cyan
+    # Display prompt with current model
+    Write-Host -NoNewline "[$currentModel] Grammar Input > " -ForegroundColor Cyan
     $userInput = Read-Host
 
-    if ($userInput -eq "exit" -or $userInput -eq "quit") { 
+    if ($userInput -eq "exit" -or $userInput -eq "quit") {
         Stop-IGTServer
-        break 
+        break
     }
     if ([string]::IsNullOrWhiteSpace($userInput)) { continue }
+
+    # Handle LLM switching commands
+    if ($userInput -eq "/qwen" -or $userInput -eq "/Qwen") {
+        Switch-LLMProvider "qwen"
+        $currentModel = Get-CurrentModelName
+        continue
+    }
+    if ($userInput -eq "/gemini" -or $userInput -eq "/Gemini") {
+        Switch-LLMProvider "gemini"
+        $currentModel = Get-CurrentModelName
+        continue
+    }
+    if ($userInput -eq "/deepseek" -or $userInput -eq "/Deepseek") {
+        Switch-LLMProvider "deepseek"
+        $currentModel = Get-CurrentModelName
+        continue
+    }
 
     # Handle special commands
     if ($userInput -eq "handbook") {
@@ -224,6 +231,8 @@ while ($true) {
             $llmArgs = $userInput.Substring(4).Trim()
             node $llmScript $llmArgs.Split(' ')
         }
+        # Update current model after llm switch
+        $currentModel = Get-CurrentModelName
         Write-Host ""
         continue
     }
@@ -231,8 +240,8 @@ while ($true) {
     Write-Host -NoNewline "Processing..." -ForegroundColor Gray
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
-    # Use Parallel HTTP server for grammar check
-    $response = Invoke-ParallelGrammarCheck -inputText $userInput
+    # Use HTTP server for grammar check
+    $response = Invoke-GrammarCheck -inputText $userInput
     $sw.Stop()
 
     if (!$response) {
@@ -240,59 +249,20 @@ while ($true) {
         continue
     }
 
-    $fullData = $response.FullData
-    $perfInfo = $response.Perf
+    $fullData = $response
 
-    if (!$fullData) {
-        Write-Host "`nWarning: Failed to get full analysis." -ForegroundColor Yellow
-        continue
-    }
-
-    # Print remaining sections (Correction was already printed)
-    if ($fullData.refine) {
-        Write-Host "**Refine**: " -NoNewline -ForegroundColor Cyan
-        Write-Host $fullData.refine -ForegroundColor White
-    }
-    
-    if ($fullData.diagnoses -and $fullData.diagnoses.Count -gt 0) {
-        Write-Host "`n**Diagnoses**:" -ForegroundColor White
-        foreach ($d in $fullData.diagnoses) {
-            Write-Host "- $($d.error_type) ($($d.severity)): $($d.explanation)" -ForegroundColor White
-        }
-    }
-    
-    if ($fullData.rule) {
-        Write-Host "`n**Rule**: " -NoNewline -ForegroundColor Yellow
-        Write-Host $fullData.rule -ForegroundColor White
-    }
-    
-    if ($fullData.tip) {
-        Write-Host "`n**Tip**: " -NoNewline -ForegroundColor Magenta
-        Write-Host $fullData.tip -ForegroundColor White
+    # Print all sections at once
+    if ($fullData.content) {
+        Write-Host "`n$($fullData.content)" -ForegroundColor White
     }
 
     Write-Host ""
-    if ($perfInfo) {
-        $perfStr = $perfInfo -join " | "
-        Write-Host "  [$perfStr]" -ForegroundColor DarkGray
+    if ($fullData.perf) {
+        Write-Host "  [LLM: $($fullData.perf.llm_ms.ToString('N0'))ms | Total: $($fullData.perf.total_ms.ToString('N0'))ms]" -ForegroundColor DarkGray
     }
 
     # Format for logging
-    $finalOutput = "**Correction**: $($response.FastText)`n"
-    if ($fullData.refine) { $finalOutput += "**Refine**: $($fullData.refine)`n" }
-    
-    $diagnosesText = ""
-    if ($fullData.diagnoses) {
-        $diagLines = @()
-        foreach ($d in $fullData.diagnoses) {
-            $diagLines += "- $($d.error_type) ($($d.severity)): $($d.explanation)"
-        }
-        $diagnosesText = "`n**Diagnoses**:`n" + ($diagLines -join "`n")
-    }
-    $finalOutput += $diagnosesText
-    
-    if ($fullData.rule) { $finalOutput += "`n**Rule**: $($fullData.rule)" }
-    if ($fullData.tip) { $finalOutput += "`n**Tip**: $($fullData.tip)" }
+    $finalOutput = $fullData.content
 
     Log-Result -targetPath $targetPath -userInput $userInput -cleanOutput $finalOutput
 }

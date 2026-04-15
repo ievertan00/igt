@@ -28,7 +28,16 @@ const db = new Database(resolvedDbPath, { readonly: true });
 const args = process.argv.slice(2);
 const errorTypeArg = args.find(a => !a.startsWith("--"));
 const countArg = args.find(a => a.startsWith("--count="));
-const count = countArg ? parseInt(countArg.split("=")[1]) : 5;
+const levelArg = args.find(a => a.startsWith("--level="));
+const count = countArg ? parseInt(countArg.split("=")[1]) : null;
+const level = levelArg ? levelArg.split("=")[1].toUpperCase() : null;
+
+// Validate CEFR level
+const validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+if (level && !validLevels.includes(level)) {
+  console.error(`Error: Invalid CEFR level "${level}". Valid levels: ${validLevels.join(", ")}`);
+  process.exit(1);
+}
 
 // Get user's most common errors or specific error type
 function getErrorTypes(errorType) {
@@ -55,8 +64,20 @@ function getErrorTypes(errorType) {
   }
 }
 
+// Helper function to sanitize JSON string from LLM responses
+function sanitizeJsonString(str) {
+  // Remove any control characters that might break JSON parsing
+  str = str.replace(/[\x00-\x1F\x7F]/g, '');
+  
+  // Fix common issue: unescaped quotes within string values
+  // This is a simplified approach - finds patterns like "text "more text" and fixes them
+  str = str.replace(/(?<=[^\\])"(?=[^",\]}:\s])/g, '\\"');
+  
+  return str;
+}
+
 // Generate exercises as structured JSON with answers
-async function generateExercises(errorTypes, count) {
+async function generateExercises(errorTypes, count, level) {
   const errorList = errorTypes.map(e => `- ${e.error_type}`).join("\n");
 
   // Load prompt from config or use default
@@ -64,7 +85,8 @@ async function generateExercises(errorTypes, count) {
   if (config.Prompts && config.Prompts.PracticeExercisePrompt) {
     prompt = config.Prompts.PracticeExercisePrompt
       .replace(/\{\{count\}\}/g, count)
-      .replace(/\{\{errorList\}\}/g, errorList);
+      .replace(/\{\{errorList\}\}/g, errorList)
+      .replace(/\{\{level\}\}/g, level || "B1");
   } else {
     // Fallback to inline prompt for backward compatibility
     prompt = `Generate ${count} grammar practice exercises focusing on these error types:
@@ -108,12 +130,66 @@ Return ONLY the JSON array, no markdown formatting, no explanation.`;
   const text = await llmManager.generateWithFallback(prompt, "", {
     taskType: "practice"
   });
-  
+
   // Clean up markdown code blocks if present
   let cleanedText = text.replace(/^```json\s*/i, "").replace(/```$/g, "").trim();
   cleanedText = cleanedText.replace(/^```\s*/i, "").replace(/```$/g, "").trim();
 
-  return JSON.parse(cleanedText);
+  // Extract JSON array more robustly - find first [ and last ]
+  const firstBracket = cleanedText.indexOf('[');
+  const lastBracket = cleanedText.lastIndexOf(']');
+  
+  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    cleanedText = cleanedText.substring(firstBracket, lastBracket + 1);
+  } else {
+    // If no array found, check if response is wrapped in an object
+    const firstBrace = cleanedText.indexOf('{');
+    const lastBrace = cleanedText.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      try {
+        const obj = JSON.parse(cleanedText.substring(firstBrace, lastBrace + 1));
+        // Extract array from common wrapper keys
+        if (obj.exercises && Array.isArray(obj.exercises)) {
+          cleanedText = JSON.stringify(obj.exercises);
+        } else if (obj.data && Array.isArray(obj.data)) {
+          cleanedText = JSON.stringify(obj.data);
+        } else if (obj.questions && Array.isArray(obj.questions)) {
+          cleanedText = JSON.stringify(obj.questions);
+        } else if (obj.items && Array.isArray(obj.items)) {
+          cleanedText = JSON.stringify(obj.items);
+        }
+      } catch (e) {
+        // Not valid JSON, continue with original text
+      }
+    }
+  }
+
+  // Additional cleanup: escape problematic characters in explanations
+  // This handles cases where LLM includes unescaped quotes
+  cleanedText = cleanedText.replace(/\\'/g, "'");
+
+  // Sanitize JSON string - escape unescaped quotes within string values
+  // This is a simple heuristic to fix common JSON formatting issues
+  cleanedText = sanitizeJsonString(cleanedText);
+
+  // Fix over-escaped quotes: LLM often returns \" when it should be "
+  // This is the main issue - remove backslash escapes from quotes
+  cleanedText = cleanedText.replace(/\\"/g, '"');
+
+  // Debug: log the raw and cleaned JSON to see what's happening
+  console.log("\n[DEBUG] Raw response length:", text.length);
+  console.log("[DEBUG] Cleaned JSON preview:", cleanedText.substring(0, 300) + (cleanedText.length > 300 ? "..." : ""));
+
+  try {
+    const parsed = JSON.parse(cleanedText);
+    return parsed;
+  } catch (parseError) {
+    // Log full details on parse error for debugging
+    console.log("\n[DEBUG] Full cleaned text:");
+    console.log(cleanedText);
+    console.log("\n[DEBUG] Parse error at position 8:", cleanedText.substring(0, 20));
+    throw parseError;
+  }
 }
 
 // Create readline interface
@@ -209,6 +285,56 @@ async function runPractice() {
   console.log("🎯 IGT Practice Mode");
   console.log("=".repeat(50) + "\n");
 
+  // Ask for CEFR level if not provided
+  let selectedLevel = level;
+  if (!selectedLevel) {
+    console.log("Available CEFR Levels:");
+    console.log("  A1 - Beginner (basic phrases, simple sentences)");
+    console.log("  A2 - Elementary (everyday expressions, routine tasks)");
+    console.log("  B1 - Intermediate (main points of clear standard input)");
+    console.log("  B2 - Upper Intermediate (complex text, fluent interaction)");
+    console.log("  C1 - Advanced (implicit meaning, flexible expression)");
+    console.log("  C2 - Proficient (effortless understanding, precise expression)");
+    console.log("");
+    
+    while (true) {
+      const levelInput = await askQuestion("Select CEFR level (A1/A2/B1/B2/C1/C2): ");
+      const trimmedLevel = levelInput.trim().toUpperCase();
+      
+      if (validLevels.includes(trimmedLevel)) {
+        selectedLevel = trimmedLevel;
+        break;
+      } else {
+        console.log("⚠️  Invalid level. Please enter one of: A1, A2, B1, B2, C1, C2");
+      }
+    }
+  }
+
+  // Ask for number of questions if not provided
+  let selectedCount = count;
+  if (!selectedCount) {
+    while (true) {
+      const countInput = await askQuestion("Number of questions (1-50, default 5): ");
+      const trimmedInput = countInput.trim();
+      
+      if (trimmedInput === "") {
+        selectedCount = 5;
+        break;
+      }
+      
+      const parsedCount = parseInt(trimmedInput);
+      if (isNaN(parsedCount) || parsedCount < 1 || parsedCount > 50) {
+        console.log("⚠️  Please enter a number between 1 and 50.");
+      } else {
+        selectedCount = parsedCount;
+        break;
+      }
+    }
+  }
+
+  console.log(`\n📊 CEFR Level: ${selectedLevel}`);
+  console.log(`📝 Number of Questions: ${selectedCount}\n`);
+
   // Get error types
   let errorTypes;
   if (errorTypeArg) {
@@ -237,13 +363,26 @@ async function runPractice() {
   console.log("\n📝 Generating exercises...\n");
 
   let exercises;
-  try {
-    exercises = await generateExercises(errorTypes, count);
-  } catch (error) {
-    console.error("\n❌ Error generating exercises:", error.message);
-    db.close();
-    rl.close();
-    process.exit(1);
+  let retryCount = 0;
+  const maxRetries = 2;
+  
+  while (retryCount <= maxRetries) {
+    try {
+      exercises = await generateExercises(errorTypes, selectedCount, selectedLevel);
+      break; // Success, exit loop
+    } catch (error) {
+      retryCount++;
+      if (retryCount > maxRetries) {
+        console.error("\n❌ Error generating exercises:", error.message);
+        console.error("\n💡 Tip: Try again with fewer questions or a different error type.");
+        db.close();
+        rl.close();
+        process.exit(1);
+      } else {
+        console.log(`\n⚠️  Exercise generation failed, retrying (${retryCount}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
   }
 
   if (!Array.isArray(exercises) || exercises.length === 0) {
