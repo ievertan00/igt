@@ -1,0 +1,9 @@
+{
+  "name": "igt-bridge",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "better-sqlite3": "^12.8.0"
+  }
+}
