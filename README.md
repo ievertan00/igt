@@ -38,29 +38,34 @@ Processing... Done (1670ms)
 | Feature | Description |
 |---------|-------------|
 | **High Speed** | Optimized Node.js bridge achieves **<2s** loop times (83% faster than Gemini CLI) |
+| **Smart Output** | Automaticaly omits technical sections (Diagnosis/Rule/Tip) if text is correct |
+| **Anti-Hallucination** | Strict verification rules prevent "phantom" error detection |
 | **Three-Tier Feedback** | Review → Correction → Refine |
 | **Persistent Logging** | Auto-logs all interactions to Markdown (Obsidian-compatible) |
-| **Customizable Prompts** | Externalize system prompts via `system_prompt.txt` |
+| **Customizable Prompts** | Centralized prompt management in `lib/igt_config.json` |
 
 ### English Learning Suite
 
 | Feature | Command | Description |
 |---------|---------|-------------|
-| **Auto Data Collection** | *(automatic)* | Every grammar check is logged to SQLite with structured error types |
+| **Auto Data Collection** | *(automatic)* | Every grammar check is logged to SQLite with 20+ structured error types |
 | **Error Handbook** | `handbook` | Generate an Obsidian Dashboard report of your weak points |
 | **Practice Mode** | `practice` | Interactive exercises with auto-grading, targeting your top errors |
 | **Proficiency Assessment** | `assess` | Estimate your CEFR level and track progress over time |
 
 ### Error Classification (MECE)
 
-All errors are mapped to a predefined taxonomy of **13 types** across 5 categories:
+All errors are mapped to a predefined taxonomy of **20 types** across 5 categories:
 
 ```
 Grammar ──┬── Article Usage
           ├── Verb Tense
           ├── Subject-Verb Agreement
+          ├── Pronoun Usage
           ├── Preposition Usage
-          └── (4 more...)
+          ├── Conjunction/Connector
+          ├── Modifier Placement
+          └── Sentence Structure
 
 Vocabulary ──── Word Choice
              ├── Idiomatic Expression
