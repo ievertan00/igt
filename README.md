@@ -49,9 +49,10 @@ Processing... Done (1670ms)
 | Feature | Command | Description |
 |---------|---------|-------------|
 | **Auto Data Collection** | *(automatic)* | Every grammar check is logged to SQLite with 20+ structured error types |
-| **Error Handbook** | `handbook` | Generate an Obsidian Dashboard report of your weak points |
-| **Practice Mode** | `practice` | Interactive exercises with auto-grading, targeting your top errors |
+| **Linguistic Analyst** | `handbook` | AI-powered diagnosis of your **recurring habits** and **root causes** |
+| **Pattern-Aware Practice** | `practice` | Exercises that target your **specific linguistic traps** (Top 3 Recurring + 2 Recent) |
 | **Proficiency Assessment** | `assess` | Estimate your CEFR level and track progress over time |
+| **Obsidian Dashboard** | `handbook` | Generates a high-quality Markdown report for your personal knowledge base |
 
 ### Error Classification (MECE)
 
