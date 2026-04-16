@@ -9,20 +9,36 @@ if (-not (Test-Path $configPath)) {
     exit 1
 }
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
-$targetPath = $config.ReviewPath
 
-# 2. Optimization Environment Variables
+# 2. Load .env for private paths and keys
+$envPath = Join-Path $scriptDir ".env"
+if (Test-Path $envPath) {
+    Get-Content $envPath | Where-Object { $_ -match '^([^=]+)=(.*)$' } | ForEach-Object {
+        $key = $Matches[1].Trim()
+        $value = $Matches[2].Trim()
+        # Remove quotes if present
+        if (($value.StartsWith("'") -and $value.EndsWith("'")) -or ($value.StartsWith('"') -and $value.EndsWith('"'))) {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+        Set-Content -Path "Env:$key" -Value $value
+    }
+}
+
+# 3. Path resolution (Priority: .env > config.json)
+$targetPath = if ($env:IGT_REVIEW_PATH) { $env:IGT_REVIEW_PATH } else { $config.ReviewPath }
+
+# 4. Optimization Environment Variables
 $env:GEMINI_SYSTEM_MD = "false"
 $env:GEMINI_TELEMETRY_ENABLED = "false"
 $env:NO_COLOR = "1"
 
-# 3. Server configuration
+# 5. Server configuration
 $serverPort = 18964
 $serverHost = "127.0.0.1"
 $serverBaseUrl = "http://$serverHost`:$serverPort"
 $serverProcess = $null
 
-# 4. Helper Function: Surgical Logging
+# 6. Helper Function: Surgical Logging
 function Log-Result {
     param([string]$targetPath, [string]$userInput, [string]$cleanOutput)
     if (-not $targetPath) { return }
