@@ -64,6 +64,53 @@ function getErrorTypes(errorType) {
   }
 }
 
+// Fetch linguistic context (recurring traps and recent failures) for the requested error types
+function getLinguisticContext(errorTypes) {
+  let contextText = "";
+  
+  for (const type of errorTypes) {
+    const errorTypeName = type.error_type;
+    contextText += `\n### Error Type: ${errorTypeName}\n`;
+    
+    // 1. Get Top 3 Recurring "Traps" (most frequent rules/explanations)
+    const recurringTraps = db.prepare(`
+      SELECT a.rule, COUNT(*) as count
+      FROM advice a
+      JOIN diagnoses d ON a.input_id = d.input_id
+      WHERE d.error_type = ? AND a.rule IS NOT NULL AND a.rule != ''
+      GROUP BY a.rule
+      ORDER BY count DESC
+      LIMIT 3
+    `).all(errorTypeName);
+    
+    if (recurringTraps.length > 0) {
+      contextText += "Recurring Traps:\n";
+      recurringTraps.forEach((trap, i) => {
+        contextText += `- ${trap.rule} (appeared ${trap.count} times)\n`;
+      });
+    }
+    
+    // 2. Get 2 Most Recent Failures
+    const recentFailures = db.prepare(`
+      SELECT i.original_text, i.correction
+      FROM inputs i
+      JOIN diagnoses d ON d.input_id = i.id
+      WHERE d.error_type = ?
+      ORDER BY i.timestamp DESC
+      LIMIT 2
+    `).all(errorTypeName);
+    
+    if (recentFailures.length > 0) {
+      contextText += "Recent Failures:\n";
+      recentFailures.forEach((fail, i) => {
+        contextText += `- Original: "${fail.original_text}" -> Corrected: "${fail.correction}"\n`;
+      });
+    }
+  }
+  
+  return contextText || "No previous history found for these error types.";
+}
+
 // Helper function to sanitize JSON string from LLM responses
 function sanitizeJsonString(str) {
   // Remove any control characters that might break JSON parsing
@@ -79,6 +126,7 @@ function sanitizeJsonString(str) {
 // Generate exercises as structured JSON with answers
 async function generateExercises(errorTypes, count, level) {
   const errorList = errorTypes.map(e => `- ${e.error_type}`).join("\n");
+  const linguisticSummary = getLinguisticContext(errorTypes); // Inject context
 
   // Load prompt from config or use default
   let prompt;
@@ -86,11 +134,15 @@ async function generateExercises(errorTypes, count, level) {
     prompt = config.Prompts.PracticeExercisePrompt
       .replace(/\{\{count\}\}/g, count)
       .replace(/\{\{errorList\}\}/g, errorList)
-      .replace(/\{\{level\}\}/g, level || "B1");
+      .replace(/\{\{level\}\}/g, level || "B1")
+      .replace(/\{\{linguisticSummary\}\}/g, linguisticSummary); // Replace placeholder
   } else {
     // Fallback to inline prompt for backward compatibility
     prompt = `Generate ${count} grammar practice exercises focusing on these error types:
 ${errorList}
+
+LINGUISTIC CONTEXT (RECURRING TRAPS & RECENT FAILURES):
+${linguisticSummary}
 
 IMPORTANT RULES:
 1. Create ENTIRELY NEW sentences. DO NOT use or reference any previous user input examples.
