@@ -514,6 +514,18 @@ async function runPractice() {
     console.log("📚 Consider reviewing the grammar rules for these error types.");
   }
 
+  // Weakest area from historical data
+  const weakest = db.prepare(`
+    SELECT error_type, COUNT(*) as total
+    FROM diagnoses
+    GROUP BY error_type
+    ORDER BY total DESC
+    LIMIT 1
+  `).get();
+  if (weakest) {
+    console.log(`\n📌 Historically weakest area: ${weakest.error_type} (${weakest.total} total errors)`);
+  }
+
   console.log("");
 
   db.close();
