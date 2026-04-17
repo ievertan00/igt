@@ -44,9 +44,11 @@ function Read-LineWithHistory {
 
     Write-Host -NoNewline $Prompt -ForegroundColor Cyan
 
-    $w        = [System.Console]::WindowWidth
-    $pLen     = $Prompt.Length
-    $startRow = [System.Console]::CursorTop   # row where prompt was printed
+    $w    = [System.Console]::WindowWidth
+    $pLen = $Prompt.Length
+    # Use script-scope so both script blocks can read AND update it when the
+    # terminal scrolls (local variables can't be written from a script block).
+    $script:rlStartRow = [System.Console]::CursorTop
 
     $buf     = [System.Text.StringBuilder]::new()
     $cur     = 0
@@ -54,23 +56,31 @@ function Read-LineWithHistory {
     $saved   = ""
 
     # Move cursor to buffer position $pos, accounting for line wrapping.
-    # $startRow is captured by value at prompt time; if the terminal later
-    # scrolls we update it by comparing expected vs actual cursor row.
+    # Row is clamped to [0, BufferHeight-1] so a very long paste can't throw.
     $GoTo = {
         param([int]$pos)
-        $abs = $pLen + $pos
-        $row = $startRow + [Math]::Floor($abs / $w)
-        $col = $abs % $w
-        [System.Console]::SetCursorPosition($col, $row)
+        $abs    = $pLen + $pos
+        $row    = $script:rlStartRow + [Math]::Floor($abs / $w)
+        $col    = $abs % $w
+        $maxRow = [System.Console]::BufferHeight - 1
+        [System.Console]::SetCursorPosition($col, [Math]::Max(0, [Math]::Min($row, $maxRow)))
     }
 
-    # Overwrite from buffer position $from to end, then erase $extra stale chars.
+    # Overwrite from buffer position $from to end, erase $extra stale chars,
+    # then adjust $script:rlStartRow if the terminal scrolled during the write.
     $DrawTail = {
         param([int]$from, [int]$extra = 0)
         & $GoTo $from
-        $tail = $buf.ToString().Substring($from)
-        [System.Console]::Write($tail)
-        if ($extra -gt 0) { [System.Console]::Write(' ' * $extra) }
+        $content = $buf.ToString().Substring($from) + (' ' * $extra)
+        # Predict where cursor should land after writing (without scrolling)
+        $absEnd      = $pLen + $from + $content.Length
+        $expectedRow = $script:rlStartRow + [Math]::Floor($absEnd / $w)
+        [System.Console]::Write($content)
+        # If terminal scrolled, actualRow < expectedRow — shift startRow up
+        $actualRow = [System.Console]::CursorTop
+        if ($actualRow -lt $expectedRow) {
+            $script:rlStartRow += $actualRow - $expectedRow
+        }
     }
 
     while ($true) {
