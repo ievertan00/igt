@@ -228,18 +228,9 @@ Return ONLY the JSON array, no markdown formatting, no explanation.`;
   // This is the main issue - remove backslash escapes from quotes
   cleanedText = cleanedText.replace(/\\"/g, '"');
 
-  // Debug: log the raw and cleaned JSON to see what's happening
-  console.log("\n[DEBUG] Raw response length:", text.length);
-  console.log("[DEBUG] Cleaned JSON preview:", cleanedText.substring(0, 300) + (cleanedText.length > 300 ? "..." : ""));
-
   try {
-    const parsed = JSON.parse(cleanedText);
-    return parsed;
+    return JSON.parse(cleanedText);
   } catch (parseError) {
-    // Log full details on parse error for debugging
-    console.log("\n[DEBUG] Full cleaned text:");
-    console.log(cleanedText);
-    console.log("\n[DEBUG] Parse error at position 8:", cleanedText.substring(0, 20));
     throw parseError;
   }
 }

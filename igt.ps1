@@ -320,12 +320,49 @@ function Invoke-GrammarCheck {
     }
 }
 
-# ── Compact header ────────────────────────────────────────────────────────────────
+# ── Header ───────────────────────────────────────────────────────────────────────
+function Show-Header {
+    param([string]$Model)
+    Write-Host ""
+    Write-Host "  IGT  Interactive Grammar Tool" -ForegroundColor Yellow
+    Write-Host "  ──────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  Model  " -NoNewline -ForegroundColor DarkGray
+    Write-Host $Model -ForegroundColor Cyan
+    Write-Host '  Usage  type text to check · /help for commands · """ for multiline' -ForegroundColor DarkGray
+    Write-Host ""
+}
+
+function Show-Help {
+    Write-Host ""
+    Write-Host "  Commands" -ForegroundColor Yellow
+    Write-Host "  ──────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  /handbook         " -NoNewline -ForegroundColor Cyan
+    Write-Host "Generate your personal error handbook" -ForegroundColor White
+    Write-Host "  /practice         " -NoNewline -ForegroundColor Cyan
+    Write-Host "Targeted grammar exercises (CEFR-aware)" -ForegroundColor White
+    Write-Host "  /practice B2 10   " -NoNewline -ForegroundColor Cyan
+    Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor DarkGray
+    Write-Host "  /assess           " -NoNewline -ForegroundColor Cyan
+    Write-Host "Estimate your CEFR proficiency level" -ForegroundColor White
+    Write-Host "  /vocab            " -NoNewline -ForegroundColor Cyan
+    Write-Host "Quiz yourself on saved word choices" -ForegroundColor White
+    Write-Host "  /vocab list       " -NoNewline -ForegroundColor Cyan
+    Write-Host "Browse all saved vocabulary items" -ForegroundColor White
+    Write-Host "  /gemini           " -NoNewline -ForegroundColor Cyan
+    Write-Host "Switch to Gemini model" -ForegroundColor White
+    Write-Host "  /qwen             " -NoNewline -ForegroundColor Cyan
+    Write-Host "Switch to Qwen model" -ForegroundColor White
+    Write-Host "  /deepseek         " -NoNewline -ForegroundColor Cyan
+    Write-Host "Switch to Deepseek model" -ForegroundColor White
+    Write-Host '  """               ' -NoNewline -ForegroundColor Cyan
+    Write-Host "Enter multiline input mode" -ForegroundColor White
+    Write-Host "  exit              " -NoNewline -ForegroundColor Cyan
+    Write-Host "Quit IGT" -ForegroundColor White
+    Write-Host ""
+}
+
 $currentModel = Get-CurrentModelName
-Write-Host ""
-Write-Host "  IGT  |  $currentModel" -ForegroundColor Yellow
-Write-Host '  handbook  practice  assess  vocab  /qwen  /gemini  /deepseek  exit  (""" = multiline)' -ForegroundColor DarkGray
-Write-Host ""
+Show-Header -Model $currentModel
 
 # ── Main loop ─────────────────────────────────────────────────────────────────────
 while ($true) {
@@ -350,46 +387,66 @@ while ($true) {
         if ([string]::IsNullOrWhiteSpace($userInput)) { continue }
     }
 
-    # LLM switching
-    if ($userInput -match '^/(qwen|gemini|deepseek)$') {
-        Switch-LLMProvider $Matches[1]
-        $currentModel = Get-CurrentModelName
-        Write-Host "  Switched to $currentModel" -ForegroundColor DarkGray
+    # All commands start with /
+    if ($userInput.StartsWith("/")) {
+        $parts   = $userInput.TrimStart('/').Trim() -split '\s+', 2
+        $cmd     = $parts[0].ToLower()
+        $cmdArgs = if ($parts.Count -gt 1) { $parts[1] } else { "" }
+
+        if ($cmd -eq "help") {
+            Show-Help
+
+        } elseif ($cmd -eq "handbook") {
+            Write-Host ""
+            node (Join-Path $scriptDir "tools\igt-handbook.mjs")
+            Write-Host ""
+
+        } elseif ($cmd -eq "practice") {
+            Write-Host ""
+            # Shorthand: /practice B2 10  →  --level=B2 --count=10
+            $nodeArgs = @()
+            if ($cmdArgs -match '^([A-Ca-c][12])\s+(\d+)$') {
+                $nodeArgs = @("--level=$($Matches[1].ToUpper())", "--count=$($Matches[2])")
+            } elseif ($cmdArgs -ne "") {
+                $nodeArgs = $cmdArgs -split '\s+'
+            }
+            node (Join-Path $scriptDir "tools\igt-practice.mjs") @nodeArgs
+            Write-Host ""
+
+        } elseif ($cmd -eq "assess") {
+            Write-Host ""
+            node (Join-Path $scriptDir "tools\igt-assess.mjs")
+            Write-Host ""
+
+        } elseif ($cmd -eq "vocab") {
+            Write-Host ""
+            if ($cmdArgs -eq "list") {
+                node (Join-Path $scriptDir "tools\igt-vocab.mjs") "--list"
+            } else {
+                node (Join-Path $scriptDir "tools\igt-vocab.mjs")
+            }
+            Write-Host ""
+
+        } elseif ($cmd -in @("gemini", "qwen", "deepseek")) {
+            Switch-LLMProvider $cmd
+            $currentModel = Get-CurrentModelName
+            Write-Host "  Switched to $currentModel" -ForegroundColor DarkGray
+
+        } elseif ($cmd -eq "llm") {
+            $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
+            if ($cmdArgs -eq "") { node $llmScript }
+            else { node $llmScript $cmdArgs.Split(' ') }
+            $currentModel = Get-CurrentModelName
+            Write-Host ""
+
+        } elseif ($cmd -eq "exit" -or $cmd -eq "quit") {
+            Stop-IGTServer; break
+
+        } else {
+            Write-Host "  Unknown command /$cmd — type /help for a list." -ForegroundColor Yellow
+        }
         continue
     }
-
-    # Named commands — use $handled flag (switch continue goes to next case, not while)
-    $handled = $false
-
-    if ($userInput -eq "handbook") {
-        Write-Host ""
-        node (Join-Path $scriptDir "tools\igt-handbook.mjs")
-        Write-Host ""; $handled = $true
-    } elseif ($userInput -eq "practice") {
-        Write-Host ""
-        node (Join-Path $scriptDir "tools\igt-practice.mjs")
-        Write-Host ""; $handled = $true
-    } elseif ($userInput -eq "assess") {
-        Write-Host ""
-        node (Join-Path $scriptDir "tools\igt-assess.mjs")
-        Write-Host ""; $handled = $true
-    } elseif ($userInput -eq "vocab") {
-        Write-Host ""
-        node (Join-Path $scriptDir "tools\igt-vocab.mjs")
-        Write-Host ""; $handled = $true
-    } elseif ($userInput -eq "vocab --list") {
-        Write-Host ""
-        node (Join-Path $scriptDir "tools\igt-vocab.mjs") "--list"
-        Write-Host ""; $handled = $true
-    } elseif ($userInput -eq "llm" -or $userInput.StartsWith("llm ")) {
-        $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
-        if ($userInput -eq "llm") { node $llmScript }
-        else { node $llmScript $userInput.Substring(4).Trim().Split(' ') }
-        $currentModel = Get-CurrentModelName
-        Write-Host ""; $handled = $true
-    }
-
-    if ($handled) { continue }
 
     # Grammar check
     Start-Spinner -Message "Thinking"
