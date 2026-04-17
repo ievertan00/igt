@@ -114,6 +114,15 @@ function Read-LineWithHistory {
                     & $GoTo $cur
                 }
             }
+            ([System.ConsoleKey]::Escape) {
+                if ($buf.Length -gt 0) {
+                    $old = $buf.Length
+                    $buf.Clear() | Out-Null
+                    $cur = 0
+                    & $DrawTail 0 $old
+                    & $GoTo 0
+                }
+            }
             ([System.ConsoleKey]::LeftArrow)  { if ($cur -gt 0)           { $cur--; & $GoTo $cur } }
             ([System.ConsoleKey]::RightArrow) { if ($cur -lt $buf.Length) { $cur++; & $GoTo $cur } }
             ([System.ConsoleKey]::Home)        { $cur = 0;           & $GoTo 0    }
@@ -202,27 +211,59 @@ function Stop-Spinner {
 function Write-ColoredResponse {
     param([string]$Content)
 
-    $section = "default"
+    # Section header colors
+    $headerColor = @{
+        review     = "Yellow"
+        correction = "Green"
+        refine     = "Cyan"
+        diagnosis  = "Magenta"
+        rule       = "Blue"
+        tip        = "DarkCyan"
+    }
+    # Body text colors (inherit from section)
+    $bodyColor = @{
+        review     = "Yellow"
+        correction = "Green"
+        refine     = "Cyan"
+        diagnosis  = "Gray"
+        rule       = "Blue"
+        tip        = "DarkCyan"
+    }
+    $sectionOrder = @("review","correction","refine","diagnosis","rule","tip")
+
+    $section  = "default"
+    $prevSection = "default"
+
     foreach ($line in ($Content -split "`n")) {
-        if     ($line -match '^\*\*Review\*\*')    { $section = "review";     Write-Host $line -ForegroundColor Yellow }
-        elseif ($line -match '^\*\*Correction\*\*') { $section = "correction"; Write-Host $line -ForegroundColor Green }
-        elseif ($line -match '^\*\*Refine\*\*')     { $section = "refine";     Write-Host $line -ForegroundColor Cyan }
-        elseif ($line -match '^\*\*Diagnosis\*\*')  { $section = "diagnosis";  Write-Host $line -ForegroundColor DarkGray }
-        elseif ($line -match '^\*\*Rule\*\*')       { $section = "rule";       Write-Host $line -ForegroundColor DarkGray }
-        elseif ($line -match '^\*\*Tip\*\*')        { $section = "tip";        Write-Host $line -ForegroundColor DarkGray }
-        elseif ($section -eq "diagnosis" -and $line -match '\(Major\)')    { Write-Host $line -ForegroundColor Red }
-        elseif ($section -eq "diagnosis" -and $line -match '\(Moderate\)') { Write-Host $line -ForegroundColor Yellow }
-        elseif ($section -eq "diagnosis" -and $line -match '\(Minor\)')    { Write-Host $line -ForegroundColor DarkYellow }
-        else {
-            switch ($section) {
-                "review"     { Write-Host $line -ForegroundColor Yellow }
-                "correction" { Write-Host $line -ForegroundColor Green }
-                "refine"     { Write-Host $line -ForegroundColor Cyan }
-                "rule"       { Write-Host $line -ForegroundColor DarkGray }
-                "tip"        { Write-Host $line -ForegroundColor DarkGray }
-                "diagnosis"  { Write-Host $line -ForegroundColor DarkGray }
-                default      { Write-Host $line -ForegroundColor White }
-            }
+        $isHeader = $false
+        $newSection = $null
+        if    ($line -match '^\*\*Review\*\*')     { $newSection = "review" }
+        elseif ($line -match '^\*\*Correction\*\*') { $newSection = "correction" }
+        elseif ($line -match '^\*\*Refine\*\*')     { $newSection = "refine" }
+        elseif ($line -match '^\*\*Diagnosis\*\*')  { $newSection = "diagnosis" }
+        elseif ($line -match '^\*\*Rule\*\*')       { $newSection = "rule" }
+        elseif ($line -match '^\*\*Tip\*\*')        { $newSection = "tip" }
+
+        if ($newSection) {
+            # Blank separator before every section except the very first
+            if ($prevSection -ne "default") { Write-Host "" }
+            $section     = $newSection
+            $prevSection = $newSection
+            $isHeader    = $true
+            Write-Host $line -ForegroundColor $headerColor[$section]
+            continue
+        }
+
+        # Body line
+        if ($section -eq "diagnosis") {
+            if    ($line -match '\(Major\)')    { Write-Host $line -ForegroundColor Red }
+            elseif ($line -match '\(Moderate\)') { Write-Host $line -ForegroundColor Yellow }
+            elseif ($line -match '\(Minor\)')    { Write-Host $line -ForegroundColor DarkYellow }
+            else                                { Write-Host $line -ForegroundColor Gray }
+        } elseif ($bodyColor.ContainsKey($section)) {
+            Write-Host $line -ForegroundColor $bodyColor[$section]
+        } else {
+            Write-Host $line -ForegroundColor White
         }
     }
 }
