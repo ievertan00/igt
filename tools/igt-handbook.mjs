@@ -806,7 +806,7 @@ async function generateReport() {
 
   // 2. Frequency Ranking (Markdown Table)
   if (errorFrequency.length > 0) {
-    md += `## 🎯 Error Frequency Ranking\n\n`;
+    md += `\n## 🎯 Error Frequency Ranking\n\n`;
     md += `| Error Type | Freq | Severity |\n`;
     md += `| :--- | :--- | :--- |\n`;
 
@@ -819,7 +819,7 @@ async function generateReport() {
 
   // 3. Trend Analysis (Table)
   if (trendData.length >= 2) {
-    md += `## 📈 Weekly Trend\n\n`;
+    md += `\n## 📈 Weekly Trend\n\n`;
     md += `| Week | Errors |\n`;
     md += `| :--- | :--- |\n`;
 
@@ -847,7 +847,7 @@ async function generateReport() {
 
   // 4. Detailed Error Analysis (Collapsible Callouts)
   if (errorFrequency.length > 0) {
-    md += `## 🔍 Detailed Error Analysis\n\n`;
+    md += `\n## 🔍 Detailed Error Analysis\n\n`;
 
     for (const err of errorFrequency) {
       const severityIcon = err.major_count > 0 ? "🔴" : err.moderate_count > 0 ? "🟡" : "🟢";
@@ -906,7 +906,7 @@ async function generateReport() {
 
   // 5. Grammar Rules Reference (LLM-Tailored)
   if (errorFrequency.length > 0) {
-    md += `## 📚 Grammar Rules Reference (AI-Powered)\n\n`;
+    md += `\n## 📚 Grammar Rules Reference (AI-Powered)\n\n`;
     md += `> [!INFO] 📖 Personalized Grammar Explanations\n`;
     md += `> This section provides **AI-generated**, customized grammar rules based on your actual errors and examples.\n\n`;
 
@@ -970,16 +970,15 @@ async function generateReport() {
               md += `> ${cleanedLine}\n`;
             }
           }
-          md += `\n`;
+          md += `\n\n`;
         }
       }
     }
-    md += `\n`;
   }
 
   // 6. Top 3 Priorities
   if (errorFrequency.length > 0) {
-    md += `## 🎯 Top 3 Priorities\n\n`;
+    md += `\n## 🎯 Top 3 Priorities\n\n`;
     md += `> [!EXAMPLE] 💡 Focus on these to see the biggest improvement\n`;
     md += `> \n`;
 
