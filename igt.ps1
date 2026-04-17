@@ -3,6 +3,10 @@
 $scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
 $configPath = Join-Path $scriptDir "lib\igt_config.json"
 
+# Intercept Ctrl+C as a keypress so CMD.exe never sees the signal.
+# Without this, cmd.exe shows "Terminate batch job (Y/N)?" on every exit.
+[System.Console]::TreatControlCAsInput = $true
+
 if (-not (Test-Path $configPath)) {
     Write-Host "Error: igt_config.json not found in $scriptDir\lib" -ForegroundColor Red
     exit 1
