@@ -231,11 +231,11 @@ function Write-ColoredResponse {
     }
     $sectionOrder = @("review","correction","refine","diagnosis","rule","tip")
 
-    $section  = "default"
-    $prevSection = "default"
+    $section      = "default"
+    $prevSection  = "default"
+    $lastWasBlank = $false
 
     foreach ($line in ($Content -split "`n")) {
-        $isHeader = $false
         $newSection = $null
         if    ($line -match '^\*\*Review\*\*')     { $newSection = "review" }
         elseif ($line -match '^\*\*Correction\*\*') { $newSection = "correction" }
@@ -245,14 +245,21 @@ function Write-ColoredResponse {
         elseif ($line -match '^\*\*Tip\*\*')        { $newSection = "tip" }
 
         if ($newSection) {
-            # Blank separator before every section except the very first
-            if ($prevSection -ne "default") { Write-Host "" }
-            $section     = $newSection
-            $prevSection = $newSection
-            $isHeader    = $true
+            # Ensure exactly one blank line before every section except the first
+            if ($prevSection -ne "default" -and -not $lastWasBlank) { Write-Host "" }
+            $section      = $newSection
+            $prevSection  = $newSection
+            $lastWasBlank = $false
             Write-Host $line -ForegroundColor $headerColor[$section]
             continue
         }
+
+        # Collapse consecutive blank lines from the LLM into at most one
+        if ($line.Trim() -eq "") {
+            if (-not $lastWasBlank) { Write-Host ""; $lastWasBlank = $true }
+            continue
+        }
+        $lastWasBlank = $false
 
         # Body line
         if ($section -eq "diagnosis") {
