@@ -288,25 +288,29 @@ function Stop-IGTServer {
 }
 
 # ── LLM Provider ─────────────────────────────────────────────────────────────────
-function Get-CurrentProvider {
-    try {
-        $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
-        $output    = node $llmScript current 2>&1 | Out-String
-        if ($output -match "Current LLM Provider:\s*(\w+)") { return $matches[1].ToLower() }
-    } catch {}
-    return $config.LLMProvider
+$script:modelMap = @{
+    gemini   = $config.GeminiFlashModel
+    qwen     = $config.QwenFlashModel
+    deepseek = $config.DeepseekFlashModel
 }
 
 function Get-CurrentModelName {
-    $provider = Get-CurrentProvider
-    $map = @{ gemini = $config.GeminiFlashModel; qwen = $config.QwenFlashModel; deepseek = $config.DeepseekFlashModel }
-    return $map[$provider]
+    # Read from env var (set by .env loader) or re-read config file — no Node spawn.
+    $provider = if ($env:IGT_LLM_PROVIDER) {
+        $env:IGT_LLM_PROVIDER.ToLower()
+    } else {
+        try { (Get-Content $configPath -Raw | ConvertFrom-Json).LLMProvider.ToLower() }
+        catch { $config.LLMProvider.ToLower() }
+    }
+    return $script:modelMap[$provider] ?? $provider
 }
 
 function Switch-LLMProvider {
     param([string]$providerName)
     $llmScript = Join-Path $scriptDir "lib\llm-switch.mjs"
     node $llmScript switch $providerName
+    # Persist new provider into env so Get-CurrentModelName picks it up without re-reading the file.
+    $env:IGT_LLM_PROVIDER = $providerName
 }
 
 function Invoke-GrammarCheck {
@@ -433,7 +437,7 @@ while ($true) {
 
         } elseif ($cmd -in @("gemini", "qwen", "deepseek")) {
             Switch-LLMProvider $cmd
-            $currentModel = Get-CurrentModelName
+            $currentModel = $script:modelMap[$cmd]
             Write-Host "  Switched to $currentModel" -ForegroundColor DarkGray
 
         } elseif ($cmd -eq "llm") {
