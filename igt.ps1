@@ -302,7 +302,8 @@ function Get-CurrentModelName {
         try { (Get-Content $configPath -Raw | ConvertFrom-Json).LLMProvider.ToLower() }
         catch { $config.LLMProvider.ToLower() }
     }
-    return $script:modelMap[$provider] ?? $provider
+    $name = $script:modelMap[$provider]
+    return if ($name) { $name } else { $provider }
 }
 
 function Switch-LLMProvider {
