@@ -43,27 +43,34 @@ function Read-LineWithHistory {
     param([string]$Prompt)
 
     Write-Host -NoNewline $Prompt -ForegroundColor Cyan
-    $promptLen = $Prompt.Length
-    $maxCol    = [System.Console]::WindowWidth - 1
+
+    $w        = [System.Console]::WindowWidth
+    $pLen     = $Prompt.Length
+    $startRow = [System.Console]::CursorTop   # row where prompt was printed
 
     $buf     = [System.Text.StringBuilder]::new()
     $cur     = 0
     $histIdx = $script:inputHistory.Count
     $saved   = ""
 
-    function Set-Col([int]$col) {
-        $safe = [Math]::Max(0, [Math]::Min($col, $maxCol))
-        [System.Console]::CursorLeft = $safe
+    # Move cursor to buffer position $pos, accounting for line wrapping.
+    # $startRow is captured by value at prompt time; if the terminal later
+    # scrolls we update it by comparing expected vs actual cursor row.
+    $GoTo = {
+        param([int]$pos)
+        $abs = $pLen + $pos
+        $row = $startRow + [Math]::Floor($abs / $w)
+        $col = $abs % $w
+        [System.Console]::SetCursorPosition($col, $row)
     }
 
-    function Redraw([string]$newLine) {
-        $old = $buf.ToString()
-        $buf.Clear() | Out-Null
-        $buf.Append($newLine) | Out-Null
-        Set-Col $promptLen
-        $pad = " " * [Math]::Max(0, $old.Length - $newLine.Length)
-        Write-Host -NoNewline ($newLine + $pad)
-        Set-Col ($promptLen + $newLine.Length)
+    # Overwrite from buffer position $from to end, then erase $extra stale chars.
+    $DrawTail = {
+        param([int]$from, [int]$extra = 0)
+        & $GoTo $from
+        $tail = $buf.ToString().Substring($from)
+        [System.Console]::Write($tail)
+        if ($extra -gt 0) { [System.Console]::Write(' ' * $extra) }
     }
 
     while ($true) {
@@ -71,7 +78,7 @@ function Read-LineWithHistory {
 
         # Ctrl+C — clean exit
         if ($k.Key -eq [System.ConsoleKey]::C -and ($k.Modifiers -band [System.ConsoleModifiers]::Control)) {
-            Write-Host ""
+            [System.Console]::WriteLine()
             Stop-IGTServer
             Stop-Spinner
             exit 0
@@ -79,63 +86,54 @@ function Read-LineWithHistory {
 
         switch ($k.Key) {
             ([System.ConsoleKey]::Enter) {
-                Write-Host ""
+                [System.Console]::WriteLine()
                 return $buf.ToString()
             }
             ([System.ConsoleKey]::Backspace) {
                 if ($cur -gt 0) {
                     $buf.Remove($cur - 1, 1) | Out-Null
                     $cur--
-                    $rest = $buf.ToString().Substring($cur)
-                    Set-Col ($promptLen + $cur)
-                    Write-Host -NoNewline ($rest + " ")
-                    Set-Col ($promptLen + $cur)
+                    & $DrawTail $cur 1
+                    & $GoTo $cur
                 }
             }
             ([System.ConsoleKey]::Delete) {
                 if ($cur -lt $buf.Length) {
                     $buf.Remove($cur, 1) | Out-Null
-                    $rest = $buf.ToString().Substring($cur)
-                    Set-Col ($promptLen + $cur)
-                    Write-Host -NoNewline ($rest + " ")
-                    Set-Col ($promptLen + $cur)
+                    & $DrawTail $cur 1
+                    & $GoTo $cur
                 }
             }
-            ([System.ConsoleKey]::LeftArrow) {
-                if ($cur -gt 0) { $cur--; Set-Col ($promptLen + $cur) }
-            }
-            ([System.ConsoleKey]::RightArrow) {
-                if ($cur -lt $buf.Length) { $cur++; Set-Col ($promptLen + $cur) }
-            }
-            ([System.ConsoleKey]::Home) {
-                $cur = 0; Set-Col $promptLen
-            }
-            ([System.ConsoleKey]::End) {
-                $cur = $buf.Length; Set-Col ($promptLen + $cur)
-            }
+            ([System.ConsoleKey]::LeftArrow)  { if ($cur -gt 0)           { $cur--; & $GoTo $cur } }
+            ([System.ConsoleKey]::RightArrow) { if ($cur -lt $buf.Length) { $cur++; & $GoTo $cur } }
+            ([System.ConsoleKey]::Home)        { $cur = 0;           & $GoTo 0    }
+            ([System.ConsoleKey]::End)         { $cur = $buf.Length; & $GoTo $cur }
             ([System.ConsoleKey]::UpArrow) {
                 if ($histIdx -gt 0) {
                     if ($histIdx -eq $script:inputHistory.Count) { $saved = $buf.ToString() }
                     $histIdx--
-                    Redraw $script:inputHistory[$histIdx]
-                    $cur = $buf.Length
+                    $old = $buf.Length
+                    $buf.Clear() | Out-Null; $buf.Append($script:inputHistory[$histIdx]) | Out-Null
+                    & $DrawTail 0 ([Math]::Max(0, $old - $buf.Length))
+                    $cur = $buf.Length; & $GoTo $cur
                 }
             }
             ([System.ConsoleKey]::DownArrow) {
                 if ($histIdx -lt $script:inputHistory.Count) {
                     $histIdx++
-                    $line = if ($histIdx -eq $script:inputHistory.Count) { $saved } else { $script:inputHistory[$histIdx] }
-                    Redraw $line
-                    $cur = $buf.Length
+                    $old     = $buf.Length
+                    $newLine = if ($histIdx -eq $script:inputHistory.Count) { $saved } else { $script:inputHistory[$histIdx] }
+                    $buf.Clear() | Out-Null; $buf.Append($newLine) | Out-Null
+                    & $DrawTail 0 ([Math]::Max(0, $old - $buf.Length))
+                    $cur = $buf.Length; & $GoTo $cur
                 }
             }
             default {
                 if ($k.KeyChar -ne "`0" -and -not [System.Char]::IsControl($k.KeyChar)) {
                     $buf.Insert($cur, $k.KeyChar) | Out-Null
                     $cur++
-                    Set-Col ($promptLen + $cur - 1)
-                    Write-Host -NoNewline $buf.ToString().Substring($cur - 1)
-                    Set-Col ($promptLen + $cur)
+                    & $DrawTail ($cur - 1) 0
+                    & $GoTo $cur
                 }
             }
         }
