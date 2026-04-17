@@ -303,7 +303,7 @@ function Get-CurrentModelName {
         catch { $config.LLMProvider.ToLower() }
     }
     $name = $script:modelMap[$provider]
-    return if ($name) { $name } else { $provider }
+    if ($name) { return $name } else { return $provider }
 }
 
 function Switch-LLMProvider {
