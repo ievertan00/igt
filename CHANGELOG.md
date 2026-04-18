@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration security vulnerability - API keys no longer committed to git
 - Provider switching now works without application restart
 - API key management unified across all LLM providers
+- **Long input wrapping** — text that exceeds the terminal window width now wraps correctly to the next line; previously the cursor would stretch past the visible area, corrupting the display
+- **Ctrl+C behavior** — now always clears the current input and returns to the prompt; previously pressing Ctrl+C on an empty buffer (e.g. after Esc) would exit the tool entirely
+- **Esc key stale content** — clearing a long input with Esc now fully erases all characters to end of the last occupied row; previously remnant characters could remain visible
+- **HTTP server input validation** — whitespace-only input now returns 400 instead of forwarding a blank string to the LLM
+- **HTTP server error isolation** — malformed JSON in request body returns a clean error message; previously the provider name could leak through the generic error handler
 
 ### Performance
 - LLM provider switching: <100ms (instant, no restart required)

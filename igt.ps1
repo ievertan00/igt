@@ -46,56 +46,89 @@ function Read-LineWithHistory {
 
     $w    = [System.Console]::WindowWidth
     $pLen = $Prompt.Length
-    # Use script-scope so both script blocks can read AND update it when the
-    # terminal scrolls (local variables can't be written from a script block).
+    # script-scope so nested script blocks can both read and write it on scroll.
     $script:rlStartRow = [System.Console]::CursorTop
 
-    $buf     = [System.Text.StringBuilder]::new()
-    $cur     = 0
-    $histIdx = $script:inputHistory.Count
-    $saved   = ""
+    $buf      = [System.Text.StringBuilder]::new()
+    $cur      = 0
+    $histIdx  = $script:inputHistory.Count
+    $saved    = ""
+    # Key queue lets us "unread" a non-printable key encountered mid-paste.
+    $keyQueue = [System.Collections.Generic.Queue[System.ConsoleKeyInfo]]::new()
 
     # Move cursor to buffer position $pos, accounting for line wrapping.
-    # Row is clamped to [0, BufferHeight-1] so a very long paste can't throw.
+    # After positioning, recalibrates rlStartRow from the actual CursorTop so
+    # that any terminal scroll that occurred mid-session is absorbed.
     $GoTo = {
         param([int]$pos)
         $abs    = $pLen + $pos
         $row    = $script:rlStartRow + [Math]::Floor($abs / $w)
         $col    = $abs % $w
         $maxRow = [System.Console]::BufferHeight - 1
-        [System.Console]::SetCursorPosition($col, [Math]::Max(0, [Math]::Min($row, $maxRow)))
+        $clampedRow = [Math]::Max(0, [Math]::Min($row, $maxRow))
+        [System.Console]::SetCursorPosition($col, $clampedRow)
+        # Keep rlStartRow in sync with actual cursor (absorbs scroll drift)
+        $script:rlStartRow = [System.Console]::CursorTop - [Math]::Floor($abs / $w)
     }
 
-    # Overwrite from buffer position $from to end, erase $extra stale chars,
-    # then adjust $script:rlStartRow if the terminal scrolled during the write.
+    # Overwrite from buffer position $from to end, then erase $extra stale chars.
+    # Writes in WindowWidth-sized chunks and repositions the cursor at the start
+    # of each new row using the LIVE CursorTop (not a stored row offset), so
+    # wrapping is correct even when BufferWidth > WindowWidth or after scroll.
     $DrawTail = {
         param([int]$from, [int]$extra = 0)
         & $GoTo $from
-        $content = $buf.ToString().Substring($from) + (' ' * $extra)
-        # Predict where cursor should land after writing (without scrolling)
-        $absEnd      = $pLen + $from + $content.Length
-        $expectedRow = $script:rlStartRow + [Math]::Floor($absEnd / $w)
-        [System.Console]::Write($content)
-        # If terminal scrolled, actualRow < expectedRow — shift startRow up
-        $actualRow = [System.Console]::CursorTop
-        if ($actualRow -lt $expectedRow) {
-            $script:rlStartRow += $actualRow - $expectedRow
+        $tail   = $buf.ToString().Substring($from) + (' ' * $extra)
+        $endCol = ($pLen + $buf.Length + $extra) % $w
+        if ($endCol -gt 0) { $tail += ' ' * ($w - $endCol) }
+
+        $abs    = $pLen + $from          # logical column counter (wraps at $w)
+        $maxRow = [System.Console]::BufferHeight - 1
+        $i      = 0
+        while ($i -lt $tail.Length) {
+            $colNow   = $abs % $w
+            $canWrite = $w - $colNow
+            $take     = [Math]::Min($canWrite, $tail.Length - $i)
+            [System.Console]::Write($tail.Substring($i, $take))
+            $abs += $take
+            $i   += $take
+            # After filling a row exactly, force cursor to start of next row.
+            # Use live CursorTop+1 instead of a stored offset — this handles
+            # both BufferWidth==WindowWidth (delayed-wrap) and BufferWidth>WindowWidth.
+            if ($take -eq $canWrite -and $i -lt $tail.Length) {
+                $nextRow = [Math]::Min([System.Console]::CursorTop + 1, $maxRow)
+                [System.Console]::SetCursorPosition(0, $nextRow)
+                $script:rlStartRow = $nextRow - [Math]::Floor($abs / $w)
+            }
         }
     }
 
     while ($true) {
-        $k = [System.Console]::ReadKey($true)
+        # Drain the re-queue first (keys displaced mid-paste), then read console.
+        $k = if ($keyQueue.Count -gt 0) { $keyQueue.Dequeue() } else { [System.Console]::ReadKey($true) }
 
-        # Ctrl+C — clean exit
+        # Ctrl+C — always clears the current input and returns to the prompt.
+        # Use the 'exit' command to quit.
         if ($k.Key -eq [System.ConsoleKey]::C -and ($k.Modifiers -band [System.ConsoleModifiers]::Control)) {
+            if ($buf.Length -eq 0) {
+                [System.Console]::Write("^C")
+                [System.Console]::WriteLine()
+                return ""
+            }
+            $old = $buf.Length
+            $buf.Clear() | Out-Null
+            $cur = 0
+            & $DrawTail 0 $old        # erase typed text
+            & $GoTo 0                 # cursor back to start of input area
+            [System.Console]::Write("^C")
             [System.Console]::WriteLine()
-            Stop-IGTServer
-            Stop-Spinner
-            exit 0
+            return ""
         }
 
         switch ($k.Key) {
             ([System.ConsoleKey]::Enter) {
+                # Move to end so the newline doesn't split a wrapped line visually.
+                & $GoTo $buf.Length
                 [System.Console]::WriteLine()
                 return $buf.ToString()
             }
@@ -149,9 +182,23 @@ function Read-LineWithHistory {
             }
             default {
                 if ($k.KeyChar -ne "`0" -and -not [System.Char]::IsControl($k.KeyChar)) {
-                    $buf.Insert($cur, $k.KeyChar) | Out-Null
-                    $cur++
-                    & $DrawTail ($cur - 1) 0
+                    # Batch all immediately available printable chars so a paste
+                    # triggers one DrawTail instead of one per character.
+                    $chars = [System.Text.StringBuilder]::new()
+                    $chars.Append($k.KeyChar) | Out-Null
+                    while ([System.Console]::KeyAvailable) {
+                        $next = [System.Console]::ReadKey($true)
+                        if ($next.KeyChar -ne "`0" -and -not [System.Char]::IsControl($next.KeyChar)) {
+                            $chars.Append($next.KeyChar) | Out-Null
+                        } else {
+                            $keyQueue.Enqueue($next)   # put non-printable back
+                            break
+                        }
+                    }
+                    $text = $chars.ToString()
+                    $buf.Insert($cur, $text) | Out-Null
+                    $cur += $text.Length
+                    & $DrawTail ($cur - $text.Length) 0
                     & $GoTo $cur
                 }
             }
@@ -231,13 +278,12 @@ function Write-ColoredResponse {
     }
     $sectionOrder = @("review","correction","refine","diagnosis","rule","tip")
 
-    $section      = "default"
-    $prevSection  = "default"
-    $lastWasBlank = $false
+    $section     = "default"
+    $prevSection = "default"
 
     foreach ($line in ($Content -split "`n")) {
         $newSection = $null
-        if    ($line -match '^\*\*Review\*\*')     { $newSection = "review" }
+        if    ($line -match '^\*\*Review\*\*')      { $newSection = "review" }
         elseif ($line -match '^\*\*Correction\*\*') { $newSection = "correction" }
         elseif ($line -match '^\*\*Refine\*\*')     { $newSection = "refine" }
         elseif ($line -match '^\*\*Diagnosis\*\*')  { $newSection = "diagnosis" }
@@ -245,21 +291,16 @@ function Write-ColoredResponse {
         elseif ($line -match '^\*\*Tip\*\*')        { $newSection = "tip" }
 
         if ($newSection) {
-            # Ensure exactly one blank line before every section except the first
-            if ($prevSection -ne "default" -and -not $lastWasBlank) { Write-Host "" }
-            $section      = $newSection
-            $prevSection  = $newSection
-            $lastWasBlank = $false
+            # Always one blank line before every section except the first
+            if ($prevSection -ne "default") { Write-Host "" }
+            $section     = $newSection
+            $prevSection = $newSection
             Write-Host $line -ForegroundColor $headerColor[$section]
             continue
         }
 
-        # Collapse consecutive blank lines from the LLM into at most one
-        if ($line.Trim() -eq "") {
-            if (-not $lastWasBlank) { Write-Host ""; $lastWasBlank = $true }
-            continue
-        }
-        $lastWasBlank = $false
+        # Drop all blank lines from LLM output — separators are added above
+        if ($line.Trim() -eq "") { continue }
 
         # Body line
         if ($section -eq "diagnosis") {
@@ -372,17 +413,83 @@ function Switch-LLMProvider {
 
 function Invoke-GrammarCheck {
     param([string]$inputText)
+
+    $script:lastRequestCancelled = $false
+
     if (!$script:serverProcess -or $script:serverProcess.HasExited) {
         if (!(Start-IGTServer)) { return $null }
     }
-    try {
-        $body     = @{ text = $inputText } | ConvertTo-Json
-        $response = Invoke-WebRequest -Uri "$serverBaseUrl/grammar" -Method POST -Body $body -ContentType "application/json; charset=utf-8" -TimeoutSec 60 -UseBasicParsing
-        return $response.Content | ConvertFrom-Json
-    } catch {
-        Write-Host "`nError: Request failed - $_" -ForegroundColor Red
+
+    $body = @{ text = $inputText } | ConvertTo-Json
+    $url  = "$serverBaseUrl/grammar"
+
+    # Run the HTTP call in a background runspace so the main thread stays free
+    # to watch for Ctrl+C (TreatControlCAsInput=true means no OS signal fires).
+    $shared = [hashtable]::Synchronized(@{ Result = $null; Error = $null; Done = $false })
+
+    $rs = [runspacefactory]::CreateRunspace()
+    $rs.Open()
+    $rs.SessionStateProxy.SetVariable("shared", $shared)
+    $rs.SessionStateProxy.SetVariable("body",   $body)
+    $rs.SessionStateProxy.SetVariable("url",    $url)
+
+    $ps = [powershell]::Create()
+    $ps.Runspace = $rs
+    [void]$ps.AddScript({
+        try {
+            $resp = Invoke-WebRequest -Uri $url -Method POST -Body $body `
+                        -ContentType "application/json; charset=utf-8" `
+                        -TimeoutSec 60 -UseBasicParsing
+            $shared.Result = $resp.Content
+        } catch {
+            $errMsg = $null
+            try {
+                $stream = $_.Exception.Response.GetResponseStream()
+                if ($stream) {
+                    $errJson = (New-Object System.IO.StreamReader($stream)).ReadToEnd() | ConvertFrom-Json
+                    $errMsg  = $errJson.error
+                }
+            } catch {}
+            if (-not $errMsg) { $errMsg = $_.Exception.Message }
+            $shared.Error = $errMsg
+        } finally {
+            $shared.Done = $true
+        }
+    })
+    $ps.BeginInvoke() | Out-Null
+
+    # Poll: yield to spinner; watch for Ctrl+C
+    while (-not $shared.Done) {
+        if ([Console]::KeyAvailable) {
+            $k = [Console]::ReadKey($true)
+            if ($k.Key -eq [ConsoleKey]::C -and ($k.Modifiers -band [ConsoleModifiers]::Control)) {
+                $script:lastRequestCancelled = $true
+                Stop-Spinner
+                Write-Host ""
+                Write-Host "  Cancelled." -ForegroundColor DarkGray
+                try { $ps.Stop()    } catch {}
+                try { $ps.Dispose() } catch {}
+                try { $rs.Close()   } catch {}
+                try { $rs.Dispose() } catch {}
+                return $null
+            }
+        }
+        Start-Sleep -Milliseconds 50
+    }
+
+    try { $ps.Dispose(); $rs.Close(); $rs.Dispose() } catch {}
+
+    if ($shared.Error) {
+        $errMsg = $shared.Error
+        if ($errMsg -match "429|quota|rate.?limit|resource.*exhaust|too many request") {
+            Write-Host "`n  API limit reached. Wait a moment and try again." -ForegroundColor Yellow
+        } else {
+            Write-Host "`n  Error: $errMsg" -ForegroundColor Red
+        }
         return $null
     }
+
+    return $shared.Result | ConvertFrom-Json
 }
 
 # ── Header ───────────────────────────────────────────────────────────────────────
@@ -406,13 +513,11 @@ function Show-Help {
     Write-Host "  /practice         " -NoNewline -ForegroundColor Cyan
     Write-Host "Targeted grammar exercises (CEFR-aware)" -ForegroundColor White
     Write-Host "  /practice B2 10   " -NoNewline -ForegroundColor Cyan
-    Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor DarkGray
+    Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor White
     Write-Host "  /assess           " -NoNewline -ForegroundColor Cyan
     Write-Host "Estimate your CEFR proficiency level" -ForegroundColor White
-    Write-Host "  /vocab            " -NoNewline -ForegroundColor Cyan
-    Write-Host "Quiz yourself on saved word choices" -ForegroundColor White
-    Write-Host "  /vocab list       " -NoNewline -ForegroundColor Cyan
-    Write-Host "Browse all saved vocabulary items" -ForegroundColor White
+    Write-Host "  /vocab <word>     " -NoNewline -ForegroundColor Cyan
+    Write-Host "Add a word to your Obsidian vocabulary note" -ForegroundColor White
     Write-Host "  /gemini           " -NoNewline -ForegroundColor Cyan
     Write-Host "Switch to Gemini model" -ForegroundColor White
     Write-Host "  /qwen             " -NoNewline -ForegroundColor Cyan
@@ -484,13 +589,13 @@ while ($true) {
             Write-Host ""
 
         } elseif ($cmd -eq "vocab") {
-            Write-Host ""
-            if ($cmdArgs -eq "list") {
-                node (Join-Path $scriptDir "tools\igt-vocab.mjs") "--list"
+            if ($cmdArgs -eq "") {
+                Write-Host ""
+                Write-Host "  Usage: /vocab <word or phrase>" -ForegroundColor Yellow
+                Write-Host ""
             } else {
-                node (Join-Path $scriptDir "tools\igt-vocab.mjs")
+                node (Join-Path $scriptDir "tools\igt-vocal.mjs") $cmdArgs
             }
-            Write-Host ""
 
         } elseif ($cmd -in @("gemini", "qwen", "deepseek")) {
             Switch-LLMProvider $cmd
@@ -517,6 +622,8 @@ while ($true) {
     Start-Spinner -Message "Thinking"
     $response = Invoke-GrammarCheck -inputText $userInput
     Stop-Spinner
+
+    if ($script:lastRequestCancelled) { continue }
 
     if (!$response) {
         Write-Host "Error: Failed to get response" -ForegroundColor Red
