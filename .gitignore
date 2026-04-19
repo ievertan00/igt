@@ -10,3 +10,6 @@ package-lock.json
 *.csv
 handbook_*.md
 assessment_*.md
+docs/ 
+tests/ 
+CLAUDE.md 

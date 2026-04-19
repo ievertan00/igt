@@ -20,6 +20,7 @@ node tools/igt-handbook.mjs --days=7          # Generate personal error handbook
 node tools/igt-handbook.mjs --days=7 --incremental  # Only regenerate changed rules
 node tools/igt-practice.mjs --count=10        # Practice exercises
 node tools/igt-assess.mjs                     # CEFR proficiency assessment
+node tools/igt-vocal.mjs <word>               # Vocabulary lookup + save to vault
 node tools/import-review-to-db.mjs            # Import legacy Markdown logs into DB
 node lib/llm-switch.mjs                       # Manage LLM providers from CLI
 ```
@@ -52,3 +53,12 @@ Active provider is controlled by `IGT_LLM_PROVIDER` env var (set in `.env`). Swi
 - **HTTP call**: also runs in a background runspace; main thread polls `$shared.Done` every 50ms, checking for Ctrl+C to cancel.
 - **DB writes are non-blocking**: `saveToDatabase()` is called without `await` inside the `/grammar` handler.
 - **Output format**: `Write-ColoredResponse` in `igt.ps1` parses `**Section**:` headers from the LLM response and color-codes each section. Diagnosis lines are further colored by severity (Major=Red, Moderate=Yellow, Minor=DarkYellow).
+
+## Folder Layout
+
+```
+lib/        Core runtime (server, providers, config, error types)
+tools/      User-facing standalone scripts (handbook, practice, assess, vocab, db)
+tests/      Test and profiling scripts (not run in production)
+docs/       Reference documentation; docs/archive/ holds design plans and specs
+```
