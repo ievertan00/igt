@@ -69,6 +69,7 @@ function parseEntry(raw) {
     word:    wordMatch ? wordMatch[1].trim() : null,
     pos:     get("PoS"),
     meaning: get("Meaning"),
+    zh:      get("中文"),
     example: get("Example"),
     note:    get("Note"),
   };
@@ -82,6 +83,7 @@ function renderEntry(f) {
   if (f.word)    console.log(`  ${label("Word")}${paint(c.bold + c.yellow, f.word)}`);
   if (f.pos)     console.log(`  ${label("PoS")}${paint(c.gray, f.pos)}`);
   if (f.meaning) console.log(`  ${label("Meaning")}${paint(c.white, f.meaning)}`);
+  if (f.zh)      console.log(`  ${label("中文")}${paint(c.green, f.zh)}`);
   if (f.example) console.log(`  ${label("Example")}${paint(c.cyan, f.example)}`);
   if (f.note)    console.log(`  ${label("Note")}${paint(c.darkCyan, f.note)}`);
   console.log(SEP);
@@ -100,6 +102,7 @@ const SYSTEM_PROMPT = `You are a concise English vocabulary assistant. When give
 ### {word}
 **PoS:** {part of speech}
 **Meaning:** {one-line definition in English}
+**中文:** {concise Chinese translation or explanation}
 **Example:** {one natural sentence using the word}
 **Note:** {one short usage tip or common mistake}`;
 

@@ -24,6 +24,67 @@ if (!fs.existsSync(resolvedDbPath)) {
 
 const db = new Database(resolvedDbPath, { readonly: true });
 
+// Data warehouse path (same as handbook/assessment)
+const reportDir = config.ReportPath
+  ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
+  : path.join(projectRoot, "docs");
+if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true });
+
+const HISTORY_FILE = path.join(reportDir, "practice_history.json");
+
+function loadPracticeHistory() {
+  if (!fs.existsSync(HISTORY_FILE)) return [];
+  try {
+    const data = JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
+    return Array.isArray(data.questions) ? data.questions : [];
+  } catch { return []; }
+}
+
+function savePracticeHistory(exercises) {
+  const existing = loadPracticeHistory();
+  const combined = [...existing, ...exercises.map(e => e.question)];
+  fs.writeFileSync(HISTORY_FILE, JSON.stringify({ questions: combined.slice(-200) }, null, 2));
+}
+
+function savePracticeSession(exercises, results, meta) {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = now.toTimeString().slice(0, 5);
+  const filepath = path.join(reportDir, "practice_log.md");
+
+  const totalCorrect = results.filter(r => r.correct).length;
+  const pct = ((totalCorrect / results.length) * 100).toFixed(0);
+
+  let md = `\n## ${dateStr} ${timeStr} — ${meta.level} — ${totalCorrect}/${results.length} (${pct}%)\n\n`;
+  md += `> Target errors: ${meta.errorSummary}\n\n`;
+
+  results.forEach((r, i) => {
+    const ex = r.exercise;
+    const status = r.correct ? "✅" : "❌";
+    const typeLabel = ex.type === "multiple-choice" ? "MC" : "FIB";
+    md += `### Q${i + 1} ${status} [${typeLabel}] ${ex.question}\n\n`;
+    if (ex.type === "multiple-choice" && Array.isArray(ex.options)) {
+      const labels = ["A", "B", "C", "D"];
+      ex.options.forEach((opt, j) => {
+        md += `- ${labels[j]}. ${opt.replace(/^[A-Da-d][.)\s]+\s*/, "")}\n`;
+      });
+      md += "\n";
+    }
+    const cleanAnswer = ex.answer.replace(/^[A-Da-d][.)\s]+\s*/, "").trim();
+    md += `**Answer**: ${cleanAnswer} — ${ex.explanation}\n\n`;
+  });
+
+  md += `---`;
+
+  const isNew = !fs.existsSync(filepath);
+  if (isNew) {
+    fs.writeFileSync(filepath, `# IGT Practice Log\n${md}`, "utf8");
+  } else {
+    fs.appendFileSync(filepath, `\n${md}`, "utf8");
+  }
+  return "practice_log.md";
+}
+
 // Parse arguments
 const args = process.argv.slice(2);
 const errorTypeArg = args.find(a => !a.startsWith("--"));
@@ -124,7 +185,7 @@ function sanitizeJsonString(str) {
 }
 
 // Generate exercises as structured JSON with answers
-async function generateExercises(errorTypes, count, level) {
+async function generateExercises(errorTypes, count, level, usedQuestions = []) {
   const errorList = errorTypes.map(e => `- ${e.error_type}`).join("\n");
   const linguisticSummary = getLinguisticContext(errorTypes); // Inject context
 
@@ -177,6 +238,13 @@ Rules for fill-in-the-blank:
 - The "answer" field should be the exact word(s) to fill in
 
 Return ONLY the JSON array, no markdown formatting, no explanation.`;
+  }
+
+  // Append previously used questions so the LLM avoids repeating them
+  if (usedQuestions.length > 0) {
+    const recent = usedQuestions.slice(-80);
+    prompt += `\n\n### Previously Practiced Questions (DO NOT repeat or rephrase any of these):\n`;
+    recent.forEach((q, i) => { prompt += `${i + 1}. ${q}\n`; });
   }
 
   const text = await llmManager.generateWithFallback(prompt, "", {
@@ -402,16 +470,22 @@ async function runPractice() {
   const errorSummary = errorTypes.map(e => `${e.error_type} (${e.count}x)`).join(", ");
   console.log(`🎯 Target errors: ${errorSummary}`);
 
+  // Load practice history for deduplication
+  const usedQuestions = loadPracticeHistory();
+  if (usedQuestions.length > 0) {
+    console.log(`📚 Loaded ${usedQuestions.length} previously practiced questions (will avoid repeats)`);
+  }
+
   // Generate exercises
   console.log("\n📝 Generating exercises...\n");
 
   let exercises;
   let retryCount = 0;
   const maxRetries = 2;
-  
+
   while (retryCount <= maxRetries) {
     try {
-      exercises = await generateExercises(errorTypes, selectedCount, selectedLevel);
+      exercises = await generateExercises(errorTypes, selectedCount, selectedLevel, usedQuestions);
       break; // Success, exit loop
     } catch (error) {
       retryCount++;
@@ -515,6 +589,15 @@ async function runPractice() {
   `).get();
   if (weakest) {
     console.log(`\n📌 Historically weakest area: ${weakest.error_type} (${weakest.total} total errors)`);
+  }
+
+  // Save session to data warehouse and update history
+  try {
+    const sessionFile = savePracticeSession(exercises, results, { level: selectedLevel, errorSummary });
+    savePracticeHistory(exercises);
+    console.log(`\n💾 Session saved: ${sessionFile}`);
+  } catch (e) {
+    console.log(`\n⚠️  Could not save session: ${e.message}`);
   }
 
   console.log("");
