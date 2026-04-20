@@ -13,3 +13,4 @@ assessment_*.md
 docs/ 
 tests/ 
 CLAUDE.md 
+.worktrees/
