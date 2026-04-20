@@ -92,7 +92,8 @@ Start IGT with `./igt.ps1`. All commands use a `/` prefix at the input prompt.
 | `/practice` | Start a practice session targeting your top error types |
 | `/practice B2 10` | Practice at CEFR level B2, 10 questions |
 | `/assess` | Estimate your current CEFR proficiency level |
-| `/vocab <word>` | Add a word to your Obsidian vocabulary note |
+| `/add <word>` | Add a word to your Obsidian vocabulary note |
+| `/vocab` | Review saved vocabulary (quiz mode); `/vocab --list` to browse |
 | `/gemini` | Switch to Gemini |
 | `/qwen` | Switch to Qwen |
 | `/deepseek` | Switch to Deepseek |

@@ -62,17 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gemini-only architecture, replaced with pluggable provider system
 
 ### Fixed
-- Configuration security vulnerability - API keys no longer committed to git
-- Provider switching now works without application restart
-- API key management unified across all LLM providers
-- **Long input wrapping** — text that exceeds the terminal window width now wraps correctly to the next line; previously the cursor would stretch past the visible area, corrupting the display
-- **Ctrl+C behavior** — now always clears the current input and returns to the prompt; previously pressing Ctrl+C on an empty buffer (e.g. after Esc) would exit the tool entirely
-- **Esc key stale content** — clearing a long input with Esc now fully erases all characters to end of the last occupied row; previously remnant characters could remain visible
-- **HTTP server input validation** — whitespace-only input now returns 400 instead of forwarding a blank string to the LLM
-- **HTTP server error isolation** — malformed JSON in request body returns a clean error message; previously the provider name could leak through the generic error handler
+- **Long sentence wrapping** — fixed a critical issue where typing or pasting text exceeding the window height would clamp the cursor to the bottom row, preventing proper wrapping and corrupting the display; now correctly scrolls the terminal and recalculates the input area.
+- **UTF-8 character rendering** — fixed an issue where special characters (like em dashes) from the LLM response were misinterpreted as "â" on Windows; implemented explicit UTF-8 decoding for HTTP responses and configured the PowerShell console for UTF-8 output.
+- **Task-Based Model Routing** - Different models for different tasks to optimize cost and quality
 
-### Performance
-- LLM provider switching: <100ms (instant, no restart required)
 - Config loading: ~5ms (merged from two files)
 - Zero performance impact on grammar checking - maintains <2s loop times
 - All providers maintain same performance characteristics

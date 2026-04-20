@@ -20,7 +20,7 @@ node tools/igt-handbook.mjs --days=7          # Generate personal error handbook
 node tools/igt-handbook.mjs --days=7 --incremental  # Only regenerate changed rules
 node tools/igt-practice.mjs --count=10        # Practice exercises
 node tools/igt-assess.mjs                     # CEFR proficiency assessment
-node tools/igt-vocal.mjs <word>               # Vocabulary lookup + save to vault
+node tools/igt-add.mjs <word>                 # Vocabulary lookup + save to vault
 node tools/import-review-to-db.mjs            # Import legacy Markdown logs into DB
 node lib/llm-switch.mjs                       # Manage LLM providers from CLI
 ```

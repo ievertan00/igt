@@ -58,6 +58,26 @@ function ask(prompt) {
   });
 }
 
+// ── Duplicate check ───────────────────────────────────────────────────────────
+function findExistingEntry(word) {
+  if (!fs.existsSync(NOTE_FILE)) return null;
+  const content = fs.readFileSync(NOTE_FILE, "utf8");
+  const lines = content.split("\n");
+  const target = word.toLowerCase();
+  let startIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^###?\s+(.+)/);
+    if (m && m[1].trim().toLowerCase() === target) { startIdx = i; break; }
+  }
+  if (startIdx === -1) return null;
+  const block = [];
+  for (let i = startIdx; i < lines.length; i++) {
+    if (i > startIdx && /^###?\s+/.test(lines[i])) break;
+    block.push(lines[i]);
+  }
+  return block.join("\n");
+}
+
 // ── Parse LLM output ─────────────────────────────────────────────────────────
 function parseEntry(raw) {
   const get = (key) => {
@@ -93,7 +113,7 @@ function renderEntry(f) {
 const word = process.argv.slice(2).join(" ").trim();
 
 if (!word) {
-  console.error(`\n  ${paint(c.yellow, "Usage: /vocab <word or phrase>")}\n`);
+  console.error(`\n  ${paint(c.yellow, "Usage: /add <word or phrase>")}\n`);
   process.exit(1);
 }
 
@@ -105,6 +125,17 @@ const SYSTEM_PROMPT = `You are a concise English vocabulary assistant. When give
 **中文:** {concise Chinese translation or explanation}
 **Example:** {one natural sentence using the word}
 **Note:** {one short usage tip or common mistake}`;
+
+// Check for duplicate before calling the LLM
+const existingBlock = findExistingEntry(word);
+if (existingBlock) {
+  const existing = parseEntry(existingBlock);
+  console.log(`\n  ${paint(c.yellow, `"${word}" is already in your vocabulary.`)}\n`);
+  renderEntry(existing);
+  console.log("");
+  rl.close();
+  process.exit(0);
+}
 
 const llmManager = initializeLLMProviders();
 

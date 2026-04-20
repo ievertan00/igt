@@ -1,6 +1,11 @@
 # Interactive Grammar Tool (IGT) - v2.3
 # Features: animated spinner, color-coded output, input history, multiline mode, vocab builder
 $scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
+
+# Ensure console and script output use UTF-8
+[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 $configPath = Join-Path $scriptDir "lib\igt_config.json"
 
 # Intercept Ctrl+C as a keypress so CMD.exe never sees the signal.
@@ -61,12 +66,20 @@ function Read-LineWithHistory {
     # that any terminal scroll that occurred mid-session is absorbed.
     $GoTo = {
         param([int]$pos)
-        $abs    = $pLen + $pos
-        $row    = $script:rlStartRow + [Math]::Floor($abs / $w)
-        $col    = $abs % $w
-        $maxRow = [System.Console]::BufferHeight - 1
-        $clampedRow = [Math]::Max(0, [Math]::Min($row, $maxRow))
-        [System.Console]::SetCursorPosition($col, $clampedRow)
+        $abs       = $pLen + $pos
+        $targetRow = $script:rlStartRow + [Math]::Floor($abs / $w)
+        $maxRow    = [System.Console]::BufferHeight - 1
+
+        # If target row is beyond bottom, scroll until it fits
+        while ($targetRow -gt $maxRow) {
+            [System.Console]::SetCursorPosition(0, $maxRow)
+            [System.Console]::Write("`n")
+            $script:rlStartRow--
+            $targetRow--
+        }
+
+        $col = $abs % $w
+        [System.Console]::SetCursorPosition($col, [Math]::Max(0, $targetRow))
         # Keep rlStartRow in sync with actual cursor (absorbs scroll drift)
         $script:rlStartRow = [System.Console]::CursorTop - [Math]::Floor($abs / $w)
     }
@@ -96,9 +109,13 @@ function Read-LineWithHistory {
             # Use live CursorTop+1 instead of a stored offset — this handles
             # both BufferWidth==WindowWidth (delayed-wrap) and BufferWidth>WindowWidth.
             if ($take -eq $canWrite -and $i -lt $tail.Length) {
-                $nextRow = [Math]::Min([System.Console]::CursorTop + 1, $maxRow)
-                [System.Console]::SetCursorPosition(0, $nextRow)
-                $script:rlStartRow = $nextRow - [Math]::Floor($abs / $w)
+                if ([System.Console]::CursorTop -lt $maxRow) {
+                    [System.Console]::SetCursorPosition(0, [System.Console]::CursorTop + 1)
+                } else {
+                    [System.Console]::Write("`n")
+                    $script:rlStartRow--
+                }
+                $script:rlStartRow = [System.Console]::CursorTop - [Math]::Floor($abs / $w)
             }
         }
     }
@@ -254,6 +271,30 @@ function Stop-Spinner {
     }
 }
 
+# ── Word-wrap helper ─────────────────────────────────────────────────────────────
+# $Prefix  = chars already printed on the current line (cursor offset)
+# $HangIndent = spaces to indent continuation lines
+function Write-WrappedLine {
+    param([string]$Text, [string]$Color = "White", [int]$HangIndent = 0, [int]$Prefix = 0)
+    $maxW  = [Math]::Max(40, [System.Console]::WindowWidth - 1)
+    $avail = $maxW - $Prefix   # remaining space on the first line
+
+    $words = $Text -split ' '
+    $line  = ""
+
+    foreach ($word in $words) {
+        $candidate = if ($line) { "$line $word" } else { $word }
+        if ($candidate.Length -gt $avail -and $line -ne "") {
+            Write-Host $line -ForegroundColor $Color
+            $line  = (" " * $HangIndent) + $word
+            $avail = $maxW   # continuation lines get full width
+        } else {
+            $line = $candidate
+        }
+    }
+    if ($line -ne "") { Write-Host $line -ForegroundColor $Color }
+}
+
 # ── Color-coded output renderer ─────────────────────────────────────────────────
 function Write-ColoredResponse {
     param([string]$Content)
@@ -304,14 +345,14 @@ function Write-ColoredResponse {
 
         # Body line
         if ($section -eq "diagnosis") {
-            if    ($line -match '\(Major\)')    { Write-Host $line -ForegroundColor Red }
-            elseif ($line -match '\(Moderate\)') { Write-Host $line -ForegroundColor Yellow }
-            elseif ($line -match '\(Minor\)')    { Write-Host $line -ForegroundColor DarkYellow }
-            else                                { Write-Host $line -ForegroundColor Gray }
+            if    ($line -match '\(Major\)')    { Write-WrappedLine $line -Color Red }
+            elseif ($line -match '\(Moderate\)') { Write-WrappedLine $line -Color Yellow }
+            elseif ($line -match '\(Minor\)')    { Write-WrappedLine $line -Color DarkYellow }
+            else                                { Write-WrappedLine $line -Color Gray }
         } elseif ($bodyColor.ContainsKey($section)) {
-            Write-Host $line -ForegroundColor $bodyColor[$section]
+            Write-WrappedLine $line -Color $bodyColor[$section]
         } else {
-            Write-Host $line -ForegroundColor White
+            Write-WrappedLine $line -Color White
         }
     }
 }
@@ -440,7 +481,12 @@ function Invoke-GrammarCheck {
             $resp = Invoke-WebRequest -Uri $url -Method POST -Body $body `
                         -ContentType "application/json; charset=utf-8" `
                         -TimeoutSec 60 -UseBasicParsing
-            $shared.Result = $resp.Content
+            
+            # Explicitly decode as UTF-8 to avoid Windows-specific encoding issues
+            $rawStream = $resp.RawContentStream
+            $rawStream.Position = 0
+            $reader = New-Object System.IO.StreamReader($rawStream, [System.Text.Encoding]::UTF8)
+            $shared.Result = $reader.ReadToEnd()
         } catch {
             $errMsg = $null
             try {
@@ -516,8 +562,10 @@ function Show-Help {
     Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor White
     Write-Host "  /assess           " -NoNewline -ForegroundColor Cyan
     Write-Host "Estimate your CEFR proficiency level" -ForegroundColor White
-    Write-Host "  /vocab <word>     " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /add <word>       " -NoNewline -ForegroundColor Cyan
     Write-Host "Add a word to your Obsidian vocabulary note" -ForegroundColor White
+    Write-Host "  /vocab            " -NoNewline -ForegroundColor Cyan
+    Write-Host "Review saved vocabulary (quiz or list)" -ForegroundColor White
     Write-Host "  /gemini           " -NoNewline -ForegroundColor Cyan
     Write-Host "Switch to Gemini model" -ForegroundColor White
     Write-Host "  /qwen             " -NoNewline -ForegroundColor Cyan
@@ -588,14 +636,20 @@ while ($true) {
             node (Join-Path $scriptDir "tools\igt-assess.mjs")
             Write-Host ""
 
-        } elseif ($cmd -eq "vocab") {
+        } elseif ($cmd -eq "add") {
             if ($cmdArgs -eq "") {
                 Write-Host ""
-                Write-Host "  Usage: /vocab <word or phrase>" -ForegroundColor Yellow
+                Write-Host "  Usage: /add <word or phrase>" -ForegroundColor Yellow
                 Write-Host ""
             } else {
-                node (Join-Path $scriptDir "tools\igt-vocal.mjs") $cmdArgs
+                node (Join-Path $scriptDir "tools\igt-add.mjs") $cmdArgs
             }
+
+        } elseif ($cmd -eq "vocab") {
+            Write-Host ""
+            $nodeArgs = if ($cmdArgs -ne "") { $cmdArgs -split '\s+' } else { @() }
+            node (Join-Path $scriptDir "tools\igt-vocab.mjs") @nodeArgs
+            Write-Host ""
 
         } elseif ($cmd -in @("gemini", "qwen", "deepseek")) {
             Switch-LLMProvider $cmd
@@ -630,6 +684,9 @@ while ($true) {
         continue
     }
 
+    Write-Host ""
+    Write-Host "  Input  " -NoNewline -ForegroundColor DarkGray
+    Write-WrappedLine $userInput -Color White -HangIndent 10 -Prefix 9
     Write-Host ""
     Write-ColoredResponse $response.content
     Write-Host ""
