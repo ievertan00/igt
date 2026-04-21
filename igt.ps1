@@ -302,7 +302,7 @@ function Sanitize-BodyLine {
     param([string]$line, [string]$section)
     # Strip surrounding brackets or quotes the LLM sometimes wraps sentences in
     if ($line -match '^\[(.+)\]$')  { $line = $Matches[1].Trim() }
-    if ($line -match '^"(.+)"$')    { $line = $Matches[1].Trim() }
+    if ($line -match '^"([^"]+)"$') { $line = $Matches[1].Trim() }
     if ($line -match "^'(.+)'$")    { $line = $Matches[1].Trim() }
     # Ensure bullet prefix for list sections
     if ($section -in @("diagnosis","rule","tip") -and $line -ne "" -and $line -notmatch '^- ') {
@@ -335,8 +335,10 @@ function Write-ColoredResponse {
     }
     $sectionOrder = @("review","correction","refine","diagnosis","rule","tip")
 
-    $section     = "default"
-    $prevSection = "default"
+    $section          = "default"
+    $prevSection      = "default"
+    $sectionBodyCount = 0
+    $sectionSeen      = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     foreach ($line in ($Content -split "`n")) {
         $newSection = $null
@@ -350,15 +352,26 @@ function Write-ColoredResponse {
         if ($newSection) {
             # Always one blank line before every section except the first
             if ($prevSection -ne "default") { Write-Host "" }
-            $section     = $newSection
-            $prevSection = $newSection
+            $section          = $newSection
+            $prevSection      = $newSection
+            $sectionBodyCount = 0
+            $sectionSeen.Clear()
             # Separate inline content from the header marker
             if ($line -match '^(\*\*\w+\*\*\:?\s*)(.+)$') {
                 Write-Host $Matches[1].TrimEnd() -ForegroundColor $headerColor[$section]
-                $remainder = $Matches[2].Trim()
-                $remainder = Sanitize-BodyLine $remainder $section
+                $remainder = Sanitize-BodyLine $Matches[2].Trim() $section
                 if ($remainder -ne "") {
-                    Write-WrappedLine $remainder -Color $bodyColor[$section]
+                    if ($section -in @("diagnosis","rule","tip")) {
+                        # Split multiple items on one line
+                        $remainder -split '\s+(?=- )' | ForEach-Object { 
+                            $trimmed = $_.Trim()
+                            if ($trimmed -and $sectionSeen.Add($trimmed)) {
+                                Write-WrappedLine $trimmed -Color $bodyColor[$section]
+                            }
+                        }
+                    } else {
+                        Write-WrappedLine $remainder -Color $bodyColor[$section]
+                    }
                 }
             } else {
                 Write-Host $line -ForegroundColor $headerColor[$section]
@@ -371,10 +384,18 @@ function Write-ColoredResponse {
 
         # Body line — single color per section
         $cleanLine = Sanitize-BodyLine $line.Trim() $section
-        if ($bodyColor.ContainsKey($section)) {
-            Write-WrappedLine $cleanLine -Color $bodyColor[$section]
+        $color = if ($bodyColor.ContainsKey($section)) { $bodyColor[$section] } else { "White" }
+        if ($section -in @("diagnosis","rule","tip")) {
+            $items = $cleanLine -split '\s+(?=- )'
+            foreach ($item in $items) {
+                $trimmed = $item.Trim()
+                if ($trimmed -and $sectionSeen.Add($trimmed)) {
+                    Write-WrappedLine $trimmed -Color $color
+                    $sectionBodyCount++
+                }
+            }
         } else {
-            Write-WrappedLine $cleanLine -Color White
+            Write-WrappedLine $cleanLine -Color $color
         }
     }
 }
@@ -404,6 +425,15 @@ function Log-Result {
 # ── Server ───────────────────────────────────────────────────────────────────────
 function Start-IGTServer {
     $serverPath = Join-Path $scriptDir "lib\igt-http-server.mjs"
+
+    # Force reload: Kill any existing process using the IGT port
+    $existingPid = netstat -ano | findstr ":$serverPort" | ForEach-Object { $_.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)[-1] } | Select-Object -Unique
+    if ($existingPid) {
+        try {
+            Stop-Process -Id $existingPid -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 200
+        } catch {}
+    }
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName    = "node"
