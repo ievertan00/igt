@@ -2,40 +2,23 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 import initializeLLMProviders from "../lib/llm-init.mjs";
+import { ui, paint, colors, Spinner } from "../lib/ui.mjs";
 
 const VAULT_DIR = "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse";
 const NOTE_FILE = path.join(VAULT_DIR, "IGT Vocabulary.md");
 
-// ── ANSI helpers ──────────────────────────────────────────────────────────────
-const c = {
-  reset:    "\x1b[0m",
-  bold:     "\x1b[1m",
-  cyan:     "\x1b[36m",
-  yellow:   "\x1b[33m",
-  green:    "\x1b[32m",
-  darkCyan: "\x1b[96m",
-  gray:     "\x1b[90m",
-  white:    "\x1b[97m",
-};
-const paint = (color, text) => `${color}${text}${c.reset}`;
-
 // ── Spinner ───────────────────────────────────────────────────────────────────
-const FRAMES = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
-let spinnerTimer = null;
-let spinnerIdx = 0;
+let currentSpinner = null;
 
 function startSpinner(msg) {
-  process.stdout.write("\n");
-  spinnerTimer = setInterval(() => {
-    process.stdout.write(`\r  ${paint(c.cyan, FRAMES[spinnerIdx++ % FRAMES.length])}  ${paint(c.gray, msg)}`);
-  }, 80);
+  currentSpinner = new Spinner(msg);
+  currentSpinner.start();
 }
 
 function stopSpinner() {
-  if (spinnerTimer) {
-    clearInterval(spinnerTimer);
-    spinnerTimer = null;
-    process.stdout.write("\r\x1b[2K");
+  if (currentSpinner) {
+    currentSpinner.stop();
+    currentSpinner = null;
   }
 }
 
@@ -45,7 +28,7 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 function abort(msg = "Cancelled.") {
   stopSpinner();
   rl.close();
-  console.log(`\n  ${paint(c.gray, msg)}\n`);
+  console.log(`\n  ${paint(colors.gray, msg)}\n`);
   process.exit(0);
 }
 
@@ -97,23 +80,23 @@ function parseEntry(raw) {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderEntry(f) {
-  const label = (t) => paint(c.gray, t.padEnd(10));
-  const SEP   = paint(c.gray, "  ──────────────────────────────────────────");
-  console.log(SEP);
-  if (f.word)    console.log(`  ${label("Word")}${paint(c.bold + c.yellow, f.word)}`);
-  if (f.pos)     console.log(`  ${label("PoS")}${paint(c.gray, f.pos)}`);
-  if (f.meaning) console.log(`  ${label("Meaning")}${paint(c.white, f.meaning)}`);
-  if (f.zh)      console.log(`  ${label("中文")}${paint(c.green, f.zh)}`);
-  if (f.example) console.log(`  ${label("Example")}${paint(c.cyan, f.example)}`);
-  if (f.note)    console.log(`  ${label("Note")}${paint(c.darkCyan, f.note)}`);
-  console.log(SEP);
+  const label = (t) => paint(colors.gray, t.padEnd(10));
+  let content = "";
+  
+  if (f.pos)     content += `  ${label("PoS")}${paint(colors.gray, f.pos)}\n`;
+  if (f.meaning) content += `  ${label("Meaning")}${paint(colors.white, f.meaning)}\n`;
+  if (f.zh)      content += `  ${label("中文")}${paint(colors.green, f.zh)}\n`;
+  if (f.example) content += `  ${label("Example")}${paint(colors.cyan, f.example)}\n`;
+  if (f.note)    content += `  ${label("Note")}${paint(colors.brightCyan, f.note)}`;
+
+  console.log(ui.box(paint(colors.bold + colors.yellow, f.word), content.trimEnd(), { width: 70 }));
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 const word = process.argv.slice(2).join(" ").trim();
 
 if (!word) {
-  console.error(`\n  ${paint(c.yellow, "Usage: /add <word or phrase>")}\n`);
+  console.error(`\n  ${paint(colors.yellow, "Usage: /add <word or phrase>")}\n`);
   process.exit(1);
 }
 

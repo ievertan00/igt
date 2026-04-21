@@ -1,21 +1,9 @@
 import fs from "fs";
 import path from "path";
 import readline from "readline";
+import { ui, paint, colors } from "../lib/ui.mjs";
 
 const NOTE_FILE = "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\IGT Vocabulary.md";
-
-// ── ANSI helpers ──────────────────────────────────────────────────────────────
-const c = {
-  reset:    "\x1b[0m",
-  bold:     "\x1b[1m",
-  cyan:     "\x1b[36m",
-  yellow:   "\x1b[33m",
-  green:    "\x1b[32m",
-  darkCyan: "\x1b[96m",
-  gray:     "\x1b[90m",
-  white:    "\x1b[97m",
-};
-const paint = (color, text) => `${color}${text}${c.reset}`;
 
 // ── Parse all entries from the vault file ─────────────────────────────────────
 function parseAllEntries() {
@@ -61,20 +49,19 @@ function parseEntry(raw) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-const SEP = paint(c.gray, "  ──────────────────────────────────────────");
-
 function renderEntry(f) {
-  const label = (t) => paint(c.gray, t.padEnd(10));
-  console.log(SEP);
-  if (f.word)    console.log(`  ${label("Word")}${paint(c.bold + c.yellow, f.word)}`);
-  if (f.pos)     console.log(`  ${label("PoS")}${paint(c.gray, f.pos)}`);
-  if (f.meaning) console.log(`  ${label("Meaning")}${paint(c.white, f.meaning)}`);
-  if (f.zh)      console.log(`  ${label("中文")}${paint(c.green, f.zh)}`);
-  if (f.example) console.log(`  ${label("Example")}${paint(c.cyan, f.example)}`);
-  if (f.note)    console.log(`  ${label("Note")}${paint(c.darkCyan, f.note)}`);
-  if (f.memory)  console.log(`  ${label("Memory")}${paint(c.yellow, f.memory)}`);
-  if (f.added)   console.log(`  ${label("Added")}${paint(c.gray, f.added)}`);
-  console.log(SEP);
+  const label = (t) => paint(colors.gray, t.padEnd(10));
+  let content = "";
+  
+  if (f.pos)     content += `  ${label("PoS")}${paint(colors.gray, f.pos)}\n`;
+  if (f.meaning) content += `  ${label("Meaning")}${paint(colors.white, f.meaning)}\n`;
+  if (f.zh)      content += `  ${label("中文")}${paint(colors.green, f.zh)}\n`;
+  if (f.example) content += `  ${label("Example")}${paint(colors.cyan, f.example)}\n`;
+  if (f.note)    content += `  ${label("Note")}${paint(colors.brightCyan, f.note)}\n`;
+  if (f.memory)  content += `  ${label("Memory")}${paint(colors.yellow, f.memory)}\n`;
+  if (f.added)   content += `  ${label("Added")}${paint(colors.gray, f.added)}`;
+
+  console.log(ui.box(paint(colors.bold + colors.yellow, f.word), content.trimEnd(), { width: 70 }));
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -82,15 +69,18 @@ const args = process.argv.slice(2);
 const entries = parseAllEntries();
 
 if (entries.length === 0) {
-  console.log(`\n  ${paint(c.yellow, "No vocabulary saved yet.")}  Use ${paint(c.cyan, "/add <word>")} to add words.\n`);
+  console.log(`\n  ${paint(colors.yellow, "No vocabulary saved yet.")}  Use ${paint(colors.cyan, "/add <word>")} to add words.\n`);
   process.exit(0);
 }
 
 // ── List mode ─────────────────────────────────────────────────────────────────
 if (args.includes("--list") || args.includes("list")) {
-  console.log(`\n  ${paint(c.bold + c.white, `Vocabulary — ${entries.length} word(s)`)}\n`);
-  for (const e of entries) renderEntry(e);
+  ui.header("Vocabulary", `${entries.length} word(s) saved`);
   console.log("");
+  for (const e of entries) {
+    renderEntry(e);
+    console.log("");
+  }
   process.exit(0);
 }
 
@@ -98,7 +88,7 @@ if (args.includes("--list") || args.includes("list")) {
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
 
 rl.on("SIGINT", () => {
-  console.log(`\n  ${paint(c.gray, "Quiz ended.")}\n`);
+  console.log(`\n  ${paint(colors.gray, "Quiz ended.")}\n`);
   rl.close();
   process.exit(0);
 });
@@ -109,49 +99,56 @@ function ask(prompt) {
 
 async function runQuiz() {
   const shuffled = [...entries].sort(() => Math.random() - 0.5);
-  console.log(`\n  ${paint(c.bold + c.white, "Vocabulary Quiz")}  ${paint(c.gray, `${shuffled.length} word(s) · Ctrl+C to quit`)}\n`);
+  ui.header("Vocabulary Quiz", `${shuffled.length} word(s) · Ctrl+C to quit`);
 
   let known = 0;
   const missed = [];
 
   for (let i = 0; i < shuffled.length; i++) {
     const e = shuffled[i];
-    console.log(SEP);
-    console.log(`  ${paint(c.gray, `${i + 1} / ${shuffled.length}`)}  ${paint(c.bold + c.yellow, e.word)}  ${paint(c.gray, e.pos || "")}`);
+    const label = (t) => paint(colors.gray, t.padEnd(10));
+    let content = "";
+    
+    if (e.meaning) content += `  ${label("Meaning")}${paint(colors.white, e.meaning)}\n`;
+    if (e.zh)      content += `  ${label("中文")}${paint(colors.green, e.zh)}\n`;
+    if (e.example) content += `  ${label("Example")}${paint(colors.cyan, e.example)}\n`;
+    if (e.note)    content += `  ${label("Note")}${paint(colors.brightCyan, e.note)}\n`;
+    if (e.memory)  content += `  ${label("Memory")}${paint(colors.yellow, e.memory)}`;
+
+    console.log(`\n  ${paint(colors.gray, `${i + 1} / ${shuffled.length}`)}  ${paint(colors.bold + colors.yellow, e.word)}  ${paint(colors.gray, e.pos || "")}`);
     console.log("");
-    await ask(`  ${paint(c.gray, "Your meaning? (Enter to reveal)")}  `);
+    
+    const reveal = await ask(`  ${paint(colors.gray, "Your meaning? (Enter to reveal)")}  `);
     process.stdout.write("\x1b[1A\x1b[2K");
-
-    if (e.meaning) console.log(`  ${paint(c.gray, "Meaning".padEnd(10))}${paint(c.white, e.meaning)}`);
-    if (e.zh)      console.log(`  ${paint(c.gray, "中文".padEnd(10))}${paint(c.green, e.zh)}`);
-    if (e.example) console.log(`  ${paint(c.gray, "Example".padEnd(10))}${paint(c.cyan, e.example)}`);
-    if (e.note)    console.log(`  ${paint(c.gray, "Note".padEnd(10))}${paint(c.darkCyan, e.note)}`);
-    if (e.memory)  console.log(`  ${paint(c.gray, "Memory".padEnd(10))}${paint(c.yellow, e.memory)}`);
+    
+    console.log(ui.box(paint(colors.bold + colors.yellow, e.word), content.trimEnd(), { width: 70 }));
     console.log("");
 
-    const grade = await ask(`  ${paint(c.gray, "Did you know it?")} ${paint(c.white, "[y/n]")}  `);
+    const grade = await ask(`  ${paint(colors.gray, "Did you know it?")} ${paint(colors.white, "[y/n]")}  `);
     if (grade.trim().toLowerCase() !== "n") {
       known++;
-      console.log(`  ${paint(c.green, "✓ Got it")}\n`);
+      console.log(`  ${paint(colors.green, "✓ Got it")}`);
     } else {
       missed.push(e);
-      console.log(`  ${paint(c.yellow, "✗ Review again")}\n`);
+      console.log(`  ${paint(colors.yellow, "✗ Review again")}`);
     }
   }
 
   // Summary
   const pct = Math.round((known / shuffled.length) * 100);
-  console.log(SEP);
-  console.log(`\n  ${paint(c.bold + c.white, "Score:")} ${paint(c.green, `${known} / ${shuffled.length}`)}  ${paint(c.gray, `(${pct}%)`)}`);
-  if (missed.length > 0) {
-    console.log(`\n  ${paint(c.yellow, "Words to revisit:")}`);
-    for (const e of missed) console.log(`    ${paint(c.yellow, e.word)}  ${paint(c.gray, e.meaning || "")}`);
-  }
   console.log("");
-  if      (pct === 100) console.log(`  ${paint(c.green, "Perfect round!")}`);
-  else if (pct >= 80)   console.log(`  ${paint(c.green, "Great work — keep it up.")}`);
-  else if (pct >= 50)   console.log(`  ${paint(c.yellow, "Getting there. Review the ones you missed.")}`);
-  else                  console.log(`  ${paint(c.yellow, "Keep practicing — repetition is the key.")}`);
+  ui.header("Quiz Result", `${known} / ${shuffled.length} (${pct}%)`);
+  
+  if (missed.length > 0) {
+    console.log(`\n  ${paint(colors.yellow, "Words to revisit:")}`);
+    for (const e of missed) console.log(`    ${paint(colors.yellow, e.word)}  ${paint(colors.gray, e.meaning || "")}`);
+  }
+  
+  console.log("");
+  if      (pct === 100) console.log(`  ${paint(colors.green, "Perfect round!")}`);
+  else if (pct >= 80)   console.log(`  ${paint(colors.green, "Great work — keep it up.")}`);
+  else if (pct >= 50)   console.log(`  ${paint(colors.yellow, "Getting there. Review the ones you missed.")}`);
+  else                  console.log(`  ${paint(colors.yellow, "Keep practicing — repetition is the key.")}`);
   console.log("");
   rl.close();
 }

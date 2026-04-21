@@ -3,6 +3,11 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import configLoader from "../lib/config-loader.mjs";
+import { ui, paint, colors } from "../lib/ui.mjs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -355,6 +360,23 @@ if (config.ReportPath) {
 
 fs.writeFileSync(outputPath, report, "utf8");
 
-console.log(`✅ Proficiency Assessment generated: ${outputPath}`);
-console.log(`🎯 Estimated CEFR Level: ${cefr.level} - ${cefr.description}`);
-console.log(`📊 Analyzed ${stats.total_inputs} inputs with ${stats.total_diagnoses} diagnoses`);
+ui.header("Proficiency Assessment", `Analyzed ${stats.total_inputs} inputs`);
+
+const summaryContent = [
+  `${paint(colors.gray, "Estimated Level ")}${paint(colors.bold + colors.cyan, cefr.level)} - ${paint(colors.white, cefr.description)}`,
+  `${paint(colors.gray, "Diagnoses       ")}${paint(colors.yellow, stats.total_diagnoses.toString())}`,
+  `${paint(colors.gray, "Unique Errors   ")}${paint(colors.brightRed, stats.unique_errors.toString())}`,
+  "",
+  paint(colors.gray, "Dimension Scores:"),
+  ...Object.entries(dimensions).map(([dim, score]) => {
+    const barLength = Math.round(score / 10);
+    const bar = paint(colors.green, "█".repeat(barLength)) + paint(colors.gray, "░".repeat(10 - barLength));
+    return `  ${paint(colors.white, dim.padEnd(18))} ${bar} ${score.toFixed(0)}%`;
+  }),
+  "",
+  `${paint(colors.green, "✅ Report saved to:")}`,
+  `  ${paint(colors.gray, outputPath)}`
+].join("\n");
+
+console.log(ui.box("ASSESSMENT SUMMARY", summaryContent, { width: 70 }));
+console.log("");

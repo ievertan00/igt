@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
+import { ui, paint, colors, Spinner } from "../lib/ui.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -359,35 +360,39 @@ function gradeAnswer(exercise, userAnswer) {
 
 // Format exercise for display
 function displayExercise(exercise, index, total) {
-  console.log("\n" + "─".repeat(50));
-  console.log(`📝 Exercise ${index}/${total}`);
-  console.log("─".repeat(50));
+  const typeLabel = exercise.type === "multiple-choice" ? "Multiple Choice" : "Fill in the Blank";
+  ui.header(`Exercise ${index}/${total}`, typeLabel);
 
+  let content = "";
   if (exercise.type === "multiple-choice") {
-    console.log(`\n[Multiple Choice] ${exercise.question}\n`);
+    content = `${paint(colors.white, exercise.question)}\n\n`;
     const labels = ["A", "B", "C", "D"];
     for (let i = 0; i < exercise.options.length; i++) {
-      // Strip any existing leading label (e.g., "A. ", "B) ", "a. ")
       const cleaned = exercise.options[i].replace(/^[A-Da-d][.)\s]+\s*/, "");
-      console.log(`  ${labels[i]}. ${cleaned}`);
+      content += `  ${paint(colors.cyan, labels[i])}. ${paint(colors.white, cleaned)}\n`;
     }
-    console.log("");
   } else {
-    console.log(`\n[Fill in the Blank] ${exercise.question}\n`);
+    content = `${paint(colors.white, exercise.question)}`;
   }
+
+  console.log(ui.box("QUESTION", content.trimEnd(), { width: 70 }));
+  console.log("");
 }
 
 // Display result after answering
 function displayResult(exercise, isCorrect) {
-  // Clean answer for display
   const cleanAnswer = exercise.answer.replace(/^[A-Da-d][.)\s]+\s*/, "").trim();
-
+  
+  let content = "";
   if (isCorrect) {
-    console.log("\n✅ Correct!\n");
+    content = `${paint(colors.green, "✅ Correct!")}\n\n`;
   } else {
-    console.log(`\n❌ Incorrect. The correct answer is: **${cleanAnswer}**\n`);
+    content = `${paint(colors.red, "❌ Incorrect.")} ${paint(colors.gray, "The correct answer is: ")}${paint(colors.bold + colors.green, cleanAnswer)}\n\n`;
   }
-  console.log(`💡 ${exercise.explanation}\n`);
+  content += `${paint(colors.yellow, "💡 ")}${paint(colors.white, exercise.explanation)}`;
+
+  console.log(ui.box("FEEDBACK", content, { width: 70, color: isCorrect ? colors.green : colors.red }));
+  console.log("");
 }
 
 // Main practice loop
