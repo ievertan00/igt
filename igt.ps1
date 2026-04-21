@@ -297,6 +297,20 @@ function Write-WrappedLine {
     if ($line -ne "") { Write-Host $line -ForegroundColor $Color }
 }
 
+# ── Body line sanitizer ──────────────────────────────────────────────────────────
+function Sanitize-BodyLine {
+    param([string]$line, [string]$section)
+    # Strip surrounding brackets or quotes the LLM sometimes wraps sentences in
+    if ($line -match '^\[(.+)\]$')  { $line = $Matches[1].Trim() }
+    if ($line -match '^"(.+)"$')    { $line = $Matches[1].Trim() }
+    if ($line -match "^'(.+)'$")    { $line = $Matches[1].Trim() }
+    # Ensure bullet prefix for list sections
+    if ($section -in @("diagnosis","rule","tip") -and $line -ne "" -and $line -notmatch '^- ') {
+        $line = "- $line"
+    }
+    return $line
+}
+
 # ── Color-coded output renderer ─────────────────────────────────────────────────
 function Write-ColoredResponse {
     param([string]$Content)
@@ -342,6 +356,7 @@ function Write-ColoredResponse {
             if ($line -match '^(\*\*\w+\*\*\:?\s*)(.+)$') {
                 Write-Host $Matches[1].TrimEnd() -ForegroundColor $headerColor[$section]
                 $remainder = $Matches[2].Trim()
+                $remainder = Sanitize-BodyLine $remainder $section
                 if ($remainder -ne "") {
                     Write-WrappedLine $remainder -Color $bodyColor[$section]
                 }
@@ -355,10 +370,11 @@ function Write-ColoredResponse {
         if ($line.Trim() -eq "") { continue }
 
         # Body line — single color per section
+        $cleanLine = Sanitize-BodyLine $line.Trim() $section
         if ($bodyColor.ContainsKey($section)) {
-            Write-WrappedLine $line -Color $bodyColor[$section]
+            Write-WrappedLine $cleanLine -Color $bodyColor[$section]
         } else {
-            Write-WrappedLine $line -Color White
+            Write-WrappedLine $cleanLine -Color White
         }
     }
 }

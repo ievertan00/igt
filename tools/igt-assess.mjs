@@ -9,10 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const projectRoot = path.join(__dirname, "..");
-
 // Load config via unified config loader
 const config = configLoader.load();
 const dbPath = config.DbPath || "igt_data.db";
