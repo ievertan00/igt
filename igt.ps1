@@ -207,6 +207,8 @@ function Read-LineWithHistory {
                         $next = [System.Console]::ReadKey($true)
                         if ($next.KeyChar -ne "`0" -and -not [System.Char]::IsControl($next.KeyChar)) {
                             $chars.Append($next.KeyChar) | Out-Null
+                        } elseif ($next.Key -eq [System.ConsoleKey]::Enter) {
+                            $chars.Append(' ') | Out-Null  # collapse pasted newlines into spaces
                         } else {
                             $keyQueue.Enqueue($next)   # put non-printable back
                             break
@@ -242,10 +244,10 @@ function Start-Spinner {
     $ps = [powershell]::Create()
     $ps.Runspace = $rs
     [void]$ps.AddScript({
-        $f = @('-', '\', '|', '/')
+        $f = @('⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏')
         $i = 0
         while (-not $syncHash.Stop) {
-            [System.Console]::Write("`r$($f[$i % 4]) $($syncHash.Message)... ")
+            [System.Console]::Write("`r$($f[$i % $f.Count]) $($syncHash.Message)... ")
             Start-Sleep -Milliseconds 100
             $i++
         }
@@ -336,20 +338,24 @@ function Write-ColoredResponse {
             if ($prevSection -ne "default") { Write-Host "" }
             $section     = $newSection
             $prevSection = $newSection
-            Write-Host $line -ForegroundColor $headerColor[$section]
+            # Separate inline content from the header marker
+            if ($line -match '^(\*\*\w+\*\*\:?\s*)(.+)$') {
+                Write-Host $Matches[1].TrimEnd() -ForegroundColor $headerColor[$section]
+                $remainder = $Matches[2].Trim()
+                if ($remainder -ne "") {
+                    Write-WrappedLine $remainder -Color $bodyColor[$section]
+                }
+            } else {
+                Write-Host $line -ForegroundColor $headerColor[$section]
+            }
             continue
         }
 
         # Drop all blank lines from LLM output — separators are added above
         if ($line.Trim() -eq "") { continue }
 
-        # Body line
-        if ($section -eq "diagnosis") {
-            if    ($line -match '\(Major\)')    { Write-WrappedLine $line -Color Red }
-            elseif ($line -match '\(Moderate\)') { Write-WrappedLine $line -Color Yellow }
-            elseif ($line -match '\(Minor\)')    { Write-WrappedLine $line -Color DarkYellow }
-            else                                { Write-WrappedLine $line -Color Gray }
-        } elseif ($bodyColor.ContainsKey($section)) {
+        # Body line — single color per section
+        if ($bodyColor.ContainsKey($section)) {
             Write-WrappedLine $line -Color $bodyColor[$section]
         } else {
             Write-WrappedLine $line -Color White
@@ -412,7 +418,7 @@ function Start-IGTServer {
         Start-Sleep -Milliseconds 100
     }
 
-    if ($ready) { Write-Host "[Server] Started (port $serverPort)" -ForegroundColor DarkGray; return $true }
+    if ($ready) { Write-Host "  ● server  port $serverPort" -ForegroundColor DarkGray; return $true }
     Write-Host "Error: Server startup timeout" -ForegroundColor Red
     return $false
 }
@@ -551,31 +557,32 @@ function Show-Header {
 }
 
 function Show-Help {
+    $sep = "─" * [Math]::Min(54, [Math]::Max(30, [System.Console]::WindowWidth - 4))
     Write-Host ""
     Write-Host "  Commands" -ForegroundColor Yellow
-    Write-Host "  ──────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  $sep" -ForegroundColor DarkGray
     Write-Host "  /handbook         " -NoNewline -ForegroundColor Cyan
-    Write-Host "Generate your personal error handbook" -ForegroundColor White
+    Write-Host "Generate your personal error handbook" -ForegroundColor Gray
     Write-Host "  /practice         " -NoNewline -ForegroundColor Cyan
-    Write-Host "Targeted grammar exercises (CEFR-aware)" -ForegroundColor White
+    Write-Host "Targeted grammar exercises (CEFR-aware)" -ForegroundColor Gray
     Write-Host "  /practice B2 10   " -NoNewline -ForegroundColor Cyan
-    Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor White
+    Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor Gray
     Write-Host "  /assess           " -NoNewline -ForegroundColor Cyan
-    Write-Host "Estimate your CEFR proficiency level" -ForegroundColor White
+    Write-Host "Estimate your CEFR proficiency level" -ForegroundColor Gray
     Write-Host "  /add <word>       " -NoNewline -ForegroundColor Cyan
-    Write-Host "Add a word to your Obsidian vocabulary note" -ForegroundColor White
+    Write-Host "Add a word to your Obsidian vocabulary note" -ForegroundColor Gray
     Write-Host "  /vocab            " -NoNewline -ForegroundColor Cyan
-    Write-Host "Review saved vocabulary (quiz or list)" -ForegroundColor White
+    Write-Host "Review saved vocabulary (quiz or list)" -ForegroundColor Gray
     Write-Host "  /gemini           " -NoNewline -ForegroundColor Cyan
-    Write-Host "Switch to Gemini model" -ForegroundColor White
+    Write-Host "Switch to Gemini model" -ForegroundColor Gray
     Write-Host "  /qwen             " -NoNewline -ForegroundColor Cyan
-    Write-Host "Switch to Qwen model" -ForegroundColor White
+    Write-Host "Switch to Qwen model" -ForegroundColor Gray
     Write-Host "  /deepseek         " -NoNewline -ForegroundColor Cyan
-    Write-Host "Switch to Deepseek model" -ForegroundColor White
+    Write-Host "Switch to Deepseek model" -ForegroundColor Gray
     Write-Host '  """               ' -NoNewline -ForegroundColor Cyan
-    Write-Host "Enter multiline input mode" -ForegroundColor White
+    Write-Host "Enter multiline input mode" -ForegroundColor Gray
     Write-Host "  exit              " -NoNewline -ForegroundColor Cyan
-    Write-Host "Quit IGT" -ForegroundColor White
+    Write-Host "Quit IGT" -ForegroundColor Gray
     Write-Host ""
 }
 
@@ -584,7 +591,7 @@ Show-Header -Model $currentModel
 
 # ── Main loop ─────────────────────────────────────────────────────────────────────
 while ($true) {
-    $userInput = Read-LineWithHistory -Prompt "[$currentModel] > "
+    $userInput = Read-LineWithHistory -Prompt " $currentModel ❯ "
 
     if ($userInput -eq "exit" -or $userInput -eq "quit") {
         Stop-IGTServer
@@ -594,10 +601,10 @@ while ($true) {
 
     # Multiline mode
     if ($userInput -eq '"""') {
-        Write-Host '  [Multiline — type """ on its own line to submit]' -ForegroundColor DarkGray
+        Write-Host '  multiline  ·  """ on its own line to submit' -ForegroundColor DarkGray
         $lines = [System.Collections.Generic.List[string]]::new()
         while ($true) {
-            $line = Read-LineWithHistory -Prompt "  > "
+            $line = Read-LineWithHistory -Prompt "  ❯ "
             if ($line -eq '"""') { break }
             $lines.Add($line)
         }
@@ -687,12 +694,12 @@ while ($true) {
     Write-Host ""
     Write-Host "  Input  " -NoNewline -ForegroundColor DarkGray
     Write-WrappedLine $userInput -Color White -HangIndent 10 -Prefix 9
-    Write-Host ""
+    Write-Host ("  " + ("─" * [Math]::Min(44, [Math]::Max(20, [System.Console]::WindowWidth - 4)))) -ForegroundColor DarkGray
     Write-ColoredResponse $response.content
     Write-Host ""
 
     if ($response.perf) {
-        Write-Host "  [LLM: $($response.perf.llm_ms.ToString('N0'))ms | Total: $($response.perf.total_ms.ToString('N0'))ms]" -ForegroundColor DarkGray
+        Write-Host "  $($response.perf.llm_ms.ToString('N0'))ms llm  ·  $($response.perf.total_ms.ToString('N0'))ms total" -ForegroundColor DarkGray
     }
 
     # Add to history (skip consecutive duplicates)

@@ -5,9 +5,11 @@ This document tracks the historical changes to the core LLM prompts found in lib
 ---
 
 ## Commit e0639d65 - Fri Apr 17 16:13:52 2026 +0800
+
 **Commit Message**: refine: improve all three LLM prompts for precision and output quality
 
 ### SystemPrompt
+
 ```text
 You are a precise Linguistic Validator and Professional Editor. Your sole job is to catch real errors, fix them minimally, and then offer a fluent rewrite — nothing more.
 
@@ -60,10 +62,10 @@ Input: "This happens after a sudden crash of my CMD window."
 **Review**: Correct.
 **Correction**: This happens after a sudden crash of my CMD window.
 **Refine**: This occurs whenever my CMD window crashes unexpectedly.
-
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are a personal English grammar coach. Your job is to turn a user's real error history into a concise, actionable reference they can actually remember and apply.
 
@@ -105,6 +107,7 @@ One short, memorable rule of thumb the user can carry in their head (e.g., *"Cou
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises targeting these error types:
 {{errorList}}
@@ -150,9 +153,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 8b59ec61 - Thu Apr 16 09:19:01 2026 +0800
+
 **Commit Message**: Update Handbook and Practice prompts to support pattern detection
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator and Professional Editor.
 
@@ -205,10 +210,10 @@ Input: "This happens after a sudden crash of my CMD window."
 **Review**: Correct.
 **Correction**: This happens after a sudden crash of my CMD window.
 **Refine**: This occurs following a sudden crash of my CMD window.
-
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor and Linguistic Analyst. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -236,6 +241,7 @@ Keep the tone encouraging and analytical. Focus on the patterns the user actuall
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
@@ -285,9 +291,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 151b62ca - Wed Apr 15 17:51:59 2026 +0800
+
 **Commit Message**: refactor: move path configurations to .env and clean up igt_config.json
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator and Professional Editor.
 
@@ -340,10 +348,10 @@ Input: "This happens after a sudden crash of my CMD window."
 **Review**: Correct.
 **Correction**: This happens after a sudden crash of my CMD window.
 **Refine**: This occurs following a sudden crash of my CMD window.
-
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -371,6 +379,7 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
@@ -420,9 +429,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 70a31966 - Wed Apr 15 16:27:04 2026 +0800
+
 **Commit Message**: feat: use generalized examples in system prompt
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator and Professional Editor.
 
@@ -480,10 +491,10 @@ Input: "I finished reading my report."
 **Review**: Correct.
 **Correction**: I finished reading my report.
 **Refine**: I have completed the review of my documentation.
-
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -511,6 +522,7 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
@@ -560,9 +572,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 80a0ce17 - Wed Apr 15 16:14:26 2026 +0800
+
 **Commit Message**: fix: add anti-hallucination verification rule to system prompt
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator and Professional Editor.
 
@@ -620,10 +634,10 @@ Input: "This happens after a sudden crash of my CMD window."
 **Review**: Correct.
 **Correction**: This happens after a sudden crash of my CMD window.
 **Refine**: This occurs following a sudden crash of my CMD window.
-
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -651,6 +665,7 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
@@ -700,9 +715,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 029c7f04 - Wed Apr 15 15:40:24 2026 +0800
+
 **Commit Message**: feat: complete system prompt refinement (v2.2)
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator and Professional Editor.
 
@@ -757,6 +774,7 @@ Input: "She go to store"
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -784,6 +802,7 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
@@ -833,9 +852,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 45ccb83b - Wed Apr 15 15:24:09 2026 +0800
+
 **Commit Message**: feat: update system prompt for better accuracy and parser compatibility
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator and Professional Editor.
 
@@ -889,6 +910,7 @@ Input: "She go to store"
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -916,6 +938,7 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
@@ -965,9 +988,11 @@ CRITICAL: Return ONLY the JSON array. NO markdown, NO code blocks, NO explanatio
 ---
 
 ## Commit 399e1c65 - Wed Apr 15 11:06:41 2026 +0800
+
 **Commit Message**: feat: move private paths to .env and track igt_config.json in git
 
 ### SystemPrompt
+
 ```text
 Act as an expert Linguistic Validator, Professional Editor, and Writing Coach.
 
@@ -998,6 +1023,7 @@ Output Format (STRICT):
 ```
 
 ### HandbookGrammarRulePrompt
+
 ```text
 You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
 
@@ -1025,6 +1051,7 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 ```
 
 ### PracticeExercisePrompt
+
 ```text
 Generate {{count}} grammar practice exercises focusing on these error types:
 {{errorList}}
