@@ -639,7 +639,7 @@ Show-Header -Model $currentModel
 while ($true) {
     $userInput = Read-LineWithHistory -Prompt " $currentModel ❯ "
 
-    if ($userInput -eq "exit" -or $userInput -eq "quit") {
+    if ($userInput -eq "exit" -or $userInput -eq "quit" -or $userInput -eq "q") {
         Stop-IGTServer
         break
     }
@@ -716,7 +716,7 @@ while ($true) {
             $currentModel = Get-CurrentModelName
             Write-Host ""
 
-        } elseif ($cmd -eq "exit" -or $cmd -eq "quit") {
+        } elseif ($cmd -eq "exit" -or $cmd -eq "quit" -or $cmd -eq "q") {
             Stop-IGTServer; break
 
         } else {
