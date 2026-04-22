@@ -16,14 +16,14 @@ Processing... Done (1521ms)
 
 ## Features
 
-| | |
-|---|---|
-| **Multi-LLM** | Switch between Google Gemini, Alibaba Qwen, and Deepseek instantly — no restart needed |
-| **Fast** | Persistent HTTP server eliminates Node.js startup overhead; typical response under 2s |
-| **Anti-hallucination** | Strict prompt rules prevent phantom error detection; corrections are verbatim if the input is already correct |
-| **Error taxonomy** | All diagnoses are normalized to 20 canonical types across 5 categories (Grammar, Vocabulary, Mechanics, Style, Clarity) |
-| **Auto-logging** | Every check is saved to SQLite and appended to a Markdown review log (Obsidian-compatible) |
-| **Learning suite** | Personal error handbook, targeted practice exercises, and CEFR proficiency assessment built from your error history |
+|                        |                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Multi-LLM**          | Switch between Google Gemini, Alibaba Qwen, and Deepseek instantly — no restart needed                                  |
+| **Fast**               | Persistent HTTP server eliminates Node.js startup overhead; typical response under 2s                                   |
+| **Anti-hallucination** | Strict prompt rules prevent phantom error detection; corrections are verbatim if the input is already correct           |
+| **Error taxonomy**     | All diagnoses are normalized to 20 canonical types across 5 categories (Grammar, Vocabulary, Mechanics, Style, Clarity) |
+| **Auto-logging**       | Every check is saved to SQLite and appended to a Markdown review log (Obsidian-compatible)                              |
+| **Learning suite**     | Personal error handbook, targeted practice exercises, and CEFR proficiency assessment built from your error history     |
 
 ## Prerequisites
 
@@ -50,12 +50,13 @@ node tools/init-db.mjs   # initialize the SQLite database (first run only)
 
 IGT separates private and shared configuration:
 
-| File | Tracked by git | Purpose |
-|------|---------------|---------|
-| `.env` | No | API keys, default provider |
-| `lib/igt_config.json` | Yes | Model names, file paths, LLM prompts |
+| File                  | Tracked by git | Purpose                              |
+| --------------------- | -------------- | ------------------------------------ |
+| `.env`                | No             | API keys, default provider           |
+| `lib/igt_config.json` | Yes            | Model names, file paths, LLM prompts |
 
 **`.env`**
+
 ```env
 GOOGLE_API_KEYS=key1,key2        # comma-separated for automatic rotation
 DASHSCOPE_API_KEYS=your-key
@@ -64,6 +65,7 @@ IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek
 ```
 
 **`lib/igt_config.json`** (excerpt)
+
 ```json
 {
   "LLMProvider": "gemini",
@@ -86,21 +88,21 @@ All three LLM prompts (`SystemPrompt`, `HandbookGrammarRulePrompt`, `PracticeExe
 
 Start IGT with `./igt.ps1`. All commands use a `/` prefix at the input prompt.
 
-| Command | Description |
-|---------|-------------|
-| `/handbook` | Generate your personal error handbook |
-| `/practice` | Start a practice session targeting your top error types |
-| `/practice B2 10` | Practice at CEFR level B2, 10 questions |
-| `/assess` | Estimate your current CEFR proficiency level |
-| `/add <word>` | Add a word to your Obsidian vocabulary note |
-| `/vocab` | Review saved vocabulary (quiz mode); `/vocab --list` to browse |
-| `/gemini` | Switch to Gemini |
-| `/qwen` | Switch to Qwen |
-| `/deepseek` | Switch to Deepseek |
-| `/llm status` | Show current provider, configured keys, and model names |
-| `/llm setup` | Interactive wizard to configure API keys |
-| `/help` | Show command reference |
-| `exit` | Quit IGT |
+| Command           | Description                                                    |
+| ----------------- | -------------------------------------------------------------- |
+| `/handbook`       | Generate your personal error handbook                          |
+| `/practice`       | Start a practice session targeting your top error types        |
+| `/practice B2 10` | Practice at CEFR level B2, 10 questions                        |
+| `/assess`         | Estimate your current CEFR proficiency level                   |
+| `/add <word>`     | Add a word to your Obsidian vocabulary note                    |
+| `/vocab`          | Review saved vocabulary (quiz mode); `/vocab --list` to browse |
+| `/gemini`         | Switch to Gemini                                               |
+| `/qwen`           | Switch to Qwen                                                 |
+| `/deepseek`       | Switch to Deepseek                                             |
+| `/llm status`     | Show current provider, configured keys, and model names        |
+| `/llm setup`      | Interactive wizard to configure API keys                       |
+| `/help`           | Show command reference                                         |
+| `exit`            | Quit IGT                                                       |
 
 **Input behavior**: Ctrl+C clears the current input and returns to the prompt. Long inputs wrap across multiple terminal rows automatically. Use `"""` to enter multiline mode.
 
@@ -152,28 +154,28 @@ igt.ps1  ──POST /grammar──►  igt-http-server.mjs
 
 **Key files**
 
-| File | Role |
-|------|------|
-| `igt.ps1` | Interactive loop, color rendering, command routing |
-| `lib/igt-http-server.mjs` | HTTP server, request handling, orchestration |
-| `lib/llm-provider.mjs` | Provider abstraction, model routing, key rotation |
-| `lib/llm-gemini.mjs` | Gemini API implementation |
-| `lib/llm-qwen.mjs` | Qwen (DashScope) API implementation |
-| `lib/llm-deepseek.mjs` | Deepseek API implementation |
-| `lib/config-loader.mjs` | Merges `.env` + `igt_config.json` at startup |
-| `lib/error-types.mjs` | 20-type MECE error taxonomy |
-| `tools/igt-handbook.mjs` | Handbook generator with incremental cache |
-| `tools/igt-practice.mjs` | Practice exercise generator and grader |
-| `tools/igt-assess.mjs` | CEFR assessment engine |
-| `tools/init-db.mjs` | Database initializer |
-| `tools/import-review-to-db.mjs` | Import legacy Markdown logs into SQLite |
+| File                            | Role                                               |
+| ------------------------------- | -------------------------------------------------- |
+| `igt.ps1`                       | Interactive loop, color rendering, command routing |
+| `lib/igt-http-server.mjs`       | HTTP server, request handling, orchestration       |
+| `lib/llm-provider.mjs`          | Provider abstraction, model routing, key rotation  |
+| `lib/llm-gemini.mjs`            | Gemini API implementation                          |
+| `lib/llm-qwen.mjs`              | Qwen (DashScope) API implementation                |
+| `lib/llm-deepseek.mjs`          | Deepseek API implementation                        |
+| `lib/config-loader.mjs`         | Merges `.env` + `igt_config.json` at startup       |
+| `lib/error-types.mjs`           | 20-type MECE error taxonomy                        |
+| `tools/igt-handbook.mjs`        | Handbook generator with incremental cache          |
+| `tools/igt-practice.mjs`        | Practice exercise generator and grader             |
+| `tools/igt-assess.mjs`          | CEFR assessment engine                             |
+| `tools/init-db.mjs`             | Database initializer                               |
+| `tools/import-review-to-db.mjs` | Import legacy Markdown logs into SQLite            |
 
 ## Performance
 
-| | Wall-clock time |
-|---|---|
-| Gemini CLI (baseline) | ~9.91s |
-| IGT | ~1.67s |
+|                       | Wall-clock time |
+| --------------------- | --------------- |
+| Gemini CLI (baseline) | ~9.91s          |
+| IGT                   | ~1.67s          |
 
 The 83% improvement comes entirely from eliminating per-request Node.js startup by keeping the HTTP server alive. The API call itself (~1,500ms) is the dominant cost and is network-bound.
 
