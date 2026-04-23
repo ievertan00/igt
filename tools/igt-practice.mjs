@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
-import { ui, paint, colors, Spinner } from "../lib/ui.mjs";
+import { ui, paint, colors, Spinner, wrapText } from "../lib/ui.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -358,6 +358,9 @@ function gradeAnswer(exercise, userAnswer) {
   return false;
 }
 
+const BOX_WIDTH = 72;
+const BOX_INNER_WIDTH = BOX_WIDTH - 6; // subtract borders (│ , │) + padding
+
 // Format exercise for display
 function displayExercise(exercise, index, total) {
   const typeLabel = exercise.type === "multiple-choice" ? "Multiple Choice" : "Fill in the Blank";
@@ -365,17 +368,17 @@ function displayExercise(exercise, index, total) {
 
   let content = "";
   if (exercise.type === "multiple-choice") {
-    content = `${paint(colors.white, exercise.question)}\n\n`;
+    content = `${paint(colors.white, wrapText(exercise.question, BOX_INNER_WIDTH))}\n\n`;
     const labels = ["A", "B", "C", "D"];
     for (let i = 0; i < exercise.options.length; i++) {
       const cleaned = exercise.options[i].replace(/^[A-Da-d][.)\s]+\s*/, "");
       content += `  ${paint(colors.cyan, labels[i])}. ${paint(colors.white, cleaned)}\n`;
     }
   } else {
-    content = `${paint(colors.white, exercise.question)}`;
+    content = `${paint(colors.white, wrapText(exercise.question, BOX_INNER_WIDTH))}`;
   }
 
-  console.log(ui.box("QUESTION", content.trimEnd(), { width: 70 }));
+  console.log(ui.box("QUESTION", content.trimEnd(), { width: BOX_WIDTH }));
   console.log("");
 }
 
@@ -389,9 +392,9 @@ function displayResult(exercise, isCorrect) {
   } else {
     content = `${paint(colors.red, "❌ Incorrect.")} ${paint(colors.gray, "The correct answer is: ")}${paint(colors.bold + colors.green, cleanAnswer)}\n\n`;
   }
-  content += `${paint(colors.yellow, "💡 ")}${paint(colors.white, exercise.explanation)}`;
+  content += `${paint(colors.yellow, "💡 ")}${paint(colors.white, wrapText(exercise.explanation, BOX_INNER_WIDTH - 4, 4))}`;
 
-  console.log(ui.box("FEEDBACK", content, { width: 70, color: isCorrect ? colors.green : colors.red }));
+  console.log(ui.box("FEEDBACK", content, { width: BOX_WIDTH, color: isCorrect ? colors.green : colors.red }));
   console.log("");
 }
 

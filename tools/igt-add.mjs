@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 import initializeLLMProviders from "../lib/llm-init.mjs";
-import { ui, paint, colors, Spinner } from "../lib/ui.mjs";
+import { ui, paint, colors, Spinner, wrapText } from "../lib/ui.mjs";
 
 const VAULT_DIR = "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse";
 const NOTE_FILE = path.join(VAULT_DIR, "IGT Vocabulary.md");
@@ -79,15 +79,17 @@ function parseEntry(raw) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
+const VFIELD_WIDTH = 52; // 70 box - 6 border/padding - 12 label prefix
+
 function renderEntry(f) {
   const label = (t) => paint(colors.gray, t.padEnd(10));
   let content = "";
-  
+
   if (f.pos)     content += `  ${label("PoS")}${paint(colors.gray, f.pos)}\n`;
-  if (f.meaning) content += `  ${label("Meaning")}${paint(colors.white, f.meaning)}\n`;
+  if (f.meaning) content += `  ${label("Meaning")}${paint(colors.white, wrapText(f.meaning, VFIELD_WIDTH, 12))}\n`;
   if (f.zh)      content += `  ${label("中文")}${paint(colors.green, f.zh)}\n`;
-  if (f.example) content += `  ${label("Example")}${paint(colors.cyan, f.example)}\n`;
-  if (f.note)    content += `  ${label("Note")}${paint(colors.brightCyan, f.note)}`;
+  if (f.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(f.example, VFIELD_WIDTH, 12))}\n`;
+  if (f.note)    content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(f.note, VFIELD_WIDTH, 12))}`;
 
   console.log(ui.box(paint(colors.bold + colors.yellow, f.word), content.trimEnd(), { width: 70 }));
 }

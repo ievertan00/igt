@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import configLoader from "../lib/config-loader.mjs";
-import { ui, paint, colors } from "../lib/ui.mjs";
+import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -371,7 +371,7 @@ const summaryContent = [
   }),
   "",
   `${paint(colors.green, "✅ Report saved to:")}`,
-  `  ${paint(colors.gray, outputPath)}`
+  `  ${paint(colors.gray, wrapText(outputPath, 62, 2))}`
 ].join("\n");
 
 console.log(ui.box("ASSESSMENT SUMMARY", summaryContent, { width: 70 }));
