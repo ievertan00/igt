@@ -1,11 +1,23 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import readline from "readline";
-import initializeLLMProviders from "../lib/llm-init.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
 import { ui, paint, colors, Spinner, wrapText } from "../lib/ui.mjs";
 
-const VAULT_DIR = "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse";
-const NOTE_FILE = path.join(VAULT_DIR, "IGT Vocabulary.md");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
+
+const config = configLoader.load();
+const c = colors;
+
+const baseDir = config.VaultDir 
+  ? (path.isAbsolute(config.VaultDir) ? config.VaultDir : path.join(projectRoot, config.VaultDir))
+  : path.join(projectRoot, "docs");
+
+const VOCAB_FILE = config.VocabFile || "IGT Vocabulary.md";
+const NOTE_FILE = path.isAbsolute(VOCAB_FILE) ? VOCAB_FILE : path.join(baseDir, VOCAB_FILE);
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
 let currentSpinner = null;
@@ -166,3 +178,5 @@ if (!fs.existsSync(NOTE_FILE)) {
 fs.appendFileSync(NOTE_FILE, mdBlock, "utf8");
 
 console.log(`\n  ${paint(c.green, "✓")} ${paint(c.gray, "Saved to")} ${paint(c.white, "IGT Vocabulary.md")}\n`);
+
+rl.close();
