@@ -14,6 +14,7 @@ IGT (Interactive Grammar Tool) is a Windows PowerShell CLI that provides real-ti
 ```
 
 One-off Node tools (run directly, not through igt.ps1):
+
 ```bash
 node tools/init-db.mjs                        # Initialize SQLite DB (first run)
 node tools/igt-handbook.mjs --days=7          # Generate personal error handbook
@@ -62,3 +63,7 @@ tools/      User-facing standalone scripts (handbook, practice, assess, vocab, d
 tests/      Test and profiling scripts (not run in production)
 docs/       Reference documentation; docs/archive/ holds design plans and specs
 ```
+
+## Actions
+
+- Save the project documents in the /docs directory.
