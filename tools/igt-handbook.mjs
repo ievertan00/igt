@@ -1016,26 +1016,20 @@ function getCategoryIcon(category) {
 
 const report = await generateReport();
 
-// Save to file with LLM provider in filename
+// Resolve output path
 const dateStr = new Date().toISOString().split("T")[0];
 const provider = llmManager.getCurrentProviderName();
 
-// Use ReportPath from config if available
-let outputPath;
-const baseFilename = `handbook_${dateStr}_${provider}.md`;
+const reportDir = config.ReportPath 
+  ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
+  : path.join(projectRoot, "docs");
 
-if (config.ReportPath) {
-  const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath);
-  if (!fs.existsSync(reportDir)) {
-    fs.mkdirSync(reportDir, { recursive: true });
-  }
-  outputPath = path.join(reportDir, baseFilename);
-} else {
-  outputPath = path.join(projectRoot, `docs`, baseFilename);
-  const docsDir = path.join(projectRoot, `docs`);
-  if (!fs.existsSync(docsDir)) {
-    fs.mkdirSync(docsDir, { recursive: true });
-  }
+const outputPath = path.join(reportDir, `handbook_${dateStr}_${provider}.md`);
+
+// Ensure directory exists
+const outputDir = path.dirname(outputPath);
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
 }
 
 fs.writeFileSync(outputPath, report, "utf8");

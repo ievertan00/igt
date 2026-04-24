@@ -1,9 +1,22 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import readline from "readline";
+import configLoader from "../lib/config-loader.mjs";
 import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
 
-const NOTE_FILE = "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\IGT Vocabulary.md";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, "..");
+
+const config = configLoader.load();
+
+const baseDir = config.VaultDir 
+  ? (path.isAbsolute(config.VaultDir) ? config.VaultDir : path.join(projectRoot, config.VaultDir))
+  : path.join(projectRoot, "docs");
+
+const VOCAB_FILE = config.VocabFile || "IGT Vocabulary.md";
+const NOTE_FILE = path.isAbsolute(VOCAB_FILE) ? VOCAB_FILE : path.join(baseDir, VOCAB_FILE);
 
 // ── Parse all entries from the vault file ─────────────────────────────────────
 function parseAllEntries() {

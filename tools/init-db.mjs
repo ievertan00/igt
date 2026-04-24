@@ -2,15 +2,15 @@ import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import configLoader from "../lib/config-loader.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
-// Load config to get database path
-const configPath = path.join(projectRoot, "igt_config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-const dbPath = config.DbPath || path.join(projectRoot, "igt_data.db");
+// Load merged config
+const config = configLoader.load();
+const dbPath = config.DbPath || "igt_data.db";
 
 // Resolve relative path
 const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);

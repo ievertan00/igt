@@ -25,13 +25,14 @@ if (!fs.existsSync(resolvedDbPath)) {
 
 const db = new Database(resolvedDbPath, { readonly: true });
 
-// Data warehouse path (same as handbook/assessment)
-const reportDir = config.ReportPath
-  ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
+// Data warehouse path (VaultDir for practice)
+const baseDir = config.VaultDir 
+  ? (path.isAbsolute(config.VaultDir) ? config.VaultDir : path.join(projectRoot, config.VaultDir))
   : path.join(projectRoot, "docs");
-if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true });
 
-const HISTORY_FILE = path.join(reportDir, "practice_history.json");
+if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+const HISTORY_FILE = path.join(baseDir, "practice_history.json");
 
 function loadPracticeHistory() {
   if (!fs.existsSync(HISTORY_FILE)) return [];
@@ -51,7 +52,22 @@ function savePracticeSession(exercises, results, meta) {
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10);
   const timeStr = now.toTimeString().slice(0, 5);
-  const filepath = path.join(reportDir, "practice_log.md");
+  
+  // Resolve practice log file path
+  let filepath;
+  if (config.PracticeFile) {
+    filepath = path.isAbsolute(config.PracticeFile) 
+      ? config.PracticeFile 
+      : path.join(baseDir, config.PracticeFile);
+  } else {
+    filepath = path.join(baseDir, "practice_log.md");
+  }
+
+  // Ensure directory exists
+  const fileDir = path.dirname(filepath);
+  if (!fs.existsSync(fileDir)) {
+    fs.mkdirSync(fileDir, { recursive: true });
+  }
 
   const totalCorrect = results.filter(r => r.correct).length;
   const pct = ((totalCorrect / results.length) * 100).toFixed(0);
@@ -83,7 +99,7 @@ function savePracticeSession(exercises, results, meta) {
   } else {
     fs.appendFileSync(filepath, `\n${md}`, "utf8");
   }
-  return "practice_log.md";
+  return path.basename(filepath);
 }
 
 // Parse arguments
@@ -189,6 +205,9 @@ function sanitizeJsonString(str) {
 async function generateExercises(errorTypes, count, level, usedQuestions = []) {
   const errorList = errorTypes.map(e => `- ${e.error_type}`).join("\n");
   const linguisticSummary = getLinguisticContext(errorTypes); // Inject context
+  
+  // Limit usedQuestions to last 20 to keep context window small and reduce latency
+  const recentQuestions = usedQuestions.slice(-20).join("\n");
 
   // Load prompt from config or use default
   let prompt;
@@ -197,7 +216,8 @@ async function generateExercises(errorTypes, count, level, usedQuestions = []) {
       .replace(/\{\{count\}\}/g, count)
       .replace(/\{\{errorList\}\}/g, errorList)
       .replace(/\{\{level\}\}/g, level || "B1")
-      .replace(/\{\{linguisticSummary\}\}/g, linguisticSummary); // Replace placeholder
+      .replace(/\{\{linguisticSummary\}\}/g, linguisticSummary)
+      .replace(/\{\{usedQuestions\}\}/g, recentQuestions || "None yet."); // Replace placeholder
   } else {
     // Fallback to inline prompt for backward compatibility
     prompt = `Generate ${count} grammar practice exercises focusing on these error types:
@@ -239,13 +259,6 @@ Rules for fill-in-the-blank:
 - The "answer" field should be the exact word(s) to fill in
 
 Return ONLY the JSON array, no markdown formatting, no explanation.`;
-  }
-
-  // Append previously used questions so the LLM avoids repeating them
-  if (usedQuestions.length > 0) {
-    const recent = usedQuestions.slice(-80);
-    prompt += `\n\n### Previously Practiced Questions (DO NOT repeat or rephrase any of these):\n`;
-    recent.forEach((q, i) => { prompt += `${i + 1}. ${q}\n`; });
   }
 
   const text = await llmManager.generateWithFallback(prompt, "", {
@@ -398,6 +411,9 @@ function displayResult(exercise, isCorrect) {
   console.log("");
 }
 
+// Export for testing
+export { generateExercises, getErrorTypes, getLinguisticContext, gradeAnswer };
+
 // Main practice loop
 async function runPractice() {
   console.log("\n" + "=".repeat(50));
@@ -485,7 +501,8 @@ async function runPractice() {
   }
 
   // Generate exercises
-  console.log("\n📝 Generating exercises...\n");
+  const spinner = new Spinner("Generating exercises...");
+  spinner.start();
 
   let exercises;
   let retryCount = 0;
@@ -494,17 +511,19 @@ async function runPractice() {
   while (retryCount <= maxRetries) {
     try {
       exercises = await generateExercises(errorTypes, selectedCount, selectedLevel, usedQuestions);
+      spinner.stop();
       break; // Success, exit loop
     } catch (error) {
       retryCount++;
       if (retryCount > maxRetries) {
+        spinner.stop();
         console.error("\n❌ Error generating exercises:", error.message);
         console.error("\n💡 Tip: Try again with fewer questions or a different error type.");
         db.close();
         rl.close();
         process.exit(1);
       } else {
-        console.log(`\n⚠️  Exercise generation failed, retrying (${retryCount}/${maxRetries})...`);
+        // Wait a moment before retrying
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -558,46 +577,59 @@ async function runPractice() {
   const totalCorrect = results.filter(r => r.correct).length;
   const finalPct = totalAnswered > 0 ? ((totalCorrect / totalAnswered) * 100).toFixed(0) : 0;
 
-  console.log("\n" + "=".repeat(50));
-  console.log("📋 Session Summary");
-  console.log("=".repeat(50));
-  console.log(`\n🎯 Final Score: ${totalCorrect}/${totalAnswered} (${finalPct}%)\n`);
+  ui.header("Session Summary", `Performance assessment for CEFR ${selectedLevel}`);
+
+  let summaryContent = `🎯 Final Score: ${paint(colors.bold + colors.white, totalCorrect + "/" + totalAnswered)} (${paint(colors.brightGreen, finalPct + "%")})\n\n`;
+
+  
+  const numericPct = parseInt(finalPct);
+  let feedback = "";
+  if (numericPct >= 90) {
+    feedback = `🌟 ${paint(colors.brightGreen, "Excellent!")} You have a strong grasp of these points.`;
+  } else if (numericPct >= 70) {
+    feedback = `👍 ${paint(colors.green, "Good job!")} Keep practicing to improve further.`;
+  } else if (numericPct >= 50) {
+    feedback = `💪 ${paint(colors.yellow, "Keep it up!")} Review the rules and try again.`;
+  } else {
+    feedback = `📚 ${paint(colors.brightRed, "Needs focus.")} Consider reviewing the grammar rules.`;
+  }
+  summaryContent += wrapText(feedback, BOX_INNER_WIDTH);
+
+  console.log(ui.box("SUMMARY", summaryContent, { width: BOX_WIDTH, color: colors.yellow }));
+  console.log("");
 
   // Show wrong answers
   const wrongAnswers = results.filter(r => !r.correct);
   if (wrongAnswers.length > 0) {
-    console.log("📝 Review your mistakes:\n");
+    console.log(`  ${paint(colors.bold + colors.red, "📝 Review your mistakes:")}\n`);
     for (const r of wrongAnswers) {
       const cleanAnswer = r.exercise.answer.replace(/^[A-Da-d][.)\s]+\s*/, "").trim();
-      console.log(`  • ${r.exercise.question}`);
-      console.log(`    Correct answer: ${cleanAnswer}`);
-      console.log(`    💡 ${r.exercise.explanation}\n`);
-    }
-  }
+      
+      let mistakeContent = `${paint(colors.white, wrapText(r.exercise.question, BOX_INNER_WIDTH))}\n\n`;
+      
+      const answerLabel = "Correct answer: ";
+      mistakeContent += `  ${paint(colors.gray, answerLabel)}${paint(colors.bold + colors.green, wrapText(cleanAnswer, BOX_INNER_WIDTH - answerLabel.length - 2, answerLabel.length + 2).trim())}\n\n`;
+      
+      mistakeContent += `  ${paint(colors.yellow, "💡 ")}${paint(colors.white, wrapText(r.exercise.explanation, BOX_INNER_WIDTH - 5, 5).trim())}`;
 
-  // Performance feedback
-  const pct = parseInt(finalPct);
-  if (pct >= 90) {
-    console.log("🌟 Excellent! You have a strong grasp of these grammar points.");
-  } else if (pct >= 70) {
-    console.log("👍 Good job! Keep practicing to improve further.");
-  } else if (pct >= 50) {
-    console.log("💪 Keep it up! Review the rules and try again.");
-  } else {
-    console.log("📚 Consider reviewing the grammar rules for these error types.");
-  }
+      console.log(ui.box("MISTAKE", mistakeContent, { width: BOX_WIDTH, color: colors.red }));
+      console.log("");
+      }
+      }
 
-  // Weakest area from historical data
-  const weakest = db.prepare(`
-    SELECT error_type, COUNT(*) as total
-    FROM diagnoses
-    GROUP BY error_type
-    ORDER BY total DESC
-    LIMIT 1
-  `).get();
-  if (weakest) {
-    console.log(`\n📌 Historically weakest area: ${weakest.error_type} (${weakest.total} total errors)`);
-  }
+      // Weakest area from historical data
+      const weakest = db.prepare(`
+      SELECT error_type, COUNT(*) as total
+      FROM diagnoses
+      GROUP BY error_type
+      ORDER BY total DESC
+      LIMIT 1
+      `).get();
+      if (weakest) {
+      let weakestText = `📌 Historically weakest area: ${paint(colors.bold + colors.brightRed, weakest.error_type)} (${weakest.total} total errors)`;
+      console.log(ui.box("INSIGHT", wrapText(weakestText, BOX_INNER_WIDTH), { width: BOX_WIDTH, color: colors.magenta }));
+      }
+
 
   // Save session to data warehouse and update history
   try {
@@ -614,7 +646,12 @@ async function runPractice() {
   rl.close();
 }
 
-// Run
-runPractice().then(() => {
-  process.exit(0);
-});
+// Run if executed directly
+const isMain = process.argv[1] && (process.argv[1].endsWith('igt-practice.mjs') || process.argv[1].includes('igt-practice.mjs'));
+
+if (isMain) {
+  runPractice().then(() => {
+    process.exit(0);
+  });
+}
+

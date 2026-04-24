@@ -22,10 +22,25 @@ $envPath = Join-Path $scriptDir ".env"
 if (Test-Path $envPath) {
     Get-Content $envPath | Where-Object { $_ -match '^([^=]+)=(.*)$' } | ForEach-Object {
         $key = $Matches[1].Trim()
-        $value = $Matches[2].Trim()
-        if (($value.StartsWith("'") -and $value.EndsWith("'")) -or ($value.StartsWith('"') -and $value.EndsWith('"'))) {
-            $value = $value.Substring(1, $value.Length - 2)
+        $rawValue = $Matches[2].Trim()
+        $value = ""
+
+        # Handle inline comments and quotes
+        if ($rawValue.StartsWith('"')) {
+            $endQuote = $rawValue.IndexOf('"', 1)
+            if ($endQuote -ne -1) { $value = $rawValue.Substring(1, $endQuote - 1) }
+            else { $value = $rawValue.Substring(1) }
+        } elseif ($rawValue.StartsWith("'")) {
+            $endQuote = $rawValue.IndexOf("'", 1)
+            if ($endQuote -ne -1) { $value = $rawValue.Substring(1, $endQuote - 1) }
+            else { $value = $rawValue.Substring(1) }
+        } else {
+            # No quotes, everything before the first # is the value
+            $hashIdx = $rawValue.IndexOf('#')
+            if ($hashIdx -ne -1) { $value = $rawValue.Substring(0, $hashIdx).Trim() }
+            else { $value = $rawValue }
         }
+
         Set-Content -Path "Env:$key" -Value $value
     }
 }
@@ -607,17 +622,17 @@ function Show-Help {
     Write-Host ""
     Write-Host "  Commands" -ForegroundColor Yellow
     Write-Host "  $sep" -ForegroundColor DarkGray
-    Write-Host "  /handbook         " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /handbook  (/h)   " -NoNewline -ForegroundColor Cyan
     Write-Host "Generate your personal error handbook" -ForegroundColor Gray
-    Write-Host "  /practice         " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /practice  (/p)   " -NoNewline -ForegroundColor Cyan
     Write-Host "Targeted grammar exercises (CEFR-aware)" -ForegroundColor Gray
     Write-Host "  /practice B2 10   " -NoNewline -ForegroundColor Cyan
     Write-Host "Shorthand for --level=B2 --count=10" -ForegroundColor Gray
-    Write-Host "  /assess           " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /assess    (/as)  " -NoNewline -ForegroundColor Cyan
     Write-Host "Estimate your CEFR proficiency level" -ForegroundColor Gray
-    Write-Host "  /add <word>       " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /add <w>   (/a)   " -NoNewline -ForegroundColor Cyan
     Write-Host "Add a word to your Obsidian vocabulary note" -ForegroundColor Gray
-    Write-Host "  /vocab            " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /vocab     (/v)   " -NoNewline -ForegroundColor Cyan
     Write-Host "Review saved vocabulary (quiz or list)" -ForegroundColor Gray
     Write-Host "  /gemini           " -NoNewline -ForegroundColor Cyan
     Write-Host "Switch to Gemini model" -ForegroundColor Gray
@@ -627,7 +642,7 @@ function Show-Help {
     Write-Host "Switch to Deepseek model" -ForegroundColor Gray
     Write-Host '  """               ' -NoNewline -ForegroundColor Cyan
     Write-Host "Enter multiline input mode" -ForegroundColor Gray
-    Write-Host "  exit              " -NoNewline -ForegroundColor Cyan
+    Write-Host "  /exit      (/q)   " -NoNewline -ForegroundColor Cyan
     Write-Host "Quit IGT" -ForegroundColor Gray
     Write-Host ""
 }
@@ -667,12 +682,12 @@ while ($true) {
         if ($cmd -eq "help") {
             Show-Help
 
-        } elseif ($cmd -eq "handbook") {
+        } elseif ($cmd -eq "handbook" -or $cmd -eq "h") {
             Write-Host ""
             node (Join-Path $scriptDir "tools\igt-handbook.mjs")
             Write-Host ""
 
-        } elseif ($cmd -eq "practice") {
+        } elseif ($cmd -eq "practice" -or $cmd -eq "p") {
             Write-Host ""
             # Shorthand: /practice B2 10  →  --level=B2 --count=10
             $nodeArgs = @()
@@ -684,12 +699,12 @@ while ($true) {
             node (Join-Path $scriptDir "tools\igt-practice.mjs") @nodeArgs
             Write-Host ""
 
-        } elseif ($cmd -eq "assess") {
+        } elseif ($cmd -eq "assess" -or $cmd -eq "as") {
             Write-Host ""
             node (Join-Path $scriptDir "tools\igt-assess.mjs")
             Write-Host ""
 
-        } elseif ($cmd -eq "add") {
+        } elseif ($cmd -eq "add" -or $cmd -eq "a") {
             if ($cmdArgs -eq "") {
                 Write-Host ""
                 Write-Host "  Usage: /add <word or phrase>" -ForegroundColor Yellow
@@ -698,7 +713,7 @@ while ($true) {
                 node (Join-Path $scriptDir "tools\igt-add.mjs") $cmdArgs
             }
 
-        } elseif ($cmd -eq "vocab") {
+        } elseif ($cmd -eq "vocab" -or $cmd -eq "v") {
             Write-Host ""
             $nodeArgs = if ($cmdArgs -ne "") { $cmdArgs -split '\s+' } else { @() }
             node (Join-Path $scriptDir "tools\igt-vocab.mjs") @nodeArgs

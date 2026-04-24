@@ -52,8 +52,8 @@ IGT separates private and shared configuration:
 
 | File                  | Tracked by git | Purpose                              |
 | --------------------- | -------------- | ------------------------------------ |
-| `.env`                | No             | API keys, default provider           |
-| `lib/igt_config.json` | Yes            | Model names, file paths, LLM prompts |
+| `.env`                | No             | API keys, personal file paths        |
+| `lib/igt_config.json` | Yes            | Model names, prompts, non-private config |
 
 **`.env`**
 
@@ -62,6 +62,13 @@ GOOGLE_API_KEYS=key1,key2        # comma-separated for automatic rotation
 DASHSCOPE_API_KEYS=your-key
 DEEPSEEK_API_KEYS=your-key
 IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek
+
+# Local paths
+IGT_DB_PATH=igt_data.db
+IGT_LOG_PATH=igt_db_error.log
+IGT_REVIEW_PATH=C:\Users\You\Documents\Review_Log.md
+IGT_REPORT_PATH=docs
+IGT_VAULT_DIR=D:\Obsidian\MyVault
 ```
 
 **`lib/igt_config.json`** (excerpt)
@@ -69,14 +76,12 @@ IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek
 ```json
 {
   "LLMProvider": "gemini",
-  "GeminiFlashModel": "gemini-2.5-flash",
-  "GeminiProModel":   "gemini-3.0-pro",
-  "QwenFlashModel":   "qwen3.5-flash",
-  "QwenProModel":     "qwen3-max",
+  "GeminiFlashModel": "gemini-3.1-flash-lite",
+  "GeminiProModel":   "gemini-3.1-flash",
+  "QwenFlashModel":   "qwen-turbo",
+  "QwenProModel":     "qwen3.6-max-preview",
   "DeepseekFlashModel": "deepseek-chat",
-  "DeepseekProModel":   "deepseek-reasoner",
-  "ReviewPath": "C:\\Users\\You\\Documents\\Review_Log.md",
-  "DbPath": "igt_data.db"
+  "DeepseekProModel":   "deepseek-reasoner"
 }
 ```
 

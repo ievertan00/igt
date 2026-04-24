@@ -2,15 +2,16 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import configLoader from "../lib/config-loader.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
 import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
-// Load config via unified config loader
-const config = configLoader.load();
+// Initialize LLM providers
+const llmManager = initializeLLMProviders();
+const config = llmManager.config;
 const dbPath = config.DbPath || "igt_data.db";
 const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
 
@@ -333,25 +334,20 @@ function generateReport() {
 
 const report = generateReport();
 
-// Save to file
+// Resolve output path
 const dateStr = new Date().toISOString().split("T")[0];
-const defaultOutputPath = path.join(projectRoot, `docs`, `assessment_${dateStr}.md`);
+const provider = llmManager.getCurrentProviderName();
 
-// Use ReportPath from config if available
-let outputPath;
-if (config.ReportPath) {
-  const reportDir = path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath);
-  if (!fs.existsSync(reportDir)) {
-    fs.mkdirSync(reportDir, { recursive: true });
-  }
-  outputPath = path.join(reportDir, `assessment_${dateStr}.md`);
-} else {
-  outputPath = defaultOutputPath;
-  // Ensure docs directory exists
-  const docsDir = path.join(projectRoot, `docs`);
-  if (!fs.existsSync(docsDir)) {
-    fs.mkdirSync(docsDir, { recursive: true });
-  }
+const reportDir = config.ReportPath 
+  ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
+  : path.join(projectRoot, "docs");
+
+const outputPath = path.join(reportDir, `assessment_${dateStr}_${provider}.md`);
+
+// Ensure directory exists
+const outputDir = path.dirname(outputPath);
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
 }
 
 fs.writeFileSync(outputPath, report, "utf8");
