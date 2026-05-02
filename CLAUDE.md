@@ -4,18 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-IGT (Interactive Grammar Tool) is a Windows PowerShell CLI that provides real-time English grammar checking via multiple LLM backends (Gemini, Qwen, Deepseek). It automatically logs errors to a local SQLite database and offers personalized learning tools (handbook, practice exercises, CEFR assessment).
+IGT (Interactive Grammar Tool) is a cross-platform Node.js CLI that provides real-time English grammar checking via multiple LLM backends (Gemini, Qwen, Deepseek). It automatically logs errors to a local SQLite database and offers personalized learning tools (handbook, practice exercises, CEFR assessment).
 
 ## Running the Tool
 
-```powershell
-./igt.ps1           # Start interactive grammar checker
-./igt.cmd           # Wrapper to launch from cmd.exe
+```sh
+igt                 # after npm link (any terminal, any platform)
+node igt.mjs        # direct invocation
+./igt.cmd           # Windows CMD/PowerShell wrapper
+sh igt.sh           # macOS/Linux wrapper
 ```
 
-One-off Node tools (run directly, not through igt.ps1):
+One-off Node tools (run directly):
 
-```bash
+```sh
 node tools/init-db.mjs                        # Initialize SQLite DB (first run)
 node tools/igt-handbook.mjs --days=7          # Generate personal error handbook
 node tools/igt-handbook.mjs --days=7 --incremental  # Only regenerate changed rules
@@ -28,9 +30,9 @@ node lib/llm-switch.mjs                       # Manage LLM providers from CLI
 
 ## Architecture
 
-**Two-process design**: `igt.ps1` (PowerShell main loop) spawns a persistent `lib/igt-http-server.mjs` Node.js server on port `18964` at startup. All grammar checks are HTTP POST requests to `http://127.0.0.1:18964/grammar`. This eliminates per-request Node.js startup overhead (~83% faster than cold-starting Node).
+**Two-process design**: `igt.mjs` (Node.js main loop) spawns a persistent `lib/igt-http-server.mjs` Node.js server on port `18964` at startup. All grammar checks are HTTP POST requests to `http://127.0.0.1:18964/grammar`. This eliminates per-request Node.js startup overhead (~83% faster than cold-starting Node).
 
-**Request flow**: `igt.ps1` → HTTP POST `/grammar` → `igt-http-server.mjs` → `llm-init.mjs` → `LLMProviderManager` → active provider (`llm-gemini.mjs` / `llm-qwen.mjs` / `llm-deepseek.mjs`) → response parsed + saved to SQLite (`igt_data.db`) → JSON returned to PowerShell.
+**Request flow**: `igt.mjs` → HTTP POST `/grammar` → `igt-http-server.mjs` → `llm-init.mjs` → `LLMProviderManager` → active provider (`llm-gemini.mjs` / `llm-qwen.mjs` / `llm-deepseek.mjs`) → response parsed + saved to SQLite (`igt_data.db`) → JSON returned to `igt.mjs`.
 
 **Model routing**: Flash models handle grammar correction (fast, cheap); Pro models handle handbook/practice generation (quality-critical). Both configured per-provider in `lib/igt_config.json`.
 
@@ -49,16 +51,21 @@ Active provider is controlled by `IGT_LLM_PROVIDER` env var (set in `.env`). Swi
 
 ## Key Implementation Details
 
-- **PowerShell input loop** (`Read-LineWithHistory` in `igt.ps1`): uses raw `[System.Console]::ReadKey` with `TreatControlCAsInput = $true` so Ctrl+C is intercepted without cmd.exe "Terminate batch job?" prompt.
-- **Spinner**: runs in a separate PowerShell runspace (`[runspacefactory]::CreateRunspace`) — the main thread polls for Ctrl+C while waiting for HTTP response.
-- **HTTP call**: also runs in a background runspace; main thread polls `$shared.Done` every 50ms, checking for Ctrl+C to cancel.
+- **Input loop** (`igt.mjs`): uses Node.js built-in `readline` module with `terminal: true`. History navigation (Up/Down), cursor movement, and input echo are handled natively. Uses `rl.on('line', onLine)` + manual listener removal (not `rl.question()`) to avoid stale callbacks after Ctrl+C.
+- **Ctrl+C handling**: a module-level `sigintHandler` variable is swapped by context — resolves the current `askLine()` Promise with `null` during input, calls `controller.abort()` during HTTP, and is a no-op otherwise. Dispatched via `rl.on('SIGINT', () => sigintHandler())`.
+- **Spinner**: `lib/ui.mjs` `Spinner` class — `setInterval` writing ANSI escape codes to stdout. Single-threaded; works because the event loop is free while awaiting HTTP.
+- **HTTP cancellation**: `AbortController` passed as `signal` to `http.request`. On abort, the request is destroyed and the Promise rejects with `AbortError`.
+- **Port cleanup**: `killPort()` in `igt.mjs` runs `netstat -ano` (Windows) or `lsof` (Unix) to find and kill any process on port 18964 before spawning the server.
 - **DB writes are non-blocking**: `saveToDatabase()` is called without `await` inside the `/grammar` handler.
-- **Output format**: `Write-ColoredResponse` in `igt.ps1` parses `**Section**:` headers from the LLM response and color-codes each section. Diagnosis lines are further colored by severity (Major=Red, Moderate=Yellow, Minor=DarkYellow).
+- **Output format**: `renderResponse()` in `igt.mjs` parses `**Section**` headers from the LLM response and color-codes each section using ANSI codes from `lib/ui.mjs`.
 
 ## Folder Layout
 
 ```
-lib/        Core runtime (server, providers, config, error types)
+igt.mjs     Cross-platform Node.js entry point (main REPL)
+igt.cmd     Windows CMD/PowerShell wrapper
+igt.sh      macOS/Linux wrapper
+lib/        Core runtime (server, providers, config, error types, UI)
 tools/      User-facing standalone scripts (handbook, practice, assess, vocab, db)
 tests/      Test and profiling scripts (not run in production)
 docs/       Reference documentation; docs/archive/ holds design plans and specs
