@@ -34,7 +34,7 @@ She isn't fond of today's weather.
 | **Multi-LLM**          | Switch between Google Gemini, Alibaba Qwen, and Deepseek instantly — no restart needed                                  |
 | **Fast**               | Persistent HTTP server eliminates Node.js startup overhead; typical response under 2s                                   |
 | **Anti-hallucination** | Strict prompt rules prevent phantom error detection; corrections are verbatim if the input is already correct           |
-| **Error taxonomy**     | All diagnoses are normalized to 20 canonical types across 5 categories (Grammar, Vocabulary, Mechanics, Style, Clarity) |
+| **Error taxonomy**     | All diagnoses are normalized to 28 canonical types across 5 categories (Grammar, Vocabulary, Mechanics, Style, Clarity) |
 | **Auto-logging**       | Every check is saved to SQLite and appended to a Markdown review log (Obsidian-compatible)                              |
 | **Learning suite**     | Personal error handbook, targeted practice exercises, and CEFR proficiency assessment built from your error history     |
 

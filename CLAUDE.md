@@ -36,7 +36,7 @@ node lib/llm-switch.mjs                       # Manage LLM providers from CLI
 
 **Model routing**: Flash models handle grammar correction (fast, cheap); Pro models handle handbook/practice generation (quality-critical). Both configured per-provider in `lib/igt_config.json`.
 
-**Error classification**: All LLM-returned diagnoses are normalized to 20 canonical error types via `lib/error-types.mjs`. This MECE taxonomy drives all DB storage and analytics.
+**Error classification**: All LLM-returned diagnoses are normalized to 28 canonical error types via `lib/error-types.mjs` (12 Grammar, 4 Vocabulary, 4 Mechanics, 5 Style, 3 Clarity). This MECE taxonomy drives all DB storage and analytics.
 
 ## Configuration
 
