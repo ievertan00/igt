@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
 import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
+import { getMastery } from "../lib/mastery.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,12 +25,14 @@ const db = new Database(resolvedDbPath, { readonly: true });
 
 // Get overall statistics
 const stats = db.prepare(`
-  SELECT 
+  SELECT
     COUNT(DISTINCT i.id) as total_inputs,
     COUNT(DISTINCT d.id) as total_diagnoses,
     COUNT(DISTINCT d.error_type) as unique_errors,
     MIN(i.timestamp) as first_input,
-    MAX(i.timestamp) as last_input
+    MAX(i.timestamp) as last_input,
+    MIN(i.id) as first_input_id,
+    MAX(i.id) as last_input_id
   FROM inputs i
   LEFT JOIN diagnoses d ON i.id = d.input_id
 `).get();
@@ -133,6 +136,8 @@ const persistentErrors = db.prepare(`
   ORDER BY total_count DESC
   LIMIT 5
 `).all();
+
+const masteryData = getMastery(db);
 
 db.close();
 
@@ -279,6 +284,17 @@ function generateReport() {
     md += `\n`;
   }
   
+  // Mastery levels
+  if (masteryData.length > 0) {
+    md += `## 🎓 Mastery View (30-day window)\n\n`;
+    md += `| Error Type | 30-day count | Mastery |\n`;
+    md += `|-----------|-------------|--------|\n`;
+    for (const row of masteryData) {
+      md += `| ${row.error_type} | ${row.last_30d} | ${row.mastery} |\n`;
+    }
+    md += `\n`;
+  }
+
   // Trend analysis
   if (errorRateTrend.length >= 2) {
     md += `## 📈 Progress Trend\n\n`;
@@ -352,6 +368,31 @@ if (!fs.existsSync(outputDir)) {
 
 fs.writeFileSync(outputPath, report, "utf8");
 
+// Persist the assessment + the input window it was scored against (A11)
+try {
+  const writeDb = new Database(resolvedDbPath);
+  writeDb.exec(`
+    CREATE TABLE IF NOT EXISTS assessments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      level TEXT NOT NULL,
+      score_raw TEXT,
+      inputs_window_start INTEGER,
+      inputs_window_end INTEGER,
+      inputs_count INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_assessments_timestamp ON assessments(timestamp);
+  `);
+  const scoreRaw = JSON.stringify({ level: cefr.level, description: cefr.description, dimensions });
+  writeDb.prepare(`
+    INSERT INTO assessments (level, score_raw, inputs_window_start, inputs_window_end, inputs_count)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(cefr.level, scoreRaw, stats.first_input_id, stats.last_input_id, stats.total_inputs);
+  writeDb.close();
+} catch (err) {
+  console.error(paint(colors.yellow, `  Warning: could not persist assessment: ${err.message}`));
+}
+
 ui.header("Proficiency Assessment", `Analyzed ${stats.total_inputs} inputs`);
 
 const summaryContent = [
@@ -364,6 +405,13 @@ const summaryContent = [
     const barLength = Math.round(score / 10);
     const bar = paint(colors.green, "█".repeat(barLength)) + paint(colors.gray, "░".repeat(10 - barLength));
     return `  ${paint(colors.white, dim.padEnd(18))} ${bar} ${score.toFixed(0)}%`;
+  }),
+  "",
+  paint(colors.gray, "Mastery (30-day):"),
+  ...["frequent","occasional","rare","mastered"].map(bucket => {
+    const items = masteryData.filter(r => r.mastery === bucket);
+    const color = bucket === "mastered" ? colors.green : bucket === "frequent" ? colors.red : colors.yellow;
+    return `  ${paint(color, bucket.padEnd(12))} ${items.length} error type(s)`;
   }),
   "",
   `${paint(colors.green, "✅ Report saved to:")}`,

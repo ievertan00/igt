@@ -7,7 +7,8 @@ import { spawn, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
-import { colors, paint, Spinner } from "./lib/ui.mjs";
+import { colors, paint, Spinner, renderBarChart } from "./lib/ui.mjs";
+import configLoader from "./lib/config-loader.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,37 +16,6 @@ const __dirname = path.dirname(__filename);
 const SERVER_PORT = 18964;
 const SERVER_HOST = "127.0.0.1";
 const SERVER_BASE = `http://${SERVER_HOST}:${SERVER_PORT}`;
-
-// ─── Config ────────────────────────────────────────────────────────────────────
-
-function loadEnv() {
-  const envPath = path.join(__dirname, ".env");
-  if (!fs.existsSync(envPath)) return;
-  for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
-    const m = line.match(/^([^#=\s][^=]*)=(.*)/);
-    if (!m) continue;
-    const key = m[1].trim();
-    if (key in process.env) continue;
-    let val = m[2].trim();
-    if (val.startsWith('"')) {
-      const end = val.indexOf('"', 1);
-      val = end !== -1 ? val.slice(1, end) : val.slice(1);
-    } else if (val.startsWith("'")) {
-      const end = val.indexOf("'", 1);
-      val = end !== -1 ? val.slice(1, end) : val.slice(1);
-    } else {
-      const h = val.indexOf("#");
-      if (h !== -1) val = val.slice(0, h).trim();
-    }
-    process.env[key] = val;
-  }
-}
-
-function loadConfig() {
-  const p = path.join(__dirname, "lib", "igt_config.json");
-  if (!fs.existsSync(p)) { process.stderr.write("Error: igt_config.json not found\n"); process.exit(1); }
-  return JSON.parse(fs.readFileSync(p, "utf8"));
-}
 
 // ─── Server ────────────────────────────────────────────────────────────────────
 
@@ -151,8 +121,6 @@ async function callGrammar(text, signal) {
 
 // ─── Render ────────────────────────────────────────────────────────────────────
 
-const SECTION_RE = /^\*\*(Review|Correction|Refine|Diagnosis|Rule|Tip)\*\*/i;
-const LIST_SECTIONS = new Set(["diagnosis", "rule", "tip"]);
 const SC = {
   review:     { h: colors.yellow,  b: colors.yellow },
   correction: { h: colors.green,   b: colors.green  },
@@ -180,53 +148,53 @@ function printLine(text, color) {
   if (line) process.stdout.write(paint(color, line) + "\n");
 }
 
-function sanitize(line, section) {
-  line = line.replace(/^\[(.+)\]$/, "$1").replace(/^"([^"]+)"$/, "$1").replace(/^'(.+)'$/, "$1").trim();
-  if (LIST_SECTIONS.has(section) && line && !line.startsWith("- ")) line = `- ${line}`;
-  return line;
+function emitSection(label, key, lines) {
+  if (!lines.length) return;
+  const sc = SC[key];
+  process.stdout.write("\n" + paint(sc.h, `**${label}**`) + "\n");
+  for (const l of lines) printLine(l, sc.b);
 }
 
-function emitLines(text, section, color, seen) {
-  const items = LIST_SECTIONS.has(section)
-    ? text.split(/\s+(?=- )/).map((s) => s.trim()).filter(Boolean)
-    : [text];
-  for (const item of items) {
-    if (!item) continue;
-    const key = item.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    printLine(item, color);
-  }
+function splitLines(value) {
+  if (!value) return [];
+  return String(value).split("\n").map((s) => s.trim()).filter(Boolean);
 }
 
-function renderResponse(content) {
-  let section = "";
-  let first = true;
-  const seen = new Set();
-  for (const raw of content.split("\n")) {
-    const m = raw.match(SECTION_RE);
-    if (m) {
-      if (!first) process.stdout.write("\n");
-      first = false;
-      section = m[1].toLowerCase();
-      seen.clear();
-      const sc = SC[section];
-      process.stdout.write(paint(sc.h, `**${m[1]}**`) + "\n");
-      const rest = sanitize(raw.replace(SECTION_RE, "").replace(/^:\s*/, "").trim(), section);
-      if (rest) emitLines(rest, section, sc.b, seen);
-      continue;
-    }
-    if (!raw.trim()) continue;
-    const sc = SC[section] || { b: colors.white };
-    emitLines(sanitize(raw.trim(), section), section, sc.b, seen);
+// data is the structured object from the server: {review, correction, refine, diagnoses[], rule, tip}
+function renderResponse(data) {
+  emitSection("Review",     "review",     splitLines(data.review));
+  emitSection("Correction", "correction", splitLines(data.correction));
+  emitSection("Refine",     "refine",     splitLines(data.refine));
+
+  if (Array.isArray(data.diagnoses) && data.diagnoses.length) {
+    const lines = data.diagnoses.map((d) => `- ${d.error_type || "Error"} (${d.severity || "Minor"}): ${d.explanation || ""}`);
+    emitSection("Diagnosis", "diagnosis", lines);
   }
+
+  emitSection("Rule", "rule", splitLines(data.rule).map((s) => s.startsWith("- ") ? s : `- ${s}`));
+  emitSection("Tip",  "tip",  splitLines(data.tip ).map((s) => s.startsWith("- ") ? s : `- ${s}`));
 }
 
 // ─── Logging ───────────────────────────────────────────────────────────────────
 
-function logResult(targetPath, text, content) {
+function dataToMarkdown(data) {
+  const sections = [];
+  const push = (label, body) => { if (body && body.trim()) sections.push(`**${label}**\n${body.trim()}`); };
+  push("Review",     data.review);
+  push("Correction", data.correction);
+  push("Refine",     data.refine);
+  if (Array.isArray(data.diagnoses) && data.diagnoses.length) {
+    push("Diagnosis", data.diagnoses.map((d) => `- ${d.error_type || "Error"} (${d.severity || "Minor"}): ${d.explanation || ""}`).join("\n"));
+  }
+  if (data.rule) push("Rule", splitLines(data.rule).map((s) => s.startsWith("- ") ? s : `- ${s}`).join("\n"));
+  if (data.tip)  push("Tip",  splitLines(data.tip ).map((s) => s.startsWith("- ") ? s : `- ${s}`).join("\n"));
+  return sections.join("\n\n");
+}
+
+function logResult(targetPath, text, data) {
   if (!targetPath) return;
   const ts = new Date().toISOString().replace("T", " ").slice(0, 19);
+  const content = dataToMarkdown(data);
   try { fs.appendFileSync(targetPath, `\n---\n### [${ts}]\n**User Input**: ${text}\n**Output**:\n${content}`, "utf8"); }
   catch { process.stdout.write(paint(colors.yellow, "  Warning: Could not log entry.\n")); }
 }
@@ -305,14 +273,15 @@ async function runGrammarCheck(text, targetPath) {
   process.stdout.write("\n");
   process.stdout.write(`  ${paint(colors.gray, "Input  ")}${paint(colors.white, text)}\n`);
   process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
-  renderResponse(resp.content);
+  renderResponse(resp.data);
   process.stdout.write("\n");
   if (resp.perf) {
     const { llm_ms, total_ms } = resp.perf;
     process.stdout.write(`  ${paint(colors.gray, `${Math.round(llm_ms)}ms llm  ·  ${Math.round(total_ms)}ms total`)}\n`);
   }
 
-  logResult(targetPath, text, resp.content);
+  sessionSentenceCount++;
+  logResult(targetPath, text, resp.data);
 }
 
 // ─── Commands ──────────────────────────────────────────────────────────────────
@@ -323,6 +292,114 @@ function runNode(script, ...args) {
       stdio: "inherit", env: process.env,
     }).on("close", resolve);
   });
+}
+
+function fetchJson(method, pathPart, body = null) {
+  return new Promise((resolve, reject) => {
+    const opts = {
+      hostname: SERVER_HOST, port: SERVER_PORT, path: pathPart, method,
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+    };
+    if (body) opts.headers["Content-Length"] = Buffer.byteLength(body, "utf8");
+    const req = http.request(opts, (res) => {
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => {
+        try {
+          const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+          if (res.statusCode !== 200) reject(new Error(parsed.error || `HTTP ${res.statusCode}`));
+          else resolve(parsed);
+        } catch (e) { reject(e); }
+      });
+    });
+    req.on("error", reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
+async function runUndo(rl, n) {
+  if (!Number.isFinite(n) || n < 1) {
+    process.stdout.write(paint(colors.yellow, "  Usage: /undo [N]   (delete the last N inputs; default 1)\n\n"));
+    return;
+  }
+  let preview;
+  try {
+    preview = await fetchJson("GET", `/inputs/last?n=${n}`);
+  } catch (e) {
+    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return;
+  }
+  if (!preview.rows || preview.rows.length === 0) {
+    process.stdout.write(paint(colors.gray, "  Nothing to undo.\n\n")); return;
+  }
+  process.stdout.write(`  ${paint(colors.yellow, `About to delete the last ${preview.rows.length} input(s):`)}\n`);
+  for (const r of preview.rows) {
+    const text = r.original_text.replace(/\s+/g, " ").slice(0, 80);
+    process.stdout.write(`    ${paint(colors.gray, `#${r.id}`)}  ${paint(colors.white, text)}\n`);
+  }
+  const confirm = await askLine(rl, paint(colors.yellow, "  Proceed? (y/N): "));
+  if (!confirm || !/^y(es)?$/i.test(confirm.trim())) {
+    process.stdout.write(paint(colors.gray, "  Cancelled.\n\n")); return;
+  }
+  try {
+    const r = await fetchJson("POST", "/undo", JSON.stringify({ n }));
+    process.stdout.write(`  ${paint(colors.green, "Deleted")}: ${r.deleted_inputs} input(s), ${r.deleted_diagnoses} diagnoses, ${r.deleted_cards} cards, ${r.deleted_vocab} vocab, ${r.deleted_advice} advice rows\n\n`);
+  } catch (e) {
+    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`));
+  }
+}
+
+async function runReview(rl, limit) {
+  let preview;
+  try {
+    preview = await fetchJson("GET", `/review/due?limit=${Math.max(1, limit)}`);
+  } catch (e) {
+    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return;
+  }
+  const cards = preview.cards || [];
+  if (cards.length === 0) {
+    process.stdout.write(paint(colors.gray, "  No cards due. Come back tomorrow.\n\n")); return;
+  }
+
+  process.stdout.write(`  ${paint(colors.yellow, `${cards.length} card(s) due — type your answer; Ctrl+C to stop.`)}\n\n`);
+  let correctCount = 0;
+  let wrongCount = 0;
+  for (let i = 0; i < cards.length; i++) {
+    const c = cards[i];
+    process.stdout.write(`  ${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n`);
+    process.stdout.write(`  ${paint(colors.cyan, c.prompt)}\n`);
+    const answer = await askLine(rl, paint(colors.gray, "  ❯ "));
+    if (answer === null) { process.stdout.write("\n"); break; }
+    if (!answer.trim()) { process.stdout.write(paint(colors.gray, "  (skipped)\n\n")); continue; }
+
+    const spinner = new Spinner("checking");
+    spinner.start();
+    let result;
+    try {
+      result = await fetchJson("POST", "/review/grade", JSON.stringify({ card_id: c.id, response: answer }));
+    } catch (e) {
+      spinner.stop(true);
+      process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`));
+      continue;
+    }
+    spinner.stop(true);
+
+    if (result.correct) {
+      correctCount++;
+      process.stdout.write(`  ${paint(colors.green, "✓ correct")} ${paint(colors.gray, `→ next due ${result.next.dueDate} (interval ${result.next.intervalDays}d)`)}\n\n`);
+    } else {
+      wrongCount++;
+      process.stdout.write(`  ${paint(colors.red, "✗ wrong")} ${paint(colors.gray, `expected: ${c.answer.replace(/^[-*]\s+/, "")}`)}\n`);
+      process.stdout.write(`  ${paint(colors.gray, `→ reset to 1d`)}\n\n`);
+    }
+  }
+
+  const total = correctCount + wrongCount;
+  if (total > 0) {
+    const pct = Math.round((correctCount / total) * 100);
+    process.stdout.write(`  ${paint(colors.gray, "─".repeat(40))}\n`);
+    process.stdout.write(`  ${paint(colors.yellow, `Reviewed ${total}, ${correctCount} correct (${pct}%), ${wrongCount} reset.`)}\n\n`);
+  }
 }
 
 function getModel(config) {
@@ -361,8 +438,20 @@ async function handleCommand(raw, config, rl) {
       break;
     case "llm":
       await runNode("lib/llm-switch.mjs", ...args); process.stdout.write("\n"); break;
+    case "undo": case "u":
+      await runUndo(rl, args[0] ? parseInt(args[0], 10) : 1);
+      break;
+    case "review": case "r":
+      await runReview(rl, args[0] ? parseInt(args[0], 10) : 20);
+      break;
+    case "stats": case "st":
+      await runStats();
+      break;
+    case "today":
+      await runToday(rl, config);
+      break;
     case "exit": case "quit": case "q":
-      stopServer(); rl.close(); process.exit(0);
+      await showSessionSummary(); stopServer(); rl.close(); process.exit(0);
       break;
     default:
       process.stdout.write(paint(colors.yellow, `  Unknown command /${cmd} — type /help for a list.\n`));
@@ -379,6 +468,10 @@ function showHelp() {
   row("/assess    (/as)  ", "Estimate your CEFR proficiency level");
   row("/add <w>   (/a)   ", "Add a word to your Obsidian vocabulary note");
   row("/vocab     (/v)   ", "Review saved vocabulary (quiz or list)");
+  row("/review    (/r)   ", "SRS review of cards due today (cloze + diagnoses)");
+  row("/stats     (/st)  ", "Analytics dashboard: errors by hour, length, mastery");
+  row("/today            ", "Adaptive daily plan: SRS + practice focus area");
+  row("/undo [N]  (/u)   ", "Delete the last N inputs and their diagnoses/cards (default 1)");
   row("/gemini           ", "Switch to Gemini model");
   row("/qwen             ", "Switch to Qwen model");
   row("/deepseek         ", "Switch to Deepseek model");
@@ -387,14 +480,134 @@ function showHelp() {
   process.stdout.write("\n");
 }
 
+// ─── Session ───────────────────────────────────────────────────────────────────
+
+let sessionSentenceCount = 0;
+
+async function runToday(rl, config) {
+  let stats, due;
+  try {
+    [stats, due] = await Promise.all([
+      fetchJson("GET", "/stats"),
+      fetchJson("GET", "/review/due?limit=100"),
+    ]);
+  } catch (e) {
+    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return;
+  }
+
+  const dueCount = due.cards?.length || 0;
+  const clozeDrillCount = Math.min(3, dueCount);
+  const focusType = stats.mastery?.find(r => r.mastery === "frequent")?.error_type?.split(" / ").pop() || null;
+
+  const sep = "─".repeat(44);
+  process.stdout.write(`\n  ${paint(colors.yellow, "TODAY'S PLAN")}  ${paint(colors.gray, "(estimated 10 min)")}\n`);
+  process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
+  const reviewMin = Math.max(2, Math.round(dueCount * 0.6));
+  process.stdout.write(`  ${paint(colors.gray, "1.")} ${paint(colors.white, "SRS reviews   ")}${paint(colors.cyan, `${dueCount} card(s) due`)}  ${paint(colors.gray, `(~${reviewMin} min)`)}  /review\n`);
+  process.stdout.write(`  ${paint(colors.gray, "2.")} ${paint(colors.white, "Cloze drill   ")}${paint(colors.cyan, `${clozeDrillCount} card(s)`)}  ${paint(colors.gray, "(~3 min)")}  /review --count=${clozeDrillCount}\n`);
+  process.stdout.write(`  ${paint(colors.gray, "3.")} ${paint(colors.white, "Free practice ")}${paint(colors.cyan, "1 paragraph")}  ${paint(colors.gray, "(~4 min)")}  /practice --count=1\n`);
+  if (focusType) {
+    process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
+    process.stdout.write(`  ${paint(colors.gray, "Focus: ")}${paint(colors.magenta, focusType)}  ${paint(colors.gray, "(most frequent error — target it today)")}\n`);
+  }
+  process.stdout.write(`  ${paint(colors.gray, sep)}\n\n`);
+
+  if (dueCount > 0) {
+    const go = await askLine(rl, paint(colors.gray, "  Start SRS review now? (Y/n): "));
+    if (go === null || /^n/i.test(go.trim())) return;
+    await runReview(rl, 20);
+  }
+}
+
+async function runStats() {
+  let data;
+  try { data = await fetchJson("GET", "/stats"); }
+  catch (e) { process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return; }
+
+  const W = Math.min(72, Math.max(40, (process.stdout.columns || 80) - 4));
+  process.stdout.write("\n");
+
+  if (data.byLength && data.byLength.length) {
+    renderBarChart(
+      data.byLength.map(r => ({ label: `${r.bucket} words`, value: parseFloat(r.avg_errors.toFixed(2)) })),
+      { title: "Errors / input  by sentence length", color: colors.magenta, maxWidth: W }
+    );
+  }
+
+  if (data.cefrTrajectory && data.cefrTrajectory.length) {
+    const levels = ["A1","A2","B1","B2","C1","C2"];
+    process.stdout.write(`  ${paint(colors.yellow, "CEFR trajectory")}\n`);
+    for (const row of data.cefrTrajectory) {
+      const idx = levels.indexOf(row.level);
+      const bar = paint(colors.green, "█".repeat(Math.max(1, idx * 3 + 1)));
+      process.stdout.write(`  ${paint(colors.gray, row.day)}  ${bar} ${paint(colors.white, row.level)}\n`);
+    }
+    process.stdout.write("\n");
+  }
+
+  if (data.mastery && data.mastery.length) {
+    const byCat = { frequent: [], occasional: [], rare: [], mastered: [] };
+    for (const r of data.mastery) (byCat[r.mastery] || []).push(r.error_type.split(" / ").pop());
+    const catColor = { frequent: colors.red, occasional: colors.yellow, rare: colors.cyan, mastered: colors.green };
+
+    process.stdout.write(`  ${paint(colors.yellow, "Mastery  (30-day window)")}\n`);
+
+    for (const [cat, items] of Object.entries(byCat)) {
+      const label = paint(catColor[cat], cat.padEnd(11));
+      const countStr = paint(colors.gray, `${String(items.length).padStart(2)} type${items.length !== 1 ? "s" : " "}`);
+      if (items.length === 0) continue;
+
+      // For frequent/occasional show up to top 5 items on separate indented lines
+      if (cat === "frequent" || cat === "occasional") {
+        process.stdout.write(`  ${label}  ${countStr}\n`);
+        const shown = items.slice(0, 5);
+        for (const item of shown) {
+          process.stdout.write(`               ${paint(colors.gray, "· ")}${paint(colors.white, item)}\n`);
+        }
+        if (items.length > 5) {
+          process.stdout.write(`               ${paint(colors.gray, `· … +${items.length - 5} more`)}\n`);
+        }
+      } else {
+        // rare/mastered: single line with up to 4 items inline
+        const preview = items.slice(0, 4).join("  ·  ");
+        const more = items.length > 4 ? paint(colors.gray, `  +${items.length - 4} more`) : "";
+        process.stdout.write(`  ${label}  ${countStr}   ${paint(colors.gray, preview)}${more}\n`);
+      }
+    }
+    process.stdout.write("\n");
+  }
+}
+
+async function showSessionSummary() {
+  if (sessionSentenceCount === 0) return;
+  let s;
+  try { s = await fetchJson("GET", "/session/summary"); } catch { return; }
+  if (!s || s.no_session) return;
+
+  const errPerSent = s.total_inputs > 0 ? (s.total_errors / s.total_inputs).toFixed(1) : "0";
+  const avg7 = s.avg_errors_7day.toFixed(1);
+  const trend = s.total_inputs > 0 && s.avg_errors_7day > 0
+    ? (parseFloat(errPerSent) < parseFloat(avg7) ? paint(colors.green, " ↑ improving") : paint(colors.yellow, " → stable"))
+    : "";
+
+  const sep = "─".repeat(44);
+  process.stdout.write(`\n  ${paint(colors.gray, sep)}\n`);
+  process.stdout.write(`  ${paint(colors.yellow, "Session Summary")}\n`);
+  process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
+  process.stdout.write(`  ${paint(colors.gray, "Sentences      ")}${paint(colors.white, String(s.total_inputs))}\n`);
+  process.stdout.write(`  ${paint(colors.gray, "Errors/sent    ")}${paint(colors.white, errPerSent)}${paint(colors.gray, `  vs 7-day avg ${avg7}`)}${trend}\n`);
+  if (s.top_error) process.stdout.write(`  ${paint(colors.gray, "Top error      ")}${paint(colors.cyan, s.top_error)}\n`);
+  process.stdout.write(`  ${paint(colors.gray, "Cards added    ")}${paint(colors.white, String(s.cards_added))}  ${paint(colors.gray, `due tomorrow: ${s.cards_due_tomorrow}`)}\n`);
+  process.stdout.write(`  ${paint(colors.gray, sep)}\n\n`);
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
   process.env.GEMINI_SYSTEM_MD = "false";
   process.env.GEMINI_TELEMETRY_ENABLED = "false";
 
-  loadEnv();
-  const config = loadConfig();
+  const config = configLoader.load();
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
 
   process.stdout.write("\n");
@@ -420,7 +633,7 @@ async function main() {
     if (!text) continue;
 
     if (["exit", "quit", "q"].includes(text.toLowerCase())) {
-      stopServer(); rl.close(); process.exit(0);
+      await showSessionSummary(); stopServer(); rl.close(); process.exit(0);
     }
 
     if (text === '"""') {

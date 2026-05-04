@@ -1,26 +1,26 @@
 # Interactive Grammar Tool (IGT)
 
-A cross-platform CLI grammar checker powered by multiple LLM backends that doubles as a personal English learning system. Every correction is logged to a local SQLite database, building a record of your error patterns that drives targeted practice, error handbooks, and CEFR proficiency assessment.
+A cross-platform CLI that checks your English grammar and turns every mistake into a learning event. Each correction is stored in a local SQLite database; the SRS deck, error handbook, practice exercises, and CEFR assessment all grow from that record. The loop: write → get corrected → review the card tomorrow → repeat until the error type reaches "mastered".
 
 ```
-[qwen-turbo ❯] She don't like the weather today.
+qwen-turbo ❯ She don't like the weather today.
 
-**Review**
-One error — subject-verb agreement (Minor overall).
+Review
+One error — subject-verb agreement.
 
-**Correction**
+Correction
 She doesn't like the weather today.
 
-**Refine**
+Refine
 She isn't fond of today's weather.
 
-**Diagnosis**
+Diagnosis
 - Subject-Verb Agreement (Minor): "don't" should be "doesn't" for third-person singular.
 
-**Rule**
+Rule
 - Third-person singular subjects (he/she/it) require "doesn't", not "don't".
 
-**Tip**
+Tip
 - When you see "she/he/it", the verb always gets an -s or -es in the present tense.
 
   1521ms llm  ·  1524ms total
@@ -28,15 +28,18 @@ She isn't fond of today's weather.
 
 ## Features
 
-|                        |                                                                                                                         |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Cross-platform**     | Runs on Windows (CMD/PowerShell), macOS, and Linux via a single Node.js entry point                                     |
-| **Multi-LLM**          | Switch between Google Gemini, Alibaba Qwen, and Deepseek instantly — no restart needed                                  |
-| **Fast**               | Persistent HTTP server eliminates Node.js startup overhead; typical response under 2s                                   |
-| **Anti-hallucination** | Strict prompt rules prevent phantom error detection; corrections are verbatim if the input is already correct           |
-| **Error taxonomy**     | All diagnoses are normalized to 28 canonical types across 5 categories (Grammar, Vocabulary, Mechanics, Style, Clarity) |
-| **Auto-logging**       | Every check is saved to SQLite and appended to a Markdown review log (Obsidian-compatible)                              |
-| **Learning suite**     | Personal error handbook, targeted practice exercises, and CEFR proficiency assessment built from your error history     |
+|                        |                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Cross-platform**     | Runs on Windows (CMD/PowerShell), macOS, and Linux via a single Node.js entry point                                      |
+| **Multi-LLM**          | Switch between Google Gemini, Alibaba Qwen, and Deepseek instantly — no restart needed                                   |
+| **Fast**               | Persistent HTTP server eliminates Node.js startup overhead; typical response under 2s                                    |
+| **Anti-hallucination** | Strict prompt rules prevent phantom error detection; corrections are verbatim if the input is already correct            |
+| **Error taxonomy**     | All diagnoses normalized to 28 canonical types across 5 categories (Grammar, Vocabulary, Mechanics, Style, Clarity)     |
+| **Auto-logging**       | Every check is saved to SQLite and appended to a Markdown review log (Obsidian-compatible)                               |
+| **SRS flashcard deck** | Every error auto-generates a cloze flashcard; `/review` drills due cards with SM-2 spacing                               |
+| **Mastery tracking**   | Error types bucketed frequent → occasional → rare → mastered based on 30-day occurrence counts                           |
+| **Analytics**          | `/stats` shows error rate by sentence length, CEFR trajectory, and mastery breakdown                                     |
+| **Learning suite**     | Personal error handbook, targeted practice exercises, and CEFR assessment — all driven by your actual error history      |
 
 ## Prerequisites
 
@@ -116,25 +119,42 @@ All three LLM prompts (`SystemPrompt`, `HandbookGrammarRulePrompt`, `PracticeExe
 
 Start IGT with `igt`. All commands use a `/` prefix at the input prompt.
 
-| Command           | Description                                                    |
-| ----------------- | -------------------------------------------------------------- |
-| `/handbook`       | Generate your personal error handbook                          |
-| `/practice`       | Start a practice session targeting your top error types        |
-| `/practice B2 10` | Practice at CEFR level B2, 10 questions                        |
-| `/assess`         | Estimate your current CEFR proficiency level                   |
-| `/add <word>`     | Add a word to your Obsidian vocabulary note                    |
-| `/vocab`          | Review saved vocabulary (quiz mode); `/vocab --list` to browse |
-| `/gemini`         | Switch to Gemini                                               |
-| `/qwen`           | Switch to Qwen                                                 |
-| `/deepseek`       | Switch to Deepseek                                             |
-| `/llm status`     | Show current provider, configured keys, and model names        |
-| `/llm setup`      | Interactive wizard to configure API keys                       |
-| `/help`           | Show command reference                                         |
-| `exit`            | Quit IGT                                                       |
+| Command           | Description                                                         |
+| ----------------- | ------------------------------------------------------------------- |
+| `/review`         | SRS review session — drills all cards due today with SM-2 grading   |
+| `/today`          | Adaptive daily plan: SRS count + cloze drill + practice focus area  |
+| `/stats`          | Analytics dashboard: errors by sentence length, mastery, CEFR trend |
+| `/handbook`       | Generate your personal error handbook                               |
+| `/practice`       | Start a practice session targeting your top error types             |
+| `/practice B2 10` | Practice at CEFR level B2, 10 questions                             |
+| `/assess`         | Estimate your current CEFR proficiency level                        |
+| `/undo [N]`       | Delete the last N inputs and their diagnoses/cards (default 1)      |
+| `/add <word>`     | Add a word to your Obsidian vocabulary note                         |
+| `/vocab`          | Review saved vocabulary (quiz mode); `/vocab --list` to browse      |
+| `/gemini`         | Switch to Gemini                                                    |
+| `/qwen`           | Switch to Qwen                                                      |
+| `/deepseek`       | Switch to Deepseek                                                  |
+| `/llm status`     | Show current provider, configured keys, and model names             |
+| `/help`           | Show command reference                                              |
+| `exit`            | Quit IGT (shows session summary first)                              |
 
 **Input behavior**: Ctrl+C clears the current input and returns to the prompt (does not exit). Use `"""` to enter multiline mode.
 
 ## Learning Suite
+
+### SRS Flashcard Review (`/review`)
+
+Every grammar check automatically generates a cloze flashcard: the corrected sentence with the changed word(s) blanked out. `/review` drills all cards due today. Grading is exact-match first; if your answer differs, a single LLM call decides whether it's semantically equivalent. SM-2 spacing determines when each card resurfaces — correct answers extend the interval, wrong answers reset it to 1 day.
+
+### Daily Plan (`/today`)
+
+Shows how many SRS cards are due, the recommended cloze drill count, a free-practice suggestion, and the error type to focus on today (most frequent in the last 30 days). Offers to launch `/review` immediately.
+
+### Analytics (`/stats`)
+
+- **Errors by sentence length** — whether complexity is driving your mistakes
+- **CEFR trajectory** — your assessed level over time
+- **Mastery breakdown** — every error type bucketed into frequent / occasional / rare / mastered based on 30-day counts
 
 ### Error Handbook (`/handbook`)
 
@@ -151,7 +171,7 @@ node tools/igt-handbook.mjs --days=30 --clear-cache   # force full rebuild
 
 ### Practice (`/practice`)
 
-Generates exercises that target your top 3 recurring error types plus 2 recent ones. Mix of multiple-choice and fill-in-the-blank. Difficulty matches your CEFR level. Wrong-answer options are plausible mistakes, not obvious distractors.
+Generates exercises that target your top 3 recurring error types plus 2 recent ones. Mix of multiple-choice and fill-in-the-blank. Difficulty matches your CEFR level.
 
 ```sh
 node tools/igt-practice.mjs                  # uses your error history
@@ -161,45 +181,51 @@ node tools/igt-practice.mjs --count=10       # set question count
 
 ### Assessment (`/assess`)
 
-Estimates your current CEFR level (A1–C2) from your error history — frequency, severity, error type distribution, and improvement trend over time.
+Estimates your current CEFR level (A1–C2) from your error history — frequency, severity, distribution, and improvement trend. Each assessment is stored with the input window it was scored against, so the trajectory is reproducible.
 
 ## Architecture
 
-`igt.mjs` (Node.js main loop) starts a persistent HTTP server (`lib/igt-http-server.mjs`) on port `18964` at launch. Each grammar check is an HTTP POST to `http://127.0.0.1:18964/grammar` — this avoids per-request Node.js startup cost.
+`igt.mjs` (Node.js main loop) starts a persistent HTTP server (`lib/igt-http-server.mjs`) on port `18964` at launch. Each grammar check is an HTTP POST to `http://127.0.0.1:18964/grammar`. The server returns structured JSON; the client owns rendering.
 
 ```
 igt.mjs  ──POST /grammar──►  igt-http-server.mjs
                                     │
+                          runMigrations() at boot
                           LLMProviderManager
                           ┌─────┬──────┬──────────┐
                        Gemini  Qwen  Deepseek   (flash for grammar,
                                                   pro for handbook/practice)
                                     │
-                          Error parser + SQLite writer (async)
+                          parseDiagnosis() → SQLite (non-blocking)
+                          buildCloze()    → srs_cards insert
                                     │
-                          JSON response ◄── igt.mjs renders with color
+                          {data, perf} ◄── igt.mjs renders with color
 ```
 
 **Key files**
 
-| File                            | Role                                               |
-| ------------------------------- | -------------------------------------------------- |
-| `igt.mjs`                       | Interactive loop, color rendering, command routing |
-| `igt.cmd`                       | Windows CMD/PowerShell wrapper                     |
-| `igt.sh`                        | macOS/Linux wrapper                                |
-| `lib/igt-http-server.mjs`       | HTTP server, request handling, orchestration       |
-| `lib/llm-provider.mjs`          | Provider abstraction, model routing, key rotation  |
-| `lib/llm-gemini.mjs`            | Gemini API implementation                          |
-| `lib/llm-qwen.mjs`              | Qwen (DashScope) API implementation                |
-| `lib/llm-deepseek.mjs`          | Deepseek API implementation                        |
-| `lib/config-loader.mjs`         | Merges `.env` + `igt_config.json` at startup       |
-| `lib/error-types.mjs`           | 20-type MECE error taxonomy                        |
-| `lib/ui.mjs`                    | ANSI colors, spinner, text wrapping                |
-| `tools/igt-handbook.mjs`        | Handbook generator with incremental cache          |
-| `tools/igt-practice.mjs`        | Practice exercise generator and grader             |
-| `tools/igt-assess.mjs`          | CEFR assessment engine                             |
-| `tools/init-db.mjs`             | Database initializer                               |
-| `tools/import-review-to-db.mjs` | Import legacy Markdown logs into SQLite            |
+| File                            | Role                                                      |
+| ------------------------------- | --------------------------------------------------------- |
+| `igt.mjs`                       | Interactive loop, color rendering, command routing        |
+| `lib/igt-http-server.mjs`       | HTTP server, all endpoints, session state, DB writes      |
+| `lib/migrations.mjs`            | Versioned migration runner (schema_version table)         |
+| `migrations/`                   | Numbered `.sql` and `.mjs` migration files                |
+| `lib/parse-diagnosis.mjs`       | Thin JSON parser for structured LLM output                |
+| `lib/srs.mjs`                   | SM-2 spaced-repetition scheduler (pure functions)         |
+| `lib/cloze.mjs`                 | Cloze card extraction from (original, correction) pairs   |
+| `lib/mastery.mjs`               | 30-day mastery bucketing query                            |
+| `lib/llm-provider.mjs`          | Provider abstraction, model routing, key rotation         |
+| `lib/llm-gemini.mjs`            | Gemini API (schema-enforced JSON output)                  |
+| `lib/llm-qwen.mjs`              | Qwen (DashScope) API                                      |
+| `lib/llm-deepseek.mjs`          | Deepseek API                                              |
+| `lib/config-loader.mjs`         | Merges `.env` + `igt_config.json` at startup              |
+| `lib/error-types.mjs`           | 28-type MECE error taxonomy                               |
+| `lib/ui.mjs`                    | ANSI colors, spinner, bar chart, text wrapping            |
+| `tools/igt-handbook.mjs`        | Handbook generator with incremental cache                 |
+| `tools/igt-practice.mjs`        | Practice exercise generator and grader                    |
+| `tools/igt-assess.mjs`          | CEFR assessment engine + assessments DB write             |
+| `tools/init-db.mjs`             | Thin wrapper around migration runner (first-run setup)    |
+| `tools/import-review-to-db.mjs` | Import legacy Markdown logs into SQLite                   |
 
 ## Performance
 

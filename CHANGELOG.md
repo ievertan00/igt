@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] - 2026-05-04
+
+### Added
+
+- **SRS flashcard deck** — every grammar check auto-generates a cloze card via `lib/cloze.mjs`; substitution-only extraction (1–3 changed tokens) per SM-2 best practices
+- **`/review` command** — drills all cards due today with SM-2 spacing (`lib/srs.mjs`); exact-match grading first, synchronous LLM fall-through on mismatch; progress bar and session summary
+- **`/today` command** — adaptive daily plan: SRS count + cloze drill count + free-practice suggestion; targets the most frequent error type; offers to launch `/review` immediately
+- **`/stats` command** — analytics dashboard with errors-by-sentence-length bar chart, CEFR trajectory, and mastery breakdown (frequent / occasional / rare / mastered)
+- **`/undo [N]` command** — hard-deletes the last N inputs and cascades to diagnoses, advice, vocab, and srs_cards in one transaction; shows a preview and confirms before deleting
+- **Session summary** — displayed on exit: sentences checked, errors/sentence vs 7-day average, top error type, SRS cards added, cards due tomorrow
+- **Mastery tracking** (`lib/mastery.mjs`) — 30-day bucketing query; surfaced in `/assess` report and terminal output, and in `/stats`
+- **Migrations runner** (`lib/migrations.mjs`) — versioned `.sql` + `.mjs` migrations in `migrations/`; `schema_version` table; runs automatically at server boot; replay-safe (restore-from-backup applies missing migrations)
+- **`srs_cards` table** (migration 002) — SM-2 fields: ease, interval_days, due_date, total_reviews, correct_streak
+- **Backfill migrations** — 003 assigns session_ids to all historical NULL-session inputs (grouped by 30-min gap); 004 seeds the SRS deck from existing diagnoses (224 cards from the existing 283 inputs)
+- **`assessments` table** — persists each `/assess` run with the input window scored against (inputs_window_start/end/count) for reproducibility
+- **`lib/parse-diagnosis.mjs`** — extracted from server; testable; exported `GRAMMAR_RESPONSE_SCHEMA` constant
+- **`lib/srs.mjs`** — pure SM-2 functions; `grade(card, quality)` returns next ease, interval, dueDate
+- **`lib/cloze.mjs`** — `buildCloze(original, correction)` returns `{prompt, answer}` or null
+- **`lib/mastery.mjs`** — `getMastery(db)` and `bucketLabel(count)` exports
+- **`renderBarChart()`** in `lib/ui.mjs` — ASCII bar chart with `maxWidth` cap and configurable color
+- **48 tests across 9 files** via `npm test` (node --test)
+- **`/review/due`**, **`/review/grade`**, **`/undo`**, **`/stats`**, **`/session/summary`**, **`/inputs/last`** server endpoints
+
+### Changed
+
+- **Structured JSON output** — server enforces `responseSchema` (Gemini) or `response_format: json_object` (Qwen/Deepseek); returns `{data, perf}` instead of `{content, perf}`; client renders structured fields directly — no markdown round-trip
+- **`parseDiagnosis()`** collapsed from ~90-line 4-fallback chain to ~30 lines: single `JSON.parse`, WARNING log + raw dump on failure
+- **Session write** — in-memory `currentSessionId` + `lastInputAt` (A3b); DB queried once at boot; new session row only on >30-min gap; `sessions.total_inputs` kept fresh per write
+- **`tools/init-db.mjs`** — now a thin wrapper around `runMigrations()`; all `CREATE TABLE` statements moved to `migrations/001_initial_schema.sql`
+- **Config consolidation** — hand-rolled `loadEnv()`/`loadConfig()` removed from `igt.mjs`; unified on `configLoader.load()`
+- **Key exhaustion error** — "All N keys exhausted. Last error: …" message (previously silent last-error throw)
+- **`/assess`** — now writes an `assessments` row and shows mastery bucketing in the terminal summary
+- **`lib/ui.mjs`** — `renderBarChart()` added; `maxWidth` option limits bar chart to 72 chars to avoid full-terminal fills
+
+### Removed
+
+- **`igt.ps1`** — deleted (superseded by `igt.mjs` since v3.0.0)
+- **`lib/igt-bridge.mjs`** — deleted (legacy standalone script, orphaned since v3.0.0)
+- **`streamGeminiResponse()`** — streaming endpoint removed; all providers use the same non-streaming JSON path
+- **`/grammar/stream` endpoint** — removed
+- **`formatDisplayContent()`**, **`extractSections()`**, **`cleanString()`** — deleted (~160 lines); rendering moved to client
+- **`igt_db_error.log`** untracked; `*.log` added to `.gitignore`
+- **Errors by hour of day** chart removed from `/stats` (not actionable)
+
+---
+
 ## [3.0.0] - 2026-05-02
 
 ### Added
@@ -120,7 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial project scaffolding and concept validation
 
-[Unreleased]: https://github.com/ievertan00/igt/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/ievertan00/igt/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/ievertan00/igt/compare/v3.0.0...v3.5.0
 [3.0.0]: https://github.com/ievertan00/igt/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/ievertan00/igt/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/ievertan00/igt/compare/v1.5.0...v2.0.0
