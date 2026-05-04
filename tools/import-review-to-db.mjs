@@ -9,12 +9,15 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
 // Load config
-const configPath = path.join(projectRoot, "igt_config.json");
+const configPath = path.join(projectRoot, "lib", "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-const reviewPath = config.ReviewPath;
+
+// Accept file path from CLI arg, fall back to config
+const reviewPath = process.argv[2] || config.ReviewPath;
 
 if (!reviewPath || !fs.existsSync(reviewPath)) {
-  console.error("Error: ReviewPath not found in config or file does not exist.");
+  console.error("Error: Review log file not found.");
+  console.error("Usage: node tools/import-review-to-db.mjs <path-to-review-log.md>");
   process.exit(1);
 }
 
@@ -33,32 +36,23 @@ db.pragma("journal_mode = WAL");
 // Read the review file
 const content = fs.readFileSync(reviewPath, "utf8");
 
-// Parse entries using regex
-// Format: ### [timestamp]\n**User Input**: ...\n**Gemini Output**:\n...
-const entryPattern = /### \[([^\]]+)\]\s*\*\*User Input\*\*:\s*([\s\S]*?)\*\*Gemini Output\*\*:\s*([\s\S]*?)(?=(?:\n---\n### \[)|$)/g;
+// Parse entries — format: ### [timestamp]\n...sections...\n---\n
+const entryPattern = /### \[([^\]]+)\]([\s\S]*?)(?=\n---\n### \[|\n---\s*$|$)/g;
 
 const entries = [];
 let match;
 
 while ((match = entryPattern.exec(content)) !== null) {
   const timestamp = match[1].trim();
-  const userInput = match[2].trim();
-  let geminiOutput = match[3].trim();
-  
-  // Clean up Gemini output (remove .Trim() and other artifacts)
-  geminiOutput = geminiOutput.replace(/\.Trim\(\)\s*$/g, "").trim();
-  
-  // Skip if user input is empty or too short
-  if (userInput.length < 3) continue;
-  
-  entries.push({
-    timestamp,
-    userInput,
-    geminiOutput
-  });
+  const block = match[2];
+
+  const userInput = extractSection(block, "User Input");
+  if (!userInput || userInput.length < 3) continue;
+
+  entries.push({ timestamp, userInput, block });
 }
 
-console.log(`Found ${entries.length} entries in Review_&_Feedback.md`);
+console.log(`Found ${entries.length} entries in ${path.basename(reviewPath)}`);
 
 if (entries.length === 0) {
   console.log("No entries to import.");
@@ -66,47 +60,95 @@ if (entries.length === 0) {
   process.exit(0);
 }
 
-// Parse Gemini output to extract sections
-function parseSections(output) {
-  const correctionMatch = output.match(/\*\*Correction\*\*:\s*([\s\S]*?)(?=\*\*[A-Z]|$)/i);
-  const refineMatch = output.match(/\*\*Refine\*\*:\s*([\s\S]*?)(?=\*\*[A-Z]|$)/i);
-  const reviewMatch = output.match(/\*\*Review\*\*:\s*([\s\S]*?)(?=\*\*[A-Z]|$)/i);
-  const diagnosisMatch = output.match(/\*\*Diagnosis\*\*:\s*([\s\S]*?)(?=\*\*[A-Z]|$)/i);
-  const ruleMatch = output.match(/\*\*Rule\*\*:\s*([\s\S]*?)(?=\*\*[A-Z]|$)/i);
-  const tipMatch = output.match(/\*\*Tip\*\*:\s*([\s\S]*?)(?=\*\*[A-Z]|$)/i);
-  
-  return {
-    review: reviewMatch ? reviewMatch[1].trim() : null,
-    correction: correctionMatch ? correctionMatch[1].trim() : null,
-    refine: refineMatch ? refineMatch[1].trim() : null,
-    diagnosis: diagnosisMatch ? diagnosisMatch[1].trim() : null,
-    rule: ruleMatch ? ruleMatch[1].trim() : null,
-    tip: tipMatch ? tipMatch[1].trim() : null
-  };
+// Extract a named section from an entry block.
+// Sections are delimited by \n**SectionName**: headers.
+function extractSection(block, name) {
+  const start = block.indexOf(`**${name}**:`);
+  if (start === -1) return null;
+  const contentStart = start + `**${name}**:`.length;
+  // Next section header starts with \n** followed by an uppercase letter
+  const nextHeader = block.slice(contentStart).search(/\n\*\*[A-Z]/);
+  const contentEnd = nextHeader === -1 ? block.length : contentStart + nextHeader;
+  return block.slice(contentStart, contentEnd).trim() || null;
 }
 
-// Parse diagnosis text to extract structured data
+// Parse diagnosis block into structured records.
+// Handles formats found in the log:
+//   "- ErrorType (Severity): explanation"
+//   "- ErrorType (Severity)"
+//   "- ErrorType: Severity"  (severity after colon)
+//   "- Severity: Minor"      (continuation line for the previous item)
 function parseDiagnosisText(diagnosisText) {
   const diagnoses = [];
   if (!diagnosisText) return diagnoses;
-  
-  // Match patterns like "- Article misuse (Minor): ..." or "1. Tense confusion (Major): ..."
-  const items = diagnosisText.match(/[-*\d.]+\s*(.+?)\s*\((Minor|Moderate|Major)\)\s*[:：]?\s*(.*)/gi);
-  if (items) {
-    for (const item of items) {
-      const m = item.match(/[-*\d.]+\s*(.+?)\s*\((Minor|Moderate|Major)\)\s*[:：]?\s*(.*)/i);
-      if (m) {
-        const rawType = m[1].trim().replace(/^-+\s*/, "");
-        const classifiedType = classifyErrorType(rawType);
-        diagnoses.push({
-          error_type: getErrorTypePath(classifiedType),
-          severity: m[2].trim(),
-          explanation: m[3].trim()
-        });
+
+  const lines = diagnosisText.split("\n");
+  let pending = null; // item waiting for a severity continuation line
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+
+    // Continuation: "- Severity: Minor/Moderate/Major"
+    const contMatch = t.match(/^[-*]?\s*Severity\s*[:：]\s*(Minor|Moderate|Major)/i);
+    if (contMatch) {
+      if (pending) {
+        pending.severity = contMatch[1];
+        diagnoses.push(pending);
+        pending = null;
+      }
+      continue;
+    }
+
+    // New bullet item
+    const bulletMatch = t.match(/^[-*\d.]+\s+([\s\S]+)/);
+    if (!bulletMatch) continue;
+
+    // Flush previous pending item (had no severity continuation)
+    if (pending) {
+      if (pending.severity) diagnoses.push(pending);
+      pending = null;
+    }
+
+    const text = bulletMatch[1].trim();
+    let errorType = text;
+    let severity = null;
+    let explanation = null;
+
+    // Try "(Minor|Moderate|Major)" anywhere in the text
+    const parenSev = text.match(/\((Minor|Moderate|Major)\)/i);
+    if (parenSev) {
+      severity = parenSev[1];
+      errorType = text.slice(0, parenSev.index).replace(/[.,()\s]+$/, "").trim();
+      const after = text.slice(parenSev.index + parenSev[0].length).replace(/^[:\s.]+/, "").trim();
+      if (after) explanation = after;
+    } else {
+      // Try "ErrorType: Severity" (severity at end after colon)
+      const colonSev = text.match(/^(.+?)\s*[:：]\s*(Minor|Moderate|Major)\s*\.?$/i);
+      if (colonSev) {
+        errorType = colonSev[1].trim();
+        severity = colonSev[2];
       }
     }
+
+    // Clean up errorType: strip trailing punctuation / parens
+    errorType = errorType.replace(/\s*\([^)]*\)\s*$/, "").replace(/[.,;:]+$/, "").trim();
+
+    const classifiedType = classifyErrorType(errorType);
+    pending = {
+      error_type: getErrorTypePath(classifiedType),
+      severity,
+      explanation: explanation || null,
+    };
+    if (severity) {
+      diagnoses.push(pending);
+      pending = null;
+    }
   }
-  
+
+  // Flush last pending item
+  if (pending && pending.severity) diagnoses.push(pending);
+
   return diagnoses;
 }
 
@@ -141,23 +183,27 @@ const insertMany = db.transaction((entries) => {
       continue;
     }
     
-    const sections = parseSections(entry.geminiOutput);
-    
+    const correction = extractSection(entry.block, "Correction");
+    const refine = extractSection(entry.block, "Refine");
+    const diagnosisText = extractSection(entry.block, "Diagnosis");
+    const rule = extractSection(entry.block, "Rule");
+    const tip = extractSection(entry.block, "Tip");
+
     // Insert input
-    const result = insertInput.run(entry.timestamp, entry.userInput, sections.correction, sections.refine);
+    const result = insertInput.run(entry.timestamp, entry.userInput, correction, refine);
     const inputId = result.lastInsertRowid;
     
     // Parse and insert diagnoses
-    if (sections.diagnosis) {
-      const diagnoses = parseDiagnosisText(sections.diagnosis);
+    if (diagnosisText) {
+      const diagnoses = parseDiagnosisText(diagnosisText);
       for (const d of diagnoses) {
         insertDiagnosis.run(inputId, d.error_type, d.severity, d.explanation);
       }
     }
-    
+
     // Insert advice
-    if (sections.rule || sections.tip) {
-      insertAdvice.run(inputId, sections.rule, sections.tip);
+    if (rule || tip) {
+      insertAdvice.run(inputId, rule, tip);
     }
     
     imported++;

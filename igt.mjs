@@ -349,6 +349,32 @@ async function runUndo(rl, n) {
   }
 }
 
+function diffHighlight(original, corrected) {
+  const ow = original.trim().split(/\s+/);
+  const cw = corrected.trim().split(/\s+/);
+  const n = ow.length, m = cw.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = 1; i <= n; i++)
+    for (let j = 1; j <= m; j++)
+      dp[i][j] = ow[i-1].toLowerCase() === cw[j-1].toLowerCase()
+        ? dp[i-1][j-1] + 1
+        : Math.max(dp[i-1][j], dp[i][j-1]);
+  const parts = [];
+  let i = n, j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && ow[i-1].toLowerCase() === cw[j-1].toLowerCase()) {
+      parts.unshift({ word: cw[j-1], changed: ow[i-1] !== cw[j-1] }); i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      parts.unshift({ word: cw[j-1], changed: true }); j--;
+    } else {
+      i--;
+    }
+  }
+  return parts.map(({ word, changed }) =>
+    changed ? paint(colors.bold + colors.green, word) : word
+  ).join(" ");
+}
+
 async function runReview(rl, limit) {
   let preview;
   try {
@@ -361,36 +387,43 @@ async function runReview(rl, limit) {
     process.stdout.write(paint(colors.gray, "  No cards due. Come back tomorrow.\n\n")); return;
   }
 
-  process.stdout.write(`  ${paint(colors.yellow, `${cards.length} card(s) due — type your answer; Ctrl+C to stop.`)}\n\n`);
+  process.stdout.write(`  ${paint(colors.yellow, `${cards.length} card(s) due — Ctrl+C to stop.`)}\n\n`);
   let correctCount = 0;
   let wrongCount = 0;
   for (let i = 0; i < cards.length; i++) {
     const c = cards[i];
-    process.stdout.write(`  ${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n`);
-    process.stdout.write(`  ${paint(colors.cyan, c.prompt)}\n`);
-    const answer = await askLine(rl, paint(colors.gray, "  ❯ "));
-    if (answer === null) { process.stdout.write("\n"); break; }
-    if (!answer.trim()) { process.stdout.write(paint(colors.gray, "  (skipped)\n\n")); continue; }
+    const hintTypes = c.hint ? c.hint.split(" · ") : [];
+    const hintLabel = hintTypes.length > 1
+      ? `[${c.hint}] errors:`
+      : hintTypes.length === 1
+        ? `[${c.hint}] error:`
+        : null;
 
-    const spinner = new Spinner("checking");
-    spinner.start();
+    process.stdout.write(`  ${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n`);
+    if (hintLabel) process.stdout.write(`  ${paint(colors.yellow, hintLabel)}\n\n`);
+    process.stdout.write(`  ${paint(colors.cyan, c.prompt)}\n`);
+    const enter = await askLine(rl, paint(colors.gray, "  Show Answer [Enter] ❯ "));
+    if (enter === null) { process.stdout.write("\n"); break; }
+
+    process.stdout.write(`  ${diffHighlight(c.prompt, c.answer)}\n`);
+    const choice = await askLine(rl, paint(colors.gray, "  Found it? [y/n] ❯ "));
+    if (choice === null) { process.stdout.write("\n"); break; }
+
+    const selfCorrect = !/^n/i.test(choice.trim());
     let result;
     try {
-      result = await fetchJson("POST", "/review/grade", JSON.stringify({ card_id: c.id, response: answer }));
+      result = await fetchJson("POST", "/review/grade", JSON.stringify({ card_id: c.id, correct: selfCorrect }));
     } catch (e) {
-      spinner.stop(true);
       process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`));
       continue;
     }
-    spinner.stop(true);
 
-    if (result.correct) {
+    if (selfCorrect) {
       correctCount++;
-      process.stdout.write(`  ${paint(colors.green, "✓ correct")} ${paint(colors.gray, `→ next due ${result.next.dueDate} (interval ${result.next.intervalDays}d)`)}\n\n`);
+      process.stdout.write(`  ${paint(colors.green, "✓")} ${paint(colors.gray, `→ next due ${result.next.dueDate} (interval ${result.next.intervalDays}d)`)}\n\n`);
     } else {
       wrongCount++;
-      process.stdout.write(`  ${paint(colors.red, "✗ wrong")} ${paint(colors.gray, `expected: ${c.answer.replace(/^[-*]\s+/, "")}`)}\n`);
-      process.stdout.write(`  ${paint(colors.gray, `→ reset to 1d`)}\n\n`);
+      process.stdout.write(`  ${paint(colors.red, "✗")} ${paint(colors.gray, `→ reset to 1d`)}\n\n`);
     }
   }
 
@@ -432,7 +465,7 @@ async function handleCommand(raw, config, rl) {
     case "vocab": case "v":
       await runNode("tools/igt-vocab.mjs", ...args); process.stdout.write("\n"); break;
     case "gemini": case "qwen": case "deepseek":
-      await runNode("lib/llm-switch.mjs", "switch", cmd);
+      await fetchJson("POST", "/switch", JSON.stringify({ provider: cmd }));
       process.env.IGT_LLM_PROVIDER = cmd;
       process.stdout.write(paint(colors.gray, `  Switched to ${getModel(config).model}\n`));
       break;
@@ -442,7 +475,7 @@ async function handleCommand(raw, config, rl) {
       await runUndo(rl, args[0] ? parseInt(args[0], 10) : 1);
       break;
     case "review": case "r":
-      await runReview(rl, args[0] ? parseInt(args[0], 10) : 20);
+      await runReview(rl, args[0] ? parseInt(args[0], 10) : 10);
       break;
     case "stats": case "st":
       await runStats();
@@ -515,7 +548,7 @@ async function runToday(rl, config) {
   if (dueCount > 0) {
     const go = await askLine(rl, paint(colors.gray, "  Start SRS review now? (Y/n): "));
     if (go === null || /^n/i.test(go.trim())) return;
-    await runReview(rl, 20);
+    await runReview(rl, 10);
   }
 }
 
