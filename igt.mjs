@@ -222,6 +222,8 @@ function askLine(rl, prompt) {
       if (settled) return;
       settled = true;
       rl.removeListener("line", onLine);
+      rl.write(null, { ctrl: true, name: 'e' });
+      rl.write(null, { ctrl: true, name: 'u' });
       process.stdout.write("^C\n");
       sigintHandler = () => {};
       resolve(null);
@@ -288,9 +290,11 @@ async function runGrammarCheck(text, targetPath) {
 
 function runNode(script, ...args) {
   return new Promise((resolve) => {
-    spawn(process.execPath, [path.join(__dirname, script), ...args], {
+    const child = spawn(process.execPath, [path.join(__dirname, script), ...args], {
       stdio: "inherit", env: process.env,
-    }).on("close", resolve);
+    });
+    sigintHandler = () => { child.kill(); sigintHandler = () => {}; };
+    child.on("close", () => { sigintHandler = () => {}; resolve(); });
   });
 }
 
@@ -656,6 +660,12 @@ async function main() {
     terminal: true, historySize: 100, removeHistoryDuplicates: true,
   });
   rl.on("SIGINT", () => sigintHandler());
+  process.stdin.on("data", (chunk) => {
+    if (chunk.length === 1 && chunk[0] === 0x1b) {
+      rl.write(null, { ctrl: true, name: "e" });
+      rl.write(null, { ctrl: true, name: "u" });
+    }
+  });
   process.on("exit", stopServer);
 
   while (true) {
