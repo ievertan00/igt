@@ -517,6 +517,32 @@ function showHelp() {
   process.stdout.write("\n");
 }
 
+// ─── Input validation ─────────────────────────────────────────────────────────
+
+let lastSubmittedText = "";
+
+const TEST_PATTERNS = /^(test(ing)?|hello|hi|hey|ok|okay|yes|no|sure|thanks|thank you|lol|haha|asdf|qwerty|foo|bar|baz|abc|xyz|aaa+|bbb+|ccc+|zzz+|123|1234|12345)[!?.\s]*$/i;
+
+function validateInput(text) {
+  if (text.length < 10)
+    return "Input too short — type a complete sentence.";
+  const words = text.split(/\s+/).filter((w) => /[a-zA-Z]/.test(w));
+  if (words.length < 2)
+    return "Input too short — needs at least two words.";
+  if (TEST_PATTERNS.test(text))
+    return "Looks like a test input — type a sentence you actually want checked.";
+  const nonSpace = text.replace(/\s/g, "");
+  if (nonSpace.length > 4) {
+    const counts = {};
+    for (const c of nonSpace) counts[c] = (counts[c] || 0) + 1;
+    if (Math.max(...Object.values(counts)) / nonSpace.length > 0.6)
+      return "Input looks like noise — type a real sentence.";
+  }
+  if (text === lastSubmittedText)
+    return "Duplicate — same text as your last submission.";
+  return null;
+}
+
 // ─── Session ───────────────────────────────────────────────────────────────────
 
 let sessionSentenceCount = 0;
@@ -689,12 +715,26 @@ async function main() {
         lines.push(l);
       }
       const combined = lines.join("\n").trim();
-      if (combined) await runGrammarCheck(combined, targetPath);
+      if (combined) {
+        const multiRejection = validateInput(combined);
+        if (multiRejection) {
+          process.stdout.write(`  ${paint(colors.yellow, multiRejection)}\n\n`);
+        } else {
+          lastSubmittedText = combined;
+          await runGrammarCheck(combined, targetPath);
+        }
+      }
       continue;
     }
 
     if (text.startsWith("/")) { await handleCommand(text, config, rl); continue; }
 
+    const rejection = validateInput(text);
+    if (rejection) {
+      process.stdout.write(`  ${paint(colors.yellow, rejection)}\n\n`);
+      continue;
+    }
+    lastSubmittedText = text;
     await runGrammarCheck(text, targetPath);
   }
 }
