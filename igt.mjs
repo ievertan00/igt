@@ -203,6 +203,7 @@ function logResult(targetPath, text, data) {
 // sigintHandler is swapped by context: idle = no-op, input = clear line, http = abort
 
 let sigintHandler = () => {};
+let globalEscHandler = null;
 
 // Uses rl 'line' event directly (not question()) to allow clean SIGINT cancellation
 // without leaving stale question callbacks that fire on the next Enter keypress.
@@ -288,13 +289,21 @@ async function runGrammarCheck(text, targetPath) {
 
 // ─── Commands ──────────────────────────────────────────────────────────────────
 
-function runNode(script, ...args) {
+function runNode(rl, script, ...args) {
   return new Promise((resolve) => {
+    if (rl) rl.pause();
+    if (globalEscHandler) process.stdin.removeListener("data", globalEscHandler);
+    
     const child = spawn(process.execPath, [path.join(__dirname, script), ...args], {
       stdio: "inherit", env: process.env,
     });
     sigintHandler = () => { child.kill(); sigintHandler = () => {}; };
-    child.on("close", () => { sigintHandler = () => {}; resolve(); });
+    child.on("close", () => { 
+      sigintHandler = () => {}; 
+      if (rl) rl.resume();
+      if (globalEscHandler) process.stdin.on("data", globalEscHandler);
+      resolve(); 
+    });
   });
 }
 
@@ -454,27 +463,27 @@ async function handleCommand(raw, config, rl) {
   switch (cmd) {
     case "help": showHelp(); break;
     case "handbook": case "h":
-      await runNode("tools/igt-handbook.mjs"); process.stdout.write("\n"); break;
+      await runNode(rl, "tools/igt-handbook.mjs"); process.stdout.write("\n"); break;
     case "practice": case "p": {
       const m = args.join(" ").match(/^([A-Ca-c][12])\s+(\d+)$/);
       const nodeArgs = m ? [`--level=${m[1].toUpperCase()}`, `--count=${m[2]}`] : args;
-      await runNode("tools/igt-practice.mjs", ...nodeArgs); process.stdout.write("\n"); break;
+      await runNode(rl, "tools/igt-practice.mjs", ...nodeArgs); process.stdout.write("\n"); break;
     }
     case "assess": case "as":
-      await runNode("tools/igt-assess.mjs"); process.stdout.write("\n"); break;
+      await runNode(rl, "tools/igt-assess.mjs"); process.stdout.write("\n"); break;
     case "add": case "a":
       if (!args.length) process.stdout.write(paint(colors.yellow, "Usage: /add <word or phrase>\n\n"));
-      else await runNode("tools/igt-add.mjs", args.join(" "));
+      else await runNode(rl, "tools/igt-add.mjs", args.join(" "));
       break;
     case "vocab": case "v":
-      await runNode("tools/igt-vocab.mjs", ...args); process.stdout.write("\n"); break;
+      await runNode(rl, "tools/igt-vocab.mjs", ...args); process.stdout.write("\n"); break;
     case "gemini": case "qwen": case "deepseek":
       await fetchJson("POST", "/switch", JSON.stringify({ provider: cmd }));
       process.env.IGT_LLM_PROVIDER = cmd;
       process.stdout.write(paint(colors.gray, `Switched to ${getModel(config).model}\n`));
       break;
     case "llm":
-      await runNode("lib/llm-switch.mjs", ...args); process.stdout.write("\n"); break;
+      await runNode(rl, "lib/llm-switch.mjs", ...args); process.stdout.write("\n"); break;
     case "undo": case "u":
       await runUndo(rl, args[0] ? parseInt(args[0], 10) : 1);
       break;
@@ -685,13 +694,16 @@ async function main() {
     input: process.stdin, output: process.stdout,
     terminal: true, historySize: 100, removeHistoryDuplicates: true,
   });
-  rl.on("SIGINT", () => sigintHandler());
-  process.stdin.on("data", (chunk) => {
+
+  globalEscHandler = (chunk) => {
     if (chunk.length === 1 && chunk[0] === 0x1b) {
       rl.write(null, { ctrl: true, name: "e" });
       rl.write(null, { ctrl: true, name: "u" });
     }
-  });
+  };
+
+  rl.on("SIGINT", () => sigintHandler());
+  process.stdin.on("data", globalEscHandler);
   process.on("exit", stopServer);
 
   while (true) {
