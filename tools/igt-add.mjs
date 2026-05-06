@@ -135,8 +135,10 @@ if (existingBlock) {
 }
 
 const llmManager = initializeLLMProviders();
+const activeProvider = llmManager.getCurrentProviderName();
+const activeModel = llmManager.getCurrentProvider().getModelName(config, "grammar");
 
-startSpinner("Looking up vocabulary…");
+startSpinner(`Looking up vocabulary via ${paint(c.cyan, activeProvider)} (${paint(c.gray, activeModel)})…`);
 let raw;
 try {
   raw = await llmManager.generateWithFallback(word, SYSTEM_PROMPT, { taskType: "grammar" });
