@@ -76,7 +76,7 @@ async function startServer() {
       return false;
     }
     if (await ping()) {
-      process.stdout.write(`  ${paint(colors.gray, `● server  port ${SERVER_PORT}`)}\n`);
+      process.stdout.write(`${paint(colors.gray, `● server  port ${SERVER_PORT}`)}\n`);
       return true;
     }
   }
@@ -125,7 +125,7 @@ const SC = {
   review:     { h: colors.yellow,  b: colors.yellow },
   correction: { h: colors.green,   b: colors.green  },
   refine:     { h: colors.cyan,    b: colors.cyan   },
-  diagnosis:  { h: colors.magenta, b: colors.gray   },
+  diagnosis:  { h: colors.magenta, b: colors.magenta },
   rule:       { h: colors.blue,    b: colors.blue   },
   tip:        { h: colors.cyan,    b: colors.cyan   },
 };
@@ -196,7 +196,7 @@ function logResult(targetPath, text, data) {
   const ts = new Date().toISOString().replace("T", " ").slice(0, 19);
   const content = dataToMarkdown(data);
   try { fs.appendFileSync(targetPath, `\n---\n### [${ts}]\n**User Input**: ${text}\n**Output**:\n${content}`, "utf8"); }
-  catch { process.stdout.write(paint(colors.yellow, "  Warning: Could not log entry.\n")); }
+  catch { process.stdout.write(paint(colors.yellow, "Warning: Could not log entry.\n")); }
 }
 
 // ─── Input ─────────────────────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ async function runGrammarCheck(text, targetPath) {
     controller.abort();
     sigintHandler = () => {};
     spinner.stop(true);
-    process.stdout.write("\n" + paint(colors.gray, "  Cancelled.\n"));
+    process.stdout.write("\n" + paint(colors.gray, "Cancelled.\n"));
   };
 
   let resp = null;
@@ -273,13 +273,13 @@ async function runGrammarCheck(text, targetPath) {
 
   const sep = "─".repeat(Math.min(44, Math.max(20, cols() - 3)));
   process.stdout.write("\n");
-  process.stdout.write(`  ${paint(colors.gray, "Input  ")}${paint(colors.white, text)}\n`);
-  process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
+  process.stdout.write(`${paint(colors.gray, "Input  ")}${paint(colors.white, text)}\n`);
+  process.stdout.write(`${paint(colors.gray, sep)}\n`);
   renderResponse(resp.data);
   process.stdout.write("\n");
   if (resp.perf) {
     const { llm_ms, total_ms } = resp.perf;
-    process.stdout.write(`  ${paint(colors.gray, `${Math.round(llm_ms)}ms llm  ·  ${Math.round(total_ms)}ms total`)}\n`);
+    process.stdout.write(`${paint(colors.gray, `${Math.round(llm_ms)}ms llm  ·  ${Math.round(total_ms)}ms total`)}\n`);
   }
 
   sessionSentenceCount++;
@@ -324,32 +324,32 @@ function fetchJson(method, pathPart, body = null) {
 
 async function runUndo(rl, n) {
   if (!Number.isFinite(n) || n < 1) {
-    process.stdout.write(paint(colors.yellow, "  Usage: /undo [N]   (delete the last N inputs; default 1)\n\n"));
+    process.stdout.write(paint(colors.yellow, "Usage: /undo [N]   (delete the last N inputs; default 1)\n\n"));
     return;
   }
   let preview;
   try {
     preview = await fetchJson("GET", `/inputs/last?n=${n}`);
   } catch (e) {
-    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return;
+    process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`)); return;
   }
   if (!preview.rows || preview.rows.length === 0) {
-    process.stdout.write(paint(colors.gray, "  Nothing to undo.\n\n")); return;
+    process.stdout.write(paint(colors.gray, "Nothing to undo.\n\n")); return;
   }
-  process.stdout.write(`  ${paint(colors.yellow, `About to delete the last ${preview.rows.length} input(s):`)}\n`);
+  process.stdout.write(`${paint(colors.yellow, `About to delete the last ${preview.rows.length} input(s):`)}\n`);
   for (const r of preview.rows) {
     const text = r.original_text.replace(/\s+/g, " ").slice(0, 80);
-    process.stdout.write(`    ${paint(colors.gray, `#${r.id}`)}  ${paint(colors.white, text)}\n`);
+    process.stdout.write(`  ${paint(colors.gray, `#${r.id}`)}  ${paint(colors.white, text)}\n`);
   }
-  const confirm = await askLine(rl, paint(colors.yellow, "  Proceed? (y/N): "));
+  const confirm = await askLine(rl, paint(colors.yellow, "Proceed? (y/N): "));
   if (!confirm || !/^y(es)?$/i.test(confirm.trim())) {
-    process.stdout.write(paint(colors.gray, "  Cancelled.\n\n")); return;
+    process.stdout.write(paint(colors.gray, "Cancelled.\n\n")); return;
   }
   try {
     const r = await fetchJson("POST", "/undo", JSON.stringify({ n }));
-    process.stdout.write(`  ${paint(colors.green, "Deleted")}: ${r.deleted_inputs} input(s), ${r.deleted_diagnoses} diagnoses, ${r.deleted_cards} cards, ${r.deleted_vocab} vocab, ${r.deleted_advice} advice rows\n\n`);
+    process.stdout.write(`${paint(colors.green, "Deleted")}: ${r.deleted_inputs} input(s), ${r.deleted_diagnoses} diagnoses, ${r.deleted_cards} cards, ${r.deleted_vocab} vocab, ${r.deleted_advice} advice rows\n\n`);
   } catch (e) {
-    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`));
+    process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`));
   }
 }
 
@@ -384,14 +384,14 @@ async function runReview(rl, limit) {
   try {
     preview = await fetchJson("GET", `/review/due?limit=${Math.max(1, limit)}`);
   } catch (e) {
-    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return;
+    process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`)); return;
   }
   const cards = preview.cards || [];
   if (cards.length === 0) {
-    process.stdout.write(paint(colors.gray, "  No cards due. Come back tomorrow.\n\n")); return;
+    process.stdout.write(paint(colors.gray, "No cards due. Come back tomorrow.\n\n")); return;
   }
 
-  process.stdout.write(`  ${paint(colors.yellow, `${cards.length} card(s) due — Ctrl+C to stop.`)}\n\n`);
+  process.stdout.write(`${paint(colors.yellow, `${cards.length} card(s) due — Ctrl+C to stop.`)}\n\n`);
   let correctCount = 0;
   let wrongCount = 0;
   for (let i = 0; i < cards.length; i++) {
@@ -403,13 +403,13 @@ async function runReview(rl, limit) {
         ? `[${c.hint}] error:`
         : null;
 
-    process.stdout.write(`  ${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n`);
-    if (hintLabel) process.stdout.write(`  ${paint(colors.yellow, hintLabel)}\n\n`);
-    process.stdout.write(`  ${paint(colors.cyan, c.prompt)}\n`);
+    process.stdout.write(`${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n`);
+    if (hintLabel) process.stdout.write(`${paint(colors.yellow, hintLabel)}\n\n`);
+    process.stdout.write(`${paint(colors.cyan, c.prompt)}\n`);
     const enter = await askLine(rl, paint(colors.gray, "  Show Answer [Enter] ❯ "));
     if (enter === null) { process.stdout.write("\n"); break; }
 
-    process.stdout.write(`  ${diffHighlight(c.prompt, c.answer)}\n`);
+    process.stdout.write(`${diffHighlight(c.prompt, c.answer)}\n`);
     const choice = await askLine(rl, paint(colors.gray, "  Found it? [y/n] ❯ "));
     if (choice === null) { process.stdout.write("\n"); break; }
 
@@ -418,24 +418,24 @@ async function runReview(rl, limit) {
     try {
       result = await fetchJson("POST", "/review/grade", JSON.stringify({ card_id: c.id, correct: selfCorrect }));
     } catch (e) {
-      process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`));
+      process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`));
       continue;
     }
 
     if (selfCorrect) {
       correctCount++;
-      process.stdout.write(`  ${paint(colors.green, "✓")} ${paint(colors.gray, `→ next due ${result.next.dueDate} (interval ${result.next.intervalDays}d)`)}\n\n`);
+      process.stdout.write(`${paint(colors.green, "✓")} ${paint(colors.gray, `→ next due ${result.next.dueDate} (interval ${result.next.intervalDays}d)`)}\n\n`);
     } else {
       wrongCount++;
-      process.stdout.write(`  ${paint(colors.red, "✗")} ${paint(colors.gray, `→ reset to 1d`)}\n\n`);
+      process.stdout.write(`${paint(colors.red, "✗")} ${paint(colors.gray, `→ reset to 1d`)}\n\n`);
     }
   }
 
   const total = correctCount + wrongCount;
   if (total > 0) {
     const pct = Math.round((correctCount / total) * 100);
-    process.stdout.write(`  ${paint(colors.gray, "─".repeat(40))}\n`);
-    process.stdout.write(`  ${paint(colors.yellow, `Reviewed ${total}, ${correctCount} correct (${pct}%), ${wrongCount} reset.`)}\n\n`);
+    process.stdout.write(`${paint(colors.gray, "─".repeat(40))}\n`);
+    process.stdout.write(`${paint(colors.yellow, `Reviewed ${total}, ${correctCount} correct (${pct}%), ${wrongCount} reset.`)}\n\n`);
   }
 }
 
@@ -463,7 +463,7 @@ async function handleCommand(raw, config, rl) {
     case "assess": case "as":
       await runNode("tools/igt-assess.mjs"); process.stdout.write("\n"); break;
     case "add": case "a":
-      if (!args.length) process.stdout.write(paint(colors.yellow, "  Usage: /add <word or phrase>\n\n"));
+      if (!args.length) process.stdout.write(paint(colors.yellow, "Usage: /add <word or phrase>\n\n"));
       else await runNode("tools/igt-add.mjs", args.join(" "));
       break;
     case "vocab": case "v":
@@ -471,7 +471,7 @@ async function handleCommand(raw, config, rl) {
     case "gemini": case "qwen": case "deepseek":
       await fetchJson("POST", "/switch", JSON.stringify({ provider: cmd }));
       process.env.IGT_LLM_PROVIDER = cmd;
-      process.stdout.write(paint(colors.gray, `  Switched to ${getModel(config).model}\n`));
+      process.stdout.write(paint(colors.gray, `Switched to ${getModel(config).model}\n`));
       break;
     case "llm":
       await runNode("lib/llm-switch.mjs", ...args); process.stdout.write("\n"); break;
@@ -491,13 +491,13 @@ async function handleCommand(raw, config, rl) {
       await showSessionSummary(); stopServer(); rl.close(); process.exit(0);
       break;
     default:
-      process.stdout.write(paint(colors.yellow, `  Unknown command /${cmd} — type /help for a list.\n`));
+      process.stdout.write(paint(colors.yellow, `Unknown command /${cmd} — type /help for a list.\n`));
   }
 }
 
 function showHelp() {
   const sep = "─".repeat(Math.min(54, Math.max(30, cols() - 3)));
-  const row = (c, d) => process.stdout.write(`  ${paint(colors.cyan, c)}${paint(colors.gray, d)}\n`);
+  const row = (c, d) => process.stdout.write(`${paint(colors.cyan, c)}${paint(colors.gray, d)}\n`);
   process.stdout.write(`\n  ${paint(colors.yellow, "Commands")}\n  ${paint(colors.gray, sep)}\n`);
   row("/handbook  (/h)   ", "Generate your personal error handbook");
   row("/practice  (/p)   ", "Targeted grammar exercises (CEFR-aware)");
@@ -555,7 +555,7 @@ async function runToday(rl, config) {
       fetchJson("GET", "/review/due?limit=100"),
     ]);
   } catch (e) {
-    process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return;
+    process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`)); return;
   }
 
   const dueCount = due.cards?.length || 0;
@@ -564,16 +564,16 @@ async function runToday(rl, config) {
 
   const sep = "─".repeat(44);
   process.stdout.write(`\n  ${paint(colors.yellow, "TODAY'S PLAN")}  ${paint(colors.gray, "(estimated 10 min)")}\n`);
-  process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
+  process.stdout.write(`${paint(colors.gray, sep)}\n`);
   const reviewMin = Math.max(2, Math.round(dueCount * 0.6));
-  process.stdout.write(`  ${paint(colors.gray, "1.")} ${paint(colors.white, "SRS reviews   ")}${paint(colors.cyan, `${dueCount} card(s) due`)}  ${paint(colors.gray, `(~${reviewMin} min)`)}  /review\n`);
-  process.stdout.write(`  ${paint(colors.gray, "2.")} ${paint(colors.white, "Cloze drill   ")}${paint(colors.cyan, `${clozeDrillCount} card(s)`)}  ${paint(colors.gray, "(~3 min)")}  /review --count=${clozeDrillCount}\n`);
-  process.stdout.write(`  ${paint(colors.gray, "3.")} ${paint(colors.white, "Free practice ")}${paint(colors.cyan, "1 paragraph")}  ${paint(colors.gray, "(~4 min)")}  /practice --count=1\n`);
+  process.stdout.write(`${paint(colors.gray, "1.")} ${paint(colors.white, "SRS reviews   ")}${paint(colors.cyan, `${dueCount} card(s) due`)}  ${paint(colors.gray, `(~${reviewMin} min)`)}  /review\n`);
+  process.stdout.write(`${paint(colors.gray, "2.")} ${paint(colors.white, "Cloze drill   ")}${paint(colors.cyan, `${clozeDrillCount} card(s)`)}  ${paint(colors.gray, "(~3 min)")}  /review --count=${clozeDrillCount}\n`);
+  process.stdout.write(`${paint(colors.gray, "3.")} ${paint(colors.white, "Free practice ")}${paint(colors.cyan, "1 paragraph")}  ${paint(colors.gray, "(~4 min)")}  /practice --count=1\n`);
   if (focusType) {
-    process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
-    process.stdout.write(`  ${paint(colors.gray, "Focus: ")}${paint(colors.magenta, focusType)}  ${paint(colors.gray, "(most frequent error — target it today)")}\n`);
+    process.stdout.write(`${paint(colors.gray, sep)}\n`);
+    process.stdout.write(`${paint(colors.gray, "Focus: ")}${paint(colors.magenta, focusType)}  ${paint(colors.gray, "(most frequent error — target it today)")}\n`);
   }
-  process.stdout.write(`  ${paint(colors.gray, sep)}\n\n`);
+  process.stdout.write(`${paint(colors.gray, sep)}\n\n`);
 
   if (dueCount > 0) {
     const go = await askLine(rl, paint(colors.gray, "  Start SRS review now? (Y/n): "));
@@ -585,7 +585,7 @@ async function runToday(rl, config) {
 async function runStats() {
   let data;
   try { data = await fetchJson("GET", "/stats"); }
-  catch (e) { process.stdout.write(paint(colors.red, `  Error: ${e.message}\n\n`)); return; }
+  catch (e) { process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`)); return; }
 
   const W = Math.min(72, Math.max(40, (process.stdout.columns || 80) - 4));
   process.stdout.write("\n");
@@ -599,11 +599,11 @@ async function runStats() {
 
   if (data.cefrTrajectory && data.cefrTrajectory.length) {
     const levels = ["A1","A2","B1","B2","C1","C2"];
-    process.stdout.write(`  ${paint(colors.yellow, "CEFR trajectory")}\n`);
+    process.stdout.write(`${paint(colors.yellow, "CEFR trajectory")}\n`);
     for (const row of data.cefrTrajectory) {
       const idx = levels.indexOf(row.level);
       const bar = paint(colors.green, "█".repeat(Math.max(1, idx * 3 + 1)));
-      process.stdout.write(`  ${paint(colors.gray, row.day)}  ${bar} ${paint(colors.white, row.level)}\n`);
+      process.stdout.write(`${paint(colors.gray, row.day)}  ${bar} ${paint(colors.white, row.level)}\n`);
     }
     process.stdout.write("\n");
   }
@@ -613,7 +613,7 @@ async function runStats() {
     for (const r of data.mastery) (byCat[r.mastery] || []).push(r.error_type.split(" / ").pop());
     const catColor = { frequent: colors.red, occasional: colors.yellow, rare: colors.cyan, mastered: colors.green };
 
-    process.stdout.write(`  ${paint(colors.yellow, "Mastery  (30-day window)")}\n`);
+    process.stdout.write(`${paint(colors.yellow, "Mastery  (30-day window)")}\n`);
 
     for (const [cat, items] of Object.entries(byCat)) {
       const label = paint(catColor[cat], cat.padEnd(11));
@@ -622,19 +622,19 @@ async function runStats() {
 
       // For frequent/occasional show up to top 5 items on separate indented lines
       if (cat === "frequent" || cat === "occasional") {
-        process.stdout.write(`  ${label}  ${countStr}\n`);
+        process.stdout.write(`${label}  ${countStr}\n`);
         const shown = items.slice(0, 5);
         for (const item of shown) {
-          process.stdout.write(`               ${paint(colors.gray, "· ")}${paint(colors.white, item)}\n`);
+          process.stdout.write(`             ${paint(colors.gray, "· ")}${paint(colors.white, item)}\n`);
         }
         if (items.length > 5) {
-          process.stdout.write(`               ${paint(colors.gray, `· … +${items.length - 5} more`)}\n`);
+          process.stdout.write(`             ${paint(colors.gray, `· … +${items.length - 5} more`)}\n`);
         }
       } else {
         // rare/mastered: single line with up to 4 items inline
         const preview = items.slice(0, 4).join("  ·  ");
         const more = items.length > 4 ? paint(colors.gray, `  +${items.length - 4} more`) : "";
-        process.stdout.write(`  ${label}  ${countStr}   ${paint(colors.gray, preview)}${more}\n`);
+        process.stdout.write(`${label}  ${countStr}   ${paint(colors.gray, preview)}${more}\n`);
       }
     }
     process.stdout.write("\n");
@@ -655,13 +655,13 @@ async function showSessionSummary() {
 
   const sep = "─".repeat(44);
   process.stdout.write(`\n  ${paint(colors.gray, sep)}\n`);
-  process.stdout.write(`  ${paint(colors.yellow, "Session Summary")}\n`);
-  process.stdout.write(`  ${paint(colors.gray, sep)}\n`);
-  process.stdout.write(`  ${paint(colors.gray, "Sentences      ")}${paint(colors.white, String(s.total_inputs))}\n`);
-  process.stdout.write(`  ${paint(colors.gray, "Errors/sent    ")}${paint(colors.white, errPerSent)}${paint(colors.gray, `  vs 7-day avg ${avg7}`)}${trend}\n`);
-  if (s.top_error) process.stdout.write(`  ${paint(colors.gray, "Top error      ")}${paint(colors.cyan, s.top_error)}\n`);
-  process.stdout.write(`  ${paint(colors.gray, "Cards added    ")}${paint(colors.white, String(s.cards_added))}  ${paint(colors.gray, `due tomorrow: ${s.cards_due_tomorrow}`)}\n`);
-  process.stdout.write(`  ${paint(colors.gray, sep)}\n\n`);
+  process.stdout.write(`${paint(colors.yellow, "Session Summary")}\n`);
+  process.stdout.write(`${paint(colors.gray, sep)}\n`);
+  process.stdout.write(`${paint(colors.gray, "Sentences      ")}${paint(colors.white, String(s.total_inputs))}\n`);
+  process.stdout.write(`${paint(colors.gray, "Errors/sent    ")}${paint(colors.white, errPerSent)}${paint(colors.gray, `  vs 7-day avg ${avg7}`)}${trend}\n`);
+  if (s.top_error) process.stdout.write(`${paint(colors.gray, "Top error      ")}${paint(colors.cyan, s.top_error)}\n`);
+  process.stdout.write(`${paint(colors.gray, "Cards added    ")}${paint(colors.white, String(s.cards_added))}  ${paint(colors.gray, `due tomorrow: ${s.cards_due_tomorrow}`)}\n`);
+  process.stdout.write(`${paint(colors.gray, sep)}\n\n`);
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
@@ -674,10 +674,10 @@ async function main() {
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
 
   process.stdout.write("\n");
-  process.stdout.write(`  ${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.white, "Interactive Grammar Tool")}\n`);
-  process.stdout.write(`  ${paint(colors.gray, "──────────────────────────────────────────────")}\n`);
-  process.stdout.write(`  ${paint(colors.gray, "Model  ")}${paint(colors.cyan, getModel(config).model)}\n`);
-  process.stdout.write(`  ${paint(colors.gray, 'Usage  type text to check · /help for commands · """ for multiline')}\n\n`);
+  process.stdout.write(`${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.white, "Interactive Grammar Tool")}\n`);
+  process.stdout.write(`${paint(colors.gray, "──────────────────────────────────────────────")}\n`);
+  process.stdout.write(`${paint(colors.gray, "Model  ")}${paint(colors.cyan, getModel(config).model)}\n`);
+  process.stdout.write(`${paint(colors.gray, 'Usage  type text to check · /help for commands · """ for multiline')}\n\n`);
 
   if (!await startServer()) process.exit(1);
 
@@ -696,7 +696,7 @@ async function main() {
 
   while (true) {
     const { model } = getModel(config);
-    const line = await askLine(rl, `  ${paint(colors.cyan, model + " ❯")} `);
+    const line = await askLine(rl, `${paint(colors.cyan, model + " ❯")} `);
     if (line === null) continue;
     const text = line.trim();
     if (!text) continue;
@@ -706,10 +706,10 @@ async function main() {
     }
 
     if (text === '"""') {
-      process.stdout.write(`  ${paint(colors.gray, 'multiline  ·  """ on its own line to submit')}\n`);
+      process.stdout.write(`${paint(colors.gray, 'multiline  ·  """ on its own line to submit')}\n`);
       const lines = [];
       while (true) {
-        const l = await askLine(rl, `  ${paint(colors.cyan, "❯")} `);
+        const l = await askLine(rl, `${paint(colors.cyan, "❯")} `);
         if (l === null) continue;
         if (l.trim() === '"""') break;
         lines.push(l);
@@ -718,7 +718,7 @@ async function main() {
       if (combined) {
         const multiRejection = validateInput(combined);
         if (multiRejection) {
-          process.stdout.write(`  ${paint(colors.yellow, multiRejection)}\n\n`);
+          process.stdout.write(`${paint(colors.yellow, multiRejection)}\n\n`);
         } else {
           lastSubmittedText = combined;
           await runGrammarCheck(combined, targetPath);
@@ -731,7 +731,7 @@ async function main() {
 
     const rejection = validateInput(text);
     if (rejection) {
-      process.stdout.write(`  ${paint(colors.yellow, rejection)}\n\n`);
+      process.stdout.write(`${paint(colors.yellow, rejection)}\n\n`);
       continue;
     }
     lastSubmittedText = text;

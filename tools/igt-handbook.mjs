@@ -307,6 +307,54 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
   return getStaticGrammarRule(errorType);
 }
 
+/**
+ * Generate a high-level overall summary of the user's linguistic performance
+ */
+async function generateOverallSummary(stats, errorFrequency, days) {
+  // Prepare frequency text for LLM (top 10 items)
+  const frequencyText = errorFrequency.slice(0, 10).map(err => 
+    `- ${err.error_type}: ${err.count} occurrences (${err.major_count} Major, ${err.moderate_count} Moderate)`
+  ).join("\n");
+
+  const topError = errorFrequency.length > 0 ? errorFrequency[0].error_type : "N/A";
+
+  // Load prompt from config
+  let prompt;
+  if (config.Prompts && config.Prompts.HandbookSummaryPrompt) {
+    prompt = config.Prompts.HandbookSummaryPrompt
+      .replace("{{days}}", days)
+      .replace("{{totalInputs}}", stats.total_inputs)
+      .replace("{{totalErrors}}", stats.total_diagnoses)
+      .replace("{{uniqueErrors}}", errorFrequency.length)
+      .replace("{{topError}}", topError)
+      .replace("{{frequencyText}}", frequencyText);
+  } else {
+    // Fallback
+    prompt = `Provide a linguistic summary for:
+    - Period: ${days} days
+    - Inputs: ${stats.total_inputs}
+    - Errors: ${stats.total_diagnoses}
+    - Top Error: ${topError}
+    
+    Ranking:
+    ${frequencyText}
+    
+    Give 2-3 paragraphs of analysis and 3 goals. English only.`;
+  }
+
+  try {
+    const result = await llmManager.generate(prompt, "", {
+      taskType: "handbook",
+      systemPrompt: ""
+    });
+    
+    return extractMarkdownContent(result);
+  } catch (error) {
+    console.error(`❌ Failed to generate overall summary: ${error.message}`);
+    return null;
+  }
+}
+
 // Fallback: Static grammar rules (keep existing implementation)
 function getStaticGrammarRule(errorType) {
   const rules = {
@@ -826,6 +874,14 @@ async function generateReport() {
   md += `> - **Total Diagnoses**: ${stats.total_diagnoses}\n`;
   md += `> - **Unique Errors**: ${errorFrequency.length}\n`;
   md += `> - **Critical Priority**: ${topError}\n\n`;
+
+  // 1.5. Overall Summary (LLM Generated)
+  console.log(`🤖 Generating overall summary with ${provider.toUpperCase()}...`);
+  const overallSummary = await generateOverallSummary(stats, errorFrequency, days);
+  if (overallSummary) {
+    md += `## 📝 Executive Linguistic Summary\n\n`;
+    md += overallSummary + "\n\n";
+  }
 
   // 2. Frequency Ranking (Markdown Table)
   if (errorFrequency.length > 0) {
