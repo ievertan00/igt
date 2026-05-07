@@ -4,6 +4,7 @@ package-lock.json
 .claude/
 .env
 .qwen/
+.cache/
 *.db
 *.db-wal
 *.db-shm
@@ -11,7 +12,16 @@ package-lock.json
 *.log
 handbook_*.md
 assessment_*.md
-docs/ 
-tests/ 
-CLAUDE.md 
+docs/
+tests/
+CLAUDE.md
+GEMINI.md
+TODOS.md
 .worktrees/
+
+# Dev-only / test scripts not needed by end users
+tools/extract-all-prompts.mjs
+tools/extract-prompt-history.mjs
+tools/test-all-historical-prompts.mjs
+tools/test-phi4.mjs
+tools/test-prompts.mjs

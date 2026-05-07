@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Local Ollama support** — new `ollama` provider (`lib/llm-ollama.mjs`) runs any model via the OpenAI-compatible Ollama API at `localhost:11434`; default model is `phi4` (Phi-4 14B); no API key required; configurable via `OllamaBaseUrl` and `OllamaModel` in `igt_config.json`
+- **`/ollama` switch command** — switch to local model from the REPL without restarting
+- **Request timeouts** for all providers — grammar checks abort after a configurable deadline; surfaced with a clear error message instead of hanging
+- **Provider diagnostics in `/add`** — vocabulary lookup now shows which provider and model is active and reports connection errors immediately
+
+### Fixed
+
+- **Double-enter after subprocess** — terminal input isolation prevents spurious newline injection after running handbook/practice generators
+- **Qwen in TUN/VPN environments** — complete DNS and routing bypass for DashScope endpoints when a TUN adapter is active; forced direct TCP connection to the international API endpoint (`dashscope.aliyuncs.com`)
+
 ---
 
 ## [3.5.0] - 2026-05-04
