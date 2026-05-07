@@ -14,12 +14,12 @@ const llmManager = initializeLLMProviders();
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const daysArg = args.find(a => a.startsWith("--days="));
+const daysArg = args.find((a) => a.startsWith("--days="));
 const days = daysArg ? parseInt(daysArg.split("=")[1]) : 30; // Default: last 30 days
-const incrementalArg = args.find(a => a === "--incremental" || a === "-i");
+const incrementalArg = args.find((a) => a === "--incremental" || a === "-i");
 const incremental = incrementalArg !== undefined;
-const clearCacheArg = args.find(a => a === "--clear-cache" || a === "-c");
-const cacheStatsArg = args.find(a => a === "--cache-stats");
+const clearCacheArg = args.find((a) => a === "--clear-cache" || a === "-c");
+const cacheStatsArg = args.find((a) => a === "--cache-stats");
 
 // Handle cache management commands
 if (clearCacheArg) {
@@ -45,15 +45,17 @@ if (cacheStatsArg) {
   console.log("📊 Cache Statistics:");
   const cacheDir = path.join(projectRoot, ".cache");
   if (fs.existsSync(cacheDir)) {
-    const files = fs.readdirSync(cacheDir).filter(f => f.startsWith("rule_") && f.endsWith(".json"));
+    const files = fs
+      .readdirSync(cacheDir)
+      .filter((f) => f.startsWith("rule_") && f.endsWith(".json"));
     console.log(`  Cached rules: ${files.length}`);
-    
+
     let totalSize = 0;
     for (const file of files) {
       const filePath = path.join(cacheDir, file);
       const stat = fs.statSync(filePath);
       totalSize += stat.size;
-      
+
       const cacheData = JSON.parse(fs.readFileSync(filePath, "utf8"));
       const errorType = cacheData.errorType || file;
       const generatedAt = cacheData.generatedAt || "Unknown";
@@ -69,17 +71,31 @@ if (cacheStatsArg) {
 // Load config via unified config loader
 const config = configLoader.load();
 const dbPath = config.DbPath || "igt_data.db";
-const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
+const resolvedDbPath = path.isAbsolute(dbPath)
+  ? dbPath
+  : path.join(projectRoot, dbPath);
 
 if (!fs.existsSync(resolvedDbPath)) {
-  console.error("Error: Database file not found. Run IGT first to collect data.");
+  console.error(
+    "Error: Database file not found. Run IGT first to collect data.",
+  );
   process.exit(1);
+}
+
+// Ctrl+C: parent's readline is paused (raw mode), so 0x03 won't become SIGINT.
+// Read stdin directly and exit on 0x03 so the loop can be interrupted.
+if (process.stdin.isTTY) {
+  process.stdin.resume();
+  process.stdin.on("data", (chunk) => {
+    if (chunk.length === 1 && chunk[0] === 0x03) process.exit(0);
+  });
 }
 
 const db = new Database(resolvedDbPath, { readonly: true });
 
 // Get date filter
-const dateFilter = days > 0 ? `AND i.timestamp >= datetime('now', '-${days} days')` : "";
+const dateFilter =
+  days > 0 ? `AND i.timestamp >= datetime('now', '-${days} days')` : "";
 
 // Cache management for incremental updates
 function getCacheDir() {
@@ -103,7 +119,10 @@ function loadCachedRule(errorType) {
       return cached;
     }
   } catch (error) {
-    console.warn(`Warning: Failed to load cache for ${errorType}:`, error.message);
+    console.warn(
+      `Warning: Failed to load cache for ${errorType}:`,
+      error.message,
+    );
   }
   return null;
 }
@@ -115,33 +134,41 @@ function saveCachedRule(errorType, hash, rule) {
       errorType,
       hash,
       generatedAt: new Date().toISOString(),
-      rule
+      rule,
     };
     fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2), "utf8");
   } catch (error) {
-    console.warn(`Warning: Failed to save cache for ${errorType}:`, error.message);
+    console.warn(
+      `Warning: Failed to save cache for ${errorType}:`,
+      error.message,
+    );
   }
 }
 
 function computeExamplesHash(examples) {
   // Create a hash based on example content to detect changes
-  const hashInput = examples.map(ex => 
-    `${ex.original_text}|${ex.correction}|${ex.refine}|${ex.rule}|${ex.tip}`
-  ).join("\n");
-  
+  const hashInput = examples
+    .map(
+      (ex) =>
+        `${ex.original_text}|${ex.correction}|${ex.refine}|${ex.rule}|${ex.tip}`,
+    )
+    .join("\n");
+
   return crypto.createHash("md5").update(hashInput).digest("hex");
 }
 
 function hasExamplesChanged(errorType, currentExamples) {
   const cached = loadCachedRule(errorType);
   if (!cached) return true; // No cache, needs regeneration
-  
+
   const currentHash = computeExamplesHash(currentExamples);
   return cached.hash !== currentHash;
 }
 
 // 1. Get error type frequency
-const errorFrequency = db.prepare(`
+const errorFrequency = db
+  .prepare(
+    `
   SELECT
     d.error_type,
     COUNT(*) as count,
@@ -154,10 +181,14 @@ const errorFrequency = db.prepare(`
   WHERE 1=1 ${dateFilter}
   GROUP BY d.error_type
   ORDER BY count DESC
-`).all();
+`,
+  )
+  .all();
 
 // 2. Get trend data (errors per week)
-const trendData = db.prepare(`
+const trendData = db
+  .prepare(
+    `
   SELECT 
     strftime('%Y-%W', i.timestamp) as week,
     COUNT(*) as error_count
@@ -166,7 +197,9 @@ const trendData = db.prepare(`
   WHERE 1=1 ${dateFilter}
   GROUP BY week
   ORDER BY week
-`).all();
+`,
+  )
+  .all();
 
 // Strip JSON wrappers, code fences, and thinking tags from LLM responses
 function extractMarkdownContent(raw) {
@@ -183,7 +216,8 @@ function extractMarkdownContent(raw) {
   if (raw.startsWith("{")) {
     try {
       const parsed = JSON.parse(raw);
-      const content = parsed.content || parsed.markdown || parsed.text || parsed.output;
+      const content =
+        parsed.content || parsed.markdown || parsed.text || parsed.output;
       if (typeof content === "string") return content.trim();
     } catch {}
   }
@@ -205,23 +239,26 @@ async function generateTailoredGrammarRule(errorType, examples) {
   }
 
   // Prepare user examples for LLM
-  const examplesText = examples.map((ex, i) => {
-    let text = `Example ${i + 1}:\n`;
-    text += `Original: "${ex.original_text}"\n`;
-    if (ex.correction) text += `Corrected: "${ex.correction}"\n`;
-    if (ex.refine) text += `Natural: "${ex.refine}"\n`;
-    if (ex.explanation) text += `Explanation: "${ex.explanation}"\n`;
-    if (ex.rule) text += `Rule: "${ex.rule}"\n`;
-    if (ex.tip) text += `Tip: "${ex.tip}"\n`;
-    return text;
-  }).join("\n");
+  const examplesText = examples
+    .map((ex, i) => {
+      let text = `Example ${i + 1}:\n`;
+      text += `Original: "${ex.original_text}"\n`;
+      if (ex.correction) text += `Corrected: "${ex.correction}"\n`;
+      if (ex.refine) text += `Natural: "${ex.refine}"\n`;
+      if (ex.explanation) text += `Explanation: "${ex.explanation}"\n`;
+      if (ex.rule) text += `Rule: "${ex.rule}"\n`;
+      if (ex.tip) text += `Tip: "${ex.tip}"\n`;
+      return text;
+    })
+    .join("\n");
 
   // Load prompt from config or use default
   let prompt;
   if (config.Prompts && config.Prompts.HandbookGrammarRulePrompt) {
-    prompt = config.Prompts.HandbookGrammarRulePrompt
-      .replace("{{errorType}}", errorType)
-      .replace("{{examplesText}}", examplesText);
+    prompt = config.Prompts.HandbookGrammarRulePrompt.replace(
+      "{{errorType}}",
+      errorType,
+    ).replace("{{examplesText}}", examplesText);
   } else {
     // Fallback to inline prompt for backward compatibility
     prompt = `You are an expert English grammar tutor. Based on the user's error patterns and examples, create a detailed, personalized grammar rule explanation.
@@ -256,12 +293,12 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
     try {
       const raw = await llmManager.generate(prompt, "", {
         taskType: "handbook",
-        systemPrompt: ""
+        systemPrompt: "",
       });
 
       const rule = {
         title: `${errorType} (Personalized)`,
-        content: extractMarkdownContent(raw)
+        content: extractMarkdownContent(raw),
       };
 
       // Cache the result with hash
@@ -276,7 +313,11 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
       return rule;
     } catch (error) {
       // Check if it's a rate limit error (429)
-      if (error.message && (error.message.includes("429") || error.message.toLowerCase().includes("rate"))) {
+      if (
+        error.message &&
+        (error.message.includes("429") ||
+          error.message.toLowerCase().includes("rate"))
+      ) {
         // Try to extract retry delay from error message
         let retryDelay = 5; // Default 5 seconds
         const delayMatch = error.message.match(/retry in ([\d.]+)s/i);
@@ -288,8 +329,12 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
 
         if (retryCount < maxRetries) {
           retryCount++;
-          console.log(`⏳ Rate limit hit. Waiting ${retryDelay.toFixed(1)}s before retry ${retryCount}/${maxRetries}...`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay * 1000));
+          console.log(
+            `⏳ Rate limit hit. Waiting ${retryDelay.toFixed(1)}s before retry ${retryCount}/${maxRetries}...`,
+          );
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryDelay * 1000),
+          );
         } else {
           console.warn(`⚠️  Rate limit exceeded after ${maxRetries} retries.`);
           break;
@@ -312,17 +357,21 @@ Keep the tone encouraging and educational. Focus on the patterns the user actual
  */
 async function generateOverallSummary(stats, errorFrequency, days) {
   // Prepare frequency text for LLM (top 10 items)
-  const frequencyText = errorFrequency.slice(0, 10).map(err => 
-    `- ${err.error_type}: ${err.count} occurrences (${err.major_count} Major, ${err.moderate_count} Moderate)`
-  ).join("\n");
+  const frequencyText = errorFrequency
+    .slice(0, 10)
+    .map(
+      (err) =>
+        `- ${err.error_type}: ${err.count} occurrences (${err.major_count} Major, ${err.moderate_count} Moderate)`,
+    )
+    .join("\n");
 
-  const topError = errorFrequency.length > 0 ? errorFrequency[0].error_type : "N/A";
+  const topError =
+    errorFrequency.length > 0 ? errorFrequency[0].error_type : "N/A";
 
   // Load prompt from config
   let prompt;
   if (config.Prompts && config.Prompts.HandbookSummaryPrompt) {
-    prompt = config.Prompts.HandbookSummaryPrompt
-      .replace("{{days}}", days)
+    prompt = config.Prompts.HandbookSummaryPrompt.replace("{{days}}", days)
       .replace("{{totalInputs}}", stats.total_inputs)
       .replace("{{totalErrors}}", stats.total_diagnoses)
       .replace("{{uniqueErrors}}", errorFrequency.length)
@@ -345,9 +394,9 @@ async function generateOverallSummary(stats, errorFrequency, days) {
   try {
     const result = await llmManager.generate(prompt, "", {
       taskType: "handbook",
-      systemPrompt: ""
+      systemPrompt: "",
     });
-    
+
     return extractMarkdownContent(result);
   } catch (error) {
     console.error(`❌ Failed to generate overall summary: ${error.message}`);
@@ -378,7 +427,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "I have a idea." → ✅ "I have an idea."
 - ❌ "The life is beautiful." → ✅ "Life is beautiful."
-- ❌ "She is best student." → ✅ "She is the best student."`
+- ❌ "She is best student." → ✅ "She is the best student."`,
     },
     "Grammar / Verb Tense": {
       title: "Verb Tense (动词时态)",
@@ -407,7 +456,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "I have seen him yesterday." → ✅ "I saw him yesterday." (specific past time = simple past)
 - ❌ "I am knowing the answer." → ✅ "I know the answer." (stative verbs don't use continuous)
-- ❌ "She has 25 when she married." → ✅ "She was 25 when she married." (age in past = was)`
+- ❌ "She has 25 when she married." → ✅ "She was 25 when she married." (age in past = was)`,
     },
     "Grammar / Subject-Verb Agreement": {
       title: "Subject-Verb Agreement (主谓一致)",
@@ -428,7 +477,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "The list of items are long." → ✅ "The list of items is long."
 - ❌ "Everyone have their opinion." → ✅ "Everyone has their opinion."
-- ❌ "Neither my brother nor my sisters likes it." → ✅ "Neither my brother nor my sisters like it."`
+- ❌ "Neither my brother nor my sisters likes it." → ✅ "Neither my brother nor my sisters like it."`,
     },
     "Grammar / Pronoun Usage": {
       title: "Pronoun Usage (代词用法)",
@@ -451,7 +500,7 @@ function getStaticGrammarRule(errorType) {
 - ❌ "Me and John went out." → ✅ "John and I went out."
 - ❌ "Between you and I..." → ✅ "Between you and me..." (after preposition = object)
 - ❌ "Each student should bring their book." → ✅ "Each student should bring his or her book." (formal)
-- ❌ "The dog wagged it's tail." → ✅ "The dog wagged its tail." (possessive, NOT contraction)`
+- ❌ "The dog wagged it's tail." → ✅ "The dog wagged its tail." (possessive, NOT contraction)`,
     },
     "Grammar / Preposition Usage": {
       title: "Preposition Usage (介词用法)",
@@ -473,7 +522,7 @@ function getStaticGrammarRule(errorType) {
 - ❌ "I'm good in English." → ✅ "I'm good at English."
 - ❌ "She arrived to the station." → ✅ "She arrived at the station."
 - ❌ "We discussed about the problem." → ✅ "We discussed the problem." (discuss = no preposition)
-- ❌ "I've been here since 3 years." → ✅ "I've been here for 3 years." (duration = for)`
+- ❌ "I've been here since 3 years." → ✅ "I've been here for 3 years." (duration = for)`,
     },
     "Grammar / Conjunction/Connector": {
       title: "Conjunction/Connector (连词/连接词)",
@@ -498,7 +547,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "I was tired, so I went to bed, but I couldn't sleep." → ✅ Split into two sentences.
 - ❌ "Although it was raining, but we went out." → ✅ "Although it was raining, we went out." (don't use both)
-- ❌ "I like apples, however I don't like oranges." → ✅ "I like apples; however, I don't like oranges."`
+- ❌ "I like apples, however I don't like oranges." → ✅ "I like apples; however, I don't like oranges."`,
     },
     "Grammar / Modifier Placement": {
       title: "Modifier Placement (修饰语位置)",
@@ -517,7 +566,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "I almost drove for 6 hours." → ✅ "I drove for almost 6 hours."
 - ❌ "Running down the street, the dog chased me." → ✅ "Running down the street, I saw the dog chase me." (dangling)
-- ❌ "She gave a bone to the dog with a red collar." → ✅ "She gave a bone to the dog that had a red collar." (ambiguous)`
+- ❌ "She gave a bone to the dog with a red collar." → ✅ "She gave a bone to the dog that had a red collar." (ambiguous)`,
     },
     "Grammar / Sentence Structure": {
       title: "Sentence Structure (句子结构)",
@@ -542,7 +591,7 @@ function getStaticGrammarRule(errorType) {
 
 **Common Mistakes:**
 - ❌ "The book that I bought yesterday which was expensive." → ✅ "The book that I bought yesterday was expensive."
-- ❌ "She asked me where was the station." → ✅ "She asked me where the station was." (indirect question order)`
+- ❌ "She asked me where was the station." → ✅ "She asked me where the station was." (indirect question order)`,
     },
     "Vocabulary / Word Choice": {
       title: "Word Choice (词汇选择)",
@@ -560,7 +609,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "The weather will effect our plans." → ✅ "The weather will affect our plans."
 - ❌ "I have less books than you." → ✅ "I have fewer books than you."
-- ❌ "She is more taller than me." → ✅ "She is taller than me." (comparative already has -er)`
+- ❌ "She is more taller than me." → ✅ "She is taller than me." (comparative already has -er)`,
     },
     "Vocabulary / Idiomatic Expression": {
       title: "Idiomatic Expression (习语表达)",
@@ -580,7 +629,7 @@ function getStaticGrammarRule(errorType) {
 - ❌ "I did a mistake." → ✅ "I made a mistake."
 - ❌ "Can you say me the time?" → ✅ "Can you tell me the time?"
 - ❌ "I'm agree with you." → ✅ "I agree with you."
-- ❌ "He suggested me to go." → ✅ "He suggested that I go." or "He suggested going."`
+- ❌ "He suggested me to go." → ✅ "He suggested that I go." or "He suggested going."`,
     },
     "Vocabulary / Redundancy": {
       title: "Redundancy (冗余)",
@@ -599,7 +648,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "I personally think that in my opinion..." → ✅ "I think..." (choose one)
 - ❌ "The final outcome at the end of the day..." → ✅ "The outcome..."
-- ❌ "She nodded her head." → ✅ "She nodded." (nodding implies the head)`
+- ❌ "She nodded her head." → ✅ "She nodded." (nodding implies the head)`,
     },
     "Clarity / Sentence Fragment": {
       title: "Sentence Fragment (句子片段)",
@@ -618,7 +667,7 @@ function getStaticGrammarRule(errorType) {
 
 **Common Mistakes:**
 - ❌ "Although it was raining. We went out." → ✅ "Although it was raining, we went out."
-- ❌ "For example, cats and dogs." → ✅ "I like pets, for example, cats and dogs."`
+- ❌ "For example, cats and dogs." → ✅ "I like pets, for example, cats and dogs."`,
     },
     "Clarity / Ambiguity": {
       title: "Ambiguity (歧义)",
@@ -642,7 +691,7 @@ function getStaticGrammarRule(errorType) {
 
 **Common Mistakes:**
 - ❌ "When the boy arrived at the park, his father called and he was upset." → ✅ Split into two sentences.
-- ❌ "She said she loved him yesterday." → ✅ "Yesterday, she said she loved him." or "She said she loved him the day before."`
+- ❌ "She said she loved him yesterday." → ✅ "Yesterday, she said she loved him." or "She said she loved him the day before."`,
     },
     "Clarity / Incomplete Thought": {
       title: "Incomplete Thought (不完整思路)",
@@ -661,7 +710,7 @@ function getStaticGrammarRule(errorType) {
 
 **Common Mistakes:**
 - ❌ "Not only did she win, but also..." → ✅ "Not only did she win, but she also broke the record."
-- ❌ "Whether you like it or not..." → ✅ "Whether you like it or not, we must go."`
+- ❌ "Whether you like it or not..." → ✅ "Whether you like it or not, we must go."`,
     },
     "Mechanics / Punctuation": {
       title: "Punctuation (标点符号)",
@@ -687,7 +736,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "I love cooking, my family and my pets." → ✅ "I love cooking, my family, and my pets." (Oxford comma)
 - ❌ "Its a beautiful day." → ✅ "It's a beautiful day."
-- ❌ "The cat sat on the mat, it was soft." → ✅ "The cat sat on the mat; it was soft." (comma splice)`
+- ❌ "The cat sat on the mat, it was soft." → ✅ "The cat sat on the mat; it was soft." (comma splice)`,
     },
     "Mechanics / Capitalization": {
       title: "Capitalization (大写)",
@@ -712,7 +761,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "i love chinese food." → ✅ "I love Chinese food."
 - ❌ "She studies english Literature." → ✅ "She studies English literature."
-- ❌ "The President visited the east coast." → ✅ "The President visited the East Coast." (specific region)`
+- ❌ "The President visited the east coast." → ✅ "The President visited the East Coast." (specific region)`,
     },
     "Mechanics / Spelling": {
       title: "Spelling (拼写)",
@@ -737,7 +786,7 @@ function getStaticGrammarRule(errorType) {
 **Tips:**
 1. Use spell-check tools, but don't rely on them entirely.
 2. Read extensively to internalize correct spellings.
-3. Practice tricky words regularly.`
+3. Practice tricky words regularly.`,
     },
     "Style / Phrasing": {
       title: "Phrasing (措辞)",
@@ -759,7 +808,7 @@ function getStaticGrammarRule(errorType) {
 **Common Mistakes:**
 - ❌ "Do a photo" → ✅ "Take a photo"
 - ❌ "Make a party" → ✅ "Have/throw a party"
-- ❌ "Say the truth" → ✅ "Tell the truth"`
+- ❌ "Say the truth" → ✅ "Tell the truth"`,
     },
     "Style / Conciseness": {
       title: "Conciseness (简洁)",
@@ -782,7 +831,7 @@ function getStaticGrammarRule(errorType) {
 
 **Common Mistakes:**
 - ❌ "In my personal opinion, I think that..." → ✅ "I think..."
-- ❌ "The reason why is because..." → ✅ "The reason is..." or "Because..."`
+- ❌ "The reason why is because..." → ✅ "The reason is..." or "Because..."`,
     },
     "Style / Tone & Register": {
       title: "Tone & Register (语气与语域)",
@@ -811,8 +860,8 @@ function getStaticGrammarRule(errorType) {
 - ❌ Too formal in casual email: "I hereby request..."
   → ✅ "I'd like to ask..."
 - ❌ "I want the report ASAP." (too direct for supervisor)
-  → ✅ "Could you please send the report at your earliest convenience?"`
-    }
+  → ✅ "Could you please send the report at your earliest convenience?"`,
+    },
   };
 
   return rules[errorType] || null;
@@ -820,7 +869,9 @@ function getStaticGrammarRule(errorType) {
 
 // 5. Get example sentences for each error type
 function getExamples(errorType, limit = 3) {
-  return db.prepare(`
+  return db
+    .prepare(
+      `
     SELECT
       i.original_text,
       i.correction,
@@ -834,18 +885,24 @@ function getExamples(errorType, limit = 3) {
     WHERE d.error_type = ?
     ORDER BY i.timestamp DESC
     LIMIT ?
-  `).all(errorType, limit);
+  `,
+    )
+    .all(errorType, limit);
 }
 
 // 4. Get total statistics
-const stats = db.prepare(`
+const stats = db
+  .prepare(
+    `
   SELECT 
     COUNT(DISTINCT i.id) as total_inputs,
     COUNT(d.id) as total_diagnoses
   FROM inputs i
   LEFT JOIN diagnoses d ON i.id = d.input_id
   WHERE 1=1 ${dateFilter}
-`).get();
+`,
+  )
+  .get();
 
 // Generate Obsidian Dashboard report
 async function generateReport() {
@@ -859,6 +916,8 @@ async function generateReport() {
     handbookModel = config.QwenProModel || "qwen3-max";
   } else if (provider === "deepseek") {
     handbookModel = config.DeepseekProModel || "deepseek-reasoner";
+  } else if (provider === "ollama") {
+    handbookModel = config.OllamaModel || "phi4";
   } else {
     handbookModel = config.GeminiProModel || "gemini-3.0-pro";
   }
@@ -867,7 +926,8 @@ async function generateReport() {
   md += `> [!INFO] Generated with: **${provider.toUpperCase()}** (${handbookModel}) on ${date}\n\n`;
 
   // 1. Overview Section (Abstract Callout)
-  const topError = errorFrequency.length > 0 ? errorFrequency[0].error_type : "N/A";
+  const topError =
+    errorFrequency.length > 0 ? errorFrequency[0].error_type : "N/A";
   md += `> [!ABSTRACT] 📊 Performance Summary (Date: ${date})\n`;
   md += `> - **Period**: Last ${days} days\n`;
   md += `> - **Inputs Analyzed**: ${stats.total_inputs}\n`;
@@ -876,8 +936,14 @@ async function generateReport() {
   md += `> - **Critical Priority**: ${topError}\n\n`;
 
   // 1.5. Overall Summary (LLM Generated)
-  console.log(`🤖 Generating overall summary with ${provider.toUpperCase()}...`);
-  const overallSummary = await generateOverallSummary(stats, errorFrequency, days);
+  console.log(
+    `🤖 Generating overall summary with ${provider.toUpperCase()}...`,
+  );
+  const overallSummary = await generateOverallSummary(
+    stats,
+    errorFrequency,
+    days,
+  );
   if (overallSummary) {
     md += `## 📝 Executive Linguistic Summary\n\n`;
     md += overallSummary + "\n\n";
@@ -890,7 +956,12 @@ async function generateReport() {
     md += `| :--- | :--- | :--- |\n`;
 
     for (const err of errorFrequency) {
-      const severity = err.major_count > 0 ? "🔴 Major" : err.moderate_count > 0 ? "🟡 Moderate" : "🟢 Minor";
+      const severity =
+        err.major_count > 0
+          ? "🔴 Major"
+          : err.moderate_count > 0
+            ? "🟡 Moderate"
+            : "🟢 Minor";
       md += `| ${err.error_type} | ${err.count} | ${severity} |\n`;
     }
     md += `\n`;
@@ -910,9 +981,13 @@ async function generateReport() {
 
     // Trend direction
     if (trendData.length >= 4) {
-      const recent = trendData.slice(-2).reduce((sum, t) => sum + t.error_count, 0);
-      const older = trendData.slice(-4, -2).reduce((sum, t) => sum + t.error_count, 0);
-      const change = ((recent - older) / Math.max(older, 1) * 100).toFixed(1);
+      const recent = trendData
+        .slice(-2)
+        .reduce((sum, t) => sum + t.error_count, 0);
+      const older = trendData
+        .slice(-4, -2)
+        .reduce((sum, t) => sum + t.error_count, 0);
+      const change = (((recent - older) / Math.max(older, 1)) * 100).toFixed(1);
 
       if (change < 0) {
         md += `> [!SUCCESS] ✅ Good news! Your errors decreased by **${Math.abs(change)}%** in recent weeks.\n\n`;
@@ -929,7 +1004,8 @@ async function generateReport() {
     md += `\n## 🔍 Detailed Error Analysis\n\n`;
 
     for (const err of errorFrequency) {
-      const severityIcon = err.major_count > 0 ? "🔴" : err.moderate_count > 0 ? "🟡" : "🟢";
+      const severityIcon =
+        err.major_count > 0 ? "🔴" : err.moderate_count > 0 ? "🟡" : "🟢";
       md += `> [!CAUTION]- ${severityIcon} ${err.error_type} (${err.count} Occurrences)\n`;
       md += `>\n`;
 
@@ -1010,17 +1086,25 @@ async function generateReport() {
         const examples = getExamples(err.error_type, 5);
         pendingCalls.push(
           generateTailoredGrammarRule(err.error_type, examples)
-            .then(rule => ({ errorType: err.error_type, category, rule }))
-            .catch(error => {
-              console.warn(`⚠️  Failed to generate rule for ${err.error_type}: ${error.message}`);
-              return { errorType: err.error_type, category, rule: getStaticGrammarRule(err.error_type) };
-            })
+            .then((rule) => ({ errorType: err.error_type, category, rule }))
+            .catch((error) => {
+              console.warn(
+                `⚠️  Failed to generate rule for ${err.error_type}: ${error.message}`,
+              );
+              return {
+                errorType: err.error_type,
+                category,
+                rule: getStaticGrammarRule(err.error_type),
+              };
+            }),
         );
       }
     }
 
     // Execute all LLM calls in parallel
-    console.log(`\n🤖 Generating ${pendingCalls.length} grammar rules with ${provider.toUpperCase()} (${handbookModel})...`);
+    console.log(
+      `\n🤖 Generating ${pendingCalls.length} grammar rules with ${provider.toUpperCase()} (${handbookModel})...`,
+    );
     const results = await Promise.allSettled(pendingCalls);
 
     // Collect results
@@ -1092,11 +1176,11 @@ function escapeCallout(str) {
 // Get category icon
 function getCategoryIcon(category) {
   const icons = {
-    "Grammar": "🔧",
-    "Vocabulary": "📝",
-    "Mechanics": "⚙️",
-    "Style": "🎨",
-    "Clarity": "💡"
+    Grammar: "🔧",
+    Vocabulary: "📝",
+    Mechanics: "⚙️",
+    Style: "🎨",
+    Clarity: "💡",
   };
   return icons[category] || "📌";
 }
@@ -1107,8 +1191,10 @@ const report = await generateReport();
 const dateStr = new Date().toISOString().split("T")[0];
 const provider = llmManager.getCurrentProviderName();
 
-const reportDir = config.ReportPath 
-  ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
+const reportDir = config.ReportPath
+  ? path.isAbsolute(config.ReportPath)
+    ? config.ReportPath
+    : path.join(projectRoot, config.ReportPath)
   : path.join(projectRoot, "docs");
 
 const outputPath = path.join(reportDir, `handbook_${dateStr}_${provider}.md`);
@@ -1122,13 +1208,17 @@ if (!fs.existsSync(outputDir)) {
 fs.writeFileSync(outputPath, report, "utf8");
 
 console.log(`\n✅ Personal Error Handbook generated: ${outputPath}`);
-console.log(`📊 Analyzed ${stats.total_inputs} inputs with ${stats.total_diagnoses} diagnoses`);
+console.log(
+  `📊 Analyzed ${stats.total_inputs} inputs with ${stats.total_diagnoses} diagnoses`,
+);
 console.log(`🎯 Found ${errorFrequency.length} unique error types`);
 
 if (incremental) {
   const cacheDir = path.join(projectRoot, ".cache");
   if (fs.existsSync(cacheDir)) {
-    const cachedFiles = fs.readdirSync(cacheDir).filter(f => f.startsWith("rule_") && f.endsWith(".json"));
+    const cachedFiles = fs
+      .readdirSync(cacheDir)
+      .filter((f) => f.startsWith("rule_") && f.endsWith(".json"));
     console.log(`⚡ Incremental mode: ${cachedFiles.length} rules cached`);
   }
 }

@@ -450,7 +450,7 @@ async function runReview(rl, limit) {
 
 function getModel(config) {
   const p = (process.env.IGT_LLM_PROVIDER || config.LLMProvider || "gemini").toLowerCase();
-  const k = { gemini: "GeminiFlashModel", qwen: "QwenFlashModel", deepseek: "DeepseekFlashModel" };
+  const k = { gemini: "GeminiFlashModel", qwen: "QwenFlashModel", deepseek: "DeepseekFlashModel", ollama: "OllamaModel" };
   return { provider: p, model: config[k[p]] || p };
 }
 
@@ -477,7 +477,7 @@ async function handleCommand(raw, config, rl) {
       break;
     case "vocab": case "v":
       await runNode(rl, "tools/igt-vocab.mjs", ...args); process.stdout.write("\n"); break;
-    case "gemini": case "qwen": case "deepseek":
+    case "gemini": case "qwen": case "deepseek": case "ollama":
       await fetchJson("POST", "/switch", JSON.stringify({ provider: cmd }));
       process.env.IGT_LLM_PROVIDER = cmd;
       process.stdout.write(paint(colors.gray, `Switched to ${getModel(config).model}\n`));
@@ -521,6 +521,7 @@ function showHelp() {
   row("/gemini           ", "Switch to Gemini model");
   row("/qwen             ", "Switch to Qwen model");
   row("/deepseek         ", "Switch to Deepseek model");
+  row("/ollama           ", "Switch to local Phi-4 (Ollama)");
   row('"""               ', "Enter multiline input mode");
   row("/exit      (/q)   ", "Quit IGT");
   process.stdout.write("\n");
