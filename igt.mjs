@@ -140,7 +140,10 @@ function updateUI(config) {
     currentStatusMessage,
     rows
   );
-  process.stdout.write(status);
+  if (status !== lastStatus) {
+    process.stdout.write(status);
+    lastStatus = status;
+  }
 }
 
 const SC = {
@@ -255,6 +258,9 @@ function askLine(rl, prompt) {
     rl.on("line", onLine);
     rl.setPrompt(prompt);
     rl.prompt();
+    // rl.prompt() calls _refreshLine which our proxy keeps from wiping the bar,
+    // but the bar may already be missing if external output ran. Force a repaint.
+    if (lastStatus) process.stdout.write(lastStatus);
   });
 }
 
@@ -824,14 +830,29 @@ async function main() {
 
   if (!await startServer()) process.exit(1);
 
+  // readline's _refreshLine emits clearScreenDown (\x1b[0J) on every keypress
+  // redraw, which wipes the fixed status bar below the cursor. Downgrade it to
+  // clearLine (\x1b[K) so only the current line is cleared. The cleanup path
+  // uses fs.writeSync, which bypasses this proxy and can still clear the bar.
+  const _origWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (chunk, enc, cb) => {
+    if (typeof chunk === "string") chunk = chunk.replace(/\x1b\[0?J/g, "\x1b[K");
+    return _origWrite(chunk, enc, cb);
+  };
+
   const rl = createInterface({
     input: process.stdin, output: process.stdout,
     terminal: true, historySize: 100, removeHistoryDuplicates: true,
   });
 
-  // UI initialization: Render IMMEDIATELY with placeholders
-  process.stdout.write(ansi.setScrollingRegion(process.stdout.rows || 24));
-  lastStatus = ""; 
+  // UI initialization: Render IMMEDIATELY with placeholders.
+  // DECSTBM (set scrolling region) moves the cursor to home (1,1), which would
+  // cause the next prompt to overwrite the header. Park it at the bottom of
+  // the scrolling region so new content flows from the bottom upward.
+  const initRows = process.stdout.rows || 24;
+  process.stdout.write(ansi.setScrollingRegion(initRows));
+  process.stdout.write(`\x1b[${initRows - 2};1H`);
+  lastStatus = "";
   updateUI(config);
 
   // Background fetch for actual stats
@@ -854,6 +875,7 @@ async function main() {
     if (chunk.length === 1 && chunk[0] === 0x1b) {
       rl.write(null, { ctrl: true, name: "e" });
       rl.write(null, { ctrl: true, name: "u" });
+      if (lastStatus) process.stdout.write(lastStatus);
     }
   };
 

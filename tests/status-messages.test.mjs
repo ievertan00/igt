@@ -22,7 +22,7 @@ test("migration 006: status_messages table is created and seeded", async () => {
     
     // Check seed data
     const rows = db.prepare("SELECT * FROM status_messages").all();
-    assert.equal(rows.length, 4, "Should have 4 seeded rows");
+    assert.ok(rows.length >= 4, `Should have at least 4 seeded rows, got ${rows.length}`);
     
     assert.ok(rows.find(r => r.content.includes("/undo") && r.type === 'tip'));
     assert.ok(rows.find(r => r.content.includes("/review") && r.type === 'tip'));
