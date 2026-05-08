@@ -496,6 +496,13 @@ async function handleCommand(raw, config, rl) {
     case "today":
       await runToday(rl, config);
       break;
+    case "retry":
+      if (!lastSubmittedText) {
+        process.stdout.write(paint(colors.yellow, "Nothing to retry yet.\n\n"));
+      } else {
+        await runGrammarCheck(lastSubmittedText, lastTargetPath);
+      }
+      break;
     case "exit": case "quit": case "q":
       await showSessionSummary(); stopServer(); rl.close(); process.exit(0);
       break;
@@ -517,12 +524,13 @@ function showHelp() {
   row("/review    (/r)   ", "SRS review of cards due today (cloze + diagnoses)");
   row("/stats     (/st)  ", "Analytics dashboard: errors by hour, length, mastery");
   row("/today            ", "Adaptive daily plan: SRS + practice focus area");
+  row("/retry            ", "Re-run the last input with the same model");
   row("/undo [N]  (/u)   ", "Delete the last N inputs and their diagnoses/cards (default 1)");
   row("/gemini           ", "Switch to Gemini model");
   row("/qwen             ", "Switch to Qwen model");
   row("/deepseek         ", "Switch to Deepseek model");
   row("/ollama           ", "Switch to local Phi-4 (Ollama)");
-  row('"""               ', "Enter multiline input mode");
+  row('"""               ', "Multiline mode (blank line or \"\"\" to submit)");
   row("/exit      (/q)   ", "Quit IGT");
   process.stdout.write("\n");
 }
@@ -530,6 +538,8 @@ function showHelp() {
 // ─── Input validation ─────────────────────────────────────────────────────────
 
 let lastSubmittedText = "";
+let lastSubmittedProvider = "";
+let lastTargetPath = "";
 
 const TEST_PATTERNS = /^(test(ing)?|hello|hi|hey|ok|okay|yes|no|sure|thanks|thank you|lol|haha|asdf|qwerty|foo|bar|baz|abc|xyz|aaa+|bbb+|ccc+|zzz+|123|1234|12345)[!?.\s]*$/i;
 
@@ -548,7 +558,7 @@ function validateInput(text) {
     if (Math.max(...Object.values(counts)) / nonSpace.length > 0.6)
       return "Input looks like noise — type a real sentence.";
   }
-  if (text === lastSubmittedText)
+  if (text === lastSubmittedText && (process.env.IGT_LLM_PROVIDER || "gemini") === lastSubmittedProvider)
     return "Duplicate — same text as your last submission.";
   return null;
 }
@@ -719,12 +729,12 @@ async function main() {
     }
 
     if (text === '"""') {
-      process.stdout.write(`${paint(colors.gray, 'multiline  ·  """ on its own line to submit')}\n`);
+      process.stdout.write(`${paint(colors.gray, 'multiline  ·  blank line or """ to submit · Ctrl+C to cancel')}\n`);
       const lines = [];
       while (true) {
         const l = await askLine(rl, `${paint(colors.cyan, "❯")} `);
-        if (l === null) continue;
-        if (l.trim() === '"""') break;
+        if (l === null) { lines.length = 0; break; }
+        if (l.trim() === '"""' || (l.trim() === '' && lines.length > 0)) break;
         lines.push(l);
       }
       const combined = lines.join("\n").trim();
@@ -734,6 +744,8 @@ async function main() {
           process.stdout.write(`${paint(colors.yellow, multiRejection)}\n\n`);
         } else {
           lastSubmittedText = combined;
+          lastSubmittedProvider = process.env.IGT_LLM_PROVIDER || "gemini";
+          lastTargetPath = targetPath;
           await runGrammarCheck(combined, targetPath);
         }
       }
@@ -748,6 +760,8 @@ async function main() {
       continue;
     }
     lastSubmittedText = text;
+    lastSubmittedProvider = process.env.IGT_LLM_PROVIDER || "gemini";
+    lastTargetPath = targetPath;
     await runGrammarCheck(text, targetPath);
   }
 }
