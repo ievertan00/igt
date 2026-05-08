@@ -1,4 +1,5 @@
--- Initial IGT schema. Idempotent (CREATE IF NOT EXISTS) so it's safe on existing DBs.
+-- Core IGT schema (Squashed 001-002). 
+-- Idempotent (CREATE IF NOT EXISTS).
 
 CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,9 +58,36 @@ CREATE TABLE IF NOT EXISTS assessments (
   inputs_count INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS srs_cards (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_type TEXT NOT NULL,        -- 'diagnosis' | 'cloze' | 'vocab' | 'input'
+  source_id INTEGER NOT NULL,
+  prompt TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  ease REAL DEFAULT 2.5,
+  interval_days INTEGER DEFAULT 1,
+  due_date DATE NOT NULL,
+  last_reviewed TIMESTAMP,
+  total_reviews INTEGER DEFAULT 0,
+  correct_streak INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS status_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    type TEXT NOT NULL, -- 'tip', 'quote', 'grammar_fact'
+    author TEXT,
+    source TEXT,
+    last_shown_at TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_inputs_timestamp ON inputs(timestamp);
 CREATE INDEX IF NOT EXISTS idx_diagnoses_input_id ON diagnoses(input_id);
 CREATE INDEX IF NOT EXISTS idx_diagnoses_error_type ON diagnoses(error_type);
 CREATE INDEX IF NOT EXISTS idx_advice_input_id ON advice(input_id);
 CREATE INDEX IF NOT EXISTS idx_vocab_quiz ON vocab(quiz_count, correct_count);
 CREATE INDEX IF NOT EXISTS idx_assessments_timestamp ON assessments(timestamp);
+CREATE INDEX IF NOT EXISTS idx_srs_due ON srs_cards(due_date);
+CREATE INDEX IF NOT EXISTS idx_srs_source ON srs_cards(source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_status_messages_last_shown_at ON status_messages(last_shown_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_status_messages_content ON status_messages(content);

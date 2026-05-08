@@ -5,14 +5,19 @@ All notable changes to the IGT (Interactive Grammar Tool) project will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.0] - 2026-05-08
 
 ### Added
 
-- **Local Ollama support** — new `ollama` provider (`lib/llm-ollama.mjs`) runs any model via the OpenAI-compatible Ollama API at `localhost:11434`; default model is `phi4` (Phi-4 14B); no API key required; configurable via `OllamaBaseUrl` and `OllamaModel` in `igt_config.json`
-- **`/ollama` switch command** — switch to local model from the REPL without restarting
-- **Request timeouts** for all providers — grammar checks abort after a configurable deadline; surfaced with a clear error message instead of hanging
-- **Provider diagnostics in `/add`** — vocabulary lookup now shows which provider and model is active and reports connection errors immediately
+- **Status Bar Messages** — interactive CLI status bar now displays 300+ rotating "Tips", "Grammar Facts", and "Quotes" after each grammar check; stored in the database and updated via migrations
+- **Database Initial Guidance** — added dedicated logic and documentation for first-time database setup and migration troubleshooting
+
+### Changed
+
+- **Migration System Overhaul** — squashed 9 individual migration files into 3 logical groups (`001_core_schema.sql`, `002_data_backfills.mjs`, `003_status_messages.sql`) for a cleaner project structure and faster initial setup
+- **Schema/Data Separation** — strictly separated DDL (table/index creation) into `001_core_schema.sql` and DML (data insertion) into `003_status_messages.sql`
+- **Ollama support** — enhanced `ollama` provider (`lib/llm-ollama.mjs`) runs any model via the OpenAI-compatible Ollama API; default model is `phi4` (Phi-4 14B); no API key required
+- **Provider diagnostics** — vocabulary lookup now shows which provider and model is active and reports connection errors immediately
 
 ### Fixed
 

@@ -32,6 +32,7 @@ Tip
 
 - [Before You Start](#before-you-start)
 - [Installation (Step by Step)](#installation-step-by-step)
+- [Database Initialization & Migrations](#database-initialization--migrations)
 - [Setting Up Your AI Provider](#setting-up-your-ai-provider)
   - [Option A — Online AI (Gemini, Qwen, Deepseek)](#option-a--online-ai-gemini-qwen-deepseek)
   - [Option B — Local AI with Ollama (No API Key)](#option-b--local-ai-with-ollama-no-api-key)
@@ -148,6 +149,34 @@ node igt.mjs
 ```
 
 You should see a prompt like `gemini-2.5-flash ❯`. Start typing a sentence.
+
+---
+
+## Database Initialization & Migrations
+
+IGT uses a local SQLite database (`igt_data.db`) to store your learning progress. The database is managed through a migration system to ensure it stays up-to-date as new features are added.
+
+### First-Time Setup
+
+On your very first run, you MUST initialize the database:
+
+```sh
+node tools/init-db.mjs
+```
+
+This will:
+1. Create the database file if it doesn't exist.
+2. Apply the core schema (tables for sessions, inputs, diagnoses, etc.).
+3. Seed the initial status messages (Tips, Facts, Quotes).
+
+### Automatic Updates
+
+Every time you launch IGT, the server automatically checks for any missing migrations and applies them. You generally don't need to run `init-db.mjs` again unless you are troubleshooting or have manually deleted your database file.
+
+### Troubleshooting
+
+- **"Database is locked"**: This usually happens if multiple instances of IGT are running or if another tool is accessing the `.db` file. Close all instances and try again.
+- **Migration errors**: If a migration fails, IGT will log the error to `igt_db_error.log`. You can safely delete the `.db` file and run `node tools/init-db.mjs` to start fresh (note: this will erase your history).
 
 ---
 
@@ -316,6 +345,13 @@ Tip
 If your sentence has no errors, IGT confirms it and explains why it's correct — it won't invent problems.
 
 Every check is saved to your local database and automatically generates a flashcard.
+
+### Status Bar & Tips
+
+After every check, the status bar displays a random message from a collection of 300+ items, including:
+- **Tips**: Learn hidden features like `/undo` or `/refine`.
+- **Grammar Facts**: Interesting trivia about English history and rules.
+- **Quotes**: Inspiring words from linguists and authors.
 
 ### Multiline Input
 
