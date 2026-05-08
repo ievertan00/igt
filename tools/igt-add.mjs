@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
+import Database from "better-sqlite3";
 import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
 import { ui, paint, colors, Spinner, wrapText } from "../lib/ui.mjs";
 
@@ -179,6 +180,32 @@ if (!fs.existsSync(NOTE_FILE)) {
 }
 fs.appendFileSync(NOTE_FILE, mdBlock, "utf8");
 
-console.log(`\n  ${paint(c.green, "✓")} ${paint(c.gray, "Saved to")} ${paint(c.white, "IGT Vocabulary.md")}\n`);
+console.log(`\n  ${paint(c.green, "✓")} ${paint(c.gray, "Saved to")} ${paint(c.white, "IGT Vocabulary.md")}`);
+
+// Create two SM-2 SRS cards for this word (word→zh and zh→word directions)
+if (fields.word && fields.zh) {
+  const dbPath = config.DbPath || "igt_data.db";
+  const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
+  try {
+    const db = new Database(resolvedDbPath);
+    const mkPrompt = () => ["VOCAB",
+      fields.word || "", fields.pos || "", fields.zh || "",
+      fields.meaning || "", fields.example || "", fields.note || ""
+    ].join("|||");
+    db.prepare(`DELETE FROM srs_cards WHERE source_type='vocab' AND (prompt LIKE ? OR prompt LIKE ?)`)
+      .run(`VOCAB|||word2zh|||${fields.word}|||%`, `VOCAB|||zh2word|||${fields.word}|||%`);
+    const existing = db.prepare(
+      `SELECT COUNT(*) AS n FROM srs_cards WHERE source_type='vocab' AND prompt LIKE ?`
+    ).get(`VOCAB|||${fields.word}|||%`).n;
+    if (existing === 0) {
+      db.prepare(
+        `INSERT INTO srs_cards (source_type, source_id, prompt, answer, due_date) VALUES ('vocab', 0, ?, ?, date('now'))`
+      ).run(mkPrompt(), fields.word);
+      console.log(`  ${paint(c.green, "✓")} ${paint(c.gray, "SRS vocab card added for review")}`);
+    }
+    db.close();
+  } catch {}
+}
+console.log("");
 
 rl.close();

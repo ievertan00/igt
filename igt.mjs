@@ -7,7 +7,7 @@ import { spawn, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
-import { colors, paint, Spinner, renderBarChart } from "./lib/ui.mjs";
+import { colors, paint, Spinner, renderBarChart, box, wrapText } from "./lib/ui.mjs";
 import configLoader from "./lib/config-loader.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -388,16 +388,54 @@ function diffHighlight(original, corrected) {
   ).join(" ");
 }
 
-async function runReview(rl, limit) {
+function parseVocabPrompt(prompt) {
+  if (!prompt || !prompt.startsWith("VOCAB|||")) return null;
+  const parts = prompt.split("|||");
+  // old format had a dir field (8 parts); new format omits it (7 parts)
+  const [, word, pos, zh, meaning, example, note] = parts.length === 8
+    ? [parts[0], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7]]
+    : parts;
+  return { word, pos, zh, meaning, example, note };
+}
+
+function renderVocabCard(vocab, mask) {
+  const FW = 52;
+  const MASK = paint(colors.gray, "___");
+  const lbl  = (t) => paint(colors.gray, t.padEnd(10));
+
+  const title = mask === "word"
+    ? MASK
+    : paint(colors.bold + colors.yellow, vocab.word);
+
+  let body = "";
+  if (vocab.pos)     body += `  ${lbl("PoS")}${paint(colors.gray, vocab.pos)}\n`;
+  if (vocab.meaning) body += `  ${lbl("Meaning")}${paint(colors.white, wrapText(vocab.meaning, FW, 12))}\n`;
+  if (vocab.zh)      body += `  ${lbl("中文")}${mask === "zh" ? MASK : paint(colors.green, vocab.zh)}\n`;
+  if (vocab.example) {
+    let ex = vocab.example;
+    if (mask === "word") {
+      const esc = vocab.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      ex = ex.replace(new RegExp(`\\b${esc}\\b`, "gi"), "___");
+    }
+    body += `  ${lbl("Example")}${paint(colors.cyan, wrapText(ex, FW, 12))}\n`;
+  }
+  if (vocab.note)    body += `  ${lbl("Note")}${paint(colors.brightCyan, wrapText(vocab.note, FW, 12))}`;
+
+  return box(title, body.trimEnd(), { width: 70 });
+}
+
+async function runReview(rl, limit, type = "all") {
   let preview;
   try {
-    preview = await fetchJson("GET", `/review/due?limit=${Math.max(1, limit)}`);
+    const typeParam = type !== "all" ? `&type=${type}` : "";
+    preview = await fetchJson("GET", `/review/due?limit=${Math.max(1, limit)}${typeParam}`);
   } catch (e) {
     process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`)); return;
   }
   const cards = preview.cards || [];
   if (cards.length === 0) {
-    process.stdout.write(paint(colors.gray, "No cards due. Come back tomorrow.\n\n")); return;
+    const msg = type === "vocab" ? "No vocab cards due. Come back tomorrow.\n\n" : "No cards due. Come back tomorrow.\n\n";
+    process.stdout.write(paint(colors.gray, msg)); return;
   }
 
   process.stdout.write(`${paint(colors.yellow, `${cards.length} card(s) due — Ctrl+C to stop.`)}\n\n`);
@@ -405,22 +443,50 @@ async function runReview(rl, limit) {
   let wrongCount = 0;
   for (let i = 0; i < cards.length; i++) {
     const c = cards[i];
-    const hintTypes = c.hint ? c.hint.split(" · ") : [];
-    const hintLabel = hintTypes.length > 1
-      ? `[${c.hint}] errors:`
-      : hintTypes.length === 1
-        ? `[${c.hint}] error:`
-        : null;
+    const vocab = parseVocabPrompt(c.prompt);
 
-    process.stdout.write(`${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n`);
-    if (hintLabel) process.stdout.write(`${paint(colors.yellow, hintLabel)}\n\n`);
-    process.stdout.write(`${paint(colors.cyan, c.prompt)}\n`);
+    process.stdout.write(`${paint(colors.gray, `Card ${i + 1}/${cards.length}`)}\n\n`);
+
+    let vocabMask = null;
+    if (vocab) {
+      vocabMask = Math.random() < 0.5 ? "word" : "zh";
+      const dirHint = vocabMask === "word"
+        ? paint(colors.gray, "[中文 → word]")
+        : paint(colors.gray, "[word → 中文]");
+      process.stdout.write(`${dirHint}\n\n`);
+      process.stdout.write(renderVocabCard(vocab, vocabMask) + "\n\n");
+    } else {
+      const hintTypes = c.hint ? c.hint.split(" · ") : [];
+      const hintLabel = hintTypes.length > 1
+        ? `[${c.hint}] errors:`
+        : hintTypes.length === 1
+          ? `[${c.hint}] error:`
+          : null;
+      if (hintLabel) process.stdout.write(`${paint(colors.yellow, hintLabel)}\n\n`);
+      process.stdout.write(`${paint(colors.cyan, c.prompt)}\n`);
+    }
+
     const enter = await askLine(rl, paint(colors.gray, "  Show Answer [Enter] ❯ "));
     if (enter === null) { process.stdout.write("\n"); break; }
 
-    process.stdout.write(`${diffHighlight(c.prompt, c.answer)}\n`);
-    const choice = await askLine(rl, paint(colors.gray, "  Found it? [y/n] ❯ "));
+    if (vocab) {
+      process.stdout.write(renderVocabCard(vocab, null) + "\n\n");
+    } else {
+      process.stdout.write(`${diffHighlight(c.prompt, c.answer)}\n`);
+    }
+
+    const choice = await askLine(rl, paint(colors.gray, "  Found it? [y/n/d=delete] ❯ "));
     if (choice === null) { process.stdout.write("\n"); break; }
+
+    if (/^d/i.test(choice.trim())) {
+      try {
+        await fetchJson("POST", "/review/delete", JSON.stringify({ card_id: c.id }));
+        process.stdout.write(`${paint(colors.gray, "Card deleted.")}\n\n`);
+      } catch (e) {
+        process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`));
+      }
+      continue;
+    }
 
     const selfCorrect = !/^n/i.test(choice.trim());
     let result;
@@ -476,7 +542,18 @@ async function handleCommand(raw, config, rl) {
       else await runNode(rl, "tools/igt-add.mjs", args.join(" "));
       break;
     case "vocab": case "v":
-      await runNode(rl, "tools/igt-vocab.mjs", ...args); process.stdout.write("\n"); break;
+      if (args.includes("--list") || args.includes("list")) {
+        await runNode(rl, "tools/igt-vocab.mjs", "--list"); process.stdout.write("\n");
+      } else {
+        try {
+          const seed = await fetchJson("POST", "/vocab/seed", "{}");
+          if (seed.seeded > 0)
+            process.stdout.write(paint(colors.gray, `  Seeded ${seed.seeded} new word(s) into SRS deck.\n\n`));
+        } catch {}
+        const n = parseInt(args[0], 10);
+        await runReview(rl, Number.isFinite(n) ? n : 20, "vocab");
+      }
+      break;
     case "gemini": case "qwen": case "deepseek": case "ollama":
       await fetchJson("POST", "/switch", JSON.stringify({ provider: cmd }));
       process.env.IGT_LLM_PROVIDER = cmd;
