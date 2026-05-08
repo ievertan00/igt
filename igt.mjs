@@ -7,7 +7,7 @@ import { spawn, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
-import { colors, paint, Spinner, renderBarChart, box, wrapText } from "./lib/ui.mjs";
+import { colors, paint, Spinner, renderBarChart, box, wrapText, ansi, renderStatusBar } from "./lib/ui.mjs";
 import configLoader from "./lib/config-loader.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -121,6 +121,22 @@ async function callGrammar(text, signal) {
 
 // ─── Render ────────────────────────────────────────────────────────────────────
 
+let totalInputs = 0;
+let totalDiagnoses = 0;
+let currentStatusMessage = "Keep practicing!";
+
+function updateUI(config) {
+  const rows = process.stdout.rows || 24;
+  process.stdout.write(ansi.setScrollingRegion(rows));
+  const { model } = getModel(config);
+  const status = renderStatusBar(
+    { totalInputs, totalDiagnoses, model },
+    currentStatusMessage,
+    rows
+  );
+  process.stdout.write(status);
+}
+
 const SC = {
   review:     { h: colors.yellow,  b: colors.yellow },
   correction: { h: colors.green,   b: colors.green  },
@@ -202,7 +218,7 @@ function logResult(targetPath, text, data) {
 // ─── Input ─────────────────────────────────────────────────────────────────────
 // sigintHandler is swapped by context: idle = no-op, input = clear line, http = abort
 
-let sigintHandler = () => {};
+let sigintHandler = null;
 let globalEscHandler = null;
 
 // Uses rl 'line' event directly (not question()) to allow clean SIGINT cancellation
@@ -215,7 +231,7 @@ function askLine(rl, prompt) {
       if (settled) return;
       settled = true;
       rl.removeListener("line", onLine);
-      sigintHandler = () => {};
+      sigintHandler = null;
       resolve(line);
     };
 
@@ -226,7 +242,7 @@ function askLine(rl, prompt) {
       rl.write(null, { ctrl: true, name: 'e' });
       rl.write(null, { ctrl: true, name: 'u' });
       process.stdout.write("^C\n");
-      sigintHandler = () => {};
+      sigintHandler = null;
       resolve(null);
     };
 
@@ -285,6 +301,18 @@ async function runGrammarCheck(text, targetPath) {
 
   sessionSentenceCount++;
   logResult(targetPath, text, resp.data);
+
+  totalInputs++;
+  if (Array.isArray(resp.data.diagnoses)) {
+    totalDiagnoses += resp.data.diagnoses.length;
+  }
+  
+  try {
+    const msg = await fetchJson("GET", "/status-message");
+    if (msg && msg.content) currentStatusMessage = msg.content;
+  } catch {}
+  
+  updateUI(configLoader.load());
 }
 
 // ─── Commands ──────────────────────────────────────────────────────────────────
@@ -581,7 +609,7 @@ async function handleCommand(raw, config, rl) {
       }
       break;
     case "exit": case "quit": case "q":
-      await showSessionSummary(); stopServer(); rl.close(); process.exit(0);
+      await showSessionSummary(); rl.close(); process.exit(0);
       break;
     default:
       process.stdout.write(paint(colors.yellow, `Unknown command /${cmd} — type /help for a list.\n`));
@@ -778,10 +806,28 @@ async function main() {
 
   if (!await startServer()) process.exit(1);
 
+  // Initialize status bar state
+  try {
+    const stats = await fetchJson("GET", "/stats");
+    if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
+    if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
+  } catch {}
+
+  try {
+    const msg = await fetchJson("GET", "/status-message");
+    if (msg && msg.content) currentStatusMessage = msg.content;
+  } catch {}
+
   const rl = createInterface({
     input: process.stdin, output: process.stdout,
     terminal: true, historySize: 100, removeHistoryDuplicates: true,
   });
+
+  // UI initialization
+  process.stdout.write(ansi.setScrollingRegion(process.stdout.rows || 24));
+  updateUI(config);
+
+  const uiInterval = setInterval(() => updateUI(config), 2000);
 
   globalEscHandler = (chunk) => {
     if (chunk.length === 1 && chunk[0] === 0x1b) {
@@ -790,9 +836,22 @@ async function main() {
     }
   };
 
-  rl.on("SIGINT", () => sigintHandler());
+  const cleanup = () => {
+    clearInterval(uiInterval);
+    process.stdout.write(ansi.resetScrollingRegion);
+    stopServer();
+  };
+
+  rl.on("SIGINT", () => {
+    if (sigintHandler) sigintHandler();
+    else {
+      cleanup();
+      process.exit(0);
+    }
+  });
+
   process.stdin.on("data", globalEscHandler);
-  process.on("exit", stopServer);
+  process.on("exit", cleanup);
 
   while (true) {
     const { model } = getModel(config);
@@ -802,7 +861,7 @@ async function main() {
     if (!text) continue;
 
     if (["exit", "quit", "q"].includes(text.toLowerCase())) {
-      await showSessionSummary(); stopServer(); rl.close(); process.exit(0);
+      await showSessionSummary(); rl.close(); process.exit(0);
     }
 
     if (text === '"""') {
