@@ -124,10 +124,16 @@ async function callGrammar(text, signal) {
 let totalInputs = 0;
 let totalDiagnoses = 0;
 let currentStatusMessage = "Keep practicing!";
+let lastRows = 0;
+let lastStatus = "";
 
 function updateUI(config) {
   const rows = process.stdout.rows || 24;
-  process.stdout.write(ansi.setScrollingRegion(rows));
+  if (rows !== lastRows) {
+    // Scrolling region: 1 to rows - 2. This leaves rows - 1 and rows for the status bar.
+    process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
+    lastRows = rows;
+  }
   const { model } = getModel(config);
   const status = renderStatusBar(
     { totalInputs, totalDiagnoses, model },
@@ -385,6 +391,14 @@ async function runUndo(rl, n) {
   try {
     const r = await fetchJson("POST", "/undo", JSON.stringify({ n }));
     process.stdout.write(`${paint(colors.green, "Deleted")}: ${r.deleted_inputs} input(s), ${r.deleted_diagnoses} diagnoses, ${r.deleted_cards} cards, ${r.deleted_vocab} vocab, ${r.deleted_advice} advice rows\n\n`);
+    
+    // Refresh stats for status bar
+    try {
+      const stats = await fetchJson("GET", "/stats");
+      if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
+      if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
+      updateUI(configLoader.load());
+    } catch {}
   } catch (e) {
     process.stdout.write(paint(colors.red, `Error: ${e.message}\n\n`));
   }
@@ -798,34 +812,41 @@ async function main() {
   const config = configLoader.load();
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
 
+  const rows = process.stdout.rows || 24;
+  const cols_val = process.stdout.columns || 80;
+
   process.stdout.write("\n");
   process.stdout.write(`${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.white, "Interactive Grammar Tool")}\n`);
+  process.stdout.write(`${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`);
   process.stdout.write(`${paint(colors.gray, "──────────────────────────────────────────────")}\n`);
   process.stdout.write(`${paint(colors.gray, "Model  ")}${paint(colors.cyan, getModel(config).model)}\n`);
   process.stdout.write(`${paint(colors.gray, 'Usage  type text to check · /help for commands · """ for multiline')}\n\n`);
 
   if (!await startServer()) process.exit(1);
 
-  // Initialize status bar state
-  try {
-    const stats = await fetchJson("GET", "/stats");
-    if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
-    if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
-  } catch {}
-
-  try {
-    const msg = await fetchJson("GET", "/status-message");
-    if (msg && msg.content) currentStatusMessage = msg.content;
-  } catch {}
-
   const rl = createInterface({
     input: process.stdin, output: process.stdout,
     terminal: true, historySize: 100, removeHistoryDuplicates: true,
   });
 
-  // UI initialization
+  // UI initialization: Render IMMEDIATELY with placeholders
   process.stdout.write(ansi.setScrollingRegion(process.stdout.rows || 24));
+  lastStatus = ""; 
   updateUI(config);
+
+  // Background fetch for actual stats
+  (async () => {
+    try {
+      const [stats, msg] = await Promise.all([
+        fetchJson("GET", "/stats"),
+        fetchJson("GET", "/status-message")
+      ]);
+      if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
+      if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
+      if (msg && msg.content) currentStatusMessage = msg.content;
+      updateUI(config);
+    } catch {}
+  })();
 
   const uiInterval = setInterval(() => updateUI(config), 2000);
 
@@ -838,20 +859,27 @@ async function main() {
 
   const cleanup = () => {
     clearInterval(uiInterval);
-    process.stdout.write(ansi.resetScrollingRegion);
+    const rows = process.stdout.rows || 24;
+    try {
+      // 1. Reset scrolling region
+      fs.writeSync(1, ansi.resetScrollingRegion);
+      // 2. Move to status bar start and clear down to the end of the screen
+      fs.writeSync(1, `\x1b[${rows - 1};1H\x1b[0J`);
+      // 3. Move cursor to where the first status line was to leave a clean exit
+      fs.writeSync(1, `\x1b[${rows - 1};1H`);
+    } catch {}
     stopServer();
   };
 
   rl.on("SIGINT", () => {
     if (sigintHandler) sigintHandler();
-    else {
-      cleanup();
-      process.exit(0);
-    }
+    else process.exit(0);
   });
 
   process.stdin.on("data", globalEscHandler);
   process.on("exit", cleanup);
+  process.on("SIGTERM", () => process.exit(0));
+  process.on("SIGHUP", () => process.exit(0));
 
   while (true) {
     const { model } = getModel(config);
