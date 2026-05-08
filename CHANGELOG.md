@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Migration System Overhaul** — squashed 9 individual migration files into 3 logical groups (`001_core_schema.sql`, `002_data_backfills.mjs`, `003_status_messages.sql`) for a cleaner project structure and faster initial setup
-- **Schema/Data Separation** — strictly separated DDL (table/index creation) into `001_core_schema.sql` and DML (data insertion) into `003_status_messages.sql`
+- **Migration System Overhaul** — squashed 9 individual migration files into 3 logical groups (`001_initial_schema.sql`, `002_status_messages.sql`, `003_legacy_backfills.mjs`) for a cleaner project structure and faster initial setup
+- **Schema/Data Separation** — strictly separated DDL (table/index creation) into `001_initial_schema.sql` and DML (data insertion) into `002_status_messages.sql`
 - **Ollama support** — enhanced `ollama` provider (`lib/llm-ollama.mjs`) runs any model via the OpenAI-compatible Ollama API; default model is `phi4` (Phi-4 14B); no API key required
 - **Provider diagnostics** — vocabulary lookup now shows which provider and model is active and reports connection errors immediately
 
