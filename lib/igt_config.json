@@ -8,9 +8,7 @@
   "QwenProModel": "qwen3.6-max-preview",
   "DeepseekFlashModel": "deepseek-v4-flash",
   "DeepseekProModel": "deepseek-v4-pro",
-  "QwenLocalAddress": "10.10.20.202",
   "QwenApiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-  "DeepseekLocalAddress": "10.10.20.202",
   "OllamaBaseUrl": "http://localhost:11434/v1",
   "OllamaModel": "phi4",
   "Prompts": {
