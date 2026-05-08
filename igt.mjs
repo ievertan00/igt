@@ -846,12 +846,12 @@ async function main() {
   });
 
   // UI initialization: Render IMMEDIATELY with placeholders.
-  // DECSTBM (set scrolling region) moves the cursor to home (1,1), which would
-  // cause the next prompt to overwrite the header. Park it at the bottom of
-  // the scrolling region so new content flows from the bottom upward.
+  // DECSTBM (set scrolling region) homes the cursor to (1,1), which would
+  // overwrite the header. Wrap it in save/restore so the cursor stays just
+  // below the header — the prompt then appears there and content flows
+  // downward, scrolling the header off only once the screen fills.
   const initRows = process.stdout.rows || 24;
-  process.stdout.write(ansi.setScrollingRegion(initRows));
-  process.stdout.write(`\x1b[${initRows - 2};1H`);
+  process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(initRows) + ansi.restoreCursor);
   lastStatus = "";
   updateUI(config);
 
