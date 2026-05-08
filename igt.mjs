@@ -124,6 +124,7 @@ async function callGrammar(text, signal) {
 let totalInputs = 0;
 let totalDiagnoses = 0;
 let currentStatusMessage = "Keep practicing!";
+let currentStatusAuthor = "";
 let lastRows = 0;
 let lastStatus = "";
 
@@ -137,7 +138,7 @@ function updateUI(config) {
   const { model } = getModel(config);
   const status = renderStatusBar(
     { totalInputs, totalDiagnoses, model },
-    currentStatusMessage,
+    { content: currentStatusMessage, author: currentStatusAuthor },
     rows
   );
   if (status !== lastStatus) {
@@ -241,6 +242,14 @@ function askLine(rl, prompt) {
       settled = true;
       rl.removeListener("line", onLine);
       sigintHandler = null;
+      // Rotate the status-bar tip on every Enter (fire-and-forget).
+      fetchJson("GET", "/status-message").then((msg) => {
+        if (msg && msg.content) {
+          currentStatusMessage = msg.content;
+          currentStatusAuthor = msg.author || "";
+          updateUI(configLoader.load());
+        }
+      }).catch(() => {});
       resolve(line);
     };
 
@@ -318,12 +327,7 @@ async function runGrammarCheck(text, targetPath) {
   if (Array.isArray(resp.data.diagnoses)) {
     totalDiagnoses += resp.data.diagnoses.length;
   }
-  
-  try {
-    const msg = await fetchJson("GET", "/status-message");
-    if (msg && msg.content) currentStatusMessage = msg.content;
-  } catch {}
-  
+
   updateUI(configLoader.load());
 }
 
@@ -864,7 +868,10 @@ async function main() {
       ]);
       if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
       if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
-      if (msg && msg.content) currentStatusMessage = msg.content;
+      if (msg && msg.content) {
+        currentStatusMessage = msg.content;
+        currentStatusAuthor = msg.author || "";
+      }
       updateUI(config);
     } catch {}
   })();
@@ -881,16 +888,18 @@ async function main() {
 
   const cleanup = () => {
     clearInterval(uiInterval);
-    const rows = process.stdout.rows || 24;
     try {
-      // 1. Reset scrolling region
+      // Reset scrolling region so the clear command isn't constrained by it
       fs.writeSync(1, ansi.resetScrollingRegion);
-      // 2. Move to status bar start and clear down to the end of the screen
-      fs.writeSync(1, `\x1b[${rows - 1};1H\x1b[0J`);
-      // 3. Move cursor to where the first status line was to leave a clean exit
-      fs.writeSync(1, `\x1b[${rows - 1};1H`);
     } catch {}
     stopServer();
+    // Clear the window on exit so the shell returns to a clean prompt
+    try {
+      execSync(process.platform === "win32" ? "cls" : "clear", {
+        stdio: "inherit",
+        shell: true,
+      });
+    } catch {}
   };
 
   rl.on("SIGINT", () => {
