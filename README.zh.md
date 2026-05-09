@@ -278,7 +278,7 @@ ollama pull phi4
 
 大约下载 9 GB，只需下载一次。
 
-如果想用更小/更快的模型，拉取后在 `lib/igt_config.json` 中更新 `OllamaModel`：
+如果想用更小/更快的模型，拉取后在 `lib/igt_config.json` 中更新 `OllamaActiveModel`：
 
 ```sh
 ollama pull llama3.2   # 3B，更快，质量略低
@@ -748,11 +748,11 @@ IGT_PRACTICE_FILE=               # 仓库内的练习日志路径
   "DeepseekFlashModel": "deepseek-chat",
   "DeepseekProModel":   "deepseek-reasoner",
   "OllamaBaseUrl":    "http://localhost:11434/v1",
-  "OllamaModel":      "phi4"
+  "OllamaActiveModel":      "phi4"
 }
 ```
 
-Flash 模型负责语法检查（速度优先）；Pro 模型负责手册和练习生成（质量优先）。要更换 Ollama 使用的模型，修改 `OllamaModel` 的值——运行 `ollama list` 可查看本地已安装的模型。
+Flash 模型负责语法检查（速度优先）；Pro 模型负责手册和练习生成（质量优先）。要更换 Ollama 使用的模型，修改 `OllamaActiveModel` 的值——运行 `ollama list` 可查看本地已安装的模型。
 
 所有 LLM 提示词存放在 `igt_config.json` 的 `Prompts` 部分，直接在那里编辑，无需改动源码。
 

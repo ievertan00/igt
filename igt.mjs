@@ -760,7 +760,7 @@ function getModel(config) {
     gemini: "GeminiFlashModel",
     qwen: "QwenFlashModel",
     deepseek: "DeepseekFlashModel",
-    ollama: "OllamaModel",
+    ollama: "OllamaActiveModel",
   };
   return { provider: p, model: config[k[p]] || p };
 }

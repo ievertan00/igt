@@ -278,7 +278,7 @@ ollama pull phi4
 
 This downloads about 9 GB. It only needs to happen once.
 
-To use a smaller/faster model instead, pull it and update `OllamaModel` in `lib/igt_config.json`:
+To use a smaller/faster model instead, pull it and update `OllamaActiveModel` in `lib/igt_config.json`:
 
 ```sh
 ollama pull llama3.2      # 3B, faster, slightly lower quality
@@ -749,11 +749,11 @@ IGT_PRACTICE_FILE=               # practice log path within vault
   "DeepseekFlashModel": "deepseek-chat",
   "DeepseekProModel":   "deepseek-reasoner",
   "OllamaBaseUrl":    "http://localhost:11434/v1",
-  "OllamaModel":      "phi4"
+  "OllamaActiveModel":      "phi4"
 }
 ```
 
-Flash models handle grammar correction (speed-optimized); Pro models handle handbook and practice generation (quality-optimized). To change which Ollama model IGT uses, update `OllamaModel` — run `ollama list` to see what you have installed.
+Flash models handle grammar correction (speed-optimized); Pro models handle handbook and practice generation (quality-optimized). To change which Ollama model IGT uses, update `OllamaActiveModel` — run `ollama list` to see what you have installed.
 
 All LLM prompts live in the `Prompts` section of `igt_config.json`. You can edit them to tune IGT's behavior without touching source files.
 

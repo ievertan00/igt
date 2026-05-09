@@ -917,7 +917,7 @@ async function generateReport() {
   } else if (provider === "deepseek") {
     handbookModel = config.DeepseekProModel || "deepseek-reasoner";
   } else if (provider === "ollama") {
-    handbookModel = config.OllamaModel || "phi4";
+    handbookModel = config.OllamaActiveModel || "phi4";
   } else {
     handbookModel = config.GeminiProModel || "gemini-3.0-pro";
   }
