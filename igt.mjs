@@ -833,6 +833,34 @@ async function handleCommand(raw, config, rl) {
         paint(colors.gray, `Switched to ${getModel(config).model}\n`),
       );
       break;
+    case "phi": {
+      const model = config.OllamaPhiModel || "phi4";
+      await fetchJson(
+        "POST",
+        "/switch-model",
+        JSON.stringify({ provider: "ollama", model }),
+      );
+      process.env.IGT_LLM_PROVIDER = "ollama";
+      config.OllamaModel = model;
+      process.stdout.write(
+        paint(colors.gray, `Switched to local Phi-4 (Ollama: ${model})\n`),
+      );
+      break;
+    }
+    case "gemma": {
+      const model = config.OllamaGemmaModel || "gemma4:e4b";
+      await fetchJson(
+        "POST",
+        "/switch-model",
+        JSON.stringify({ provider: "ollama", model }),
+      );
+      process.env.IGT_LLM_PROVIDER = "ollama";
+      config.OllamaModel = model;
+      process.stdout.write(
+        paint(colors.gray, `Switched to local Gemma 4 (Ollama: ${model})\n`),
+      );
+      break;
+    }
     case "llm":
       await runNode(rl, "lib/llm-switch.mjs", ...args);
       process.stdout.write("\n");
@@ -906,7 +934,9 @@ function showHelp() {
   row("/gemini           ", "Switch to Gemini model");
   row("/qwen             ", "Switch to Qwen model");
   row("/deepseek         ", "Switch to Deepseek model");
-  row("/ollama           ", "Switch to local Phi-4 (Ollama)");
+  row("/ollama           ", "Switch to default Ollama model");
+  row("/phi              ", "Switch to local Phi-4 (Ollama)");
+  row("/gemma            ", "Switch to local Gemma 4 (Ollama)");
   row('"""               ', 'Multiline mode (blank line or """ to submit)');
   row("/exit      (/q)   ", "Quit IGT");
   process.stdout.write("\n");
