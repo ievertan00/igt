@@ -62,6 +62,10 @@ test("POST /switch-model endpoint", async (t) => {
       assert.strictEqual(res.statusCode, 200);
       assert.strictEqual(res.body.provider, "gemini");
       assert.strictEqual(res.body.model, undefined);
+
+      // Verify .env
+      const env = fs.readFileSync(path.join(projectRoot, ".env"), "utf8");
+      assert.ok(env.includes("IGT_LLM_PROVIDER=gemini"));
     });
 
     await t.test("should switch to ollama with model", async () => {
@@ -69,6 +73,11 @@ test("POST /switch-model endpoint", async (t) => {
       assert.strictEqual(res.statusCode, 200);
       assert.strictEqual(res.body.provider, "ollama");
       assert.strictEqual(res.body.model, "gemma2");
+
+      // Verify .env
+      const env = fs.readFileSync(path.join(projectRoot, ".env"), "utf8");
+      assert.ok(env.includes("IGT_LLM_PROVIDER=ollama"));
+      assert.ok(env.includes("IGT_OLLAMA_MODEL=gemma2"));
     });
 
     await t.test("should return 400 if provider is missing", async () => {
