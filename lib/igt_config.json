@@ -10,7 +10,6 @@
   "DeepseekProModel": "deepseek-v4-pro",
   "QwenApiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
   "OllamaBaseUrl": "http://localhost:11434/v1",
-  "OllamaActiveModel": "phi4",
   "OllamaGemmaModel": "gemma4:e4b",
   "OllamaPhiModel": "phi4",
   "Prompts": {
