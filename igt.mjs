@@ -23,6 +23,7 @@ let totalInputs = 0;
 let totalDiagnoses = 0;
 let currentStatusMessage = "Keep practicing!";
 let currentStatusAuthor = "";
+let scrollOffset = 0;
 let lastRows = 0;
 let lastStatus = "";
 let sigintHandler = null;
@@ -43,6 +44,15 @@ function getModel(config) {
 function updateUI(config) {
   const rows = process.stdout.rows || 24;
   if (rows !== lastRows) {
+    if (lastRows > 0) {
+      // Clear old status bar positions to prevent them from scrolling into the view
+      process.stdout.write(
+        ansi.saveCursor +
+        `\x1b[${Math.max(1, lastRows - 1)};1H` + ansi.clearLine +
+        `\x1b[${Math.max(1, lastRows)};1H` + ansi.clearLine +
+        ansi.restoreCursor
+      );
+    }
     process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
     lastRows = rows;
   }
@@ -51,6 +61,7 @@ function updateUI(config) {
     { totalInputs, totalDiagnoses, model },
     { content: currentStatusMessage, author: currentStatusAuthor },
     rows,
+    scrollOffset,
   );
   if (status !== lastStatus) {
     process.stdout.write(status);
@@ -71,6 +82,7 @@ function askLine(rl, prompt) {
       api.getStatusMessage()
         .then((msg) => {
           if (msg && msg.content) {
+            if (msg.content !== currentStatusMessage) scrollOffset = 0;
             currentStatusMessage = msg.content;
             currentStatusAuthor = msg.author || "";
             updateUI(configLoader.load());
@@ -159,12 +171,19 @@ async function main() {
       const [stats, msg] = await Promise.all([api.getStats(), api.getStatusMessage()]);
       if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
       if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
-      if (msg && msg.content) { currentStatusMessage = msg.content; currentStatusAuthor = msg.author || ""; }
+      if (msg && msg.content) {
+        if (msg.content !== currentStatusMessage) scrollOffset = 0;
+        currentStatusMessage = msg.content;
+        currentStatusAuthor = msg.author || "";
+      }
       updateUI(config);
     } catch {}
   })();
 
-  const uiInterval = setInterval(() => updateUI(config), 2000);
+  const uiInterval = setInterval(() => {
+    scrollOffset++;
+    updateUI(config);
+  }, 300);
 
   globalEscHandler = (chunk) => {
     if (chunk.length === 1 && chunk[0] === 0x1b) {
@@ -183,6 +202,10 @@ async function main() {
 
   rl.on("SIGINT", () => { if (sigintHandler) sigintHandler(); else process.exit(0); });
   process.stdin.on("data", globalEscHandler);
+  process.stdout.on("resize", () => {
+    lastRows = 0;
+    updateUI(configLoader.load());
+  });
   process.on("exit", cleanup);
   process.on("SIGTERM", () => process.exit(0));
   process.on("SIGHUP", () => process.exit(0));
