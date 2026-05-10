@@ -1,4 +1,4 @@
-import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/llm/init.mjs";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";

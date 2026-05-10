@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/llm/init.mjs";
 import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
 import { getMastery } from "../lib/mastery.mjs";
 

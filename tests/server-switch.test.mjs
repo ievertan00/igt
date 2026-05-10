@@ -16,7 +16,7 @@ test("POST /switch-model endpoint", async (t) => {
     ? fs.readFileSync(path.join(projectRoot, ".env"), "utf8") 
     : null;
 
-  const server = spawn("node", ["lib/igt-http-server.mjs"], {
+  const server = spawn("node", ["lib/server/igt-http-server.mjs"], {
     env: { ...process.env, IGT_SERVER_PORT: PORT.toString() },
     cwd: projectRoot
   });
