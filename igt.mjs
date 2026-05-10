@@ -530,7 +530,7 @@ async function runUndo(rl, n) {
   try {
     const r = await fetchJson("POST", "/undo", JSON.stringify({ n }));
     process.stdout.write(
-      `${paint(colors.green, "Deleted")}: ${r.deleted_inputs} input(s), ${r.deleted_diagnoses} diagnoses, ${r.deleted_cards} cards, ${r.deleted_vocab} vocab, ${r.deleted_advice} advice rows\n\n`,
+      `${paint(colors.green, "Deleted")}: ${r.deleted_inputs} input(s), ${r.deleted_diagnoses} diagnoses, ${r.deleted_cards} cards, ${r.deleted_advice} advice rows\n\n`,
     );
 
     // Refresh stats for status bar
