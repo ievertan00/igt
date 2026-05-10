@@ -19,6 +19,9 @@ CLAUDE.md
 GEMINI.md
 TODOS.md
 .worktrees/
+.DS_Store
+**/.DS_Store
+
 
 
 # Dev-only / test scripts not needed by end users
