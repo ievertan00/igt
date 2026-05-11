@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
 import Database from "better-sqlite3";
-import initializeLLMProviders, { configLoader } from "../lib/llm-init.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/llm/init.mjs";
 import { ui, paint, colors, Spinner, wrapText } from "../lib/ui.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
