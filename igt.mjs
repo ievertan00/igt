@@ -25,6 +25,7 @@ let currentStatusMessage = "Keep practicing!";
 let currentStatusAuthor = "";
 let scrollOffset = 0;
 let lastRows = 0;
+let lastCols = 0;
 let lastStatus = "";
 let sigintHandler = null;
 let globalEscHandler = null;
@@ -32,6 +33,9 @@ let lastSubmittedText = "";
 let lastSubmittedProvider = "";
 let lastTargetPath = "";
 let sessionSentenceCount = 0;
+
+let resizeTimer = null;
+let isResizing = false;
 
 // ─── UI ─────────────────────────────────────────────────────────────────────────
 
@@ -41,20 +45,30 @@ function getModel(config) {
   return { provider: p, model: config[k[p]] || p };
 }
 
+function sweepStatusBar() {
+  const currentRows = process.stdout.rows || 24;
+  // Sweep a large area to catch any "dirty" scrolls from wraps.
+  // 15 lines up from the bottom should be plenty for even extreme wraps.
+  let sweep = ansi.saveCursor;
+  for (let r = Math.max(1, currentRows - 15); r <= currentRows; r++) {
+    sweep += `\x1b[${r};1H` + ansi.clearLine;
+  }
+  sweep += ansi.restoreCursor;
+  process.stdout.write(sweep);
+}
+
 function updateUI(config) {
+  if (isResizing) return;
   const rows = process.stdout.rows || 24;
-  if (rows !== lastRows) {
-    if (lastRows > 0) {
-      // Clear old status bar positions to prevent them from scrolling into the view
-      process.stdout.write(
-        ansi.saveCursor +
-        `\x1b[${Math.max(1, lastRows - 1)};1H` + ansi.clearLine +
-        `\x1b[${Math.max(1, lastRows)};1H` + ansi.clearLine +
-        ansi.restoreCursor
-      );
+  const cols = process.stdout.columns || 80;
+
+  if (rows !== lastRows || cols !== lastCols) {
+    if (lastRows > 0 || lastCols > 0) {
+      sweepStatusBar();
     }
     process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
     lastRows = rows;
+    lastCols = cols;
   }
   const { model } = getModel(config);
   const status = renderStatusBar(
@@ -203,8 +217,20 @@ async function main() {
   rl.on("SIGINT", () => { if (sigintHandler) sigintHandler(); else process.exit(0); });
   process.stdin.on("data", globalEscHandler);
   process.stdout.on("resize", () => {
-    lastRows = 0;
-    updateUI(configLoader.load());
+    isResizing = true;
+    if (resizeTimer) clearTimeout(resizeTimer);
+
+    // Eagerly re-set scrolling region on every signal to protect the bottom area
+    // from readline wraps. We use _origWrite to bypass the J->K interceptor.
+    const rows = process.stdout.rows || 24;
+    _origWrite(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
+
+    resizeTimer = setTimeout(() => {
+      isResizing = false;
+      sweepStatusBar();
+      lastRows = 0; // Force updateUI to fully re-render
+      updateUI(configLoader.load());
+    }, 150);
   });
   process.on("exit", cleanup);
   process.on("SIGTERM", () => process.exit(0));
