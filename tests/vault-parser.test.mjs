@@ -15,10 +15,19 @@ const practiceContent = `
 `;
 
 console.log("Running vault parser tests...");
-const vocab = parseVocab(vocabContent);
+
+// Test with fixed reference date
+const referenceDate = new Date('2026-05-11');
+const vocab = parseVocab(vocabContent, referenceDate);
 assert.strictEqual(vocab.total, 2);
 assert.strictEqual(vocab.addedThisWeek, 1);
 
 const practice = parsePractice(practiceContent);
 assert.strictEqual(practice.avgScore, 70);
+
+// Edge case: empty content
+const emptyVocab = parseVocab("");
+assert.strictEqual(emptyVocab.total, 0);
+assert.strictEqual(emptyVocab.addedThisWeek, 0);
+
 console.log("✅ Vault parser tests passed!");
