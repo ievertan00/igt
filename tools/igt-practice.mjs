@@ -104,11 +104,26 @@ function savePracticeSession(exercises, results, meta) {
 
 // Parse arguments
 const args = process.argv.slice(2);
-const errorTypeArg = args.find(a => !a.startsWith("--"));
-const countArg = args.find(a => a.startsWith("--count="));
-const levelArg = args.find(a => a.startsWith("--level="));
-const count = countArg ? parseInt(countArg.split("=")[1]) : null;
-const level = levelArg ? levelArg.split("=")[1].toUpperCase() : null;
+let errorTypeArg = null;
+let count = null;
+let level = null;
+
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i];
+  if (arg === "--type" && args[i + 1]) {
+    errorTypeArg = args[i + 1];
+    i++;
+  } else if (arg.startsWith("--type=")) {
+    errorTypeArg = arg.split("=")[1];
+  } else if (arg.startsWith("--count=")) {
+    count = parseInt(arg.split("=")[1]);
+  } else if (arg.startsWith("--level=")) {
+    level = arg.split("=")[1].toUpperCase();
+  } else if (!arg.startsWith("--")) {
+    // Positional argument for error type (legacy support)
+    if (!errorTypeArg) errorTypeArg = arg;
+  }
+}
 
 // Validate CEFR level
 const validLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
@@ -129,7 +144,7 @@ function getErrorTypes(errorType) {
       ORDER BY count DESC
       LIMIT 1
     `).get(errorType);
-    return result ? [result] : [];
+    return result ? [result] : [{ error_type: errorType, count: 0 }];
   } else {
     return db.prepare(`
       SELECT d.error_type, COUNT(*) as count
