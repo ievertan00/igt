@@ -5,6 +5,27 @@ All notable changes to the IGT (Interactive Grammar Tool) project will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-05-11
+
+### Added
+
+- **Stats Dashboard Redesign** — the `/stats` command now features a comprehensive dashboard including:
+  - **Effort Trend** — a 7-day visual line chart showing input volume and momentum vs. the previous week/month.
+  - **CEFR Trajectory** — a monthly bar chart tracking your proficiency level progression.
+  - **Top 3 Priorities** — identifies the most frequent error types and provides one-click practice commands to fix them.
+  - **Vault Snapshot** — real-time stats from your vocabulary and practice logs (total words, weekly growth, and average scores).
+- **Vault Parser** (`lib/vault-parser.mjs`) — a dedicated module that scans your Obsidian vault (or local `docs/` folder) to extract learning data from your Markdown notes.
+- **Targeted Practice** — `igt-practice.mjs` (and the `/practice` command) now supports filtering by error type via the `--type` flag, allowing you to focus exclusively on specific weaknesses like "Verb Tense" or "Article Usage".
+
+### Changed
+
+- **Improved `/today` Plan** — the daily plan now includes time estimates and targets your top priority error type automatically.
+- **Enhanced UI Components** — added support for line charts and improved sparkline rendering in the terminal.
+
+### Fixed
+
+- **Stats Accuracy** — improved trend logic to handle weeks with zero activity more gracefully.
+
 ## [3.6.0] - 2026-05-08
 
 ### Added

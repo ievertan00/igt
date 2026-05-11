@@ -399,29 +399,49 @@ Today's Plan
 Launch /review now? [y/n]
 ```
 
-### 数据统计（`/stats`）
+### 数据统计 (`/stats`)
+
+统计面板提供了学习旅程的全方位视图：
 
 ```
 ❯ /stats
 
-Errors by Sentence Length
-  Short  (1–10w)  ████░░░░  23%
-  Medium (11–20w) ██████░░  41%
-  Long   (21+w)   ██████████ 36%
+  [ Effort Trend: Last 7 Days ]
 
-Mastery Breakdown
-  Verb Tense           ██████  frequent    (18 in 30d)
-  Article Usage        ████    occasional  (9 in 30d)
-  Subject-Verb Agmt    ██      rare        (3 in 30d)
-  Spelling             ✓       mastered    (0 in 30d)
+  10 ┤      █
+   8 ┤      █
+   6 ┤  █   █   █
+   4 ┤  █   █   █   █
+   2 ┤  █   █   █   █   █
+     └─11──12──13──14──15─
 
-CEFR Trajectory
-  2026-04-08  B1
-  2026-04-20  B1+
-  2026-05-04  B2
+  Weekly:   24 inputs (+15%) vs last week. Great progress! Your consistency is paying off.
+  Monthly:  82 inputs (+8%) vs last month. Solid stability. Keep up the rhythm.
+
+  [ CEFR Trajectory: Monthly ]
+  2026-03  ███ B1
+  2026-04  ██████ B2
+  2026-05  █████████ C1
+
+  [ Top 3 Priorities ]
+  1. Verb Tense (64 hits)
+     Fix: /practice --type "Verb Tense"
+  2. Article Usage (28 hits)
+     Fix: /practice --type "Article Usage"
+  3. Preposition Usage (19 hits)
+     Fix: /practice --type "Preposition Usage"
+
+  [ Vault Snapshot ]
+  Vocab:    142 words (+12 this week)
+  Practice: 88% avg (last 5 sessions)
 ```
 
-### 个人错误手册（`/handbook`）
+- **努力趋势 (Effort Trend)**: 过去 7 天输入量的可视化图表。
+- **掌握度分析 (Mastery Breakdown)**: 识别你最频繁的错误类型（前 3 项优先任务）。
+- **CEFR 轨迹 (CEFR Trajectory)**: 追踪你数月来的英语水平进步情况。
+- **笔记库快照 (Vault Snapshot)**: 从你的词汇笔记和练习日志中解析出的实时数据。
+
+### 个人错误手册 (`/handbook`)
 
 手册将你积累的错误记录转化为一份个性化参考文档。它不是泛泛的语法教材，而是分析你的真实错误，识别你专属的反复出现的子模式（你的"语言指纹"），并从你个人习惯的角度解释根本原因。
 
@@ -610,7 +630,7 @@ node tools/igt-handbook.mjs --days=30 --clear-cache   # 强制完整重建
 
 输出文件保存在 `.env` 中 `IGT_REPORT_PATH` 指定的目录下，文件名包含日期：`handbook_2026-05-07.md`。用 Obsidian 打开后，可折叠标注块、表格和提示框会以交互方式渲染。
 
-### 专项练习（`/practice`）
+### 专项练习 (`/practice`)
 
 生成针对你最频繁错误类型的练习题，包含选择题和填空题，难度与你的 CEFR 水平相匹配。
 
@@ -628,6 +648,13 @@ Your answer: C
   before another past event ("arrived").
 ```
 
+**定向练习:**
+你可以使用 `--type` 标志针对特定的弱点进行练习：
+
+```
+❯ /practice --type "Verb Tense"
+```
+
 可直接指定级别和题数：
 
 ```
@@ -638,7 +665,7 @@ Your answer: C
 
 ```sh
 node tools/igt-practice.mjs --count=15
-node tools/igt-practice.mjs "Article Usage"   # 针对特定错误类型
+node tools/igt-practice.mjs --type "Article Usage"   # 针对特定错误类型
 ```
 
 ### CEFR 水平评估（`/assess`）

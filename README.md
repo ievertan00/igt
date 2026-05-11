@@ -401,25 +401,45 @@ Launch /review now? [y/n]
 
 ### Analytics (`/stats`)
 
+The stats dashboard provides a comprehensive view of your learning journey:
+
 ```
 ❯ /stats
 
-Errors by Sentence Length
-  Short  (1–10w)  ████░░░░  23%
-  Medium (11–20w) ██████░░  41%
-  Long   (21+w)   ██████████ 36%
+  [ Effort Trend: Last 7 Days ]
 
-Mastery Breakdown
-  Verb Tense           ██████  frequent   (18 in 30d)
-  Article Usage        ████    occasional  (9 in 30d)
-  Subject-Verb Agmt    ██      rare        (3 in 30d)
-  Spelling             ✓       mastered    (0 in 30d)
+  10 ┤      █
+   8 ┤      █
+   6 ┤  █   █   █
+   4 ┤  █   █   █   █
+   2 ┤  █   █   █   █   █
+     └─11──12──13──14──15─
 
-CEFR Trajectory
-  2026-04-08  B1
-  2026-04-20  B1+
-  2026-05-04  B2
+  Weekly:   24 inputs (+15%) vs last week. Great progress! Your consistency is paying off.
+  Monthly:  82 inputs (+8%) vs last month. Solid stability. Keep up the rhythm.
+
+  [ CEFR Trajectory: Monthly ]
+  2026-03  ███ B1
+  2026-04  ██████ B2
+  2026-05  █████████ C1
+
+  [ Top 3 Priorities ]
+  1. Verb Tense (64 hits)
+     Fix: /practice --type "Verb Tense"
+  2. Article Usage (28 hits)
+     Fix: /practice --type "Article Usage"
+  3. Preposition Usage (19 hits)
+     Fix: /practice --type "Preposition Usage"
+
+  [ Vault Snapshot ]
+  Vocab:    142 words (+12 this week)
+  Practice: 88% avg (last 5 sessions)
 ```
+
+- **Effort Trend**: A visual 7-day chart of your input volume.
+- **Mastery Breakdown**: Identifies your most frequent error types (Top 3 Priorities).
+- **CEFR Trajectory**: Tracks your proficiency level progression over months.
+- **Vault Snapshot**: Real-time stats parsed from your vocabulary and practice logs.
 
 ### Error Handbook (`/handbook`)
 
@@ -629,6 +649,13 @@ Your answer: C
   before another past event ("arrived").
 ```
 
+**Targeted Practice:**
+You can target specific weaknesses using the `--type` flag:
+
+```
+❯ /practice --type "Verb Tense"
+```
+
 Specify level and count directly:
 
 ```
@@ -639,7 +666,7 @@ Or from the command line:
 
 ```sh
 node tools/igt-practice.mjs --count=15
-node tools/igt-practice.mjs "Article Usage"   # target a specific error type
+node tools/igt-practice.mjs --type "Article Usage"   # target a specific error type
 ```
 
 ### CEFR Assessment (`/assess`)

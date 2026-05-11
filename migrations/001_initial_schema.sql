@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS diagnoses (
   error_type TEXT NOT NULL,
   severity TEXT,
   explanation TEXT,
-  FOREIGN KEY (input_id) REFERENCES inputs(id)
+  FOREIGN KEY (input_id) REFERENCES inputs(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS advice (
@@ -32,20 +32,7 @@ CREATE TABLE IF NOT EXISTS advice (
   input_id INTEGER,
   rule TEXT,
   tip TEXT,
-  FOREIGN KEY (input_id) REFERENCES inputs(id)
-);
-
-CREATE TABLE IF NOT EXISTS vocab (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  input_id INTEGER,
-  original_word TEXT NOT NULL,
-  better_word TEXT NOT NULL,
-  context TEXT,
-  explanation TEXT,
-  added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  quiz_count INTEGER DEFAULT 0,
-  correct_count INTEGER DEFAULT 0,
-  FOREIGN KEY (input_id) REFERENCES inputs(id)
+  FOREIGN KEY (input_id) REFERENCES inputs(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS assessments (
@@ -59,17 +46,24 @@ CREATE TABLE IF NOT EXISTS assessments (
 );
 
 CREATE TABLE IF NOT EXISTS srs_cards (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source_type TEXT NOT NULL,        -- 'diagnosis' | 'cloze' | 'vocab' | 'input'
-  source_id INTEGER NOT NULL,
-  prompt TEXT NOT NULL,
-  answer TEXT NOT NULL,
-  ease REAL DEFAULT 2.5,
-  interval_days INTEGER DEFAULT 1,
-  due_date DATE NOT NULL,
-  last_reviewed TIMESTAMP,
-  total_reviews INTEGER DEFAULT 0,
-  correct_streak INTEGER DEFAULT 0
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_type    TEXT    NOT NULL CHECK (source_type IN ('input', 'vocab')),
+  source_id      INTEGER,           -- input.id for grammar cards; NULL for vocab cards
+  prompt         TEXT    NOT NULL,
+  answer         TEXT    NOT NULL,
+  ease           REAL    DEFAULT 2.5,
+  interval_days  INTEGER DEFAULT 1,
+  due_date       DATE    NOT NULL,
+  last_reviewed  TIMESTAMP,
+  total_reviews  INTEGER DEFAULT 0,
+  correct_streak INTEGER DEFAULT 0,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  word           TEXT,              -- vocab cards only
+  pos            TEXT,
+  zh             TEXT,
+  meaning        TEXT,
+  example        TEXT,
+  note           TEXT
 );
 
 CREATE TABLE IF NOT EXISTS status_messages (
@@ -89,5 +83,6 @@ CREATE INDEX IF NOT EXISTS idx_vocab_quiz ON vocab(quiz_count, correct_count);
 CREATE INDEX IF NOT EXISTS idx_assessments_timestamp ON assessments(timestamp);
 CREATE INDEX IF NOT EXISTS idx_srs_due ON srs_cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_srs_source ON srs_cards(source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_inputs_session_id ON inputs(session_id);
 CREATE INDEX IF NOT EXISTS idx_status_messages_last_shown_at ON status_messages(last_shown_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_status_messages_content ON status_messages(content);

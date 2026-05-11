@@ -188,19 +188,19 @@ if (fields.word && fields.zh) {
   const resolvedDbPath = path.isAbsolute(dbPath) ? dbPath : path.join(projectRoot, dbPath);
   try {
     const db = new Database(resolvedDbPath);
-    const mkPrompt = () => ["VOCAB",
-      fields.word || "", fields.pos || "", fields.zh || "",
-      fields.meaning || "", fields.example || "", fields.note || ""
-    ].join("|||");
-    db.prepare(`DELETE FROM srs_cards WHERE source_type='vocab' AND (prompt LIKE ? OR prompt LIKE ?)`)
-      .run(`VOCAB|||word2zh|||${fields.word}|||%`, `VOCAB|||zh2word|||${fields.word}|||%`);
     const existing = db.prepare(
-      `SELECT COUNT(*) AS n FROM srs_cards WHERE source_type='vocab' AND prompt LIKE ?`
-    ).get(`VOCAB|||${fields.word}|||%`).n;
+      `SELECT COUNT(*) AS n FROM srs_cards WHERE source_type = 'vocab' AND word = ?`
+    ).get(fields.word).n;
     if (existing === 0) {
-      db.prepare(
-        `INSERT INTO srs_cards (source_type, source_id, prompt, answer, due_date) VALUES ('vocab', 0, ?, ?, date('now'))`
-      ).run(mkPrompt(), fields.word);
+      db.prepare(`
+        INSERT INTO srs_cards
+          (source_type, source_id, prompt, answer, due_date, word, pos, zh, meaning, example, note)
+        VALUES ('vocab', NULL, ?, ?, date('now'), ?, ?, ?, ?, ?, ?)
+      `).run(
+        fields.word, fields.word,
+        fields.word, fields.pos || "", fields.zh || "",
+        fields.meaning || "", fields.example || "", fields.note || ""
+      );
       console.log(`  ${paint(c.green, "✓")} ${paint(c.gray, "SRS vocab card added for review")}`);
     }
     db.close();
