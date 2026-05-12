@@ -79,7 +79,6 @@ CREATE INDEX IF NOT EXISTS idx_inputs_timestamp ON inputs(timestamp);
 CREATE INDEX IF NOT EXISTS idx_diagnoses_input_id ON diagnoses(input_id);
 CREATE INDEX IF NOT EXISTS idx_diagnoses_error_type ON diagnoses(error_type);
 CREATE INDEX IF NOT EXISTS idx_advice_input_id ON advice(input_id);
-CREATE INDEX IF NOT EXISTS idx_vocab_quiz ON vocab(quiz_count, correct_count);
 CREATE INDEX IF NOT EXISTS idx_assessments_timestamp ON assessments(timestamp);
 CREATE INDEX IF NOT EXISTS idx_srs_due ON srs_cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_srs_source ON srs_cards(source_type, source_id);
