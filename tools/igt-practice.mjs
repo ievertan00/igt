@@ -78,9 +78,8 @@ function savePracticeSession(exercises, results, meta) {
   results.forEach((r, i) => {
     const ex = r.exercise;
     const status = r.correct ? "✅" : "❌";
-    const typeLabel = ex.type === "multiple-choice" ? "MC" : "FIB";
-    md += `### Q${i + 1} ${status} [${typeLabel}] ${ex.question}\n\n`;
-    if (ex.type === "multiple-choice" && Array.isArray(ex.options)) {
+    md += `### Q${i + 1} ${status} [MC] ${ex.question}\n\n`;
+    if (Array.isArray(ex.options)) {
       const labels = ["A", "B", "C", "D"];
       ex.options.forEach((opt, j) => {
         md += `- ${labels[j]}. ${opt.replace(/^[A-Da-d][.)\s]+\s*/, "")}\n`;
@@ -235,7 +234,7 @@ async function generateExercises(errorTypes, count, level, usedQuestions = []) {
       .replace(/\{\{usedQuestions\}\}/g, recentQuestions || "None yet."); // Replace placeholder
   } else {
     // Fallback to inline prompt for backward compatibility
-    prompt = `Generate ${count} grammar practice exercises focusing on these error types:
+    prompt = `Generate ${count} grammar practice multiple-choice exercises (4 options each) focusing on these error types:
 ${errorList}
 
 LINGUISTIC CONTEXT (RECURRING TRAPS & RECENT FAILURES):
@@ -243,7 +242,7 @@ ${linguisticSummary}
 
 IMPORTANT RULES:
 1. Create ENTIRELY NEW sentences. DO NOT use or reference any previous user input examples.
-2. Each exercise must be either multiple-choice (4 options) or fill-in-the-blank.
+2. Each exercise MUST be multiple-choice (4 options labeled A, B, C, D).
 3. Use common, everyday topics (e.g., work, school, travel, daily life).
 4. Vary the difficulty slightly, starting easier.
 
@@ -256,22 +255,12 @@ Output Format (STRICT JSON, no other text):
     "options": ["go", "goes", "went", "going"],
     "answer": "went",
     "explanation": "Past tense is required because of 'yesterday'."
-  },
-  {
-    "type": "fill-in-the-blank",
-    "question": "He is ___ honest man.",
-    "answer": "an",
-    "explanation": "'An' is used before vowel sounds."
   }
 ]
 
 Rules for multiple-choice:
-- Provide exactly 4 options labeled A, B, C, D in the options array
+- Provide exactly 4 options
 - The "answer" field should be the exact text of the correct option
-
-Rules for fill-in-the-blank:
-- Use ___ (three underscores) to indicate the blank
-- The "answer" field should be the exact word(s) to fill in
 
 Return ONLY the JSON array, no markdown formatting, no explanation.`;
   }
@@ -357,33 +346,19 @@ function gradeAnswer(exercise, userAnswer) {
   // Clean the answer in case it has a leading label
   const correct = exercise.answer.replace(/^[A-Da-d][.)\s]+\s*/, "").trim().toLowerCase();
 
-  if (exercise.type === "multiple-choice") {
-    // Accept option letter (A/B/C/D) or the answer text
-    const options = (exercise.options || []).map(o => o.replace(/^[A-Da-d][.)\s]+\s*/, "").trim());
-    const optionLetters = ["a", "b", "c", "d"];
+  // Accept option letter (A/B/C/D) or the answer text
+  const options = (exercise.options || []).map(o => o.replace(/^[A-Da-d][.)\s]+\s*/, "").trim());
+  const optionLetters = ["a", "b", "c", "d"];
 
-    // Check if user entered a letter
-    if (user.length === 1 && optionLetters.includes(user)) {
-      const selectedIndex = optionLetters.indexOf(user);
-      const selectedOption = options[selectedIndex]?.toLowerCase();
-      return selectedOption === correct;
-    }
-
-    // Check if user entered the full answer text
-    return user === correct;
-
-  } else if (exercise.type === "fill-in-the-blank") {
-    // Exact match or common variant handling
-    if (user === correct) return true;
-
-    // Allow minor differences (e.g., extra spaces)
-    const normalize = (s) => s.replace(/\s+/g, " ").trim();
-    if (normalize(user) === normalize(correct)) return true;
-
-    return false;
+  // Check if user entered a letter
+  if (user.length === 1 && optionLetters.includes(user)) {
+    const selectedIndex = optionLetters.indexOf(user);
+    const selectedOption = options[selectedIndex]?.toLowerCase();
+    return selectedOption === correct;
   }
 
-  return false;
+  // Check if user entered the full answer text
+  return user === correct;
 }
 
 const BOX_WIDTH = 72;
@@ -391,19 +366,13 @@ const BOX_INNER_WIDTH = BOX_WIDTH - 6; // subtract borders (│ , │) + padding
 
 // Format exercise for display
 function displayExercise(exercise, index, total) {
-  const typeLabel = exercise.type === "multiple-choice" ? "Multiple Choice" : "Fill in the Blank";
-  ui.header(`Exercise ${index}/${total}`, typeLabel);
+  ui.header(`Exercise ${index}/${total}`, "Multiple Choice");
 
-  let content = "";
-  if (exercise.type === "multiple-choice") {
-    content = `${paint(colors.white, wrapText(exercise.question, BOX_INNER_WIDTH))}\n\n`;
-    const labels = ["A", "B", "C", "D"];
-    for (let i = 0; i < exercise.options.length; i++) {
-      const cleaned = exercise.options[i].replace(/^[A-Da-d][.)\s]+\s*/, "");
-      content += `  ${paint(colors.cyan, labels[i])}. ${paint(colors.white, cleaned)}\n`;
-    }
-  } else {
-    content = `${paint(colors.white, wrapText(exercise.question, BOX_INNER_WIDTH))}`;
+  let content = `${paint(colors.white, wrapText(exercise.question, BOX_INNER_WIDTH))}\n\n`;
+  const labels = ["A", "B", "C", "D"];
+  for (let i = 0; i < exercise.options.length; i++) {
+    const cleaned = exercise.options[i].replace(/^[A-Da-d][.)\s]+\s*/, "");
+    content += `  ${paint(colors.cyan, labels[i])}. ${paint(colors.white, cleaned)}\n`;
   }
 
   console.log(ui.box("QUESTION", content.trimEnd(), { width: BOX_WIDTH }));
@@ -564,11 +533,7 @@ async function runPractice() {
     // Get user answer (no skipping allowed)
     let userAnswer;
     while (true) {
-      if (ex.type === "multiple-choice") {
-        userAnswer = await askQuestion("Your answer (A/B/C/D): ");
-      } else {
-        userAnswer = await askQuestion("Your answer: ");
-      }
+      userAnswer = await askQuestion("Your answer (A/B/C/D): ");
       if (userAnswer && userAnswer.trim().length > 0) break;
       console.log("⚠️  Please provide an answer to continue.");
     }
