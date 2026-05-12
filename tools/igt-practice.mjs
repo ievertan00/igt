@@ -90,8 +90,6 @@ function savePracticeSession(exercises, results, meta) {
     md += `**Answer**: ${cleanAnswer} — ${ex.explanation}\n\n`;
   });
 
-  md += `---`;
-
   const isNew = !fs.existsSync(filepath);
   if (isNew) {
     fs.writeFileSync(filepath, `# IGT Practice Log\n${md}`, "utf8");
