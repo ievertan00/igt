@@ -366,7 +366,7 @@ const BOX_INNER_WIDTH = BOX_WIDTH - 6; // subtract borders (│ , │) + padding
 function displayExercise(exercise, index, total) {
   ui.header(`Exercise ${index}/${total}`, "Multiple Choice");
 
-  let content = `${paint(colors.white, wrapText(exercise.question, BOX_INNER_WIDTH))}\n\n`;
+  let content = `${paint(colors.brightWhite, wrapText(exercise.question, BOX_INNER_WIDTH))}\n\n`;
   const labels = ["A", "B", "C", "D"];
   for (let i = 0; i < exercise.options.length; i++) {
     const cleaned = exercise.options[i].replace(/^[A-Da-d][.)\s]+\s*/, "");
