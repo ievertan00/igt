@@ -6,7 +6,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
-import { colors, paint, ansi, renderStatusBar } from "./lib/ui.mjs";
+import { colors, paint, ansi, renderStatusBar, applyTheme } from "./lib/ui.mjs";
 import configLoader from "./lib/config-loader.mjs";
 import { api } from "./lib/api-client.mjs";
 import { startServer, stopServer } from "./lib/server-manager.mjs";
@@ -157,6 +157,7 @@ async function main() {
   } catch {}
 
   const config = configLoader.load();
+  applyTheme(config.Theme || "auto");
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
   const rows = process.stdout.rows || 24;
   const cols_val = process.stdout.columns || 80;
