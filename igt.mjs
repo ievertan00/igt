@@ -13,6 +13,7 @@ import { startServer, stopServer } from "./lib/server-manager.mjs";
 import { handleCommand } from "./lib/commands/dispatch.mjs";
 import { runGrammarCheck } from "./lib/commands/grammar.mjs";
 import { showSessionSummary } from "./lib/commands/stats.mjs";
+import { resolveModel } from "./lib/llm/model-resolver.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,9 +41,13 @@ let isResizing = false;
 // ─── UI ─────────────────────────────────────────────────────────────────────────
 
 function getModel(config) {
-  const p = (process.env.IGT_LLM_PROVIDER || config.LLMProvider || "gemini").toLowerCase();
-  const k = { gemini: "GeminiFlashModel", qwen: "QwenFlashModel", deepseek: "DeepseekFlashModel", ollama: "OllamaModel" };
-  return { provider: p, model: config[k[p]] || p };
+  const provider = (process.env.IGT_LLM_PROVIDER || config.LLMProvider || "gemini").toLowerCase();
+  try {
+    const { model } = resolveModel(provider, "grammar", config);
+    return { provider, model };
+  } catch (err) {
+    return { provider, model: provider };
+  }
 }
 
 function sweepStatusBar() {
@@ -146,6 +151,11 @@ function validateInput(text) {
 // ─── Main ────────────────────────────────────────────────────────────────────────
 
 async function main() {
+  // Clear screen and reset cursor to top-left
+  try {
+    process.stdout.write(process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H");
+  } catch {}
+
   const config = configLoader.load();
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
   const rows = process.stdout.rows || 24;
@@ -154,10 +164,10 @@ async function main() {
   process.stdout.write("\n");
   process.stdout.write(`${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.brightCyan, "Interactive Grammar Tool")}\n`);
   process.stdout.write(`${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`);
-  process.stdout.write(`${paint(colors.white, "──────────────────────────────────────────────────────────────────")}\n`);
+  process.stdout.write(`${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`);
   process.stdout.write(`${paint(colors.gray, "Model  ")}${paint(colors.gray, getModel(config).model)}\n`);
   process.stdout.write(`${paint(colors.gray, 'Usage  type text to check · /help for commands · """ for multiline')}\n`);
-  process.stdout.write(`${paint(colors.white, "──────────────────────────────────────────────────────────────────")}\n`);
+  process.stdout.write(`${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`);
 
   const ok = await startServer(({ port }) => {
     process.stdout.write(`${paint(colors.gray, `● server  port ${port}`)}\n\n`);
