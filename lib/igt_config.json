@@ -9,9 +9,9 @@
     "DeepseekFlashModel": "deepseek-v4-flash",
     "DeepseekProModel": "deepseek-v4-pro",
     "QwenApiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    "OllamaBaseUrl": "http://localhost:11434/v1",
+    "OllamaBaseUrl": "http://localhost:11434",
     "OllamaFamily": "gemma",
-    "OllamaGemmaFlashModel": "gemma4-fast",
+    "OllamaGemmaFlashModel": "gemma4:e4b",
     "OllamaGemmaProModel": "gemma4:e4b",
     "OllamaPhiFlashModel": "phi4",
     "OllamaPhiProModel": "phi4",
@@ -30,8 +30,7 @@
     "LocalAddress": "10.10.20.202",
     "VocabFile": "01_IGT_Vocabulary.md",
     "Theme": "auto",
-    "OllamaFlashModel": "phi4",
-    "OllamaProModel": "phi4",
+
     "VocabularyPath": "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\01_IGT_Vocabulary.md",
     "PracticePath": "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\02_Practice_Log.md"
 }

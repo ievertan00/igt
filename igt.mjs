@@ -225,7 +225,12 @@ async function main() {
     try { execSync(process.platform === "win32" ? "cls" : "clear", { stdio: "inherit", shell: true }); } catch {}
   };
 
-  rl.on("SIGINT", () => { if (sigintHandler) sigintHandler(); else process.exit(0); });
+  async function asyncExit() {
+    try { await api.unloadOllama(); } catch {}
+    process.exit(0);
+  }
+
+  rl.on("SIGINT", () => { if (sigintHandler) sigintHandler(); else asyncExit(); });
   process.stdin.on("data", globalEscHandler);
   process.stdout.on("resize", () => {
     isResizing = true;
@@ -244,8 +249,8 @@ async function main() {
     }, 150);
   });
   process.on("exit", cleanup);
-  process.on("SIGTERM", () => process.exit(0));
-  process.on("SIGHUP", () => process.exit(0));
+  process.on("SIGTERM", () => asyncExit());
+  process.on("SIGHUP", () => asyncExit());
 
   const grammarCtx = {
     onSigint: (h) => { sigintHandler = h; },
@@ -267,7 +272,7 @@ async function main() {
     if (["exit", "quit", "q"].includes(text.toLowerCase())) {
       await showSessionSummary(sessionSentenceCount);
       rl.close();
-      process.exit(0);
+      await asyncExit();
     }
 
     if (text === '"""') {
