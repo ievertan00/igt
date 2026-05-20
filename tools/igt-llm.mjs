@@ -5,9 +5,9 @@
  * Now supports .env and config.json separation
  */
 
-import initializeLLMProviders from "./init.mjs";
-import { configLoader } from "./init.mjs";
-import { getProviderModels, resolveModel } from "./model-resolver.mjs";
+import initializeLLMProviders from "../lib/server/llm/init.mjs";
+import { configLoader } from "../lib/server/llm/init.mjs";
+import { getProviderModels, resolveModel } from "../lib/server/llm/model-resolver.mjs";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -98,7 +98,7 @@ function showStatus() {
   console.log("═".repeat(50));
 
   console.log(`\n🎯 Current Provider: ${current.toUpperCase()}`);
-  console.log(`📁 Config: lib/igt_config.json (shared)`);
+  console.log(`📁 Config: igt_config.json (shared)`);
   console.log(`🔒 Secrets: .env (private, not in git)`);
 
   // Determine active models based on current provider using resolver
@@ -240,7 +240,7 @@ async function main() {
       const provider = args[1];
       if (!provider) {
         console.error("\n❌ Error: Please specify a provider name\n");
-        console.log("Usage: node lib/llm/switch.mjs switch <provider>\n");
+        console.log("Usage: node tools/igt-llm.mjs switch <provider>\n");
         process.exit(1);
       }
       switchProvider(provider);

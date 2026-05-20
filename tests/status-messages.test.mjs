@@ -4,7 +4,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { runMigrations } from "../lib/migrations.mjs";
+import { runMigrations } from "../lib/db/migrations.mjs";
 
 test("migration 006: status_messages table is created and seeded", async () => {
   // Use a temporary database but the real migrations directory

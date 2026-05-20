@@ -2,9 +2,9 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import initializeLLMProviders, { configLoader } from "../lib/llm/init.mjs";
-import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
-import { getMastery } from "../lib/mastery.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
+import { ui, paint, colors, wrapText } from "../lib/cli/ui/index.mjs";
+import { getMastery } from "../lib/domain/mastery.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -354,9 +354,9 @@ const report = generateReport();
 const dateStr = new Date().toISOString().split("T")[0];
 const provider = llmManager.getCurrentProviderName();
 
-const reportDir = config.ReportPath 
+const reportDir = config.ReportPath
   ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
-  : path.join(projectRoot, "docs");
+  : projectRoot;
 
 const outputPath = path.join(reportDir, `assessment_${dateStr}_${provider}.md`);
 

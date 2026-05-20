@@ -6,14 +6,15 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
-import { colors, paint, ansi, renderStatusBar, applyTheme } from "./lib/ui.mjs";
-import configLoader from "./lib/config-loader.mjs";
-import { api } from "./lib/api-client.mjs";
-import { startServer, stopServer } from "./lib/server-manager.mjs";
-import { handleCommand } from "./lib/commands/dispatch.mjs";
-import { runGrammarCheck } from "./lib/commands/grammar.mjs";
-import { showSessionSummary } from "./lib/commands/stats.mjs";
-import { resolveModel } from "./lib/llm/model-resolver.mjs";
+import { colors, paint, ansi, renderStatusBar, applyTheme } from "./lib/cli/ui/index.mjs";
+import configLoader from "./lib/shared/config-loader.mjs";
+import { api } from "./lib/cli/api-client.mjs";
+import { startServer, stopServer } from "./lib/cli/server-manager.mjs";
+import { handleCommand } from "./lib/cli/commands/dispatch.mjs";
+import { runGrammarCheck } from "./lib/cli/commands/grammar.mjs";
+import { showSessionSummary } from "./lib/cli/commands/stats.mjs";
+import { resolveModel } from "./lib/server/llm/model-resolver.mjs";
+import { validateInput } from "./lib/cli/validate-input.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,32 +133,6 @@ function askLine(rl, prompt) {
     rl.prompt();
     if (lastStatus) process.stdout.write(lastStatus);
   });
-}
-
-// ─── Validation ─────────────────────────────────────────────────────────────────
-
-const TEST_PATTERNS =
-  /^(test(ing)?|hello|hi|hey|ok|okay|yes|no|sure|thanks|thank you|lol|haha|asdf|qwerty|foo|bar|baz|abc|xyz|aaa+|bbb+|ccc+|zzz+|123|1234|12345)[!?.\s]*$/i;
-
-function validateInput(text) {
-  if (text.length < 10) return "Input too short — type a complete sentence.";
-  const words = text.split(/\s+/).filter((w) => /[a-zA-Z]/.test(w));
-  if (words.length < 2) return "Input too short — needs at least two words.";
-  if (TEST_PATTERNS.test(text))
-    return "Looks like a test input — type a sentence you actually want checked.";
-  const nonSpace = text.replace(/\s/g, "");
-  if (nonSpace.length > 4) {
-    const counts = {};
-    for (const c of nonSpace) counts[c] = (counts[c] || 0) + 1;
-    if (Math.max(...Object.values(counts)) / nonSpace.length > 0.6)
-      return "Input looks like noise — type a real sentence.";
-  }
-  if (
-    text === lastSubmittedText &&
-    (process.env.IGT_LLM_PROVIDER || "gemini") === lastSubmittedProvider
-  )
-    return "Duplicate — same text as your last submission.";
-  return null;
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────────
@@ -382,7 +357,7 @@ async function main() {
       continue;
     }
 
-    const rejection = validateInput(text);
+    const rejection = validateInput(text, { lastSubmittedText, lastSubmittedProvider });
     if (rejection) {
       process.stdout.write(`${paint(colors.yellow, rejection)}\n\n`);
       continue;

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { wrapText, renderCompactStats } from "../lib/ui.mjs";
+import { wrapText, renderCompactStats } from "../lib/cli/ui/index.mjs";
 
 test("wrapText reflows text with single newlines", () => {
   const input = "Added 'the' before 'wall time' to specify the particular\nwall time being discussed.";

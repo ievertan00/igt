@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
-import { parseDiagnosis } from "../lib/parse-diagnosis.mjs";
+import { parseDiagnosis } from "../lib/domain/parse-diagnosis.mjs";
 
 const errorTypes = {
   classifyErrorType: (s) => s,

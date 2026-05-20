@@ -24,12 +24,7 @@ TODOS.md
 
 
 
-# Dev-only / test scripts not needed by end users
-tools/extract-all-prompts.mjs
-tools/extract-prompt-history.mjs
-tools/test-all-historical-prompts.mjs
-tools/test-phi4.mjs
-tools/test-prompts.mjs
-
+# Dev-only / debug scripts (moved to scripts/dev/)
+scripts/dev/
 
 practice.js

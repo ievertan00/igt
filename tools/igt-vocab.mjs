@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
-import configLoader from "../lib/config-loader.mjs";
-import { ui, paint, colors, wrapText } from "../lib/ui.mjs";
+import configLoader from "../lib/shared/config-loader.mjs";
+import { ui, paint, colors, wrapText } from "../lib/cli/ui/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

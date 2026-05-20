@@ -2,14 +2,14 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { classifyErrorType, getErrorTypePath } from "../lib/error-types.mjs";
+import { classifyErrorType, getErrorTypePath } from "../lib/domain/error-types.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
 // Load config
-const configPath = path.join(projectRoot, "lib", "igt_config.json");
+const configPath = path.join(projectRoot, "igt_config.json");
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 
 // Accept file path from CLI arg, fall back to config
@@ -17,7 +17,7 @@ const reviewPath = process.argv[2] || config.ReviewPath;
 
 if (!reviewPath || !fs.existsSync(reviewPath)) {
   console.error("Error: Review log file not found.");
-  console.error("Usage: node tools/import-review-to-db.mjs <path-to-review-log.md>");
+  console.error("Usage: node scripts/import-review-to-db.mjs <path-to-review-log.md>");
   process.exit(1);
 }
 

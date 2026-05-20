@@ -28,7 +28,7 @@ INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Use /clear t
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Error types are categorized into Grammar, Vocab, Mechanics, Style, and Clarity.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: The /refine section in the output shows a more natural, native-like version.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Use /review/stats to see your SRS retention rate.', 'tip');
-INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: You can customize models and prompts in lib/igt_config.json.', 'tip');
+INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: You can customize models and prompts in igt_config.json.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Use /vocab --list to view all words in your personal vault.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: The /tip section in the response provides general usage advice.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: IGT uses Pro models for handbook generation and Flash models for grammar checks.', 'tip');

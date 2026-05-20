@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { grade, QUALITY_CORRECT, QUALITY_WRONG } from "../lib/srs.mjs";
+import { grade, QUALITY_CORRECT, QUALITY_WRONG } from "../lib/domain/srs.mjs";
 
 test("correct answer increases interval and ease", () => {
   // Need totalReviews >= 2 so SM-2 uses the exponential branch (not the 1d/6d seeding)

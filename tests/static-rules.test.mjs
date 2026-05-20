@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getStaticGrammarRule } from "../lib/handbook/static-rules.mjs";
+import { getStaticGrammarRule } from "../lib/features/handbook/static-rules.mjs";
 
 test("returns rule object for known error type", () => {
   const rule = getStaticGrammarRule("Grammar / Article Usage");

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { applyTheme, colors } from '../lib/ui.mjs';
-import ui from '../lib/ui.mjs';
-import { themes } from '../lib/themes.mjs';
+import { applyTheme, colors } from '../lib/cli/ui/index.mjs';
+import ui from '../lib/cli/ui/index.mjs';
+import { themes } from '../lib/cli/ui/themes.mjs';
 
 test('applyTheme returns false for invalid inputs', () => {
   const result = applyTheme('nonexistent_theme');

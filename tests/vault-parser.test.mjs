@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { parseVocab, parsePractice } from '../lib/vault-parser.mjs';
+import { parseVocab, parsePractice } from '../lib/domain/vault-parser.mjs';
 
 // Mock data
 const vocabContent = `

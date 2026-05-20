@@ -5,8 +5,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Database from "better-sqlite3";
-import configLoader from "../lib/config-loader.mjs";
-import { runMigrations } from "../lib/migrations.mjs";
+import configLoader from "../lib/shared/config-loader.mjs";
+import { runMigrations } from "../lib/db/migrations.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

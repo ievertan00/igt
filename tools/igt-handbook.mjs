@@ -1,11 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import initializeLLMProviders, { configLoader } from "../lib/llm/init.mjs";
-import { getErrorFrequency, getTrendData, getTotalStats, getExamples } from "../lib/handbook/queries.mjs";
-import { generateTailoredRule, generateOverallSummary } from "../lib/handbook/generator.mjs";
-import { clearCache, cacheStats } from "../lib/handbook/cache.mjs";
-import { buildReport } from "../lib/handbook/report.mjs";
+import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
+import { getErrorFrequency, getTrendData, getTotalStats, getExamples } from "../lib/features/handbook/queries.mjs";
+import { generateTailoredRule, generateOverallSummary } from "../lib/features/handbook/generator.mjs";
+import { clearCache, cacheStats } from "../lib/features/handbook/cache.mjs";
+import { buildReport } from "../lib/features/handbook/report.mjs";
+import { resolveModel } from "../lib/server/llm/model-resolver.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
@@ -47,12 +48,7 @@ if (!fs.existsSync(resolvedDbPath)) {
 }
 
 const provider = llmManager.getCurrentProviderName();
-const handbookModel = (() => {
-  if (provider === "qwen") return config.QwenProModel || "qwen3-max";
-  if (provider === "deepseek") return config.DeepseekProModel || "deepseek-reasoner";
-  if (provider === "ollama") return config.OllamaModel || "phi4";
-  return config.GeminiProModel || "gemini-3.0-pro";
-})();
+const handbookModel = resolveModel(provider, "handbook", config).model;
 
 const [errorFrequency, trendData, stats] = await Promise.all([
   getErrorFrequency(days), getTrendData(days), getTotalStats(days),
@@ -84,7 +80,7 @@ const md = buildReport({ provider, handbookModel, date: dateStr, days, stats, er
 
 const reportDir = config.ReportPath
   ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
-  : path.join(projectRoot, "docs");
+  : projectRoot;
 const outputPath = path.join(reportDir, `handbook_${dateStr}_${provider}.md`);
 if (!fs.existsSync(path.dirname(outputPath))) fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, md, "utf8");

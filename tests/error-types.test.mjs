@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { classifyErrorType } from "../lib/error-types.mjs";
+import { classifyErrorType } from "../lib/domain/error-types.mjs";
 
 test("classifies exact known keyword to canonical type", () => {
   const result = classifyErrorType("verb tense");

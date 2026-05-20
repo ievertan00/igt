@@ -123,7 +123,7 @@ Open the `.env` file in any text editor (Notepad, VS Code, etc.) and fill in at 
 **Step 6 — Set up the database**
 
 ```sh
-node tools/init-db.mjs
+node scripts/init-db.mjs
 ```
 
 This creates the local SQLite database that stores your grammar history, flashcards, and progress.
@@ -161,7 +161,7 @@ IGT uses a local SQLite database (`igt_data.db`) to store your learning progress
 On your very first run, you MUST initialize the database:
 
 ```sh
-node tools/init-db.mjs
+node scripts/init-db.mjs
 ```
 
 This will:
@@ -176,7 +176,7 @@ Every time you launch IGT, the server automatically checks for any missing migra
 ### Troubleshooting
 
 - **"Database is locked"**: This usually happens if multiple instances of IGT are running or if another tool is accessing the `.db` file. Close all instances and try again.
-- **Migration errors**: If a migration fails, IGT will log the error to `igt_db_error.log`. You can safely delete the `.db` file and run `node tools/init-db.mjs` to start fresh (note: this will erase your history).
+- **Migration errors**: If a migration fails, IGT will log the error to `igt_db_error.log`. You can safely delete the `.db` file and run `node scripts/init-db.mjs` to start fresh (note: this will erase your history).
 
 ---
 
@@ -278,7 +278,7 @@ ollama pull phi4
 
 This downloads about 9 GB. It only needs to happen once.
 
-To use a smaller/faster model instead, pull it and update `OllamaModel` in `lib/igt_config.json`:
+To use a smaller/faster model instead, pull it and update `OllamaModel` in `igt_config.json`:
 
 ```sh
 ollama pull llama3.2      # 3B, faster, slightly lower quality
@@ -741,7 +741,7 @@ IGT uses two configuration files:
 | File                  | Tracked by git | Purpose                               |
 | --------------------- | -------------- | ------------------------------------- |
 | `.env`                | No             | API keys, file paths (private)        |
-| `lib/igt_config.json` | Yes            | Model names, prompts (shared)         |
+| `igt_config.json`     | Yes            | Model names, prompts (shared)         |
 
 ### `.env` (full reference)
 
@@ -764,7 +764,7 @@ IGT_VOCABULARY_FILE=             # vocabulary note path within vault
 IGT_PRACTICE_FILE=               # practice log path within vault
 ```
 
-### `lib/igt_config.json` (excerpt)
+### `igt_config.json` (excerpt)
 
 ```json
 {
@@ -788,10 +788,10 @@ All LLM prompts live in the `Prompts` section of `igt_config.json`. You can edit
 
 ## Architecture
 
-`igt.mjs` (interactive loop) spawns a persistent HTTP server (`lib/igt-http-server.mjs`) on port `18964` at launch. Each grammar check is an HTTP POST to `http://127.0.0.1:18964/grammar`. The server returns structured JSON; the client owns rendering.
+`igt.mjs` (interactive loop) spawns a persistent HTTP server (`lib/server/index.mjs`) on port `18964` at launch. Each grammar check is an HTTP POST to `http://127.0.0.1:18964/grammar`. The server returns structured JSON; the client owns rendering.
 
 ```
-igt.mjs  ──POST /grammar──►  igt-http-server.mjs
+igt.mjs  ──POST /grammar──►  lib/server/index.mjs
                                     │
                           runMigrations() at boot
                           LLMProviderManager

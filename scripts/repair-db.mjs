@@ -7,15 +7,15 @@
  * 3. (Optional, --purge-empty) Delete inputs with no diagnosis and no correction.
  *
  * Usage:
- *   node tools/repair-db.mjs              # steps 1 + 2
- *   node tools/repair-db.mjs --purge-empty # steps 1 + 2 + 3
- *   node tools/repair-db.mjs --dry-run    # preview only, no changes
+ *   node scripts/repair-db.mjs              # steps 1 + 2
+ *   node scripts/repair-db.mjs --purge-empty # steps 1 + 2 + 3
+ *   node scripts/repair-db.mjs --dry-run    # preview only, no changes
  */
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
-import configLoader from "../lib/config-loader.mjs";
+import configLoader from "../lib/shared/config-loader.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
