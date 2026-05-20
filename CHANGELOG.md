@@ -51,9 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **SRS flashcard deck** — every grammar check auto-generates a cloze card via `lib/cloze.mjs`; substitution-only extraction (1–3 changed tokens) per SM-2 best practices
+- **SRS flashcard deck** — every grammar check auto-generates a card
 - **`/review` command** — drills all cards due today with SM-2 spacing (`lib/srs.mjs`); exact-match grading first, synchronous LLM fall-through on mismatch; progress bar and session summary
-- **`/today` command** — adaptive daily plan: SRS count + cloze drill count + free-practice suggestion; targets the most frequent error type; offers to launch `/review` immediately
+- **`/today` command** — adaptive daily plan: SRS count + free-practice suggestion; targets the most frequent error type; offers to launch `/review` immediately
 - **`/stats` command** — analytics dashboard with errors-by-sentence-length bar chart, CEFR trajectory, and mastery breakdown (frequent / occasional / rare / mastered)
 - **`/undo [N]` command** — hard-deletes the last N inputs and cascades to diagnoses, advice, vocab, and srs_cards in one transaction; shows a preview and confirms before deleting
 - **Session summary** — displayed on exit: sentences checked, errors/sentence vs 7-day average, top error type, SRS cards added, cards due tomorrow
@@ -64,7 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`assessments` table** — persists each `/assess` run with the input window scored against (inputs_window_start/end/count) for reproducibility
 - **`lib/parse-diagnosis.mjs`** — extracted from server; testable; exported `GRAMMAR_RESPONSE_SCHEMA` constant
 - **`lib/srs.mjs`** — pure SM-2 functions; `grade(card, quality)` returns next ease, interval, dueDate
-- **`lib/cloze.mjs`** — `buildCloze(original, correction)` returns `{prompt, answer}` or null
 - **`lib/mastery.mjs`** — `getMastery(db)` and `bucketLabel(count)` exports
 - **`renderBarChart()`** in `lib/ui.mjs` — ASCII bar chart with `maxWidth` cap and configurable color
 - **48 tests across 9 files** via `npm test` (node --test)

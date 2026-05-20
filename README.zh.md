@@ -393,7 +393,7 @@ SM-2 算法负责调度每张卡片：答对了复习间隔会延长（1 天 →
 
 Today's Plan
   SRS cards due:     12
-  Suggested drills:   5 cloze exercises
+  Suggested drills:   5 exercises
   Focus area:        Verb Tense  (most frequent in last 30 days)
 
 Launch /review now? [y/n]
@@ -799,7 +799,6 @@ igt.mjs  ──POST /grammar──►  igt-http-server.mjs
                                                           手册生成用 Pro 模型
                                     │
                           parseDiagnosis() → SQLite（非阻塞）
-                          buildCloze()    → srs_cards 表插入
                                     │
                           {data, perf} ◄── igt.mjs 带颜色渲染输出
 ```

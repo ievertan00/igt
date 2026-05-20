@@ -37,11 +37,16 @@ let sessionSentenceCount = 0;
 
 let resizeTimer = null;
 let isResizing = false;
+let isUIStopped = false;
 
 // ─── UI ─────────────────────────────────────────────────────────────────────────
 
 function getModel(config) {
-  const provider = (process.env.IGT_LLM_PROVIDER || config.LLMProvider || "gemini").toLowerCase();
+  const provider = (
+    process.env.IGT_LLM_PROVIDER ||
+    config.LLMProvider ||
+    "gemini"
+  ).toLowerCase();
   try {
     const { model } = resolveModel(provider, "grammar", config);
     return { provider, model };
@@ -63,15 +68,16 @@ function sweepStatusBar() {
 }
 
 function updateUI(config) {
-  if (isResizing) return;
-  const rows = process.stdout.rows || 24;
-  const cols = process.stdout.columns || 80;
+  if (isResizing || isUIStopped) return;
+  const { rows = 24, cols = 80 } = process.stdout;
 
   if (rows !== lastRows || cols !== lastCols) {
     if (lastRows > 0 || lastCols > 0) {
       sweepStatusBar();
     }
-    process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
+    process.stdout.write(
+      ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor,
+    );
     lastRows = rows;
     lastCols = cols;
   }
@@ -98,7 +104,8 @@ function askLine(rl, prompt) {
       settled = true;
       rl.removeListener("line", onLine);
       sigintHandler = null;
-      api.getStatusMessage()
+      api
+        .getStatusMessage()
         .then((msg) => {
           if (msg && msg.content) {
             if (msg.content !== currentStatusMessage) scrollOffset = 0;
@@ -129,13 +136,15 @@ function askLine(rl, prompt) {
 
 // ─── Validation ─────────────────────────────────────────────────────────────────
 
-const TEST_PATTERNS = /^(test(ing)?|hello|hi|hey|ok|okay|yes|no|sure|thanks|thank you|lol|haha|asdf|qwerty|foo|bar|baz|abc|xyz|aaa+|bbb+|ccc+|zzz+|123|1234|12345)[!?.\s]*$/i;
+const TEST_PATTERNS =
+  /^(test(ing)?|hello|hi|hey|ok|okay|yes|no|sure|thanks|thank you|lol|haha|asdf|qwerty|foo|bar|baz|abc|xyz|aaa+|bbb+|ccc+|zzz+|123|1234|12345)[!?.\s]*$/i;
 
 function validateInput(text) {
   if (text.length < 10) return "Input too short — type a complete sentence.";
   const words = text.split(/\s+/).filter((w) => /[a-zA-Z]/.test(w));
   if (words.length < 2) return "Input too short — needs at least two words.";
-  if (TEST_PATTERNS.test(text)) return "Looks like a test input — type a sentence you actually want checked.";
+  if (TEST_PATTERNS.test(text))
+    return "Looks like a test input — type a sentence you actually want checked.";
   const nonSpace = text.replace(/\s/g, "");
   if (nonSpace.length > 4) {
     const counts = {};
@@ -143,7 +152,10 @@ function validateInput(text) {
     if (Math.max(...Object.values(counts)) / nonSpace.length > 0.6)
       return "Input looks like noise — type a real sentence.";
   }
-  if (text === lastSubmittedText && (process.env.IGT_LLM_PROVIDER || "gemini") === lastSubmittedProvider)
+  if (
+    text === lastSubmittedText &&
+    (process.env.IGT_LLM_PROVIDER || "gemini") === lastSubmittedProvider
+  )
     return "Duplicate — same text as your last submission.";
   return null;
 }
@@ -153,7 +165,9 @@ function validateInput(text) {
 async function main() {
   // Clear screen and reset cursor to top-left
   try {
-    process.stdout.write(process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H");
+    process.stdout.write(
+      process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H",
+    );
   } catch {}
 
   const config = configLoader.load();
@@ -163,39 +177,80 @@ async function main() {
   const cols_val = process.stdout.columns || 80;
 
   process.stdout.write("\n");
-  process.stdout.write(`${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.brightCyan, "Interactive Grammar Tool")}\n`);
-  process.stdout.write(`${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`);
-  process.stdout.write(`${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`);
-  process.stdout.write(`${paint(colors.gray, "Model  ")}${paint(colors.gray, getModel(config).model)}\n`);
-  process.stdout.write(`${paint(colors.gray, 'Usage  type text to check · /help for commands · """ for multiline')}\n`);
-  process.stdout.write(`${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`);
+  process.stdout.write(
+    `${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.brightCyan, "Interactive Grammar Tool")}\n`,
+  );
+  process.stdout.write(
+    `${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`,
+  );
+  process.stdout.write(
+    `${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`,
+  );
+  process.stdout.write(
+    `${paint(colors.gray, "Model  ")}${paint(colors.gray, getModel(config).model)}\n`,
+  );
+  process.stdout.write(
+    `${paint(colors.gray, "Usage  type text to check · /help for commands · ")}\n`,
+  );
+  process.stdout.write(
+    `${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`,
+  );
 
   const ok = await startServer(({ port }) => {
     process.stdout.write(`${paint(colors.gray, `● server  port ${port}`)}\n\n`);
   });
   if (!ok) process.exit(1);
 
+  const stopUI = () => {
+    isUIStopped = true;
+    clearInterval(uiInterval);
+    try {
+      fs.writeSync(1, ansi.resetScrollingRegion);
+    } catch {}
+  };
+
   const _origWrite = process.stdout.write.bind(process.stdout);
   process.stdout.write = (chunk, enc, cb) => {
-    if (typeof chunk === "string") chunk = chunk.replace(/\x1b\[0?J/g, "\x1b[K");
-    return _origWrite(chunk, enc, cb);
+    const result = _origWrite(chunk, enc, cb);
+    // After any "erase to end of screen" (ED), immediately redraw the status
+    // bar so readline's _refreshLine doesn't permanently wipe it.  We must NOT
+    // replace \x1b[J with \x1b[K here — doing so breaks readline's multi-line
+    // refresh and causes the ghost-character / cursor-desync bug on wrapped lines.
+    if (
+      !isUIStopped &&
+      typeof chunk === "string" &&
+      /\x1b\[(?:0?|2)J/.test(chunk) &&
+      lastStatus
+    ) {
+      _origWrite(lastStatus);
+    }
+    return result;
   };
 
   const rl = createInterface({
-    input: process.stdin, output: process.stdout,
-    terminal: true, historySize: 100, removeHistoryDuplicates: true,
+    input: process.stdin,
+    output: process.stdout,
+    terminal: true,
+    historySize: 100,
+    removeHistoryDuplicates: true,
   });
 
   const initRows = process.stdout.rows || 24;
-  process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(initRows) + ansi.restoreCursor);
+  process.stdout.write(
+    ansi.saveCursor + ansi.setScrollingRegion(initRows) + ansi.restoreCursor,
+  );
   lastStatus = "";
   updateUI(config);
 
   (async () => {
     try {
-      const [stats, msg] = await Promise.all([api.getStats(), api.getStatusMessage()]);
+      const [stats, msg] = await Promise.all([
+        api.getStats(),
+        api.getStatusMessage(),
+      ]);
       if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
-      if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
+      if (stats.totalDiagnoses !== undefined)
+        totalDiagnoses = stats.totalDiagnoses;
       if (msg && msg.content) {
         if (msg.content !== currentStatusMessage) scrollOffset = 0;
         currentStatusMessage = msg.content;
@@ -219,18 +274,21 @@ async function main() {
   };
 
   const cleanup = () => {
-    clearInterval(uiInterval);
-    try { fs.writeSync(1, ansi.resetScrollingRegion); } catch {}
+    stopUI();
     stopServer();
-    try { execSync(process.platform === "win32" ? "cls" : "clear", { stdio: "inherit", shell: true }); } catch {}
   };
 
   async function asyncExit() {
-    try { await api.unloadOllama(); } catch {}
+    try {
+      await api.unloadOllama();
+    } catch {}
     process.exit(0);
   }
 
-  rl.on("SIGINT", () => { if (sigintHandler) sigintHandler(); else asyncExit(); });
+  rl.on("SIGINT", () => {
+    if (sigintHandler) sigintHandler();
+    else asyncExit();
+  });
   process.stdin.on("data", globalEscHandler);
   process.stdout.on("resize", () => {
     isResizing = true;
@@ -239,7 +297,9 @@ async function main() {
     // Eagerly re-set scrolling region on every signal to protect the bottom area
     // from readline wraps. We use _origWrite to bypass the J->K interceptor.
     const rows = process.stdout.rows || 24;
-    _origWrite(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
+    _origWrite(
+      ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor,
+    );
 
     resizeTimer = setTimeout(() => {
       isResizing = false;
@@ -253,7 +313,9 @@ async function main() {
   process.on("SIGHUP", () => asyncExit());
 
   const grammarCtx = {
-    onSigint: (h) => { sigintHandler = h; },
+    onSigint: (h) => {
+      sigintHandler = h;
+    },
     onResult: ({ inputs, diagnoses }) => {
       sessionSentenceCount++;
       totalInputs += inputs;
@@ -270,33 +332,11 @@ async function main() {
     if (!text) continue;
 
     if (["exit", "quit", "q"].includes(text.toLowerCase())) {
+      stopUI();
+      process.stdout.write(process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H");
       await showSessionSummary(sessionSentenceCount);
       rl.close();
       await asyncExit();
-    }
-
-    if (text === '"""') {
-      process.stdout.write(`${paint(colors.gray, 'multiline  ·  blank line or """ to submit · Ctrl+C to cancel')}\n`);
-      const lines = [];
-      while (true) {
-        const l = await askLine(rl, `${paint(colors.cyan, "❯")} `);
-        if (l === null) { lines.length = 0; break; }
-        if (l.trim() === '"""' || (l.trim() === "" && lines.length > 0)) break;
-        lines.push(l);
-      }
-      const combined = lines.join("\n").trim();
-      if (combined) {
-        const multiRejection = validateInput(combined);
-        if (multiRejection) {
-          process.stdout.write(`${paint(colors.yellow, multiRejection)}\n\n`);
-        } else {
-          lastSubmittedText = combined;
-          lastSubmittedProvider = process.env.IGT_LLM_PROVIDER || "gemini";
-          lastTargetPath = targetPath;
-          await runGrammarCheck(combined, targetPath, grammarCtx);
-        }
-      }
-      continue;
     }
 
     if (text.startsWith("/")) {
@@ -305,23 +345,39 @@ async function main() {
         askLine,
         config,
         sessionState: {
-          get lastSubmittedText() { return lastSubmittedText; },
-          get lastTargetPath() { return lastTargetPath; },
-          get sessionSentenceCount() { return sessionSentenceCount; },
+          get lastSubmittedText() {
+            return lastSubmittedText;
+          },
+          get lastTargetPath() {
+            return lastTargetPath;
+          },
+          get sessionSentenceCount() {
+            return sessionSentenceCount;
+          },
         },
         grammarCtx,
-        setSigint: (h) => { sigintHandler = h; },
-        attachStdin: () => { if (globalEscHandler) process.stdin.on("data", globalEscHandler); },
-        detachStdin: () => { if (globalEscHandler) process.stdin.removeListener("data", globalEscHandler); },
+        setSigint: (h) => {
+          sigintHandler = h;
+        },
+        attachStdin: () => {
+          if (globalEscHandler) process.stdin.on("data", globalEscHandler);
+        },
+        detachStdin: () => {
+          if (globalEscHandler)
+            process.stdin.removeListener("data", globalEscHandler);
+        },
         refreshUI: () => updateUI(configLoader.load()),
         refreshStats: async () => {
           try {
             const stats = await api.getStats();
-            if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
-            if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
+            if (stats.totalInputs !== undefined)
+              totalInputs = stats.totalInputs;
+            if (stats.totalDiagnoses !== undefined)
+              totalDiagnoses = stats.totalDiagnoses;
             updateUI(configLoader.load());
           } catch {}
         },
+        stopUI
       });
       continue;
     }

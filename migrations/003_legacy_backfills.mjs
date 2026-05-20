@@ -69,31 +69,6 @@ function strip(s) {
   return s.replace(/^[.,!?;:'"()\-]+|[.,!?;:'"()\-]+$/g, "");
 }
 
-function diffTokens(orig, corr) {
-  const ow = orig.split(/\s+/);
-  const cw = corr.split(/\s+/);
-  if (ow.length !== cw.length) return null;
-  const subs = [];
-  for (let i = 0; i < ow.length; i++) {
-    const a = strip(ow[i]).toLowerCase();
-    const b = strip(cw[i]).toLowerCase();
-    if (a !== b && a.length > 0 && b.length > 0) subs.push({ index: i, was: ow[i], to: cw[i] });
-  }
-  if (subs.length === 0 || subs.length > 3) return null;
-  return { tokens: ow, subs };
-}
-
-function buildCloze(original, correction) {
-  const diff = diffTokens(original, correction);
-  if (!diff) return null;
-  const blanked = diff.tokens.slice();
-  for (const s of diff.subs) blanked[s.index] = "____";
-  return {
-    prompt: blanked.join(" "),
-    answer: diff.subs.map(s => strip(s.to)).join(" "),
-  };
-}
-
 function seedSRSCards(db) {
   const today = new Date().toISOString().slice(0, 10);
   const rows = db.prepare(`
@@ -118,17 +93,12 @@ function seedSRSCards(db) {
 
   const tx = db.transaction(() => {
     for (const r of rows) {
-      const cloze = buildCloze(r.original_text.trim(), r.correction.trim());
-      if (cloze) {
-        insertCard.run(r.diag_id, `[${r.error_type}] ${cloze.prompt}`, cloze.answer, today);
-      } else {
-        insertCard.run(
-          r.diag_id,
-          `Rewrite with the [${r.error_type}] error fixed: ${r.original_text.trim()}`,
-          r.correction.trim(),
-          today
-        );
-      }
+      insertCard.run(
+        r.diag_id,
+        `Rewrite with the [${r.error_type}] error fixed: ${r.original_text.trim()}`,
+        r.correction.trim(),
+        today
+      );
     }
   });
   tx();
@@ -141,7 +111,7 @@ function consolidateCards(db) {
            d.input_id
     FROM srs_cards c
     JOIN diagnoses d ON c.source_id = d.id
-    WHERE c.source_type IN ('cloze', 'diagnosis')
+    WHERE c.source_type = 'diagnosis'
   `).all();
 
   const best = new Map();
@@ -154,7 +124,7 @@ function consolidateCards(db) {
   }
 
   if (best.size === 0) {
-    db.prepare(`DELETE FROM srs_cards WHERE source_type IN ('cloze', 'diagnosis')`).run();
+    db.prepare(`DELETE FROM srs_cards WHERE source_type = 'diagnosis'`).run();
     return;
   }
 
@@ -165,7 +135,7 @@ function consolidateCards(db) {
   const inputMap = new Map(inputs.map((r) => [r.id, r]));
 
   db.transaction(() => {
-    db.prepare(`DELETE FROM srs_cards WHERE source_type IN ('cloze', 'diagnosis')`).run();
+    db.prepare(`DELETE FROM srs_cards WHERE source_type = 'diagnosis'`).run();
 
     const insert = db.prepare(`
       INSERT INTO srs_cards (source_type, source_id, prompt, answer, ease, interval_days, due_date, total_reviews, correct_streak)

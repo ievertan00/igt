@@ -366,7 +366,7 @@ Press """ on a new line to submit.
 
 ### SRS Flashcard Review (`/review`)
 
-Every error you make generates a cloze flashcard — a sentence with the corrected word(s) blanked out:
+Every error you make generates a flashcard:
 
 ```
 ❯ /review
@@ -393,7 +393,7 @@ Shows a summary of what to do today:
 
 Today's Plan
   SRS cards due:     12
-  Suggested drills:   5 cloze exercises
+  Suggested drills:   5 exercises
   Focus area:        Verb Tense  (most frequent in last 30 days)
 
 Launch /review now? [y/n]
@@ -800,7 +800,6 @@ igt.mjs  ──POST /grammar──►  igt-http-server.mjs
                                                           pro model for handbook
                                     │
                           parseDiagnosis() → SQLite (non-blocking)
-                          buildCloze()    → srs_cards insert
                                     │
                           {data, perf} ◄── igt.mjs renders with color
 ```

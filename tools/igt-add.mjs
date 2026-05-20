@@ -111,7 +111,7 @@ function renderEntry(f) {
 const word = process.argv.slice(2).join(" ").trim();
 
 if (!word) {
-  console.error(`\n  ${paint(colors.yellow, "Usage: /add <word or phrase>")}\n`);
+  console.error(`\n  ${paint(colors.yellow, "Usage: /add <word or phrase>  (or /add word1, word2, …)")}\n`);
   process.exit(1);
 }
 
