@@ -1,4 +1,4 @@
--- Core IGT schema (Squashed 001-002). 
+-- Core IGT schema (Squashed 001-003: initial tables + consultations).
 -- Idempotent (CREATE IF NOT EXISTS).
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -75,6 +75,16 @@ CREATE TABLE IF NOT EXISTS status_messages (
     last_shown_at TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS consultations (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id    INTEGER NOT NULL,
+  timestamp     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  question      TEXT NOT NULL,
+  response_json TEXT NOT NULL,
+  turn_count    INTEGER NOT NULL DEFAULT 1,
+  FOREIGN KEY (session_id) REFERENCES sessions(id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_inputs_timestamp ON inputs(timestamp);
 CREATE INDEX IF NOT EXISTS idx_diagnoses_input_id ON diagnoses(input_id);
 CREATE INDEX IF NOT EXISTS idx_diagnoses_error_type ON diagnoses(error_type);
@@ -85,3 +95,5 @@ CREATE INDEX IF NOT EXISTS idx_srs_source ON srs_cards(source_type, source_id);
 CREATE INDEX IF NOT EXISTS idx_inputs_session_id ON inputs(session_id);
 CREATE INDEX IF NOT EXISTS idx_status_messages_last_shown_at ON status_messages(last_shown_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_status_messages_content ON status_messages(content);
+CREATE INDEX IF NOT EXISTS idx_consultations_session_id ON consultations(session_id);
+CREATE INDEX IF NOT EXISTS idx_consultations_timestamp ON consultations(timestamp);
