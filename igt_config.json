@@ -1,7 +1,7 @@
 {
     "_comment": "Shared configuration - paths, models, prompts (no API keys)",
     "_note": "API keys and file paths are now stored in .env file. See .env.example for template.",
-    "LLMProvider": "qwen",
+    "LLMProvider": "ollama",
     "GeminiFlashModel": "gemini-2.5-flash",
     "GeminiProModel": "gemini-2.5-pro",
     "QwenFlashModel": "qwen-turbo",
@@ -10,7 +10,7 @@
     "DeepseekProModel": "deepseek-v4-pro",
     "QwenApiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "OllamaBaseUrl": "http://localhost:11434",
-    "OllamaFamily": "gemma",
+    "OllamaFamily": "phi",
     "OllamaGemmaFlashModel": "gemma4:e4b",
     "OllamaGemmaProModel": "gemma4:e4b",
     "OllamaPhiFlashModel": "phi4",
@@ -37,5 +37,6 @@
     "PracticePath": "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\02_Practice_Log.md",
     "OllamaFlashModel": "phi4",
     "OllamaProModel": "phi4",
-    "AskFile": "03_Ask_Log.md"
+    "AskFile": "03_Ask_Log.md",
+    "AskPath": "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\03_Ask_Log.md"
 }

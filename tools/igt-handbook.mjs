@@ -50,6 +50,18 @@ if (!fs.existsSync(resolvedDbPath)) {
 const provider = llmManager.getCurrentProviderName();
 const handbookModel = resolveModel(provider, "handbook", config).model;
 
+if (provider === "ollama") {
+  const baseUrl = config.OllamaBaseUrl || "http://localhost:11434";
+  try {
+    await fetch(`${baseUrl}/api/tags`, { signal: AbortSignal.timeout(3000) });
+  } catch {
+    console.error(`\n❌ Cannot connect to Ollama at ${baseUrl}`);
+    console.error("   Start Ollama first:  ollama serve");
+    console.error("   Then load the model: ollama run " + handbookModel + "\n");
+    process.exit(1);
+  }
+}
+
 const [errorFrequency, trendData, stats] = await Promise.all([
   getErrorFrequency(days), getTrendData(days), getTotalStats(days),
 ]);
