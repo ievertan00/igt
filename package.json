@@ -6,12 +6,16 @@
     "igt": "./igt.mjs"
   },
   "scripts": {
-    "init-db": "node scripts/init-db.mjs"
+    "init-db": "node scripts/init-db.mjs",
+    "index-books": "node scripts/index-books.mjs",
+    "index-wikipedia": "node scripts/index-wikipedia.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "better-sqlite3": "^12.8.0",
     "dotenv": "^17.4.2",
-    "undici": "^8.2.0"
+    "pdf-parse": "^2.4.5",
+    "undici": "^8.2.0",
+    "xlsx": "^0.18.5"
   }
 }
