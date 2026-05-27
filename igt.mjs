@@ -14,7 +14,8 @@ import { handleCommand } from "./lib/cli/commands/dispatch.mjs";
 import { runGrammarCheck } from "./lib/cli/commands/grammar.mjs";
 import { showSessionSummary } from "./lib/cli/commands/stats.mjs";
 import { resolveModel } from "./lib/server/llm/model-resolver.mjs";
-import { validateInput } from "./lib/cli/validate-input.mjs";
+import { validateInput, isMainlyChinese } from "./lib/cli/validate-input.mjs";
+import { runTrans } from "./lib/cli/commands/translation.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -328,6 +329,11 @@ async function main() {
         },
         stopUI,
       });
+      continue;
+    }
+
+    if (isMainlyChinese(text)) {
+      await runTrans(text, { setSigint: (h) => { sigintHandler = h; } });
       continue;
     }
 
