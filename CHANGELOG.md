@@ -5,6 +5,30 @@ All notable changes to the IGT (Interactive Grammar Tool) project will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-05-27
+
+### Added
+
+- **Interactive `/ask` command** — open a multi-turn grammar consultation thread with LLMs. Consultation history is stored in the database and can be exported to your Obsidian vault.
+- **Native Tool-Calling / RAG** — the LLM providers (Gemini, Qwen, Deepseek) now use native function-calling (`generateWithTools`) to query a local grammar reference database (`grammar_ref.db`) before answering `/ask` queries and generating handbooks, providing source attributions.
+- **Data Ingestion Scripts** — added `index-books.mjs` and `index-wikipedia.mjs` to ingest grammar references from PDFs and spreadsheets into the local database.
+- **`/translate` (or `/tr`) command** — dedicated translation command ensuring robust JSON parsing, complete with idioms and nuance notes.
+- **Auto-Translation** — typing Chinese inputs at the main prompt automatically routes the text to the translation engine.
+
+### Changed
+
+- **Project Reorganization** — major architecture refactor moving from a flat `lib/` directory into domain-driven folders: `lib/cli/`, `lib/domain/`, `lib/features/`, `lib/server/`, and `lib/shared/`. Maintenance tools moved to `scripts/`.
+- **Config Management** — environment-specific settings (local paths, themes, model overrides) moved from `igt_config.json` to `.env`. `igt_config.json` relocated to the project root.
+- **`/theme` command** — now writes theme changes to `.env` instead of the JSON config.
+- **LLM Refactoring** — LLM initialization simplified by passing configuration directly to the `LLMProviderManager` constructor. Improved timeouts and fallback logic across providers.
+- **Ollama Integration** — restricted `think` parameters to supported model families (qwq, qwen3, deepseek-r1) and persist family configuration.
+
+### Fixed
+
+- **`/undo` command sync** — automatically truncates the corresponding entries from the review markdown log file to keep it in sync with the database.
+- **Vocabulary Normalization** — `/add` command automatically converts words to lowercase to prevent duplicates.
+- **Deepseek tool fallback** — fixed `tool_choice` errors when Deepseek falls back to the reasoner model.
+
 ## [3.7.0] - 2026-05-11
 
 ### Added

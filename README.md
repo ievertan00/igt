@@ -346,6 +346,18 @@ If your sentence has no errors, IGT confirms it and explains why it's correct �
 
 Every check is saved to your local database and automatically generates a flashcard.
 
+### Translation (`/translate` or auto-detect)
+
+Translate Chinese text to English naturally. IGT automatically detects Chinese input at the main prompt and routes it to the translation engine, complete with nuance notes and idioms. Or, use `/translate <text>` (alias: `/tr <text>`).
+
+### Grammar Consultation (`/ask`)
+
+Ask multi-turn questions about English grammar. IGT queries its local reference database (`grammar_ref.db`) via native function-calling to provide grounded, reliable answers with source citations.
+
+```
+❯ /ask when do I use present perfect instead of simple past?
+```
+
 ### Status Bar & Tips
 
 After every check, the status bar displays a random message from a collection of 300+ items, including:
@@ -715,6 +727,8 @@ Start IGT with `igt`. All commands use a `/` prefix.
 | `/practice`         | Practice session targeting your top error types                      |
 | `/practice B2 10`   | Practice at CEFR level B2, 10 questions                              |
 | `/assess`           | Estimate your current CEFR proficiency level                         |
+| `/ask <question>`   | Ask a grammar question with local database citations                 |
+| `/translate <text>` | Translate Chinese text to English (alias: `/tr`)                     |
 | `/undo [N]`         | Delete the last N inputs and their flashcards (default: 1)           |
 | `/add <word>`       | Look up a word and save it to your vocabulary vault                  |
 | `/vocab`            | Quiz yourself on saved vocabulary; `/vocab --list` to browse         |
@@ -740,7 +754,7 @@ IGT uses two configuration files:
 
 | File                  | Tracked by git | Purpose                               |
 | --------------------- | -------------- | ------------------------------------- |
-| `.env`                | No             | API keys, file paths (private)        |
+| `.env`                | No             | API keys, file paths, themes (private) |
 | `igt_config.json`     | Yes            | Model names, prompts (shared)         |
 
 ### `.env` (full reference)
@@ -752,9 +766,11 @@ DASHSCOPE_API_KEYS=your-key      # Qwen / Alibaba DashScope
 DEEPSEEK_API_KEYS=your-key       # Deepseek
 IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek | ollama
 
-# --- File Paths ---
+# --- File Paths & Settings ---
 IGT_DB_PATH=igt_data.db          # SQLite database (auto-created on first run)
 IGT_LOG_PATH=igt_db_error.log    # background error log
+IGT_GRAMMAR_REF_DB_PATH=grammar_ref.db # Grammar reference database for /ask
+IGT_THEME=default                # CLI color theme
 IGT_REVIEW_PATH=                 # optional: path to a Markdown corrections log
 IGT_REPORT_PATH=                 # folder for handbook/assessment exports
 
@@ -762,6 +778,7 @@ IGT_REPORT_PATH=                 # folder for handbook/assessment exports
 IGT_VAULT_DIR=                   # root of your Obsidian vault
 IGT_VOCABULARY_FILE=             # vocabulary note path within vault
 IGT_PRACTICE_FILE=               # practice log path within vault
+IGT_ASK_FILE=                    # ask consultation log path within vault
 ```
 
 ### `igt_config.json` (excerpt)
@@ -803,6 +820,13 @@ igt.mjs  ──POST /grammar──►  lib/server/index.mjs
                                     │
                           {data, perf} ◄── igt.mjs renders with color
 ```
+
+The codebase is organized into domain-driven modules under `lib/`:
+- `lib/cli/` — CLI-specific logic, UI rendering, and command routing.
+- `lib/domain/` — Core business logic (SRS, mastery, parsing).
+- `lib/features/` — Feature-specific logic (e.g., handbook generation).
+- `lib/server/` — HTTP server, routing, and LLM provider logic.
+- `lib/shared/` — Shared utilities like configuration loaders.
 
 The persistent server eliminates per-request Node.js startup overhead — typical grammar check time is ~1.5s vs ~9.9s with a cold-start approach (83% faster).
 

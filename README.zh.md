@@ -346,6 +346,18 @@ Tip
 
 每次检查都会自动保存到本地数据库，并生成一张闪卡。
 
+### 翻译（`/translate` 或自动识别）
+
+自然地将中文文本翻译成英文。IGT 会在主提示符处自动识别中文输入，并将其发送到翻译引擎，提供包含细微差别注释和地道表达的翻译。也可以使用 `/translate <文本>`（别名：`/tr <文本>`）。
+
+### 语法咨询 (`/ask`)
+
+进行多轮英语语法咨询。IGT 通过原生函数调用查询其本地参考数据库 (`grammar_ref.db`)，提供带有来源引用的可靠解答。
+
+```
+❯ /ask when do I use present perfect instead of simple past?
+```
+
 ### 状态栏与提示
 
 每次检查后，状态栏都会从 300 多个条目中随机显示一条消息，包括：
@@ -714,6 +726,8 @@ Delete last 1 input and all associated cards? [y/n] y
 | `/practice`         | 针对你的高频错误类型启动专项练习                             |
 | `/practice B2 10`   | 以 B2 难度练习 10 题                                         |
 | `/assess`           | 估算当前 CEFR 英语水平                                       |
+| `/ask <问题>`       | 提出语法问题，提供带本地数据库引用的解答                     |
+| `/translate <文本>` | 将中文文本翻译为英文（别名：`/tr`）                          |
 | `/undo [N]`         | 删除最后 N 条输入及其关联闪卡（默认 1 条）                   |
 | `/add <单词>`       | 查询单词并保存到词汇库                                       |
 | `/vocab`            | 词汇测验；`/vocab --list` 浏览已保存词汇                     |
@@ -739,7 +753,7 @@ IGT 使用两个配置文件：
 
 | 文件                  | 是否纳入 git | 用途                           |
 | --------------------- | ------------ | ------------------------------ |
-| `.env`                | 否           | API 密钥、文件路径（私有）     |
+| `.env`                | 否           | API 密钥、文件路径、主题（私有） |
 | `igt_config.json`     | 是           | 模型名称、提示词（共享）       |
 
 ### `.env`（完整参考）
@@ -751,9 +765,11 @@ DASHSCOPE_API_KEYS=your-key      # Qwen / 阿里云百炼
 DEEPSEEK_API_KEYS=your-key       # Deepseek
 IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek | ollama
 
-# --- 文件路径 ---
+# --- 文件路径与设置 ---
 IGT_DB_PATH=igt_data.db          # SQLite 数据库（首次运行自动创建）
 IGT_LOG_PATH=igt_db_error.log    # 后台错误日志
+IGT_GRAMMAR_REF_DB_PATH=grammar_ref.db # 用于 /ask 的语法参考数据库
+IGT_THEME=default                # CLI 颜色主题
 IGT_REVIEW_PATH=                 # 可选：Markdown 格式的纠正记录日志路径
 IGT_REPORT_PATH=                 # 手册/评估报告的导出文件夹
 
@@ -761,6 +777,7 @@ IGT_REPORT_PATH=                 # 手册/评估报告的导出文件夹
 IGT_VAULT_DIR=                   # Obsidian 仓库根目录
 IGT_VOCABULARY_FILE=             # 仓库内的词汇笔记路径
 IGT_PRACTICE_FILE=               # 仓库内的练习日志路径
+IGT_ASK_FILE=                    # 仓库内的语法咨询日志路径
 ```
 
 ### `igt_config.json`（摘要）
@@ -802,6 +819,13 @@ igt.mjs  ──POST /grammar──►  lib/server/index.mjs
                                     │
                           {data, perf} ◄── igt.mjs 带颜色渲染输出
 ```
+
+代码库按领域驱动模块组织在 `lib/` 目录下：
+- `lib/cli/` — CLI 特定逻辑、UI 渲染和命令路由。
+- `lib/domain/` — 核心业务逻辑（间隔重复、掌握度跟踪、解析）。
+- `lib/features/` — 特定功能逻辑（如手册生成）。
+- `lib/server/` — HTTP 服务器、路由和 LLM 提供商逻辑。
+- `lib/shared/` — 共享工具（如配置加载器）。
 
 持久化服务器避免了每次请求重新启动 Node.js 的开销——典型语法检查耗时约 1.5 秒，相比冷启动方式的约 9.9 秒提升了 83%。
 
