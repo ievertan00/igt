@@ -43,11 +43,7 @@ let isUIStopped = false;
 // ─── UI ─────────────────────────────────────────────────────────────────────────
 
 function getModel(config) {
-  const provider = (
-    process.env.IGT_LLM_PROVIDER ||
-    config.LLMProvider ||
-    "gemini"
-  ).toLowerCase();
+  const provider = (process.env.IGT_LLM_PROVIDER || config.LLMProvider || "gemini").toLowerCase();
   try {
     const { model } = resolveModel(provider, "grammar", config);
     return { provider, model };
@@ -76,9 +72,7 @@ function updateUI(config) {
     if (lastRows > 0 || lastCols > 0) {
       sweepStatusBar();
     }
-    process.stdout.write(
-      ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor,
-    );
+    process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
     lastRows = rows;
     lastCols = cols;
   }
@@ -140,9 +134,7 @@ function askLine(rl, prompt) {
 async function main() {
   // Clear screen and reset cursor to top-left
   try {
-    process.stdout.write(
-      process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H",
-    );
+    process.stdout.write(process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H");
   } catch {}
 
   const config = configLoader.load();
@@ -155,9 +147,7 @@ async function main() {
   process.stdout.write(
     `${paint(colors.bold + colors.yellow, "IGT")}  ${paint(colors.brightCyan, "Interactive Grammar Tool")}\n`,
   );
-  process.stdout.write(
-    `${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`,
-  );
+  process.stdout.write(`${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`);
   process.stdout.write(
     `${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`,
   );
@@ -191,12 +181,7 @@ async function main() {
     // bar so readline's _refreshLine doesn't permanently wipe it.  We must NOT
     // replace \x1b[J with \x1b[K here — doing so breaks readline's multi-line
     // refresh and causes the ghost-character / cursor-desync bug on wrapped lines.
-    if (
-      !isUIStopped &&
-      typeof chunk === "string" &&
-      /\x1b\[(?:0?|2)J/.test(chunk) &&
-      lastStatus
-    ) {
+    if (!isUIStopped && typeof chunk === "string" && /\x1b\[(?:0?|2)J/.test(chunk) && lastStatus) {
       _origWrite(lastStatus);
     }
     return result;
@@ -211,21 +196,15 @@ async function main() {
   });
 
   const initRows = process.stdout.rows || 24;
-  process.stdout.write(
-    ansi.saveCursor + ansi.setScrollingRegion(initRows) + ansi.restoreCursor,
-  );
+  process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(initRows) + ansi.restoreCursor);
   lastStatus = "";
   updateUI(config);
 
   (async () => {
     try {
-      const [stats, msg] = await Promise.all([
-        api.getStats(),
-        api.getStatusMessage(),
-      ]);
+      const [stats, msg] = await Promise.all([api.getStats(), api.getStatusMessage()]);
       if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
-      if (stats.totalDiagnoses !== undefined)
-        totalDiagnoses = stats.totalDiagnoses;
+      if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
       if (msg && msg.content) {
         if (msg.content !== currentStatusMessage) scrollOffset = 0;
         currentStatusMessage = msg.content;
@@ -272,9 +251,7 @@ async function main() {
     // Eagerly re-set scrolling region on every signal to protect the bottom area
     // from readline wraps. We use _origWrite to bypass the J->K interceptor.
     const rows = process.stdout.rows || 24;
-    _origWrite(
-      ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor,
-    );
+    _origWrite(ansi.saveCursor + ansi.setScrollingRegion(rows) + ansi.restoreCursor);
 
     resizeTimer = setTimeout(() => {
       isResizing = false;
@@ -338,21 +315,18 @@ async function main() {
           if (globalEscHandler) process.stdin.on("data", globalEscHandler);
         },
         detachStdin: () => {
-          if (globalEscHandler)
-            process.stdin.removeListener("data", globalEscHandler);
+          if (globalEscHandler) process.stdin.removeListener("data", globalEscHandler);
         },
         refreshUI: () => updateUI(configLoader.load()),
         refreshStats: async () => {
           try {
             const stats = await api.getStats();
-            if (stats.totalInputs !== undefined)
-              totalInputs = stats.totalInputs;
-            if (stats.totalDiagnoses !== undefined)
-              totalDiagnoses = stats.totalDiagnoses;
+            if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
+            if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
             updateUI(configLoader.load());
           } catch {}
         },
-        stopUI
+        stopUI,
       });
       continue;
     }
