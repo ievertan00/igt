@@ -15,7 +15,6 @@ handbook_*.md
 assessment_*.md
 docs/
 tests/
-assets/
 CLAUDE.md
 GEMINI.md
 TODOS.md
