@@ -2,7 +2,7 @@
 
 A command-line English grammar checker that turns every mistake into a learning event. Type a sentence, get an instant correction with explanation, and automatically build a flashcard deck that drills you on your personal error patterns.
 
-![Grammar check screenshot](assets/01_grammar_check.png)
+![Grammar check screenshot](C:\Users\Evertan\.igt\assets\1.jpg)
 
 ---
 
