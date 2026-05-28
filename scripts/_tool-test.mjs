@@ -13,14 +13,15 @@ console.log("Qwen pro model:", config.QwenProModel || "(not set, default qwen3-m
 const question = "What is the present perfect tense?";
 
 console.log("\n--- Calling generateWithTools with question:", question);
-console.log("--- (30-second watch; if silent, check network)\n");
+console.log("--- (90-second watch; if silent, check network)\n");
 
 const timeout = setTimeout(() => {
-  console.error("ERROR: No response after 30 seconds — likely a network hang.");
+  console.error("ERROR: No response after 90 seconds — likely a network hang.");
   process.exit(1);
-}, 30000);
+}, 90000);
 
 try {
+  const startTime = Date.now();
   const result = await qwen.generateWithTools(
     question,
     "You are a grammar expert. Answer concisely.",
@@ -29,6 +30,8 @@ try {
     { config, taskType: "handbook" }
   );
   clearTimeout(timeout);
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+  console.log(`\n✔ Call completed in ${elapsed}s`);
   console.log("CONTENT (first 300 chars):", result.content.slice(0, 300));
   console.log("SOURCES:", JSON.stringify(result.sources, null, 2));
 } catch (err) {
