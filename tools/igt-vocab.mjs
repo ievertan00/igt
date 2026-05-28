@@ -3,13 +3,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
 import configLoader from "../lib/shared/config-loader.mjs";
-import { ui, paint, colors, wrapText } from "../lib/cli/ui/index.mjs";
+import { ui, paint, colors, wrapText, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
 const config = configLoader.load();
+applyTheme(config.Theme || "auto");
 
 const baseDir = config.VaultDir 
   ? (path.isAbsolute(config.VaultDir) ? config.VaultDir : path.join(projectRoot, config.VaultDir))
@@ -67,31 +68,141 @@ function parseEntry(raw) {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-const VFIELD_WIDTH = 52; // 70 box - 6 border/padding - 12 label prefix
-
 function renderEntry(f) {
-  const label = (t) => paint(colors.gray, t.padEnd(10));
-  let content = "";
+  const lines = [];
+  const isLight = (currentTheme === "light" || currentTheme.endsWith("light") || currentTheme.endsWith("latte") || currentTheme === "academic");
+  const dimColor = isLight ? colors.blue : colors.gray;
+  const valueColor = isLight ? colors.black : colors.white;
 
-  if (f.pos)          content += `  ${label("PoS")}${paint(colors.gray, f.pos)}\n`;
-  if (f.meaning)      content += `  ${label("Meaning")}${paint(colors.white, wrapText(f.meaning, VFIELD_WIDTH, 12))}\n`;
-  if (f.zh)           content += `  ${label("中文")}${paint(colors.green, f.zh)}\n`;
-  if (f.synonyms)     content += `  ${label("Synonyms")}${paint(colors.magenta, wrapText(f.synonyms, VFIELD_WIDTH, 12))}\n`;
-  if (f.collocations) content += `  ${label("Collocat.")}${paint(colors.brightMagenta, wrapText(f.collocations, VFIELD_WIDTH, 12))}\n`;
-  if (f.example1)     content += `  ${label("Example 1")}${paint(colors.cyan, wrapText(f.example1, VFIELD_WIDTH, 12))}\n`;
-  if (f.example2)     content += `  ${label("Example 2")}${paint(colors.cyan, wrapText(f.example2, VFIELD_WIDTH, 12))}\n`;
-  if (f.example3)     content += `  ${label("Example 3")}${paint(colors.cyan, wrapText(f.example3, VFIELD_WIDTH, 12))}\n`;
-  if (!f.example1 && f.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(f.example, VFIELD_WIDTH, 12))}\n`;
-  if (f.note)         content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(f.note, VFIELD_WIDTH, 12))}\n`;
-  if (f.memory)       content += `  ${label("Memory")}${paint(colors.yellow, wrapText(f.memory, VFIELD_WIDTH, 12))}\n`;
-  if (f.added)        content += `  ${label("Added")}${paint(colors.gray, f.added)}`;
+  // Word (Bold & Yellow, lowercase)
+  lines.push(paint(colors.bold + colors.yellow, f.word.toLowerCase()));
 
-  console.log(ui.box(paint(colors.bold + colors.yellow, f.word), content.trimEnd(), { width: 70 }));
+  // POS & IPA
+  if (f.pos) {
+    let posLine = "";
+    if (f.pos.includes("·")) {
+      const parts = f.pos.split("·").map(s => s.trim());
+      const part = parts[0];
+      const ipa = parts.slice(1).join(" · ");
+      posLine = `${paint(colors.magenta, part)} ${paint(dimColor, "·")} ${paint(dimColor, ipa)}`;
+    } else if (f.pos.includes("/")) {
+      const slashIdx = f.pos.indexOf("/");
+      if (slashIdx > 0) {
+        const part = f.pos.slice(0, slashIdx).replace(/·/g, "").trim();
+        const ipa = f.pos.slice(slashIdx).trim();
+        posLine = `${paint(colors.magenta, part)} ${paint(dimColor, "·")} ${paint(dimColor, ipa)}`;
+      } else {
+        posLine = paint(colors.magenta, f.pos);
+      }
+    } else {
+      posLine = paint(colors.magenta, f.pos);
+    }
+    lines.push(posLine);
+  }
+
+  // Meaning
+  if (f.meaning) {
+    lines.push("");
+    const label = "Meaning:  ";
+    const labelLen = 10;
+    const wrapped = wrapText(f.meaning, 62 - labelLen, labelLen);
+    const wlines = wrapped.split("\n");
+    for (let i = 0; i < wlines.length; i++) {
+      if (i === 0) lines.push(paint(dimColor, label) + paint(valueColor, wlines[i]));
+      else lines.push(paint(valueColor, wlines[i]));
+    }
+  }
+
+  // Chinese explanation (中文)
+  if (f.zh) {
+    lines.push("");
+    const label = "中文:  ";
+    const labelLen = 7;
+    const wrapped = wrapText(f.zh, 62 - labelLen, labelLen);
+    const wlines = wrapped.split("\n");
+    for (let i = 0; i < wlines.length; i++) {
+      if (i === 0) lines.push(paint(dimColor, label) + paint(colors.green, wlines[i]));
+      else lines.push(paint(colors.green, wlines[i]));
+    }
+  }
+
+  // Examples (Italic, quoted, dimColor)
+  const exList = [f.example1, f.example2, f.example3].filter(Boolean);
+  if (!exList.length && f.example) exList.push(f.example);
+  if (exList.length) {
+    lines.push("");
+    for (const ex of exList) {
+      const wrappedEx = ex.startsWith('"') && ex.endsWith('"') ? ex : `"${ex}"`;
+      for (const wl of wrapText(wrappedEx, 62, 0).split("\n"))
+        lines.push(paint(dimColor + colors.italic, wl));
+    }
+  }
+
+  // Collocations
+  if (f.collocations) {
+    lines.push("");
+    const label = "Collocations:  ";
+    const labelLen = 15;
+    const wrapped = wrapText(f.collocations, 62 - labelLen, labelLen);
+    const wlines = wrapped.split("\n");
+    for (let i = 0; i < wlines.length; i++) {
+      if (i === 0) lines.push(paint(dimColor, label) + paint(colors.brightMagenta, wlines[i]));
+      else lines.push(paint(colors.brightMagenta, wlines[i]));
+    }
+  }
+
+  // Synonyms
+  if (f.synonyms) {
+    lines.push("");
+    const label = "Synonyms:  ";
+    const labelLen = 11;
+    const wrapped = wrapText(f.synonyms, 62 - labelLen, labelLen);
+    const wlines = wrapped.split("\n");
+    for (let i = 0; i < wlines.length; i++) {
+      if (i === 0) lines.push(paint(dimColor, label) + paint(colors.cyan, wlines[i]));
+      else lines.push(paint(colors.cyan, wlines[i]));
+    }
+  }
+
+  // Note
+  if (f.note) {
+    lines.push("");
+    const label = "Note:  ";
+    const labelLen = 7;
+    const wrapped = wrapText(f.note, 62 - labelLen, labelLen);
+    const wlines = wrapped.split("\n");
+    for (let i = 0; i < wlines.length; i++) {
+      if (i === 0) lines.push(paint(dimColor, label) + paint(colors.brightCyan, wlines[i]));
+      else lines.push(paint(colors.brightCyan, wlines[i]));
+    }
+  }
+
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+  console.log(ui.box("", lines.join("\n"), { width: 70, color: colors.blue }));
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 const entries = parseAllEntries();
+
+// ── Lookup mode ───────────────────────────────────────────────────────────────
+const lookupIdx = args.indexOf("--lookup");
+if (lookupIdx !== -1) {
+  const word = args[lookupIdx + 1]?.toLowerCase();
+  if (word) {
+    process.stdout.write(`\n  ${paint(colors.gray, "Retrieving from vault…")} `);
+    const found = entries.find(e => e.word?.toLowerCase() === word);
+    if (found) {
+      process.stdout.write(paint(colors.green, "found\n\n"));
+      renderEntry(found);
+      console.log("");
+    } else {
+      process.stdout.write(paint(colors.yellow, "not found\n\n"));
+      process.stdout.write(`  ${paint(colors.gray, `"${word}" isn't saved yet. Use /add ${word} to look it up.\n\n`)}`);
+    }
+  }
+  process.exit(0);
+}
 
 if (entries.length === 0) {
   console.log(`\n  ${paint(colors.yellow, "No vocabulary saved yet.")}  Use ${paint(colors.cyan, "/add <word>")} to add words.\n`);
@@ -131,27 +242,14 @@ async function runQuiz() {
 
   for (let i = 0; i < shuffled.length; i++) {
     const e = shuffled[i];
-    const label = (t) => paint(colors.gray, t.padEnd(10));
-    let content = "";
-    
-    if (e.meaning)      content += `  ${label("Meaning")}${paint(colors.white, wrapText(e.meaning, VFIELD_WIDTH, 12))}\n`;
-    if (e.zh)           content += `  ${label("中文")}${paint(colors.green, e.zh)}\n`;
-    if (e.synonyms)     content += `  ${label("Synonyms")}${paint(colors.magenta, wrapText(e.synonyms, VFIELD_WIDTH, 12))}\n`;
-    if (e.collocations) content += `  ${label("Collocat.")}${paint(colors.brightMagenta, wrapText(e.collocations, VFIELD_WIDTH, 12))}\n`;
-    if (e.example1)     content += `  ${label("Example 1")}${paint(colors.cyan, wrapText(e.example1, VFIELD_WIDTH, 12))}\n`;
-    if (e.example2)     content += `  ${label("Example 2")}${paint(colors.cyan, wrapText(e.example2, VFIELD_WIDTH, 12))}\n`;
-    if (e.example3)     content += `  ${label("Example 3")}${paint(colors.cyan, wrapText(e.example3, VFIELD_WIDTH, 12))}\n`;
-    if (!e.example1 && e.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(e.example, VFIELD_WIDTH, 12))}\n`;
-    if (e.note)         content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(e.note, VFIELD_WIDTH, 12))}\n`;
-    if (e.memory)       content += `  ${label("Memory")}${paint(colors.yellow, wrapText(e.memory, VFIELD_WIDTH, 12))}`;
 
     console.log(`\n  ${paint(colors.gray, `${i + 1} / ${shuffled.length}`)}  ${paint(colors.bold + colors.yellow, e.word)}  ${paint(colors.gray, e.pos || "")}`);
     console.log("");
-    
+
     const reveal = await ask(`  ${paint(colors.gray, "Your meaning? (Enter to reveal)")}  `);
     process.stdout.write("\x1b[1A\x1b[2K");
-    
-    console.log(ui.box(paint(colors.bold + colors.yellow, e.word), content.trimEnd(), { width: 70 }));
+
+    renderEntry(e);
     console.log("");
 
     const grade = await ask(`  ${paint(colors.gray, "Did you know it?")} ${paint(colors.white, "[y/n]")}  `);

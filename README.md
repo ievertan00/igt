@@ -325,9 +325,13 @@ Translate Chinese text to English naturally. IGT automatically detects Chinese i
 
 ### Grammar Consultation (`/ask`)
 
-Ask multi-turn questions about English grammar. IGT queries its local reference database (`grammar_ref.db`) via native function-calling to provide grounded, reliable answers with source citations. Follow-ups in the same thread carry context. Save the conversation to your Markdown vault on exit.
+Ask multi-turn questions about English grammar. IGT queries its local reference database (`grammar_ref.db`) via native function-calling to provide grounded, reliable answers with source citations. Follow-ups in the same thread carry context.
 
 ![/ask screenshot](assets/08_ask.png)
+
+When you exit the session, IGT prompts you to save. Choosing yes compacts the full thread into a single polished response and appends it as a dated entry to `03_Consultations.md` in your vault — readable in Obsidian, Typora, or any Markdown editor.
+
+![Ask log screenshot](assets/09_ask_log.png)
 
 ### Status Bar & Tips
 
