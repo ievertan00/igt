@@ -50,14 +50,19 @@ function parseEntry(raw) {
   const wordMatch = raw.match(/^###?\s*(.+)/m);
   const dateMatch = raw.match(/\*Added:\s*(.+?)\*/);
   return {
-    word:    wordMatch ? wordMatch[1].trim() : null,
-    pos:     get("PoS"),
-    meaning: get("Meaning"),
-    zh:      get("中文"),
-    example: get("Example"),
-    note:    get("Note"),
-    memory:  get("Memory"),
-    added:   dateMatch ? dateMatch[1].trim() : null,
+    word:         wordMatch ? wordMatch[1].trim() : null,
+    pos:          get("PoS"),
+    meaning:      get("Meaning"),
+    zh:           get("中文"),
+    synonyms:     get("Synonyms"),
+    collocations: get("Collocations"),
+    example1:     get("Example 1"),
+    example2:     get("Example 2"),
+    example3:     get("Example 3"),
+    example:      get("Example"),   // backward compat
+    note:         get("Note"),
+    memory:       get("Memory"),
+    added:        dateMatch ? dateMatch[1].trim() : null,
   };
 }
 
@@ -68,13 +73,18 @@ function renderEntry(f) {
   const label = (t) => paint(colors.gray, t.padEnd(10));
   let content = "";
 
-  if (f.pos)     content += `  ${label("PoS")}${paint(colors.gray, f.pos)}\n`;
-  if (f.meaning) content += `  ${label("Meaning")}${paint(colors.white, wrapText(f.meaning, VFIELD_WIDTH, 12))}\n`;
-  if (f.zh)      content += `  ${label("中文")}${paint(colors.green, f.zh)}\n`;
-  if (f.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(f.example, VFIELD_WIDTH, 12))}\n`;
-  if (f.note)    content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(f.note, VFIELD_WIDTH, 12))}\n`;
-  if (f.memory)  content += `  ${label("Memory")}${paint(colors.yellow, wrapText(f.memory, VFIELD_WIDTH, 12))}\n`;
-  if (f.added)   content += `  ${label("Added")}${paint(colors.gray, f.added)}`;
+  if (f.pos)          content += `  ${label("PoS")}${paint(colors.gray, f.pos)}\n`;
+  if (f.meaning)      content += `  ${label("Meaning")}${paint(colors.white, wrapText(f.meaning, VFIELD_WIDTH, 12))}\n`;
+  if (f.zh)           content += `  ${label("中文")}${paint(colors.green, f.zh)}\n`;
+  if (f.synonyms)     content += `  ${label("Synonyms")}${paint(colors.magenta, wrapText(f.synonyms, VFIELD_WIDTH, 12))}\n`;
+  if (f.collocations) content += `  ${label("Collocat.")}${paint(colors.brightMagenta, wrapText(f.collocations, VFIELD_WIDTH, 12))}\n`;
+  if (f.example1)     content += `  ${label("Example 1")}${paint(colors.cyan, wrapText(f.example1, VFIELD_WIDTH, 12))}\n`;
+  if (f.example2)     content += `  ${label("Example 2")}${paint(colors.cyan, wrapText(f.example2, VFIELD_WIDTH, 12))}\n`;
+  if (f.example3)     content += `  ${label("Example 3")}${paint(colors.cyan, wrapText(f.example3, VFIELD_WIDTH, 12))}\n`;
+  if (!f.example1 && f.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(f.example, VFIELD_WIDTH, 12))}\n`;
+  if (f.note)         content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(f.note, VFIELD_WIDTH, 12))}\n`;
+  if (f.memory)       content += `  ${label("Memory")}${paint(colors.yellow, wrapText(f.memory, VFIELD_WIDTH, 12))}\n`;
+  if (f.added)        content += `  ${label("Added")}${paint(colors.gray, f.added)}`;
 
   console.log(ui.box(paint(colors.bold + colors.yellow, f.word), content.trimEnd(), { width: 70 }));
 }
@@ -124,11 +134,16 @@ async function runQuiz() {
     const label = (t) => paint(colors.gray, t.padEnd(10));
     let content = "";
     
-    if (e.meaning) content += `  ${label("Meaning")}${paint(colors.white, wrapText(e.meaning, VFIELD_WIDTH, 12))}\n`;
-    if (e.zh)      content += `  ${label("中文")}${paint(colors.green, e.zh)}\n`;
-    if (e.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(e.example, VFIELD_WIDTH, 12))}\n`;
-    if (e.note)    content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(e.note, VFIELD_WIDTH, 12))}\n`;
-    if (e.memory)  content += `  ${label("Memory")}${paint(colors.yellow, wrapText(e.memory, VFIELD_WIDTH, 12))}`;
+    if (e.meaning)      content += `  ${label("Meaning")}${paint(colors.white, wrapText(e.meaning, VFIELD_WIDTH, 12))}\n`;
+    if (e.zh)           content += `  ${label("中文")}${paint(colors.green, e.zh)}\n`;
+    if (e.synonyms)     content += `  ${label("Synonyms")}${paint(colors.magenta, wrapText(e.synonyms, VFIELD_WIDTH, 12))}\n`;
+    if (e.collocations) content += `  ${label("Collocat.")}${paint(colors.brightMagenta, wrapText(e.collocations, VFIELD_WIDTH, 12))}\n`;
+    if (e.example1)     content += `  ${label("Example 1")}${paint(colors.cyan, wrapText(e.example1, VFIELD_WIDTH, 12))}\n`;
+    if (e.example2)     content += `  ${label("Example 2")}${paint(colors.cyan, wrapText(e.example2, VFIELD_WIDTH, 12))}\n`;
+    if (e.example3)     content += `  ${label("Example 3")}${paint(colors.cyan, wrapText(e.example3, VFIELD_WIDTH, 12))}\n`;
+    if (!e.example1 && e.example) content += `  ${label("Example")}${paint(colors.cyan, wrapText(e.example, VFIELD_WIDTH, 12))}\n`;
+    if (e.note)         content += `  ${label("Note")}${paint(colors.brightCyan, wrapText(e.note, VFIELD_WIDTH, 12))}\n`;
+    if (e.memory)       content += `  ${label("Memory")}${paint(colors.yellow, wrapText(e.memory, VFIELD_WIDTH, 12))}`;
 
     console.log(`\n  ${paint(colors.gray, `${i + 1} / ${shuffled.length}`)}  ${paint(colors.bold + colors.yellow, e.word)}  ${paint(colors.gray, e.pos || "")}`);
     console.log("");

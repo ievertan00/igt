@@ -2,29 +2,7 @@
 
 一款命令行英语语法检查工具，将每一次错误转化为学习机会。在提示符处输入英语句子，即可获得即时纠正和解析，同时自动积累一套以你的个人错误模式为基础的闪卡复习库。
 
-```
-gemini-2.5-flash ❯ She don't like the weather today.
-
-Review
-One error — subject-verb agreement.
-
-Correction
-She doesn't like the weather today.
-
-Refine
-She isn't fond of today's weather.
-
-Diagnosis
-- Subject-Verb Agreement (Minor): "don't" should be "doesn't" for third-person singular.
-
-Rule
-- Third-person singular subjects (he/she/it) require "doesn't", not "don't".
-
-Tip
-- When you see "she/he/it", the verb always gets an -s or -es in the present tense.
-
-  1521ms llm  ·  1524ms total
-```
+![语法检查截图](assets/01_grammar_check.png)
 
 ---
 
@@ -165,6 +143,7 @@ node scripts/init-db.mjs
 ```
 
 该操作将：
+
 1. 如果数据库文件不存在，则创建它。
 2. 应用核心模式（会话、输入、诊断等表格）。
 3. 植入初始状态栏消息（提示、事实、语录）。
@@ -317,30 +296,11 @@ igt
 
 ### 语法检查
 
-在提示符处输入任意英语句子并按回车。IGT 将其发送给 AI，返回结构化分析：
+在提示符处输入任意英语句子并按回车。IGT 将其发送给 AI，返回结构化分析：纠错、更地道的改写、按错误类型分类的诊断、语法规则和学习 tip。含多处错误的复杂句子一次处理完毕，每处错误独立诊断。
 
-```
-gemini-2.5-flash ❯ I have went to the store yesterday.
+![单个错误示例](assets/01_grammar_check.png)
 
-Review
-One error — verb tense.
-
-Correction
-I went to the store yesterday.
-
-Refine
-I stopped by the store yesterday.
-
-Diagnosis
-- Verb Tense (Moderate): "have went" is incorrect. Use simple past "went" with "yesterday".
-
-Rule
-- Simple past ("went") is used for completed actions with a specific past time reference.
-  Present perfect ("have gone") is used without a specific time or for recent events.
-
-Tip
-- Time words like "yesterday", "last week", "in 2020" always pair with simple past.
-```
+![多处错误示例](assets/02_multiple_errors.png)
 
 如果句子没有错误，IGT 会确认并解释原因——它不会捏造问题。
 
@@ -350,17 +310,18 @@ Tip
 
 自然地将中文文本翻译成英文。IGT 会在主提示符处自动识别中文输入，并将其发送到翻译引擎，提供包含细微差别注释和地道表达的翻译。也可以使用 `/translate <文本>`（别名：`/tr <文本>`）。
 
+![翻译截图](assets/06_translate.png)
+
 ### 语法咨询 (`/ask`)
 
-进行多轮英语语法咨询。IGT 通过原生函数调用查询其本地参考数据库 (`grammar_ref.db`)，提供带有来源引用的可靠解答。
+进行多轮英语语法咨询。IGT 通过原生函数调用查询其本地参考数据库 (`grammar_ref.db`)，提供带有来源引用的可靠解答。同一对话线程中的追问会携带上下文。退出时可选择将对话保存到 Markdown 笔记库。
 
-```
-❯ /ask when do I use present perfect instead of simple past?
-```
+![/ask 截图](assets/08_ask.png)
 
 ### 状态栏与提示
 
 每次检查后，状态栏都会从 300 多个条目中随机显示一条消息，包括：
+
 - **提示 (Tips)**：了解类似 `/undo` 或 `/refine` 等隐藏功能。
 - **语法事实 (Grammar Facts)**：关于英语历史和规则的有趣冷知识。
 - **语录 (Quotes)**：来自语言学家和作家的启发性话语。
@@ -378,21 +339,9 @@ Tip
 
 ### 间隔重复闪卡复习（`/review`）
 
-每个错误都会生成一张完形填空闪卡——被纠正的词语会被替换成空白：
+每个错误都会生成一张闪卡。SM-2 算法负责调度每张卡片：答对了复习间隔会延长（1 天 → 4 天 → 10 天……），答错了则重置为明天。答案以 **diff 高亮**方式展示——修改的词标绿，一眼看出差在哪里。随着时间推移，已掌握的错误类型不再出现。
 
-```
-❯ /review
-
-Card 1 of 8
-She _____ like the weather today.
-(Subject-Verb Agreement)
-
-Your answer: doesn't
-
-✓ Correct  →  next review in 4 days
-```
-
-SM-2 算法负责调度每张卡片：答对了复习间隔会延长（1 天 → 4 天 → 10 天……），答错了则重置为明天。随着时间推移，已掌握错误类型的卡片会逐渐消失。
+![/review 截图](assets/04_review.png)
 
 系统优先进行完全匹配判断。如果你的答案措辞不同但语义正确，会由 AI 快速裁定是否接受。
 
@@ -415,43 +364,11 @@ Launch /review now? [y/n]
 
 统计面板提供了学习旅程的全方位视图：
 
-```
-❯ /stats
-
-  [ Effort Trend: Last 7 Days ]
-
-  10 ┤      █
-   8 ┤      █
-   6 ┤  █   █   █
-   4 ┤  █   █   █   █
-   2 ┤  █   █   █   █   █
-     └─11──12──13──14──15─
-
-  Weekly:   24 inputs (+15%) vs last week. Great progress! Your consistency is paying off.
-  Monthly:  82 inputs (+8%) vs last month. Solid stability. Keep up the rhythm.
-
-  [ CEFR Trajectory: Monthly ]
-  2026-03  ███ B1
-  2026-04  ██████ B2
-  2026-05  █████████ C1
-
-  [ Top 3 Priorities ]
-  1. Verb Tense (64 hits)
-     Fix: /practice --type "Verb Tense"
-  2. Article Usage (28 hits)
-     Fix: /practice --type "Article Usage"
-  3. Preposition Usage (19 hits)
-     Fix: /practice --type "Preposition Usage"
-
-  [ Vault Snapshot ]
-  Vocab:    142 words (+12 this week)
-  Practice: 88% avg (last 5 sessions)
-```
+![/stats 截图](assets/03_stats.png)
 
 - **努力趋势 (Effort Trend)**: 过去 7 天输入量的可视化图表。
 - **掌握度分析 (Mastery Breakdown)**: 识别你最频繁的错误类型（前 3 项优先任务）。
 - **CEFR 轨迹 (CEFR Trajectory)**: 追踪你数月来的英语水平进步情况。
-- **笔记库快照 (Vault Snapshot)**: 从你的词汇笔记和练习日志中解析出的实时数据。
 
 ### 个人错误手册 (`/handbook`)
 
@@ -463,20 +380,7 @@ Launch /review now? [y/n]
 node tools/igt-handbook.mjs --days=30
 ```
 
-**运行时的终端输出：**
-
-```
-🤖 Generating overall summary with GEMINI...
-🤖 Generating 6 grammar rules with GEMINI (gemini-2.5-pro)...
-✅ Generated Verb Tense
-✅ Generated Article Usage
-✅ Generated Subject-Verb Agreement
-✅ Generated Preposition Usage
-✅ Generated Word Choice
-✅ Generated Punctuation
-
-📄 Report saved: docs/handbook_2026-05-07.md
-```
+![/handbook 截图](assets/05_handbook.png)
 
 **生成的文件内容示例：**
 
@@ -490,6 +394,7 @@ node tools/igt-handbook.mjs --days=30
 > [!INFO] Generated with: GEMINI (gemini-2.5-pro) on 2026-05-07
 
 > [!ABSTRACT] 📊 Performance Summary
+>
 > - **Period**: Last 30 days
 > - **Inputs Analyzed**: 283
 > - **Total Diagnoses**: 156
@@ -499,12 +404,14 @@ node tools/igt-handbook.mjs --days=30
 ## 📝 Executive Linguistic Summary
 
 ### 📝 Linguistic Profile
+
 你的写作整体达到 B1–B2 水平，词汇量和句子结构表现稳健。
 在 283 条输入中，最显著的模式是从句边界处的时态混用——
 尤其是在同一句话中将一般过去时和现在完成时交替使用。
 拼写和标点错误极少，说明你有扎实的书面英语基础。
 
 ### 🚀 Key Strengths & Bottlenecks
+
 - **Strength**：冠词用法已显著改善——最近两周仅出现 3 次，
   而上个月有 14 次。
 - **Bottleneck**：动词时态占全部诊断的 41%。具体子模式为：
@@ -512,6 +419,7 @@ node tools/igt-handbook.mjs --days=30
   句子中使用了现在完成时，而这类句子必须用一般过去时。
 
 ### 🎯 Strategic Goals
+
 1. 未来两周专项训练"现在完成时 vs. 一般过去时 + 时间状语"的区分；
    每天使用 /review 复习闪卡。
 2. 在 /practice 练习中针对介词搭配——固定动词介词组合
@@ -524,23 +432,23 @@ node tools/igt-handbook.mjs --days=30
 
 ## 🎯 Error Frequency Ranking
 
-| Error Type              | Freq | Severity    |
-| :---------------------- | :--- | :---------- |
-| Verb Tense              | 64   | 🔴 Major    |
-| Article Usage           | 28   | 🟡 Moderate |
-| Preposition Usage       | 19   | 🟡 Moderate |
-| Subject-Verb Agreement  | 14   | 🟢 Minor    |
-| Word Choice             | 11   | 🟢 Minor    |
-| Punctuation             |  9   | 🟢 Minor    |
+| Error Type             | Freq | Severity    |
+| :--------------------- | :--- | :---------- |
+| Verb Tense             | 64   | 🔴 Major    |
+| Article Usage          | 28   | 🟡 Moderate |
+| Preposition Usage      | 19   | 🟡 Moderate |
+| Subject-Verb Agreement | 14   | 🟢 Minor    |
+| Word Choice            | 11   | 🟢 Minor    |
+| Punctuation            | 9    | 🟢 Minor    |
 
 ## 📈 Weekly Trend
 
-| Week    | Errors              |
-| :------ | :------------------ |
-| 2026-17 | ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 14  |
-| 2026-18 | ▓▓▓▓▓▓▓▓▓▓▓ 11      |
-| 2026-19 | ▓▓▓▓▓▓▓▓ 8          |
-| 2026-20 | ▓▓▓▓▓ 5             |
+| Week    | Errors            |
+| :------ | :---------------- |
+| 2026-17 | ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 14 |
+| 2026-18 | ▓▓▓▓▓▓▓▓▓▓▓ 11    |
+| 2026-19 | ▓▓▓▓▓▓▓▓ 8        |
+| 2026-20 | ▓▓▓▓▓ 5           |
 
 > [!SUCCESS] ✅ Good news! Your errors decreased by 28.6% in recent weeks.
 
@@ -561,9 +469,9 @@ node tools/igt-handbook.mjs --days=30
 >
 > > [!INFO] Logic & Rules
 > > **Why**: "Yesterday" 是明确的过去时间状语，不能与现在完成时连用，
-> >   必须使用一般过去时（"saw"）。
+> > 必须使用一般过去时（"saw"）。
 > > **Rule**: 现在完成时 = 不指定具体时间。一般过去时 = 指定具体时间
-> >   （yesterday、last week、in 2020）。
+> > （yesterday、last week、in 2020）。
 > > **Pro Tip**: 如果能回答"具体是什么时候？"，就用一般过去时。
 >
 > ---
@@ -590,20 +498,24 @@ node tools/igt-handbook.mjs --days=30
 > [!NOTE]- 🔴 Verb Tense
 >
 > #### Overview
+>
 > 英语时态不只是编码时间，还表达说话者与事件的关系。
 > 现在完成时表示与当下时刻的相关性；一般过去时将事件封闭为已完成的历史。
 > 两者不可互换。
 >
 > #### Detected Habit
-> *"The Yesterday Trap（昨天陷阱）"* —— 你在描述近期过去事件时习惯使用现在
+>
+> _"The Yesterday Trap（昨天陷阱）"_ —— 你在描述近期过去事件时习惯使用现在
 > 完成时，随后又附上一个与之矛盾的具体时间状语。
 >
 > #### Root Cause
+>
 > 普通话用体标记（了、过）表示完成，没有时态的区分，因此现在完成时 /
 > 一般过去时的对立在母语中没有直接对应物——学习者往往默认选择"听起来
 > 更完整"的那种形式。
 >
 > #### Before / After
+>
 > | ❌ User wrote                        | ✅ Should be                    | Why                     |
 > | :----------------------------------- | :------------------------------ | :---------------------- |
 > | I have seen him yesterday.           | I saw him yesterday.            | 有具体时间 → 一般过去时 |
@@ -611,6 +523,7 @@ node tools/igt-handbook.mjs --days=30
 > | We have finished the report at 5 PM. | We finished the report at 5 PM. | 时钟时间 → 一般过去时   |
 >
 > #### The Rule
+>
 > - 凡是带有具体时间状语的句子（yesterday、last week、in 2020、at 3 PM、
 >   when I was young），一律使用**一般过去时**。
 > - 不指定时间、强调当下结果或相关性时，使用**现在完成时**
@@ -619,7 +532,8 @@ node tools/igt-handbook.mjs --days=30
 > - 并列谓语（"she graduated and found"）中，两个动词必须时态一致。
 >
 > #### Mnemonic
-> *"有具体时间，就用简单过去。"*（Specific time? Simple past every time.）
+>
+> _"有具体时间，就用简单过去。"_（Specific time? Simple past every time.）
 >
 > > [!TIP] Key Takeaway
 > > 只要能回答"具体是什么时候？"，答案就永远是一般过去时，没有例外。
@@ -686,18 +600,9 @@ node tools/igt-practice.mjs --type "Article Usage"   # 针对特定错误类型
 
 ### 词汇查询（`/add`）
 
-```
-❯ /add ephemeral
+查询任意单词并保存到本地 Markdown 词汇库，用 `/vocab` 随时复习。
 
-ephemeral  /ɪˈfem(ə)r(ə)l/  adjective
-Meaning: lasting for a very short time
-Example: "the ephemeral pleasures of youth"
-Synonyms: transitory, transient, fleeting, short-lived
-
-Saved to vocabulary vault ✓
-```
-
-用 `/vocab` 复习已保存的词汇。
+![/add 和 /vocab 截图](assets/07_vocab.png)
 
 ### 撤销（`/undo`）
 
@@ -717,27 +622,27 @@ Delete last 1 input and all associated cards? [y/n] y
 
 启动 IGT 后，所有命令以 `/` 开头。
 
-| 命令                | 说明                                                         |
-| ------------------- | ------------------------------------------------------------ |
-| `/review`           | 间隔重复复习——逐一训练今日到期的所有闪卡                     |
-| `/today`            | 每日计划：到期卡片数、建议练习量、今日重点错误类型           |
-| `/stats`            | 统计面板：按句子长度划分的错误率、掌握程度分布、CEFR 趋势    |
-| `/handbook`         | 生成个人错误手册（后台运行）                                 |
-| `/practice`         | 针对你的高频错误类型启动专项练习                             |
-| `/practice B2 10`   | 以 B2 难度练习 10 题                                         |
-| `/assess`           | 估算当前 CEFR 英语水平                                       |
-| `/ask <问题>`       | 提出语法问题，提供带本地数据库引用的解答                     |
-| `/translate <文本>` | 将中文文本翻译为英文（别名：`/tr`）                          |
-| `/undo [N]`         | 删除最后 N 条输入及其关联闪卡（默认 1 条）                   |
-| `/add <单词>`       | 查询单词并保存到词汇库                                       |
-| `/vocab`            | 词汇测验；`/vocab --list` 浏览已保存词汇                     |
-| `/gemini`           | 切换到 Google Gemini                                         |
-| `/qwen`             | 切换到阿里云 Qwen                                            |
-| `/deepseek`         | 切换到 Deepseek                                              |
-| `/ollama`           | 切换到本地 Ollama 模型                                       |
-| `/llm status`       | 显示当前提供商、已配置密钥和模型名称                         |
-| `/help`             | 显示命令参考                                                 |
-| `exit`              | 退出（会先显示本次会话摘要）                                 |
+| 命令                | 说明                                                      |
+| ------------------- | --------------------------------------------------------- |
+| `/review`           | 间隔重复复习——逐一训练今日到期的所有闪卡                  |
+| `/today`            | 每日计划：到期卡片数、建议练习量、今日重点错误类型        |
+| `/stats`            | 统计面板：按句子长度划分的错误率、掌握程度分布、CEFR 趋势 |
+| `/handbook`         | 生成个人错误手册（后台运行）                              |
+| `/practice`         | 针对你的高频错误类型启动专项练习                          |
+| `/practice B2 10`   | 以 B2 难度练习 10 题                                      |
+| `/assess`           | 估算当前 CEFR 英语水平                                    |
+| `/ask <问题>`       | 提出语法问题，提供带本地数据库引用的解答                  |
+| `/translate <文本>` | 将中文文本翻译为英文（别名：`/tr`）                       |
+| `/undo [N]`         | 删除最后 N 条输入及其关联闪卡（默认 1 条）                |
+| `/add <单词>`       | 查询单词并保存到词汇库                                    |
+| `/vocab`            | 词汇测验；`/vocab --list` 浏览已保存词汇                  |
+| `/gemini`           | 切换到 Google Gemini                                      |
+| `/qwen`             | 切换到阿里云 Qwen                                         |
+| `/deepseek`         | 切换到 Deepseek                                           |
+| `/ollama`           | 切换到本地 Ollama 模型                                    |
+| `/llm status`       | 显示当前提供商、已配置密钥和模型名称                      |
+| `/help`             | 显示命令参考                                              |
+| `exit`              | 退出（会先显示本次会话摘要）                              |
 
 **快捷键：**
 
@@ -751,10 +656,10 @@ Delete last 1 input and all associated cards? [y/n] y
 
 IGT 使用两个配置文件：
 
-| 文件                  | 是否纳入 git | 用途                           |
-| --------------------- | ------------ | ------------------------------ |
-| `.env`                | 否           | API 密钥、文件路径、主题（私有） |
-| `igt_config.json`     | 是           | 模型名称、提示词（共享）       |
+| 文件              | 是否纳入 git | 用途                             |
+| ----------------- | ------------ | -------------------------------- |
+| `.env`            | 否           | API 密钥、文件路径、主题（私有） |
+| `igt_config.json` | 是           | 模型名称、提示词（共享）         |
 
 ### `.env`（完整参考）
 
@@ -786,13 +691,13 @@ IGT_ASK_FILE=                    # 仓库内的语法咨询日志路径
 {
   "LLMProvider": "gemini",
   "GeminiFlashModel": "gemini-2.5-flash",
-  "GeminiProModel":   "gemini-2.5-pro",
-  "QwenFlashModel":   "qwen-turbo",
-  "QwenProModel":     "qwen3.6-max-preview",
+  "GeminiProModel": "gemini-2.5-pro",
+  "QwenFlashModel": "qwen-turbo",
+  "QwenProModel": "qwen3.6-max-preview",
   "DeepseekFlashModel": "deepseek-chat",
-  "DeepseekProModel":   "deepseek-reasoner",
-  "OllamaBaseUrl":    "http://localhost:11434/v1",
-  "OllamaModel":      "phi4"
+  "DeepseekProModel": "deepseek-reasoner",
+  "OllamaBaseUrl": "http://localhost:11434/v1",
+  "OllamaModel": "phi4"
 }
 ```
 
@@ -821,6 +726,7 @@ igt.mjs  ──POST /grammar──►  lib/server/index.mjs
 ```
 
 代码库按领域驱动模块组织在 `lib/` 目录下：
+
 - `lib/cli/` — CLI 特定逻辑、UI 渲染和命令路由。
 - `lib/domain/` — 核心业务逻辑（间隔重复、掌握度跟踪、解析）。
 - `lib/features/` — 特定功能逻辑（如手册生成）。
@@ -833,4 +739,4 @@ igt.mjs  ──POST /grammar──►  lib/server/index.mjs
 
 ## 许可证
 
-MIT
+Apache 2.0

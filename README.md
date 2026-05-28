@@ -2,29 +2,7 @@
 
 A command-line English grammar checker that turns every mistake into a learning event. Type a sentence, get an instant correction with explanation, and automatically build a flashcard deck that drills you on your personal error patterns.
 
-```
-gemini-2.5-flash ❯ She don't like the weather today.
-
-Review
-One error — subject-verb agreement.
-
-Correction
-She doesn't like the weather today.
-
-Refine
-She isn't fond of today's weather.
-
-Diagnosis
-- Subject-Verb Agreement (Minor): "don't" should be "doesn't" for third-person singular.
-
-Rule
-- Third-person singular subjects (he/she/it) require "doesn't", not "don't".
-
-Tip
-- When you see "she/he/it", the verb always gets an -s or -es in the present tense.
-
-  1521ms llm  ·  1524ms total
-```
+![Grammar check screenshot](assets/01_grammar_check.png)
 
 ---
 
@@ -53,13 +31,15 @@ You need two things installed on your computer before you can run IGT.
 Node.js is a program that runs JavaScript code outside a web browser. IGT is built with it.
 
 - Go to **https://nodejs.org** and download the **LTS** version (the left button).
-- Run the installer and accept the defaults.
-- When finished, open a terminal (Command Prompt or PowerShell on Windows, Terminal on Mac/Linux) and verify it worked:
 
+- Run the installer and accept the defaults.
+
+- When finished, open a terminal (Command Prompt or PowerShell on Windows, Terminal on Mac/Linux) and verify it worked:
+  
   ```
   node --version
   ```
-
+  
   You should see something like `v22.0.0`. Any version 18 or higher is fine.
 
 ### 2. Git
@@ -67,13 +47,15 @@ Node.js is a program that runs JavaScript code outside a web browser. IGT is bui
 Git is a tool for downloading and managing code from the internet.
 
 - Go to **https://git-scm.com/downloads** and download the installer for your system.
-- Run it with the default settings.
-- Verify:
 
+- Run it with the default settings.
+
+- Verify:
+  
   ```
   git --version
   ```
-
+  
   You should see something like `git version 2.44.0`.
 
 ---
@@ -165,6 +147,7 @@ node scripts/init-db.mjs
 ```
 
 This will:
+
 1. Create the database file if it doesn't exist.
 2. Apply the core schema (tables for sessions, inputs, diagnoses, etc.).
 3. Seed the initial status messages (Tips, Facts, Quotes).
@@ -193,10 +176,13 @@ All three services offer free tiers. Pick one to start.
 #### Google Gemini (recommended for beginners — most generous free tier)
 
 1. Go to **https://aistudio.google.com/apikey** and sign in with a Google account.
-2. Click **Create API key**.
-3. Copy the key (it starts with `AIza…`).
-4. Open your `.env` file and paste it:
 
+2. Click **Create API key**.
+
+3. Copy the key (it starts with `AIza…`).
+
+4. Open your `.env` file and paste it:
+   
    ```env
    GOOGLE_API_KEYS=AIzaSyYourKeyHere
    IGT_LLM_PROVIDER=gemini
@@ -211,9 +197,11 @@ All three services offer free tiers. Pick one to start.
 #### Alibaba Qwen (DashScope)
 
 1. Go to **https://dashscope.console.aliyun.com/apiKey** and create an account.
-2. Create an API key and copy it.
-3. Open `.env` and paste it:
 
+2. Create an API key and copy it.
+
+3. Open `.env` and paste it:
+   
    ```env
    DASHSCOPE_API_KEYS=sk-YourKeyHere
    IGT_LLM_PROVIDER=qwen
@@ -226,9 +214,11 @@ All three services offer free tiers. Pick one to start.
 #### Deepseek
 
 1. Go to **https://platform.deepseek.com/api_keys** and create an account.
-2. Create an API key and copy it.
-3. Open `.env` and paste it:
 
+2. Create an API key and copy it.
+
+3. Open `.env` and paste it:
+   
    ```env
    DEEPSEEK_API_KEYS=sk-YourKeyHere
    IGT_LLM_PROVIDER=deepseek
@@ -317,30 +307,11 @@ The prompt will show `phi4 ❯` (or whichever model you set). The first request 
 
 ### Grammar Checking
 
-Type any English sentence at the prompt and press Enter. IGT sends it to the AI and returns a structured analysis:
+Type any English sentence at the prompt and press Enter. IGT sends it to the AI and returns a structured analysis — correction, a more natural rewrite, diagnosis by error type, rule, and tip. Complex sentences with multiple errors are handled in a single pass, each diagnosed separately.
 
-```
-gemini-2.5-flash ❯ I have went to the store yesterday.
+![Single error example](assets/01_grammar_check.png)
 
-Review
-One error — verb tense.
-
-Correction
-I went to the store yesterday.
-
-Refine
-I stopped by the store yesterday.
-
-Diagnosis
-- Verb Tense (Moderate): "have went" is incorrect. Use simple past "went" with "yesterday".
-
-Rule
-- Simple past ("went") is used for completed actions with a specific past time reference.
-  Present perfect ("have gone") is used without a specific time or for recent events.
-
-Tip
-- Time words like "yesterday", "last week", "in 2020" always pair with simple past.
-```
+![Multiple errors example](assets/02_multiple_errors.png)
 
 If your sentence has no errors, IGT confirms it and explains why it's correct — it won't invent problems.
 
@@ -350,17 +321,18 @@ Every check is saved to your local database and automatically generates a flashc
 
 Translate Chinese text to English naturally. IGT automatically detects Chinese input at the main prompt and routes it to the translation engine, complete with nuance notes and idioms. Or, use `/translate <text>` (alias: `/tr <text>`).
 
+![Translation screenshot](assets/06_translate.png)
+
 ### Grammar Consultation (`/ask`)
 
-Ask multi-turn questions about English grammar. IGT queries its local reference database (`grammar_ref.db`) via native function-calling to provide grounded, reliable answers with source citations.
+Ask multi-turn questions about English grammar. IGT queries its local reference database (`grammar_ref.db`) via native function-calling to provide grounded, reliable answers with source citations. Follow-ups in the same thread carry context. Save the conversation to your Markdown vault on exit.
 
-```
-❯ /ask when do I use present perfect instead of simple past?
-```
+![/ask screenshot](assets/08_ask.png)
 
 ### Status Bar & Tips
 
 After every check, the status bar displays a random message from a collection of 300+ items, including:
+
 - **Tips**: Learn hidden features like `/undo` or `/refine`.
 - **Grammar Facts**: Interesting trivia about English history and rules.
 - **Quotes**: Inspiring words from linguists and authors.
@@ -378,21 +350,9 @@ Press """ on a new line to submit.
 
 ### SRS Flashcard Review (`/review`)
 
-Every error you make generates a flashcard:
+Every error you make generates a flashcard. The SM-2 algorithm schedules each card: answer correctly and the interval grows (1 day → 4 days → 10 days…); miss it and it resets to tomorrow. The answer is revealed with **diff highlighting** — changed words shown in green so you see exactly what was wrong. Over time you stop seeing cards for errors you've mastered.
 
-```
-❯ /review
-
-Card 1 of 8
-She _____ like the weather today.
-(Subject-Verb Agreement)
-
-Your answer: doesn't
-
-✓ Correct  →  next review in 4 days
-```
-
-The SM-2 algorithm schedules each card: answer correctly and the interval grows (1 day → 4 days → 10 days…); miss it and it resets to tomorrow. Over time you stop seeing cards for errors you've mastered.
+![/review screenshot](assets/04_review.png)
 
 Grading is exact-match first. If your answer differs in phrasing but is semantically correct, a quick AI call decides whether to accept it.
 
@@ -415,43 +375,11 @@ Launch /review now? [y/n]
 
 The stats dashboard provides a comprehensive view of your learning journey:
 
-```
-❯ /stats
-
-  [ Effort Trend: Last 7 Days ]
-
-  10 ┤      █
-   8 ┤      █
-   6 ┤  █   █   █
-   4 ┤  █   █   █   █
-   2 ┤  █   █   █   █   █
-     └─11──12──13──14──15─
-
-  Weekly:   24 inputs (+15%) vs last week. Great progress! Your consistency is paying off.
-  Monthly:  82 inputs (+8%) vs last month. Solid stability. Keep up the rhythm.
-
-  [ CEFR Trajectory: Monthly ]
-  2026-03  ███ B1
-  2026-04  ██████ B2
-  2026-05  █████████ C1
-
-  [ Top 3 Priorities ]
-  1. Verb Tense (64 hits)
-     Fix: /practice --type "Verb Tense"
-  2. Article Usage (28 hits)
-     Fix: /practice --type "Article Usage"
-  3. Preposition Usage (19 hits)
-     Fix: /practice --type "Preposition Usage"
-
-  [ Vault Snapshot ]
-  Vocab:    142 words (+12 this week)
-  Practice: 88% avg (last 5 sessions)
-```
+![/stats screenshot](assets/03_stats.png)
 
 - **Effort Trend**: A visual 7-day chart of your input volume.
 - **Mastery Breakdown**: Identifies your most frequent error types (Top 3 Priorities).
 - **CEFR Trajectory**: Tracks your proficiency level progression over months.
-- **Vault Snapshot**: Real-time stats parsed from your vocabulary and practice logs.
 
 ### Error Handbook (`/handbook`)
 
@@ -463,20 +391,7 @@ Run it from the command line:
 node tools/igt-handbook.mjs --days=30
 ```
 
-**Terminal output while running:**
-
-```
-🤖 Generating overall summary with GEMINI...
-🤖 Generating 6 grammar rules with GEMINI (gemini-2.5-pro)...
-✅ Generated Verb Tense
-✅ Generated Article Usage
-✅ Generated Subject-Verb Agreement
-✅ Generated Preposition Usage
-✅ Generated Word Choice
-✅ Generated Punctuation
-
-📄 Report saved: docs/handbook_2026-05-07.md
-```
+![/handbook screenshot](assets/05_handbook.png)
 
 **What the generated file looks like:**
 
@@ -490,6 +405,7 @@ The output is a Markdown file structured for Obsidian (collapsible callouts, tab
 > [!INFO] Generated with: GEMINI (gemini-2.5-pro) on 2026-05-07
 
 > [!ABSTRACT] 📊 Performance Summary
+>
 > - **Period**: Last 30 days
 > - **Inputs Analyzed**: 283
 > - **Total Diagnoses**: 156
@@ -499,12 +415,14 @@ The output is a Markdown file structured for Obsidian (collapsible callouts, tab
 ## 📝 Executive Linguistic Summary
 
 ### 📝 Linguistic Profile
+
 Your writing demonstrates solid B1–B2 command of vocabulary and sentence structure.
 The dominant pattern across your 283 inputs is tense confusion at clause boundaries —
 particularly mixing simple past and present perfect in the same sentence. Mechanics
 errors (spelling, punctuation) are rare, suggesting strong written foundations.
 
 ### 🚀 Key Strengths & Bottlenecks
+
 - **Strength**: Article usage has improved markedly — only 3 occurrences in the last
   two weeks, down from 14 the month before.
 - **Bottleneck**: Verb tense accounts for 41% of all diagnoses. The sub-pattern is
@@ -512,6 +430,7 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
   adverbs ("yesterday", "last week") that require simple past.
 
 ### 🎯 Strategic Goals
+
 1. Drill the present-perfect vs. simple-past contrast with time-adverb triggers for
    the next 2 weeks; use the /review deck daily.
 2. Target Preposition Usage in /practice sessions — fixed verb–preposition pairs
@@ -524,23 +443,23 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
 
 ## 🎯 Error Frequency Ranking
 
-| Error Type              | Freq | Severity    |
-| :---------------------- | :--- | :---------- |
-| Verb Tense              | 64   | 🔴 Major    |
-| Article Usage           | 28   | 🟡 Moderate |
-| Preposition Usage       | 19   | 🟡 Moderate |
-| Subject-Verb Agreement  | 14   | 🟢 Minor    |
-| Word Choice             | 11   | 🟢 Minor    |
-| Punctuation             |  9   | 🟢 Minor    |
+| Error Type             | Freq | Severity    |
+| :--------------------- | :--- | :---------- |
+| Verb Tense             | 64   | 🔴 Major    |
+| Article Usage          | 28   | 🟡 Moderate |
+| Preposition Usage      | 19   | 🟡 Moderate |
+| Subject-Verb Agreement | 14   | 🟢 Minor    |
+| Word Choice            | 11   | 🟢 Minor    |
+| Punctuation            | 9    | 🟢 Minor    |
 
 ## 📈 Weekly Trend
 
-| Week    | Errors              |
-| :------ | :------------------ |
-| 2026-17 | ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 14  |
-| 2026-18 | ▓▓▓▓▓▓▓▓▓▓▓ 11      |
-| 2026-19 | ▓▓▓▓▓▓▓▓ 8          |
-| 2026-20 | ▓▓▓▓▓ 5             |
+| Week    | Errors            |
+| :------ | :---------------- |
+| 2026-17 | ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 14 |
+| 2026-18 | ▓▓▓▓▓▓▓▓▓▓▓ 11    |
+| 2026-19 | ▓▓▓▓▓▓▓▓ 8        |
+| 2026-20 | ▓▓▓▓▓ 5           |
 
 > [!SUCCESS] ✅ Good news! Your errors decreased by 28.6% in recent weeks.
 
@@ -561,9 +480,9 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
 >
 > > [!INFO] Logic & Rules
 > > **Why**: "Yesterday" is a specific past-time marker; present perfect cannot
-> >   be used with it. Simple past ("saw") is required.
+> > be used with it. Simple past ("saw") is required.
 > > **Rule**: Present perfect = no specific time anchor. Simple past = specific
-> >   time anchor (yesterday, last week, in 2020).
+> > time anchor (yesterday, last week, in 2020).
 > > **Pro Tip**: If you can answer "when exactly?", use simple past.
 >
 > ---
@@ -590,27 +509,32 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
 > [!NOTE]- 🔴 Verb Tense
 >
 > #### Overview
+>
 > English tense encodes not just time but the speaker's relationship to the event.
 > Present perfect signals relevance to the present moment; simple past closes the
 > event as finished history. The two are not interchangeable.
 >
 > #### Detected Habit
-> *"The Yesterday Trap"* — you consistently reach for present perfect when narrating
+>
+> _"The Yesterday Trap"_ — you consistently reach for present perfect when narrating
 > recent past events, then attach a specific time adverb that contradicts it.
 >
 > #### Root Cause
+>
 > In Mandarin, aspect markers (了, 过) indicate completion without tense distinction,
 > so the present-perfect / simple-past contrast has no direct L1 equivalent —
 > learners default to the "more complete-sounding" form.
 >
 > #### Before / After
-> | ❌ User wrote                        | ✅ Should be                    | Why                     |
-> | :---------------------------------   | :------------------------------ | :---------------------- |
-> | I have seen him yesterday.           | I saw him yesterday.            | specific time = simple past |
+>
+> | ❌ User wrote                        | ✅ Should be                    | Why                          |
+> | :----------------------------------- | :------------------------------ | :--------------------------- |
+> | I have seen him yesterday.           | I saw him yesterday.            | specific time = simple past  |
 > | She has graduated last June.         | She graduated last June.        | "last June" anchors the past |
-> | We have finished the report at 5 PM. | We finished the report at 5 PM. | clock time = simple past |
+> | We have finished the report at 5 PM. | We finished the report at 5 PM. | clock time = simple past     |
 >
 > #### The Rule
+>
 > - Use **simple past** whenever a specific time expression is present
 >   (yesterday, last week, in 2020, at 3 PM, when I was young).
 > - Use **present perfect** when no time is specified and the focus is on
@@ -619,7 +543,8 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
 > - In compound predicates ("she graduated and found"), both verbs must match.
 >
 > #### Mnemonic
-> *"Specific time? Simple past every time."*
+>
+> _"Specific time? Simple past every time."_
 >
 > > [!TIP] Key Takeaway
 > > If you can answer "when exactly?", the answer is always simple past —
@@ -687,18 +612,9 @@ Estimates your current English level (A1–C2) from your error history — frequ
 
 ### Vocabulary Lookup (`/add`)
 
-```
-❯ /add ephemeral
+Look up any word and save it to your local Markdown vocabulary vault. Review saved words with `/vocab`.
 
-ephemeral  /ɪˈfem(ə)r(ə)l/  adjective
-Meaning: lasting for a very short time
-Example: "the ephemeral pleasures of youth"
-Synonyms: transitory, transient, fleeting, short-lived
-
-Saved to vocabulary vault ✓
-```
-
-Review saved words with `/vocab`.
+![/add and /vocab screenshot](assets/07_vocab.png)
 
 ### Undo (`/undo`)
 
@@ -718,27 +634,26 @@ Use `/undo 3` to remove the last 3 inputs.
 
 Start IGT with `igt`. All commands use a `/` prefix.
 
-| Command             | Description                                                          |
-| ------------------- | -------------------------------------------------------------------- |
-| `/review`           | SRS review session — drills all flashcards due today                 |
-| `/today`            | Daily plan: cards due, suggested drills, focus error type            |
-| `/stats`            | Analytics: error rate by sentence length, mastery breakdown, CEFR   |
-| `/handbook`         | Generate your personal error handbook (runs as background task)      |
-| `/practice`         | Practice session targeting your top error types                      |
-| `/practice B2 10`   | Practice at CEFR level B2, 10 questions                              |
-| `/assess`           | Estimate your current CEFR proficiency level                         |
-| `/ask <question>`   | Ask a grammar question with local database citations                 |
-| `/translate <text>` | Translate Chinese text to English (alias: `/tr`)                     |
-| `/undo [N]`         | Delete the last N inputs and their flashcards (default: 1)           |
-| `/add <word>`       | Look up a word and save it to your vocabulary vault                  |
-| `/vocab`            | Quiz yourself on saved vocabulary; `/vocab --list` to browse         |
-| `/gemini`           | Switch to Google Gemini                                              |
-| `/qwen`             | Switch to Alibaba Qwen                                               |
-| `/deepseek`         | Switch to Deepseek                                                   |
-| `/ollama`           | Switch to local Ollama model                                         |
-| `/llm status`       | Show active provider, configured keys, and model names               |
-| `/help`             | Show command reference                                               |
-| `exit`              | Quit (shows session summary first)                                   |
+| Command           | Description                                                       |
+| ----------------- | ----------------------------------------------------------------- |
+| `/review`         | SRS review session — drills all flashcards due today              |
+| `/today`          | Daily plan: cards due, suggested drills, focus error type         |
+| `/stats`          | Analytics: error rate by sentence length, mastery breakdown, CEFR |
+| `/handbook`       | Generate your personal error handbook (runs as background task)   |
+| `/practice`       | Practice session targeting your top error types                   |
+| `/practice B2 10` | Practice at CEFR level B2, 10 questions                           |
+| `/assess`         | Estimate your current CEFR proficiency level                      |
+| `/ask <question>` | Ask a grammar question with local database citations              |
+| `/undo [N]`       | Delete the last N inputs and their flashcards (default: 1)        |
+| `/add <word>`     | Look up a word and save it to your vocabulary vault               |
+| `/vocab`          | Quiz yourself on saved vocabulary; `/vocab --list` to browse      |
+| `/gemini`         | Switch to Google Gemini                                           |
+| `/qwen`           | Switch to Alibaba Qwen                                            |
+| `/deepseek`       | Switch to Deepseek                                                |
+| `/ollama`         | Switch to local Ollama model                                      |
+| `/llm status`     | Show active provider, configured keys, and model names            |
+| `/help`           | Show command reference                                            |
+| `exit`            | Quit (shows session summary first)                                |
 
 **Keyboard shortcuts:**
 
@@ -752,10 +667,10 @@ Start IGT with `igt`. All commands use a `/` prefix.
 
 IGT uses two configuration files:
 
-| File                  | Tracked by git | Purpose                               |
-| --------------------- | -------------- | ------------------------------------- |
-| `.env`                | No             | API keys, file paths, themes (private) |
-| `igt_config.json`     | Yes            | Model names, prompts (shared)         |
+| File              | Tracked by git | Purpose                                |
+| ----------------- | -------------- | -------------------------------------- |
+| `.env`            | No             | API keys, file paths, themes (private) |
+| `igt_config.json` | Yes            | Model names, prompts (shared)          |
 
 ### `.env` (full reference)
 
@@ -787,13 +702,13 @@ IGT_ASK_FILE=                    # ask consultation log path within vault
 {
   "LLMProvider": "gemini",
   "GeminiFlashModel": "gemini-2.5-flash",
-  "GeminiProModel":   "gemini-2.5-pro",
-  "QwenFlashModel":   "qwen-turbo",
-  "QwenProModel":     "qwen3.6-max-preview",
+  "GeminiProModel": "gemini-2.5-pro",
+  "QwenFlashModel": "qwen-turbo",
+  "QwenProModel": "qwen3.6-max-preview",
   "DeepseekFlashModel": "deepseek-chat",
-  "DeepseekProModel":   "deepseek-reasoner",
-  "OllamaBaseUrl":    "http://localhost:11434/v1",
-  "OllamaModel":      "phi4"
+  "DeepseekProModel": "deepseek-reasoner",
+  "OllamaBaseUrl": "http://localhost:11434/v1",
+  "OllamaModel": "phi4"
 }
 ```
 
@@ -822,6 +737,7 @@ igt.mjs  ──POST /grammar──►  lib/server/index.mjs
 ```
 
 The codebase is organized into domain-driven modules under `lib/`:
+
 - `lib/cli/` — CLI-specific logic, UI rendering, and command routing.
 - `lib/domain/` — Core business logic (SRS, mastery, parsing).
 - `lib/features/` — Feature-specific logic (e.g., handbook generation).
@@ -834,4 +750,4 @@ The persistent server eliminates per-request Node.js startup overhead — typica
 
 ## License
 
-MIT
+Apache 2.0
