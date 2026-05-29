@@ -1,21 +1,29 @@
-// Retroactively attach diagnoses + explanations to grammar SRS cards that were
-// imported with source_id=NULL (e.g. via scripts/import-warehouse.mjs).
+// Retroactively attach diagnoses + explanations to legacy SRS / inputs data.
 //
-// For each orphan card, ask the active LLM to identify each error between the
-// card's `prompt` (original) and `answer` (correction), then atomically:
-//   1. INSERT a synthetic row into `inputs` (original_text, correction).
-//   2. INSERT one row per diagnosis into `diagnoses`.
-//   3. UPDATE the card's `source_id` to the new input id.
+// Two modes:
+//   --mode=orphan (default) — grammar SRS cards imported with source_id=NULL
+//     (e.g. via scripts/import-warehouse.mjs). For each, ask the LLM to identify
+//     each error between the card's `prompt` and `answer`, then atomically:
+//       1. INSERT a synthetic row into `inputs`.
+//       2. INSERT one row per diagnosis into `diagnoses`.
+//       3. UPDATE the card's `source_id` to the new input id.
+//
+//   --mode=empty — inputs rows that already have diagnoses, but those diagnosis
+//     rows carry NULL/blank explanation (legacy markdown importer). For each,
+//     re-diagnose with the LLM and replace the input's diagnoses wholesale.
+//     Skips inputs where correction is empty or equals original (nothing to
+//     diagnose).
 //
 // Forces Ollama + gemma family for this run.
 //
 // Usage:
-//   node scripts/backfill-explanations.mjs               # all orphan cards
-//   node scripts/backfill-explanations.mjs --limit=5     # cap N
-//   node scripts/backfill-explanations.mjs --dry-run     # no writes
-//   node scripts/backfill-explanations.mjs --due-only    # only due cards
+//   node scripts/backfill-explanations.mjs                     # orphan cards
+//   node scripts/backfill-explanations.mjs --mode=empty        # legacy nulls
+//   node scripts/backfill-explanations.mjs --limit=5           # cap N
+//   node scripts/backfill-explanations.mjs --dry-run           # no writes
+//   node scripts/backfill-explanations.mjs --due-only          # orphan mode only
 //
-// Re-runnable: cards already linked to a real inputs row are skipped.
+// Re-runnable: rows already in good shape are skipped.
 
 import Database from "better-sqlite3";
 import path from "node:path";
@@ -32,6 +40,12 @@ const limitArg = args.find((a) => a.startsWith("--limit="));
 const limit = limitArg ? parseInt(limitArg.slice("--limit=".length), 10) : null;
 const dryRun = args.includes("--dry-run");
 const dueOnly = args.includes("--due-only");
+const modeArg = args.find((a) => a.startsWith("--mode="));
+const mode = modeArg ? modeArg.slice("--mode=".length) : "orphan";
+if (!["orphan", "empty"].includes(mode)) {
+  console.error(`Unknown --mode=${mode}. Expected: orphan | empty`);
+  process.exit(2);
+}
 
 // ── Force Ollama + gemma for this run ─────────────────────────────────────────
 process.env.IGT_LLM_PROVIDER = "ollama";
@@ -47,22 +61,47 @@ const dbPath = path.isAbsolute(config.DbPath || "")
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 
-const orphans = db
-  .prepare(
-    `SELECT id, prompt, answer, due_date
-       FROM srs_cards
-      WHERE source_type = 'input'
-        AND source_id IS NULL
-        ${dueOnly ? "AND due_date <= date('now')" : ""}
-      ORDER BY id ASC
-      ${limit ? `LIMIT ${Math.max(1, limit | 0)}` : ""}`
-  )
-  .all();
+console.log(`Provider: ollama · model: ${model}  · mode: ${mode}${dryRun ? "  [dry-run]" : ""}`);
 
-console.log(`Provider: ollama · model: ${model}`);
-console.log(`Orphan cards to process: ${orphans.length}${dryRun ? "  [dry-run]" : ""}\n`);
+// ── Build the work queue per mode ─────────────────────────────────────────────
+// Each item is normalized to { kind, id, original, correction, label }.
+let queue;
+if (mode === "orphan") {
+  queue = db
+    .prepare(
+      `SELECT id, prompt AS original, answer AS correction
+         FROM srs_cards
+        WHERE source_type = 'input'
+          AND source_id IS NULL
+          ${dueOnly ? "AND due_date <= date('now')" : ""}
+        ORDER BY id ASC
+        ${limit ? `LIMIT ${Math.max(1, limit | 0)}` : ""}`
+    )
+    .all()
+    .map((r) => ({ kind: "orphan", id: r.id, original: r.original, correction: r.correction, label: `card ${r.id}` }));
+} else {
+  // empty mode: inputs whose diagnoses are NULL/blank AND there's a real correction to diagnose
+  queue = db
+    .prepare(
+      `SELECT i.id, i.original_text AS original, i.correction AS correction
+         FROM inputs i
+        WHERE EXISTS (
+                SELECT 1 FROM diagnoses d
+                 WHERE d.input_id = i.id
+                   AND (d.explanation IS NULL OR TRIM(d.explanation) = '')
+              )
+          AND i.correction IS NOT NULL
+          AND TRIM(i.correction) != ''
+          AND TRIM(i.correction) != TRIM(i.original_text)
+        ORDER BY i.id ASC
+        ${limit ? `LIMIT ${Math.max(1, limit | 0)}` : ""}`
+    )
+    .all()
+    .map((r) => ({ kind: "empty", id: r.id, original: r.original, correction: r.correction, label: `input ${r.id}` }));
+}
 
-if (orphans.length === 0) {
+console.log(`Items to process: ${queue.length}\n`);
+if (queue.length === 0) {
   db.close();
   process.exit(0);
 }
@@ -114,43 +153,48 @@ const insertDiagnosis = db.prepare(`
   VALUES (?, ?, ?, ?)
 `);
 const linkCard = db.prepare(`UPDATE srs_cards SET source_id = ? WHERE id = ?`);
+const deleteDiagnosesForInput = db.prepare(`DELETE FROM diagnoses WHERE input_id = ?`);
+
+async function diagnoseEdit(original, correction) {
+  const userMessage = `Original: ${original}\nCorrection: ${correction}`;
+  const raw = await llm.generateWithFallback(userMessage, SYSTEM_PROMPT, {
+    taskType: "grammar",
+    responseFormat: { type: "json_object" },
+  });
+  return parseDiagnoses(raw)
+    .map((d) => {
+      const rawType = (d.type || d.error_type || "").trim();
+      if (!rawType) return null;
+      const explanation = (d.explanation || "").trim();
+      const errorType = getErrorTypePath(classifyErrorType(rawType));
+      return {
+        error_type: errorType,
+        severity: ["Minor", "Moderate", "Major"].includes(d.severity) ? d.severity : "Minor",
+        // Same fallback rule as parseDiagnosis core: never leave explanation empty.
+        explanation: explanation || errorType,
+      };
+    })
+    .filter(Boolean);
+}
 
 let backfilled = 0;
 let skippedEmpty = 0;
 let failed = 0;
 
-for (let i = 0; i < orphans.length; i++) {
-  const card = orphans[i];
-  const tag = `[${i + 1}/${orphans.length}] card ${card.id}`;
-  const preview = card.prompt.length > 60 ? card.prompt.slice(0, 60) + "…" : card.prompt;
+for (let i = 0; i < queue.length; i++) {
+  const item = queue[i];
+  const tag = `[${i + 1}/${queue.length}] ${item.label}`;
+  const preview = item.original.length > 60 ? item.original.slice(0, 60) + "…" : item.original;
   process.stdout.write(`${tag} ${preview}\n`);
 
-  const userMessage = `Original: ${card.prompt}\nCorrection: ${card.answer}`;
-
-  let diagnoses;
+  let normalized;
   try {
-    const raw = await llm.generateWithFallback(userMessage, SYSTEM_PROMPT, {
-      taskType: "grammar",
-      responseFormat: { type: "json_object" },
-    });
-    diagnoses = parseDiagnoses(raw);
+    normalized = await diagnoseEdit(item.original, item.correction);
   } catch (err) {
     failed++;
     console.log(`    ✗ LLM error: ${err.message}\n`);
     continue;
   }
-
-  const normalized = diagnoses
-    .map((d) => {
-      const rawType = (d.type || d.error_type || "").trim();
-      if (!rawType) return null;
-      return {
-        error_type: getErrorTypePath(classifyErrorType(rawType)),
-        severity: ["Minor", "Moderate", "Major"].includes(d.severity) ? d.severity : "Minor",
-        explanation: (d.explanation || "").trim(),
-      };
-    })
-    .filter(Boolean);
 
   if (normalized.length === 0) {
     skippedEmpty++;
@@ -169,16 +213,27 @@ for (let i = 0; i < orphans.length; i++) {
 
   try {
     db.transaction(() => {
-      const timestamp = new Date().toISOString();
-      const res = insertInput.run(timestamp, card.prompt, card.answer);
-      const inputId = res.lastInsertRowid;
-      for (const d of normalized) {
-        insertDiagnosis.run(inputId, d.error_type, d.severity, d.explanation);
+      if (item.kind === "orphan") {
+        const timestamp = new Date().toISOString();
+        const res = insertInput.run(timestamp, item.original, item.correction);
+        const inputId = res.lastInsertRowid;
+        for (const d of normalized) {
+          insertDiagnosis.run(inputId, d.error_type, d.severity, d.explanation);
+        }
+        linkCard.run(inputId, item.id);
+      } else {
+        // empty mode — replace this input's diagnoses in place
+        deleteDiagnosesForInput.run(item.id);
+        for (const d of normalized) {
+          insertDiagnosis.run(item.id, d.error_type, d.severity, d.explanation);
+        }
       }
-      linkCard.run(inputId, card.id);
     })();
     backfilled++;
-    console.log(`    ✓ linked to new input · ${normalized.length} diagnosis row(s)\n`);
+    const detail = item.kind === "orphan"
+      ? `linked to new input · ${normalized.length} diagnosis row(s)`
+      : `replaced with ${normalized.length} diagnosis row(s)`;
+    console.log(`    ✓ ${detail}\n`);
   } catch (err) {
     failed++;
     console.log(`    ✗ DB error: ${err.message}\n`);
