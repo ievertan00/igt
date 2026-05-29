@@ -135,10 +135,12 @@ function parseDiagnosisText(diagnosisText) {
     errorType = errorType.replace(/\s*\([^)]*\)\s*$/, "").replace(/[.,;:]+$/, "").trim();
 
     const classifiedType = classifyErrorType(errorType);
+    const normalizedType = getErrorTypePath(classifiedType);
     pending = {
-      error_type: getErrorTypePath(classifiedType),
+      error_type: normalizedType,
       severity,
-      explanation: explanation || null,
+      // Fall back to the canonical type label so /review always has prose to show.
+      explanation: explanation || normalizedType,
     };
     if (severity) {
       diagnoses.push(pending);

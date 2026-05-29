@@ -36,3 +36,26 @@ test("non-JSON falls back to review field", () => {
   const result = parseDiagnosis(raw, errorTypes, opts);
   assert.ok(result.review.length > 0, "review should contain the raw text");
 });
+
+test("diagnosis with missing explanation falls back to the type label", () => {
+  const raw = JSON.stringify({
+    correction: "I am happy.",
+    diagnoses: [{ error_type: "Grammar / Verb Tense", severity: "Minor" }],
+  });
+  const result = parseDiagnosis(raw, errorTypes, opts);
+  assert.equal(result.diagnoses.length, 1);
+  assert.equal(
+    result.diagnoses[0].explanation,
+    "Grammar / Verb Tense",
+    "empty explanation should fall back to the canonical type label",
+  );
+});
+
+test("diagnosis with whitespace-only explanation falls back to the type label", () => {
+  const raw = JSON.stringify({
+    correction: "I am happy.",
+    diagnoses: [{ error_type: "Mechanics / Spelling", severity: "Minor", explanation: "   " }],
+  });
+  const result = parseDiagnosis(raw, errorTypes, opts);
+  assert.equal(result.diagnoses[0].explanation, "Mechanics / Spelling");
+});
