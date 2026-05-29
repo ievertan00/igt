@@ -264,17 +264,17 @@ console.log("");
 renderEntry(fields);
 console.log("");
 
-// ── Step 1: confirm save ──────────────────────────────────────────────────────
+// ── Step 1: optional memory hook ─────────────────────────────────────────────
+const hook = await ask(`  ${paint(c.gray, "Memory hook?")} ${paint(c.gray, "(press Enter to skip)")}  `);
+
+// ── Step 2: confirm save ──────────────────────────────────────────────────────
+console.log("");
 const saveAns = await ask(`  ${paint(c.gray, "Save to vault?")} ${paint(c.white, "[Y/n]")}  `);
 if (saveAns.toLowerCase() === "n") {
   console.log(`\n  ${paint(c.gray, "Discarded.")}\n`);
   rl.close();
   process.exit(0);
 }
-
-// ── Step 2: optional memory hook ─────────────────────────────────────────────
-console.log("");
-const hook = await ask(`  ${paint(c.gray, "Memory hook?")} ${paint(c.gray, "(press Enter to skip)")}  `);
 rl.close();
 
 // ── Build markdown block ──────────────────────────────────────────────────────
