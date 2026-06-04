@@ -35,6 +35,7 @@ let globalEscHandler = null;
 let lastSubmittedText = "";
 let lastSubmittedProvider = "";
 let lastTargetPath = "";
+let lastGrammarResult = null;
 let sessionSentenceCount = 0;
 
 let resizeTimer = null;
@@ -301,6 +302,9 @@ async function main() {
           get lastSubmittedText() {
             return lastSubmittedText;
           },
+          get lastGrammarResult() {
+            return lastGrammarResult;
+          },
           get lastTargetPath() {
             return lastTargetPath;
           },
@@ -345,7 +349,7 @@ async function main() {
     lastSubmittedText = text;
     lastSubmittedProvider = process.env.IGT_LLM_PROVIDER || "gemini";
     lastTargetPath = targetPath;
-    await runGrammarCheck(text, targetPath, grammarCtx);
+    lastGrammarResult = await runGrammarCheck(text, targetPath, grammarCtx);
   }
 }
 
