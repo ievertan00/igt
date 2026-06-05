@@ -144,6 +144,7 @@ async function main() {
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
   const rows = process.stdout.rows || 24;
   const cols_val = process.stdout.columns || 80;
+  const sep = "─".repeat(Math.min(66, Math.max(20, cols_val - 3)));
 
   process.stdout.write("\n");
   process.stdout.write(
@@ -151,7 +152,7 @@ async function main() {
   );
   process.stdout.write(`${paint(colors.gray, `Terminal: ${cols_val}x${rows}`)}\n`);
   process.stdout.write(
-    `${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`,
+    `${paint(colors.gray, sep)}\n`,
   );
   process.stdout.write(
     `${paint(colors.gray, "Model  ")}${paint(colors.gray, getModel(config).model)}\n`,
@@ -160,7 +161,7 @@ async function main() {
     `${paint(colors.gray, "Usage  type text to check · /help for commands · ")}\n`,
   );
   process.stdout.write(
-    `${paint(colors.gray, "──────────────────────────────────────────────────────────────────")}\n`,
+    `${paint(colors.gray, sep)}\n`,
   );
 
   const ok = await startServer(({ port }) => {

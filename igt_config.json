@@ -11,8 +11,8 @@
   "QwenApiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
   "OllamaBaseUrl": "http://localhost:11434",
   "OllamaFamily": "gemma",
-  "OllamaGemmaFlashModel": "gemma4:e4b",
-  "OllamaGemmaProModel": "gemma4:e4b",
+  "OllamaGemmaFlashModel": "gemma4:12b",
+  "OllamaGemmaProModel": "gemma4:12b",
   "OllamaPhiFlashModel": "phi4",
   "OllamaPhiProModel": "phi4",
   "Prompts": {

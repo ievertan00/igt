@@ -56,7 +56,7 @@ describe("translation route", () => {
       method: "POST",
       url: "/translation",
       on: (event, cb) => {
-        if (event === "data") cb(JSON.stringify({ text: "你好" }));
+        if (event === "data") cb(JSON.stringify({ text: "你好", direction: "zh2en" }));
         if (event === "end") cb();
       },
       setTimeout: () => {}
@@ -89,7 +89,7 @@ describe("translation route", () => {
       method: "POST",
       url: "/translation",
       on: (event, cb) => {
-        if (event === "data") cb(JSON.stringify({ text: "这是一个测试" }));
+        if (event === "data") cb(JSON.stringify({ text: "这是一个测试", direction: "zh2en" }));
         if (event === "end") cb();
       },
       setTimeout: () => {}
