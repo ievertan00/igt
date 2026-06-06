@@ -219,7 +219,8 @@ if (!word) {
   process.exit(1);
 }
 
-const SYSTEM_PROMPT = `You are a concise English vocabulary assistant. When given a word or phrase, output a vocabulary entry in exactly this markdown format with no extra text:
+const SYSTEM_PROMPT = `You are a concise English vocabulary assistant. When given a word or phrase, output a vocabulary entry in exactly this markdown format with no extra text.
+IMPORTANT: If the user provides a plural noun, a gerund, or an infinitive verb (e.g., 'apples', 'running', 'to run'), convert it to its base form (e.g., 'apple', 'run') for the {word} field.
 
 ### {word}
 **PoS:** {part of speech, followed by a middle dot '·' and the IPA phonetic symbol (e.g., adjective · /ɪˈfem.ər.ral/)}
@@ -260,6 +261,22 @@ try {
 stopSpinner();
 
 const fields = parseEntry(raw.trim());
+
+// If the LLM converted it to the base form, check for duplicates again
+if (fields.word && fields.word.toLowerCase() !== word.toLowerCase()) {
+  const existingBlockBase = findExistingEntry(fields.word);
+  if (existingBlockBase) {
+    const existing = parseEntry(existingBlockBase);
+    console.log(`\n  ${paint(c.yellow, `"${fields.word}" (base form of "${word}") is already in your vocabulary.`)}\n`);
+    renderEntry(existing);
+    console.log("");
+    rl.close();
+    process.exit(0);
+  } else {
+    console.log(`\n  ${paint(c.gray, `Converted "${word}" to base form "${fields.word}".`)}`);
+  }
+}
+
 console.log("");
 renderEntry(fields);
 console.log("");
