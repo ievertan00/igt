@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
 import configLoader from "../lib/shared/config-loader.mjs";
-import { ui, paint, colors, wrapText, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
+import { ui, paint, colors, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -118,7 +118,7 @@ function renderEntry(f) {
     lines.push("");
     const label = "中文:  ";
     const labelLen = 7;
-    const wrapped = wrapText(f.zh, 62 - labelLen, labelLen);
+    const wrapped = wrapCJK(f.zh, 62 - labelLen, labelLen);
     const wlines = wrapped.split("\n");
     for (let i = 0; i < wlines.length; i++) {
       if (i === 0) lines.push(paint(dimColor, label) + paint(colors.green, wlines[i]));
