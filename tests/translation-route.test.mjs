@@ -45,7 +45,10 @@ describe("translation route", () => {
     llmGenerateMock = async (input, prompt, options) => {
       assert.strictEqual(input, "你好");
       assert.strictEqual(options.taskType, "translation");
-      assert.strictEqual(options.responseFormat.type, "json_object");
+      // Canonical provider-agnostic option — the provider, not the route,
+      // translates this to responseSchema / response_format / format:json.
+      assert.ok(options.jsonSchema, "route should pass a canonical jsonSchema");
+      assert.strictEqual(options.jsonSchema.type, "object");
       return JSON.stringify({ translation: "Hello" });
     };
 

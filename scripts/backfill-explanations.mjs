@@ -31,6 +31,7 @@ import { fileURLToPath } from "node:url";
 
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
 import { classifyErrorType, getErrorTypePath } from "../lib/domain/error-types.mjs";
+import { GRAMMAR_RESPONSE_SCHEMA } from "../lib/domain/parse-diagnosis.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const projectRoot = path.join(path.dirname(__filename), "..");
@@ -159,7 +160,7 @@ async function diagnoseEdit(original, correction) {
   const userMessage = `Original: ${original}\nCorrection: ${correction}`;
   const raw = await llm.generateWithFallback(userMessage, SYSTEM_PROMPT, {
     taskType: "grammar",
-    responseFormat: { type: "json_object" },
+    jsonSchema: GRAMMAR_RESPONSE_SCHEMA,
   });
   return parseDiagnoses(raw)
     .map((d) => {

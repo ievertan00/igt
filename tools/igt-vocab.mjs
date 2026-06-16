@@ -188,7 +188,7 @@ const entries = parseAllEntries();
 // ── Lookup mode ───────────────────────────────────────────────────────────────
 const lookupIdx = args.indexOf("--lookup");
 if (lookupIdx !== -1) {
-  const word = args[lookupIdx + 1]?.toLowerCase();
+  const word = args.slice(lookupIdx + 1).join(" ").trim().toLowerCase();
   if (word) {
     process.stdout.write(`\n  ${paint(colors.gray, "Retrieving from vault…")} `);
     const found = entries.find(e => e.word?.toLowerCase() === word);
