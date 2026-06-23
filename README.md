@@ -698,7 +698,14 @@ IGT_VAULT_DIR=                   # root of your Obsidian vault
 IGT_VOCABULARY_FILE=             # vocabulary note path within vault
 IGT_PRACTICE_FILE=               # practice log path within vault
 IGT_ASK_FILE=                    # ask consultation log path within vault
+
+# --- Text-to-Speech (optional; /chat voice) ---
+IGT_TTS_BASE_URL=http://localhost:8880  # any OpenAI-compatible /v1/audio/speech server (Kokoro by default)
+IGT_TTS_VOICE=                   # optional; defaults to af_heart
+IGT_TTS_MODEL=                   # optional; defaults to kokoro
 ```
+
+> Spoken replies in `/chat` need a TTS server reachable at `IGT_TTS_BASE_URL`. The default targets a local [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) instance on port `8880`. To switch providers, just point `IGT_TTS_BASE_URL` at a different port/URL — no code changes. If no server is reachable, IGT prints a one-time notice and stays silent; text output is unaffected. Toggle voice on/off with `/voice`.
 
 ### `igt_config.json` (excerpt)
 

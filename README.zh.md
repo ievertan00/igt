@@ -2,7 +2,7 @@
 
 一款命令行英语语法检查工具，将每一次错误转化为学习机会。在提示符处输入英语句子，即可获得即时纠正和解析，同时自动积累一套以你的个人错误模式为基础的闪卡复习库。
 
-![语法检查截图](C:\Users\Evertan\.igt\assets\1.jpg)
+![语法检查截图](assets/1.jpg)
 
 ---
 
@@ -698,7 +698,14 @@ IGT_VAULT_DIR=                   # Obsidian 仓库根目录
 IGT_VOCABULARY_FILE=             # 仓库内的词汇笔记路径
 IGT_PRACTICE_FILE=               # 仓库内的练习日志路径
 IGT_ASK_FILE=                    # 仓库内的语法咨询日志路径
+
+# --- 文本转语音（可选；/chat 语音） ---
+IGT_TTS_BASE_URL=http://localhost:8880  # 任意兼容 OpenAI 的 /v1/audio/speech 服务（默认 Kokoro）
+IGT_TTS_VOICE=                   # 可选；默认 af_heart
+IGT_TTS_MODEL=                   # 可选；默认 kokoro
 ```
+
+> `/chat` 的语音朗读需要在 `IGT_TTS_BASE_URL` 处有可访问的 TTS 服务。默认指向本地 [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) 的 `8880` 端口。要切换提供商，只需把 `IGT_TTS_BASE_URL` 指向其他端口/地址即可，无需改动代码。若无可用服务，IGT 会打印一次性提示并保持静音，不影响文字输出。用 `/voice` 开关语音。
 
 ### `igt_config.json`（摘要）
 
