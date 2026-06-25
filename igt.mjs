@@ -9,7 +9,7 @@ import path from "node:path";
 import { colors, paint, ansi, renderStatusBar, applyTheme } from "./lib/cli/ui/index.mjs";
 import configLoader from "./lib/shared/config-loader.mjs";
 import { api } from "./lib/cli/api-client.mjs";
-import { startServer, stopServer } from "./lib/cli/server-manager.mjs";
+import { startServer, stopServer, startTtsSidecar, stopTtsSidecar } from "./lib/cli/server-manager.mjs";
 import { handleCommand } from "./lib/cli/commands/dispatch.mjs";
 import { runGrammarCheck } from "./lib/cli/commands/grammar.mjs";
 import { showSessionSummary } from "./lib/cli/commands/stats.mjs";
@@ -169,6 +169,10 @@ async function main() {
   });
   if (!ok) process.exit(1);
 
+  // Auto-launch the configured local TTS adapter (e.g. CosyVoice shim) so `igt`
+  // alone brings up voice. No-op unless IGT_TTS_SIDECAR is set.
+  startTtsSidecar(config.Tts?.Sidecar);
+
   const stopUI = () => {
     isUIStopped = true;
     clearInterval(uiInterval);
@@ -233,6 +237,7 @@ async function main() {
   const cleanup = () => {
     stopUI();
     stopServer();
+    stopTtsSidecar();
   };
 
   async function asyncExit() {

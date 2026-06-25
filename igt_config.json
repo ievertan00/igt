@@ -21,7 +21,7 @@
     "Model": "kokoro",
     "Format": "wav",
     "Speed": 1.0,
-    "LeadMs": 700,
+    "LeadMs": 200,
     "Enabled": true
   },
   "Prompts": {
