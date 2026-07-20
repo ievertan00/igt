@@ -2,6 +2,7 @@
 // Interactive Grammar Tool v3 — cross-platform Node.js entry point
 
 import { createInterface } from "node:readline";
+import { PassThrough } from "node:stream";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
@@ -16,6 +17,7 @@ import { showSessionSummary } from "./lib/cli/commands/stats.mjs";
 import { resolveModel } from "./lib/server/llm/model-resolver.mjs";
 import { validateInput, isMainlyChinese } from "./lib/cli/validate-input.mjs";
 import { runTrans } from "./lib/cli/commands/translation.mjs";
+import { createPasteFilter } from "./lib/cli/paste-filter.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -194,8 +196,24 @@ async function main() {
     return result;
   };
 
+  // Route stdin through a bracketed-paste filter before readline reads it. With
+  // bracketed paste enabled (ansi.enableBracketedPaste), a pasted block arrives
+  // wrapped in markers; the filter strips them and collapses the block's newlines
+  // to spaces so a multi-line paste lands as ONE input line instead of readline
+  // firing a submission per line. readline reads the filtered PassThrough, not the
+  // raw TTY, so we drive raw mode ourselves.
+  const pasteFeed = createPasteFilter();
+  const filteredStdin = new PassThrough();
+  const feedStdin = (chunk) => {
+    const out = pasteFeed(chunk.toString("utf8"));
+    if (out) filteredStdin.write(out);
+  };
+  if (process.stdin.isTTY) process.stdin.setRawMode(true);
+  process.stdin.on("data", feedStdin);
+  process.stdout.write(ansi.enableBracketedPaste);
+
   const rl = createInterface({
-    input: process.stdin,
+    input: filteredStdin,
     output: process.stdout,
     terminal: true,
     historySize: 100,
@@ -238,6 +256,10 @@ async function main() {
     stopUI();
     stopServer();
     stopTtsSidecar();
+    // Leave the terminal the way we found it: turn bracketed paste back off and
+    // restore cooked mode, so the user's shell isn't left in raw/paste mode.
+    try { fs.writeSync(1, ansi.disableBracketedPaste); } catch {}
+    try { if (process.stdin.isTTY) process.stdin.setRawMode(false); } catch {}
   };
 
   async function asyncExit() {
@@ -324,9 +346,26 @@ async function main() {
         },
         attachStdin: () => {
           if (globalEscHandler) process.stdin.on("data", globalEscHandler);
+          process.stdin.on("data", feedStdin);
+          if (process.stdin.isTTY) process.stdin.setRawMode(true);
+          // After a child ran with stdio:"inherit", the parent's stdin does not
+          // resume reading on its own — without this, feedStdin never fires again
+          // and the prompt goes dead (Enter/keys stop working). Re-issue the read.
+          process.stdin.resume();
+          process.stdout.write(ansi.enableBracketedPaste);
         },
         detachStdin: () => {
           if (globalEscHandler) process.stdin.removeListener("data", globalEscHandler);
+          process.stdin.removeListener("data", feedStdin);
+          // Hand a normal cooked terminal (no paste markers) to the spawned child,
+          // which manages its own readline/raw mode.
+          process.stdout.write(ansi.disableBracketedPaste);
+          if (process.stdin.isTTY) process.stdin.setRawMode(false);
+          // Removing the data listeners is not enough to stop the parent's own
+          // libuv read of the TTY — without pause() the parent keeps consuming
+          // stdin bytes and starves the inherited child's prompt, so keys/Enter in
+          // the child (e.g. igt-add's "Save?") do nothing. resume() in attachStdin.
+          process.stdin.pause();
         },
         refreshUI: () => updateUI(configLoader.load()),
         refreshStats: async () => {
