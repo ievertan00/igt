@@ -260,20 +260,14 @@ ollama --version
 
 #### 第 2 步 — 下载模型
 
-IGT 默认使用 **Phi-4**（微软出品，14B 参数——质量好，8 GB 内存可运行）：
+IGT 内置两套可随时切换的本地模型家族——**Gemma 4**（谷歌）和 **Phi-4**（微软出品，14B 参数——质量好，8 GB 内存可运行）。拉取你想用的那套即可：
 
 ```sh
-ollama pull phi4
+ollama pull gemma4:12b   # 默认家族
+ollama pull phi4         # 备选家族
 ```
 
-大约下载 9 GB，只需下载一次。
-
-如果想用更小/更快的模型，拉取后在 `igt_config.json` 中更新 `OllamaModel`：
-
-```sh
-ollama pull llama3.2   # 3B，更快，质量略低
-ollama pull mistral    # 7B，速度与质量兼顾
-```
+每套模型体积数 GB，只需下载一次。在 IGT 中用 `/gemma` 和 `/phi` 实时切换家族。要让某个家族指向别的模型，编辑 `igt_config.json` 中对应的 `Ollama*Model` 字段（运行 `ollama list` 可查看本地已安装的模型）。
 
 #### 第 3 步 — 配置 IGT 使用 Ollama
 
@@ -299,7 +293,7 @@ ollama serve
 igt
 ```
 
-提示符会显示 `phi4 ❯`（或你设置的其他模型名）。首次请求可能需要 10–20 秒加载模型，之后的请求会更快。
+提示符会显示当前使用的模型（例如 `gemma4:12b ❯`）。首次请求可能需要 10–20 秒加载模型，之后的请求会更快。
 
 ---
 
@@ -332,6 +326,16 @@ igt
 退出会话时，IGT 会询问是否保存。选择保存后，整个对话线程会被压缩为一份完整的 Markdown 摘要，以带日期的条目形式追加到笔记库的 `03_Consultations.md` 文件中，可直接在 Obsidian、Typora 或任何 Markdown 编辑器中阅读。
 
 ![Ask log 截图](assets/09_ask_log.png)
+
+### 对话练习（`/chat`）
+
+用聊天的方式练习英语。`/chat` 会开启一个自由对话伙伴，围绕你提起的任何话题自然交谈，并用追问推动对话继续——它不会把每句回复都变成语法课。在你每次发言后，它只检查你写的内容中的真实错误，并列出温和的纠正（原文 → 地道说法 → 一句友好说明），不打断对话流。
+
+回复还可以选择朗读出来，用 `/voice` 开关语音。朗读需要本地文本转语音服务——详见[配置参考](#配置参考)中的 TTS 说明。
+
+### 解释纠正（`/explain`）
+
+对某处纠正不太明白？运行 `/explain`（别名 `/e`），IGT 会开启一个 `/ask` 对话，并预先载入你上一句话、它的纠正以及诊断出的错误——无需重新输入即可深入探究「为什么」。可以附上具体问题（`/explain 为什么这里要用 "the"？`），也可以直接运行获取整体讲解。
 
 ### 状态栏与提示
 
@@ -635,29 +639,36 @@ Delete last 1 input and all associated cards? [y/n] y
 
 ## 命令列表
 
-启动 IGT 后，所有命令以 `/` 开头。
+启动 IGT 后，所有命令以 `/` 开头。多数命令带有简写别名（括号内标出）。
 
-| 命令                | 说明                              |
-| ----------------- | ------------------------------- |
-| `/review`         | 间隔重复复习——逐一训练今日到期的所有闪卡           |
-| `/today`          | 每日计划：到期卡片数、建议练习量、今日重点错误类型       |
-| `/stats`          | 统计面板：按句子长度划分的错误率、掌握程度分布、CEFR 趋势 |
-| `/handbook`       | 生成个人错误手册（后台运行）                  |
-| `/practice`       | 针对你的高频错误类型启动专项练习                |
-| `/practice B2 10` | 以 B2 难度练习 10 题                  |
-| `/assess`         | 估算当前 CEFR 英语水平                  |
-| `/ask <问题>`       | 提出语法问题，提供带本地数据库引用的解答            |
-| `/translate <文本>` | 将中文文本翻译为英文（别名：`/tr`）            |
-| `/undo [N]`       | 删除最后 N 条输入及其关联闪卡（默认 1 条）        |
-| `/add <单词>`       | 查询单词并保存到词汇库                     |
-| `/vocab`          | 词汇测验；`/vocab --list` 浏览已保存词汇    |
-| `/gemini`         | 切换到 Google Gemini               |
-| `/qwen`           | 切换到阿里云 Qwen                     |
-| `/deepseek`       | 切换到 Deepseek                    |
-| `/ollama`         | 切换到本地 Ollama 模型                 |
-| `/llm status`     | 显示当前提供商、已配置密钥和模型名称              |
-| `/help`           | 显示命令参考                          |
-| `exit`            | 退出（会先显示本次会话摘要）                  |
+| 命令                   | 说明                              |
+| -------------------- | ------------------------------- |
+| `/review` (`/r`)     | 间隔重复复习——逐一训练今日到期的语法闪卡           |
+| `/word` (`/w`)       | 复习已保存的词汇；`/word --list` 浏览词汇    |
+| `/today`             | 每日计划：到期卡片数、建议练习量、今日重点错误类型       |
+| `/stats` (`/st`)     | 统计面板：按时段和句长划分的错误率、掌握度、CEFR 趋势   |
+| `/handbook` (`/h`)   | 生成个人错误手册（后台运行）                  |
+| `/practice` (`/p`)   | 针对你的高频错误类型启动专项练习                |
+| `/practice B2 10`    | 以 B2 难度练习 10 题                  |
+| `/assess` (`/as`)    | 估算当前 CEFR 英语水平                  |
+| `/ask`               | 开启多轮语法咨询对话（可选保存）                |
+| `/chat`              | 自由对话练习，附带温和纠错（可选语音朗读）           |
+| `/explain` (`/e`)    | 在 `/ask` 对话中解释你最近一次的语法纠正        |
+| `/translate` (`/tr`) | 中英互译（自动识别翻译方向）                  |
+| `/add <单词>` (`/a`)   | 查询一个或多个（逗号分隔）单词并保存到词汇库          |
+| `/retry`             | 用同一模型重新处理上一条输入                  |
+| `/undo [N]` (`/u`)   | 删除最后 N 条输入及其关联闪卡（默认 1 条）        |
+| `/voice`             | 开关 `/chat` 中的语音朗读               |
+| `/gemini`            | 切换到 Google Gemini               |
+| `/qwen`              | 切换到阿里云 Qwen                     |
+| `/deepseek`          | 切换到 Deepseek                    |
+| `/ollama`            | 切换到默认的本地 Ollama 模型             |
+| `/phi`               | 切换到本地 Phi-4（Ollama）             |
+| `/gemma`             | 切换到本地 Gemma 4（Ollama）           |
+| `/llm status`        | 显示当前提供商、已配置密钥和模型名称              |
+| `/theme`             | 切换 UI 颜色主题                      |
+| `/help`              | 显示命令参考                          |
+| `/exit` (`/q`)       | 退出（会先显示本次会话摘要）                  |
 
 **快捷键：**
 
@@ -676,7 +687,9 @@ IGT 使用两个配置文件：
 | `.env`            | 否        | API 密钥、文件路径、主题（私有） |
 | `igt_config.json` | 是        | 模型名称、提示词（共享）       |
 
-### `.env`（完整参考）
+### `.env`（常用设置）
+
+随附的 `.env.example` 是带完整注释的模板——复制它并按需填写即可。最常用的设置如下：
 
 ```env
 # --- AI 提供商密钥 ---
@@ -685,11 +698,16 @@ DASHSCOPE_API_KEYS=your-key      # Qwen / 阿里云百炼
 DEEPSEEK_API_KEYS=your-key       # Deepseek
 IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek | ollama
 
+# --- 模型覆盖（可选；按提供商覆盖 igt_config.json） ---
+IGT_GEMINI_FLASH_MODEL=          # 例如 gemini-2.5-flash
+IGT_QWEN_PRO_MODEL=              # 例如 qwen-plus、qwen-max
+IGT_OLLAMA_FLASH_MODEL=          # 例如 phi4、gemma4:12b
+
 # --- 文件路径与设置 ---
 IGT_DB_PATH=igt_data.db          # SQLite 数据库（首次运行自动创建）
 IGT_LOG_PATH=igt_db_error.log    # 后台错误日志
 IGT_GRAMMAR_REF_DB_PATH=grammar_ref.db # 用于 /ask 的语法参考数据库
-IGT_THEME=default                # CLI 颜色主题
+IGT_THEME=auto                   # auto | light | dark | 任意命名主题
 IGT_REVIEW_PATH=                 # 可选：Markdown 格式的纠正记录日志路径
 IGT_REPORT_PATH=                 # 手册/评估报告的导出文件夹
 
@@ -697,15 +715,23 @@ IGT_REPORT_PATH=                 # 手册/评估报告的导出文件夹
 IGT_VAULT_DIR=                   # Obsidian 仓库根目录
 IGT_VOCABULARY_FILE=             # 仓库内的词汇笔记路径
 IGT_PRACTICE_FILE=               # 仓库内的练习日志路径
-IGT_ASK_FILE=                    # 仓库内的语法咨询日志路径
+IGT_ASK_FILE=                    # 仓库内的 /ask 咨询日志（单文件）
+IGT_ASK_DIR=                     # 仓库内的 /ask 独立笔记目录
 
-# --- 文本转语音（可选；/chat 语音） ---
-IGT_TTS_BASE_URL=http://localhost:8880  # 任意兼容 OpenAI 的 /v1/audio/speech 服务（默认 Kokoro）
+# --- 文本转语音（可选；/chat 语音、/review [a]） ---
+IGT_TTS_BASE_URL=http://localhost:8880  # 兼容 OpenAI 的 /v1/audio/speech 服务
+IGT_TTS_SIDECAR=                 # 需自动启动的适配器脚本（留空 = 无）
+IGT_TTS_STREAM=false             # 低延迟 ffplay 流式播放（需 ffmpeg）
 IGT_TTS_VOICE=                   # 可选；默认 af_heart
 IGT_TTS_MODEL=                   # 可选；默认 kokoro
 ```
 
-> `/chat` 的语音朗读需要在 `IGT_TTS_BASE_URL` 处有可访问的 TTS 服务。默认指向本地 [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) 的 `8880` 端口。要切换提供商，只需把 `IGT_TTS_BASE_URL` 指向其他端口/地址即可，无需改动代码。若无可用服务，IGT 会打印一次性提示并保持静音，不影响文字输出。用 `/voice` 开关语音。
+> **文本转语音。** `/chat` 的语音朗读（以及 `/review` 中的 `[a]` 键）需要一个讲 OpenAI `/v1/audio/speech` 协议的本地 TTS 服务，可在 `IGT_TTS_BASE_URL` 处访问。支持两种后端：
+>
+> - **Kokoro**（默认）——原生兼容 OpenAI、内置预设音色的服务（[Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI)，端口 `8880`），无需适配器。
+> - **CosyVoice3**——克隆参考音色（支持跨语言）。它运行在一个本地小型 shim（`tools/cosyvoice-tts-shim.mjs`，通过 `IGT_TTS_SIDECAR` 自动启动）之后，该 shim 前置一个 CosyVoice Docker 容器。配置见 `.env.example` 中的 CosyVoice 配置段与 `tools/cosyvoice/`。
+>
+> 在 `.env` 中切换启用哪套配置即可更换后端，然后重启 `igt`。若无可用服务，IGT 会打印一次性提示并保持静音，不影响文字输出。用 `/voice` 开关语音。
 
 ### `igt_config.json`（摘要）
 
@@ -715,15 +741,17 @@ IGT_TTS_MODEL=                   # 可选；默认 kokoro
   "GeminiFlashModel": "gemini-2.5-flash",
   "GeminiProModel": "gemini-2.5-pro",
   "QwenFlashModel": "qwen-turbo",
-  "QwenProModel": "qwen3.6-max-preview",
-  "DeepseekFlashModel": "deepseek-chat",
-  "DeepseekProModel": "deepseek-reasoner",
-  "OllamaBaseUrl": "http://localhost:11434/v1",
-  "OllamaModel": "phi4"
+  "QwenProModel": "qwen3.6-plus",
+  "DeepseekFlashModel": "deepseek-v4-flash",
+  "DeepseekProModel": "deepseek-v4-pro",
+  "OllamaBaseUrl": "http://localhost:11434",
+  "OllamaFamily": "gemma",
+  "OllamaGemmaFlashModel": "gemma4:12b",
+  "OllamaPhiFlashModel": "phi4"
 }
 ```
 
-Flash 模型负责语法检查（速度优先）；Pro 模型负责手册和练习生成（质量优先）。要更换 Ollama 使用的模型，修改 `OllamaModel` 的值——运行 `ollama list` 可查看本地已安装的模型。
+Flash 模型负责语法检查（速度优先）；Pro 模型负责手册和练习生成（质量优先）。Ollama 支持两套本地模型家族——用 `/gemma` 和 `/phi` 在会话中切换，或设置 `OllamaFamily`。要更换本地模型，修改对应的 `Ollama*Model` 字段——运行 `ollama list` 可查看本地已安装的模型。
 
 所有 LLM 提示词存放在 `igt_config.json` 的 `Prompts` 部分，直接在那里编辑，无需改动源码。
 

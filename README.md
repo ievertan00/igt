@@ -2,7 +2,7 @@
 
 A command-line English grammar checker that turns every mistake into a learning event. Type a sentence, get an instant correction with explanation, and automatically build a flashcard deck that drills you on your personal error patterns.
 
-![Grammar check screenshot](C:\Users\Evertan\.igt\assets\1.jpg)
+![Grammar check screenshot](assets/1.jpg)
 
 ---
 
@@ -260,20 +260,14 @@ ollama --version
 
 #### Step 2 — Download a model
 
-IGT defaults to **Phi-4** (Microsoft, 14B parameters — good quality, fits in 8 GB RAM):
+IGT ships with two local model families you can switch between at any time — **Gemma 4** (Google) and **Phi-4** (Microsoft, 14B parameters — good quality, fits in 8 GB RAM). Pull whichever you want to use:
 
 ```sh
-ollama pull phi4
+ollama pull gemma4:12b    # default family
+ollama pull phi4          # alternative family
 ```
 
-This downloads about 9 GB. It only needs to happen once.
-
-To use a smaller/faster model instead, pull it and update `OllamaModel` in `igt_config.json`:
-
-```sh
-ollama pull llama3.2      # 3B, faster, slightly lower quality
-ollama pull mistral       # 7B, good balance
-```
+Each download is several GB and only needs to happen once. Inside IGT, switch families live with `/gemma` and `/phi`. To point a family at a different model, edit its `Ollama*Model` field in `igt_config.json` (run `ollama list` to see what you have installed).
 
 #### Step 3 — Configure IGT to use Ollama
 
@@ -299,7 +293,7 @@ Then in a new terminal window:
 igt
 ```
 
-The prompt will show `phi4 ❯` (or whichever model you set). The first request may take 10–20 seconds while the model loads into memory; subsequent requests are faster.
+The prompt will show the active model (e.g. `gemma4:12b ❯`). The first request may take 10–20 seconds while the model loads into memory; subsequent requests are faster.
 
 ---
 
@@ -332,6 +326,16 @@ Ask multi-turn questions about English grammar. IGT queries its local reference 
 When you exit the session, IGT prompts you to save. Choosing yes compacts the full thread into a single polished response and appends it as a dated entry to `03_Consultations.md` in your vault — readable in Obsidian, Typora, or any Markdown editor.
 
 ![Ask log screenshot](assets/09_ask_log.png)
+
+### Conversation Practice (`/chat`)
+
+Practice English by just talking. `/chat` opens a free-flowing conversation partner that chats naturally about whatever you bring up and keeps the exchange going with follow-up questions — it won't turn every reply into a lecture. After each of your messages it quietly checks *only* what you wrote for genuine mistakes and lists gentle corrections (original → natural version → a short friendly note), leaving your conversation uninterrupted.
+
+Optionally, replies can be spoken aloud. Toggle voice on/off with `/voice`. Spoken output needs a local text-to-speech server — see the TTS notes under [Configuration Reference](#configuration-reference).
+
+### Explain a Correction (`/explain`)
+
+Just got a correction you don't fully understand? Run `/explain` (alias `/e`) and IGT opens an `/ask` thread pre-loaded with your last sentence, its correction, and the diagnosed errors — so you can dig into *why* without retyping anything. Add a specific question (`/explain why is "the" wrong here?`) or run it bare for a general walkthrough.
 
 ### Status Bar & Tips
 
@@ -636,28 +640,36 @@ Use `/undo 3` to remove the last 3 inputs.
 
 ## Commands
 
-Start IGT with `igt`. All commands use a `/` prefix.
+Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (shown in parentheses).
 
-| Command           | Description                                                       |
-| ----------------- | ----------------------------------------------------------------- |
-| `/review`         | SRS review session — drills all flashcards due today              |
-| `/today`          | Daily plan: cards due, suggested drills, focus error type         |
-| `/stats`          | Analytics: error rate by sentence length, mastery breakdown, CEFR |
-| `/handbook`       | Generate your personal error handbook (runs as background task)   |
-| `/practice`       | Practice session targeting your top error types                   |
-| `/practice B2 10` | Practice at CEFR level B2, 10 questions                           |
-| `/assess`         | Estimate your current CEFR proficiency level                      |
-| `/ask <question>` | Ask a grammar question with local database citations              |
-| `/undo [N]`       | Delete the last N inputs and their flashcards (default: 1)        |
-| `/add <word>`     | Look up a word and save it to your vocabulary vault               |
-| `/vocab`          | Quiz yourself on saved vocabulary; `/vocab --list` to browse      |
-| `/gemini`         | Switch to Google Gemini                                           |
-| `/qwen`           | Switch to Alibaba Qwen                                            |
-| `/deepseek`       | Switch to Deepseek                                                |
-| `/ollama`         | Switch to local Ollama model                                      |
-| `/llm status`     | Show active provider, configured keys, and model names            |
-| `/help`           | Show command reference                                            |
-| `exit`            | Quit (shows session summary first)                                |
+| Command            | Description                                                       |
+| ------------------ | ----------------------------------------------------------------- |
+| `/review` (`/r`)   | SRS review session — drills all grammar flashcards due today      |
+| `/word` (`/w`)     | SRS review of your saved vocabulary; `/word --list` to browse     |
+| `/today`           | Daily plan: cards due, suggested drills, focus error type         |
+| `/stats` (`/st`)   | Analytics: errors by hour and sentence length, mastery, CEFR      |
+| `/handbook` (`/h`) | Generate your personal error handbook (runs as background task)   |
+| `/practice` (`/p`) | Practice session targeting your top error types                   |
+| `/practice B2 10`  | Practice at CEFR level B2, 10 questions                           |
+| `/assess` (`/as`)  | Estimate your current CEFR proficiency level                      |
+| `/ask`             | Open a multi-turn grammar consultation thread (opt-in save)       |
+| `/chat`            | Free-conversation practice with gentle corrections (optional voice) |
+| `/explain` (`/e`)  | Explain your last grammar correction in an `/ask` thread          |
+| `/translate` (`/tr`) | Translate between Chinese and English (auto-detects direction)  |
+| `/add <words>` (`/a`) | Look up one or more comma-separated words and save them to your vocab vault |
+| `/retry`           | Re-run your last input with the same model                        |
+| `/undo [N]` (`/u`) | Delete the last N inputs and their flashcards (default: 1)        |
+| `/voice`           | Toggle spoken replies in `/chat`                                  |
+| `/gemini`          | Switch to Google Gemini                                           |
+| `/qwen`            | Switch to Alibaba Qwen                                            |
+| `/deepseek`        | Switch to Deepseek                                                |
+| `/ollama`          | Switch to the default local Ollama model                         |
+| `/phi`             | Switch to local Phi-4 (Ollama)                                    |
+| `/gemma`           | Switch to local Gemma 4 (Ollama)                                 |
+| `/llm status`      | Show active provider, configured keys, and model names            |
+| `/theme`           | Switch the UI color theme                                         |
+| `/help`            | Show command reference                                            |
+| `/exit` (`/q`)     | Quit (shows session summary first)                                |
 
 **Keyboard shortcuts:**
 
@@ -676,7 +688,9 @@ IGT uses two configuration files:
 | `.env`            | No             | API keys, file paths, themes (private) |
 | `igt_config.json` | Yes            | Model names, prompts (shared)          |
 
-### `.env` (full reference)
+### `.env` (common settings)
+
+The shipped `.env.example` is a fully annotated template — copy it and fill in what you need. The most common settings:
 
 ```env
 # --- AI Provider Keys ---
@@ -685,11 +699,16 @@ DASHSCOPE_API_KEYS=your-key      # Qwen / Alibaba DashScope
 DEEPSEEK_API_KEYS=your-key       # Deepseek
 IGT_LLM_PROVIDER=gemini          # gemini | qwen | deepseek | ollama
 
+# --- Model overrides (optional; override igt_config.json per provider) ---
+IGT_GEMINI_FLASH_MODEL=          # e.g. gemini-2.5-flash
+IGT_QWEN_PRO_MODEL=              # e.g. qwen-plus, qwen-max
+IGT_OLLAMA_FLASH_MODEL=          # e.g. phi4, gemma4:12b
+
 # --- File Paths & Settings ---
 IGT_DB_PATH=igt_data.db          # SQLite database (auto-created on first run)
 IGT_LOG_PATH=igt_db_error.log    # background error log
 IGT_GRAMMAR_REF_DB_PATH=grammar_ref.db # Grammar reference database for /ask
-IGT_THEME=default                # CLI color theme
+IGT_THEME=auto                   # auto | light | dark | any named theme
 IGT_REVIEW_PATH=                 # optional: path to a Markdown corrections log
 IGT_REPORT_PATH=                 # folder for handbook/assessment exports
 
@@ -697,15 +716,23 @@ IGT_REPORT_PATH=                 # folder for handbook/assessment exports
 IGT_VAULT_DIR=                   # root of your Obsidian vault
 IGT_VOCABULARY_FILE=             # vocabulary note path within vault
 IGT_PRACTICE_FILE=               # practice log path within vault
-IGT_ASK_FILE=                    # ask consultation log path within vault
+IGT_ASK_FILE=                    # /ask consultation log (single file) within vault
+IGT_ASK_DIR=                     # /ask separate-notes directory within vault
 
-# --- Text-to-Speech (optional; /chat voice) ---
-IGT_TTS_BASE_URL=http://localhost:8880  # any OpenAI-compatible /v1/audio/speech server (Kokoro by default)
+# --- Text-to-Speech (optional; /chat voice, /review [a]) ---
+IGT_TTS_BASE_URL=http://localhost:8880  # OpenAI-compatible /v1/audio/speech server
+IGT_TTS_SIDECAR=                 # adapter script to auto-launch (blank = none)
+IGT_TTS_STREAM=false             # low-latency ffplay streaming (needs ffmpeg)
 IGT_TTS_VOICE=                   # optional; defaults to af_heart
 IGT_TTS_MODEL=                   # optional; defaults to kokoro
 ```
 
-> Spoken replies in `/chat` need a TTS server reachable at `IGT_TTS_BASE_URL`. The default targets a local [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) instance on port `8880`. To switch providers, just point `IGT_TTS_BASE_URL` at a different port/URL — no code changes. If no server is reachable, IGT prints a one-time notice and stays silent; text output is unaffected. Toggle voice on/off with `/voice`.
+> **Text-to-speech.** Spoken replies in `/chat` (and the `[a]` key in `/review`) need a local TTS server speaking the OpenAI `/v1/audio/speech` protocol, reachable at `IGT_TTS_BASE_URL`. Two backends are supported:
+>
+> - **Kokoro** (default) — a native OpenAI-compatible server with preset voices ([Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on port `8880`). No adapter needed.
+> - **CosyVoice3** — clones a reference voice (cross-lingual). It runs behind a small local shim (`tools/cosyvoice-tts-shim.mjs`, auto-launched via `IGT_TTS_SIDECAR`) that fronts a CosyVoice Docker container. See the CosyVoice profile in `.env.example` and `tools/cosyvoice/` for setup.
+>
+> Switch backends by swapping which profile is active in `.env`, then restart `igt`. If no server is reachable, IGT prints a one-time notice and stays silent — text output is unaffected. Toggle voice with `/voice`.
 
 ### `igt_config.json` (excerpt)
 
@@ -715,15 +742,17 @@ IGT_TTS_MODEL=                   # optional; defaults to kokoro
   "GeminiFlashModel": "gemini-2.5-flash",
   "GeminiProModel": "gemini-2.5-pro",
   "QwenFlashModel": "qwen-turbo",
-  "QwenProModel": "qwen3.6-max-preview",
-  "DeepseekFlashModel": "deepseek-chat",
-  "DeepseekProModel": "deepseek-reasoner",
-  "OllamaBaseUrl": "http://localhost:11434/v1",
-  "OllamaModel": "phi4"
+  "QwenProModel": "qwen3.6-plus",
+  "DeepseekFlashModel": "deepseek-v4-flash",
+  "DeepseekProModel": "deepseek-v4-pro",
+  "OllamaBaseUrl": "http://localhost:11434",
+  "OllamaFamily": "gemma",
+  "OllamaGemmaFlashModel": "gemma4:12b",
+  "OllamaPhiFlashModel": "phi4"
 }
 ```
 
-Flash models handle grammar correction (speed-optimized); Pro models handle handbook and practice generation (quality-optimized). To change which Ollama model IGT uses, update `OllamaModel` — run `ollama list` to see what you have installed.
+Flash models handle grammar correction (speed-optimized); Pro models handle handbook and practice generation (quality-optimized). Ollama supports two local model families — switch between them in-session with `/gemma` and `/phi`, or set `OllamaFamily`. To use a different local model, update the matching `Ollama*Model` field — run `ollama list` to see what you have installed.
 
 All LLM prompts live in the `Prompts` section of `igt_config.json`. You can edit them to tune IGT's behavior without touching source files.
 
