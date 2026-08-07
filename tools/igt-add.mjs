@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import readline from "readline";
 import Database from "better-sqlite3";
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
+import { cleanEnglishCounterpart, isMainlyChinese } from "../lib/shared/add-input.mjs";
 import { ui, paint, colors, Spinner, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -212,11 +213,30 @@ function renderEntry(f) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-const word = process.argv.slice(2).join(" ").trim();
+const requestedWord = process.argv.slice(2).join(" ").trim();
 
-if (!word) {
+if (!requestedWord) {
   console.error(`\n  ${paint(colors.yellow, "Usage: /add <word or phrase>  (or /add word1, word2, …)")}\n`);
   process.exit(1);
+}
+
+const llmManager = initializeLLMProviders();
+let word = requestedWord;
+
+if (isMainlyChinese(requestedWord)) {
+  const translationPrompt = `You translate vocabulary lookup terms for an English learner. Return only the single most relevant natural English dictionary headword or phrase for the user's Chinese word or phrase. Do not explain, add alternatives, punctuation, or markdown. Use the canonical/base form when appropriate.`;
+  startSpinner("Finding the English counterpart…");
+  try {
+    const translated = await llmManager.generateWithFallback(requestedWord, translationPrompt, { taskType: "translation" });
+    word = cleanEnglishCounterpart(translated);
+  } catch (err) {
+    stopSpinner();
+    console.error(`\n  ${paint(c.yellow, "English lookup failed:")} ${err.message}\n`);
+    rl.close();
+    process.exit(1);
+  }
+  stopSpinner();
+  console.log(`\n  ${paint(c.gray, `Translated "${requestedWord}" to "${word}".`)}`);
 }
 
 const SYSTEM_PROMPT = `You are a concise English vocabulary assistant. When given a word, phrase, or collocation, output a vocabulary entry in exactly this markdown format with no extra text.
@@ -244,7 +264,6 @@ if (existingBlock) {
   process.exit(0);
 }
 
-const llmManager = initializeLLMProviders();
 const activeProvider = llmManager.getCurrentProviderName();
 const activeModel = llmManager.getCurrentProvider().getModelName(config, "grammar");
 
