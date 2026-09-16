@@ -14,7 +14,8 @@ package-lock.json
 handbook_*.md
 assessment_*.md
 docs/
-tests/
+tests/*
+!tests/learning-workflows.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md

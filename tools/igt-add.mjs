@@ -100,6 +100,9 @@ function parseEntry(raw) {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderEntry(f) {
+  if (process.send && f.word) {
+    process.send({ type: "english-expression", text: [f.word, f.example1 || f.example].filter(Boolean).join(". ") });
+  }
   const lines = [];
   const isLight = (currentTheme === "light" || currentTheme.endsWith("light") || currentTheme.endsWith("latte") || currentTheme === "academic");
   const dimColor = isLight ? colors.blue : colors.gray;
@@ -248,8 +251,8 @@ IMPORTANT: If the user provides a plural noun, a gerund, an infinitive verb, or 
 **中文:** {concise Chinese translation or explanation}
 **Synonyms:** {3–5 close synonyms or synonymous phrases, comma-separated}
 **Collocations:** {3–5 common collocations or typical usage patterns/prepositions, semicolon-separated}
-**Example 1:** {a natural sentence using the word or phrase}
-**Example 2:** {another natural sentence in a different context}
+**Example 1:** {a natural sentence using the word or phrase in everyday life}
+**Example 2:** {a natural sentence in work communication when appropriate, otherwise a different everyday context}
 **Example 3:** {another natural sentence showing a different usage or register}
 **Note:** {one short usage tip or common mistake}`;
 

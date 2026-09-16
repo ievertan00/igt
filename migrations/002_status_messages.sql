@@ -19,7 +19,6 @@ INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Your vocabul
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: IGT supports Gemini, Qwen, Deepseek, and Ollama providers.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Use /practice --count=20 to generate a larger exercise set.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: The progress bar in /review shows how many cards remain in your session.', 'tip');
-INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: Try igt --assess to determine your CEFR level based on past inputs.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: In the REPL, use up/down arrows to navigate through your input history.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: The server runs on port 18964 by default.', 'tip');
 INSERT OR IGNORE INTO status_messages (content, type) VALUES ('Tip: You can find your database file at igt_data.db in the project root.', 'tip');
