@@ -1,6 +1,6 @@
 # Interactive Grammar Tool (IGT)
 
-A command-line English grammar checker that turns every mistake into a learning event. Type a sentence, get an instant correction with explanation, and automatically build a flashcard deck that drills you on your personal error patterns.
+A command-line English learning companion for everyday life and work communication. Check your writing, understand corrections, build vocabulary, listen and repeat, practise conversations, and revisit what you have learned through spaced review.
 
 ![Grammar check screenshot](assets/1.jpg)
 
@@ -8,6 +8,7 @@ A command-line English grammar checker that turns every mistake into a learning 
 
 ## Table of Contents
 
+- [A Connected Learning Routine](#a-connected-learning-routine)
 - [Before You Start](#before-you-start)
 - [Installation (Step by Step)](#installation-step-by-step)
 - [Database Initialization & Migrations](#database-initialization--migrations)
@@ -21,6 +22,18 @@ A command-line English grammar checker that turns every mistake into a learning 
 - [License](#license)
 
 ---
+
+## A connected learning routine
+
+Use `/help` to browse commands by learning activity, or `/today` to see your review counts and choose a short session.
+
+1. **Learn an expression:** `/add follow up`. Read its meaning, collocations, and examples; choose whether to save it.
+2. **Listen and repeat:** `/listen` plays the latest English expression and, after a vocabulary lookup, its first available example. Repeat aloud, then make your own sentence. Use `/listen <English text>` for a specific phrase and `/listen --stop` to stop playback.
+3. **Use it:** type a daily update or work message, such as “I will follow up with the client tomorrow.” Use `/explain` to understand any correction, or translate a Chinese expression and replay the English.
+4. **Converse:** open `/chat` and describe a situation: “Help me practise asking a colleague for clarification.” Inside chat, `/voice on`, `/voice off`, `/voice status`, `/listen`, and `/exit` are local controls.
+5. **Recall it later:** `/word 5` reviews vocabulary, `/review 5` reviews grammar, and `/quiz 3` gives fresh Chinese-to-English practice based on recorded mistakes.
+
+`/listen` also remembers the latest correction, the English side of a translation, quiz feedback, a chat reply, or a revealed review answer. It works on demand even when automatic chat voice is off. Playback uses your existing TTS configuration. Listening and repeating are self-practice; IGT does not record or assess pronunciation.
 
 ## Before You Start
 
@@ -366,18 +379,9 @@ Grading is exact-match first. If your answer differs in phrasing but is semantic
 
 ### Daily Plan (`/today`)
 
-Shows a summary of what to do today:
+Shows today’s checked sentences, words added, and grammar/vocabulary cards reviewed—even on a vocabulary-only day. It lists exact due counts for both decks and suggests listening, writing, and conversation activities for everyday life and work.
 
-```
-❯ /today
-
-Today's Plan
-  SRS cards due:     12
-  Suggested drills:   5 exercises
-  Focus area:        Verb Tense  (most frequent in last 30 days)
-
-Launch /review now? [y/n]
-```
+When cards are due, choose `g` for five grammar cards, `w` for five vocabulary cards, or Enter to continue later. Review counts cover cards already in SQLite; `/word` also imports saved vocabulary notes.
 
 ### Analytics (`/stats`)
 
@@ -387,7 +391,16 @@ The stats dashboard provides a comprehensive view of your learning journey:
 
 - **Effort Trend**: A visual 7-day chart of your input volume.
 - **Mastery Breakdown**: Identifies your most frequent error types (Top 3 Priorities).
-- **CEFR Trajectory**: Tracks your proficiency level progression over months.
+
+### Personalized Translation Quiz (`/quiz`)
+
+`/quiz` turns the same real error history used by your handbook into active Chinese-to-English practice. It generates fresh Chinese prompts around your recurring grammar weaknesses, accepts valid English alternatives, and gives a score, corrected expression, and concise feedback in Chinese after every answer.
+
+```text
+/quiz                 # 5 questions from the last 30 days
+/quiz 10              # 10 questions
+/quiz 5 --days=0      # use all error history
+```
 
 ### Error Handbook (`/handbook`)
 
@@ -443,7 +456,6 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
    the next 2 weeks; use the /review deck daily.
 2. Target Preposition Usage in /practice sessions — fixed verb–preposition pairs
    (arrive at, good at, depend on) account for your 9 remaining preposition errors.
-3. Run /assess again in 3 weeks to confirm the B2 trajectory.
 
 > [!TIP] Coach's Note
 > One targeted drill per day on the present perfect / simple past contrast will
@@ -614,10 +626,6 @@ node tools/igt-practice.mjs --count=15
 node tools/igt-practice.mjs --type "Article Usage"   # target a specific error type
 ```
 
-### CEFR Assessment (`/assess`)
-
-Estimates your current English level (A1–C2) from your error history — frequency, severity, distribution, and improvement trend. Each result is stored with the data window it was scored against so you can track your trajectory over time.
-
 ### Vocabulary Lookup (`/add`)
 
 Look up any word and save it to your local Markdown vocabulary vault. Review saved words with `/vocab`.
@@ -646,12 +654,12 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | ------------------ | ----------------------------------------------------------------- |
 | `/review` (`/r`)   | SRS review session — drills all grammar flashcards due today      |
 | `/word` (`/w`)     | SRS review of your saved vocabulary; `/word --list` to browse     |
-| `/today`           | Daily plan: cards due, suggested drills, focus error type         |
-| `/stats` (`/st`)   | Analytics: errors by hour and sentence length, mastery, CEFR      |
+| `/today` | Grammar and vocabulary review counts, listening, writing, and conversation |
+| `/stats` (`/st`)   | Factual activity, recurring errors, mastery, and review statistics |
 | `/handbook` (`/h`) | Generate your personal error handbook (runs as background task)   |
 | `/practice` (`/p`) | Practice session targeting your top error types                   |
 | `/practice B2 10`  | Practice at CEFR level B2, 10 questions                           |
-| `/assess` (`/as`)  | Estimate your current CEFR proficiency level                      |
+| `/quiz [1-10]`     | Personalized Chinese-to-English quiz with per-answer feedback     |
 | `/ask`             | Open a multi-turn grammar consultation thread (opt-in save)       |
 | `/chat`            | Free-conversation practice with gentle corrections (optional voice) |
 | `/explain` (`/e`)  | Explain your last grammar correction in an `/ask` thread          |
@@ -659,7 +667,8 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | `/add <words>` (`/a`) | Look up one or more comma-separated words and save them to your vocab vault |
 | `/retry`           | Re-run your last input with the same model                        |
 | `/undo [N]` (`/u`) | Delete the last N inputs and their flashcards (default: 1)        |
-| `/voice`           | Toggle spoken replies in `/chat`                                  |
+| `/voice [on\|off\|status]` | Control automatic chat speech, including inside `/chat` |
+| `/listen [text]` | Replay the latest English expression or supplied text; `--stop` stops audio |
 | `/gemini`          | Switch to Google Gemini                                           |
 | `/qwen`            | Switch to Alibaba Qwen                                            |
 | `/deepseek`        | Switch to Deepseek                                                |
@@ -708,9 +717,9 @@ IGT_OLLAMA_FLASH_MODEL=          # e.g. phi4, gemma4:12b
 IGT_DB_PATH=igt_data.db          # SQLite database (auto-created on first run)
 IGT_LOG_PATH=igt_db_error.log    # background error log
 IGT_GRAMMAR_REF_DB_PATH=grammar_ref.db # Grammar reference database for /ask
-IGT_THEME=auto                   # auto | light | dark | any named theme
+IGT_THEME=auto                   # auto | light | dark; changes semantic colors only
 IGT_REVIEW_PATH=                 # optional: path to a Markdown corrections log
-IGT_REPORT_PATH=                 # folder for handbook/assessment exports
+IGT_REPORT_PATH=                 # folder for handbook exports
 
 # --- Obsidian Integration (optional) ---
 IGT_VAULT_DIR=                   # root of your Obsidian vault

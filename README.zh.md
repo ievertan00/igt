@@ -1,6 +1,6 @@
 # 互动语法工具（IGT）
 
-一款命令行英语语法检查工具，将每一次错误转化为学习机会。在提示符处输入英语句子，即可获得即时纠正和解析，同时自动积累一套以你的个人错误模式为基础的闪卡复习库。
+一款面向日常生活与工作沟通的命令行英语学习工具。你可以检查写作、理解纠错、积累词汇、听读跟练、练习对话，并通过间隔复习巩固所学表达。
 
 ![语法检查截图](assets/1.jpg)
 
@@ -8,6 +8,7 @@
 
 ## 目录
 
+- [连贯的学习流程](#连贯的学习流程)
 - [开始前的准备](#开始前的准备)
 - [安装步骤（逐步说明）](#安装步骤逐步说明)
 - [数据库初始化与迁移](#数据库初始化与迁移)
@@ -21,6 +22,18 @@
 - [许可证](#许可证)
 
 ---
+
+## 连贯的学习流程
+
+用 `/help` 按学习活动查找命令，或用 `/today` 查看待复习数量并选择一项练习。
+
+1. **学一个表达：**输入 `/add follow up`，查看释义、搭配和例句，自行决定是否保存。
+2. **听读跟练：**输入 `/listen` 播放最近的英文表达；查词后会播放英文词条及第一条可用例句。跟读后，试着自己造句。也可以用 `/listen <英文>` 指定内容，用 `/listen --stop` 停止播放。
+3. **实际使用：**直接输入日常记录或工作消息，例如 “I will follow up with the client tomorrow.”，用 `/explain` 理解纠错。也可以先翻译中文，再播放英文译文。
+4. **情境对话：**进入 `/chat`，输入 “Help me practise asking a colleague for clarification.”。对话内支持 `/voice on`、`/voice off`、`/voice status`、`/listen` 和 `/exit`，这些命令不会发送给模型。
+5. **之后复习：**用 `/word 5` 回忆词汇，用 `/review 5` 复习语法，用 `/quiz 3` 根据错误记录练习新的中译英题目。
+
+`/listen` 也能播放最近的纠正句、翻译中的英文、Quiz 推荐表达、对话回复或已揭示的复习答案。关闭对话自动语音后仍可按需播放，沿用现有 TTS 配置。跟读属于自主练习；IGT 不录音，也不评估发音。
 
 ## 开始前的准备
 
@@ -366,18 +379,9 @@ igt
 
 ### 每日计划（`/today`）
 
-显示今日学习安排摘要：
+展示当天检查的句子、新增词汇以及复习过的语法和词汇卡片；即使当天没有检查句子，也会展示词汇学习记录。待复习数量分别统计两个卡组，并提供适用于日常生活与工作沟通的听读、写作和对话建议。
 
-```
-❯ /today
-
-Today's Plan
-  SRS cards due:     12
-  Suggested drills:   5 exercises
-  Focus area:        Verb Tense  (most frequent in last 30 days)
-
-Launch /review now? [y/n]
-```
+有卡片待复习时，输入 `g` 复习五张语法卡，输入 `w` 复习五张词汇卡，直接回车稍后再练。数量统计 SQLite 中已有的卡片；`/word` 还会导入词汇笔记中的新词。
 
 ### 数据统计 (`/stats`)
 
@@ -387,7 +391,16 @@ Launch /review now? [y/n]
 
 - **努力趋势 (Effort Trend)**: 过去 7 天输入量的可视化图表。
 - **掌握度分析 (Mastery Breakdown)**: 识别你最频繁的错误类型（前 3 项优先任务）。
-- **CEFR 轨迹 (CEFR Trajectory)**: 追踪你数月来的英语水平进步情况。
+
+### 个性化中译英测验 (`/quiz`)
+
+`/quiz` 使用与个人错误手册相同的真实错误记录，围绕你反复出现的语法弱点生成新的中文句子。你用英文作答后，系统会接受合理的不同表达，并逐题给出分数、建议表达和中文反馈。
+
+```text
+/quiz                 # 使用最近 30 天记录，默认 5 题
+/quiz 10              # 生成 10 题
+/quiz 5 --days=0      # 使用全部历史错误记录
+```
 
 ### 个人错误手册 (`/handbook`)
 
@@ -443,7 +456,6 @@ node tools/igt-handbook.mjs --days=30
    每天使用 /review 复习闪卡。
 2. 在 /practice 练习中针对介词搭配——固定动词介词组合
    （arrive at、good at、depend on）占剩余介词错误的大部分。
-3. 三周后再次运行 /assess，确认 B2 进步轨迹。
 
 > [!TIP] Coach's Note
 > 每天针对"现在完成时 / 一般过去时"做一组专项练习，
@@ -613,10 +625,6 @@ node tools/igt-practice.mjs --count=15
 node tools/igt-practice.mjs --type "Article Usage"   # 针对特定错误类型
 ```
 
-### CEFR 水平评估（`/assess`）
-
-根据你的错误记录（频率、严重程度、分布和进步趋势）估算你当前的英语水平（A1–C2）。每次评估结果都会连同评分依据的数据窗口一起存储，方便追踪长期进步轨迹。
-
 ### 词汇查询（`/add`）
 
 查询任意单词并保存到本地 Markdown 词汇库，用 `/vocab` 随时复习。
@@ -645,12 +653,12 @@ Delete last 1 input and all associated cards? [y/n] y
 | -------------------- | ------------------------------- |
 | `/review` (`/r`)     | 间隔重复复习——逐一训练今日到期的语法闪卡           |
 | `/word` (`/w`)       | 复习已保存的词汇；`/word --list` 浏览词汇    |
-| `/today`             | 每日计划：到期卡片数、建议练习量、今日重点错误类型       |
-| `/stats` (`/st`)     | 统计面板：按时段和句长划分的错误率、掌握度、CEFR 趋势   |
+| `/today` | 语法与词汇待复习数量，以及听读、写作和对话建议 |
+| `/stats` (`/st`)     | 事实性活动、重复错误、掌握度和复习统计   |
 | `/handbook` (`/h`)   | 生成个人错误手册（后台运行）                  |
 | `/practice` (`/p`)   | 针对你的高频错误类型启动专项练习                |
 | `/practice B2 10`    | 以 B2 难度练习 10 题                  |
-| `/assess` (`/as`)    | 估算当前 CEFR 英语水平                  |
+| `/quiz [1-10]`       | 根据错误手册记录进行中译英测验，并逐题获得中文反馈        |
 | `/ask`               | 开启多轮语法咨询对话（可选保存）                |
 | `/chat`              | 自由对话练习，附带温和纠错（可选语音朗读）           |
 | `/explain` (`/e`)    | 在 `/ask` 对话中解释你最近一次的语法纠正        |
@@ -658,7 +666,8 @@ Delete last 1 input and all associated cards? [y/n] y
 | `/add <单词>` (`/a`)   | 查询一个或多个（逗号分隔）单词并保存到词汇库          |
 | `/retry`             | 用同一模型重新处理上一条输入                  |
 | `/undo [N]` (`/u`)   | 删除最后 N 条输入及其关联闪卡（默认 1 条）        |
-| `/voice`             | 开关 `/chat` 中的语音朗读               |
+| `/voice [on\|off\|status]` | 控制对话自动语音，在 `/chat` 内也可使用 |
+| `/listen [英文]` | 播放最近的英文表达或指定内容；`--stop` 停止播放 |
 | `/gemini`            | 切换到 Google Gemini               |
 | `/qwen`              | 切换到阿里云 Qwen                     |
 | `/deepseek`          | 切换到 Deepseek                    |
@@ -707,9 +716,9 @@ IGT_OLLAMA_FLASH_MODEL=          # 例如 phi4、gemma4:12b
 IGT_DB_PATH=igt_data.db          # SQLite 数据库（首次运行自动创建）
 IGT_LOG_PATH=igt_db_error.log    # 后台错误日志
 IGT_GRAMMAR_REF_DB_PATH=grammar_ref.db # 用于 /ask 的语法参考数据库
-IGT_THEME=auto                   # auto | light | dark | 任意命名主题
+IGT_THEME=auto                   # auto | light | dark；只改变语义颜色，不改变终端背景
 IGT_REVIEW_PATH=                 # 可选：Markdown 格式的纠正记录日志路径
-IGT_REPORT_PATH=                 # 手册/评估报告的导出文件夹
+IGT_REPORT_PATH=                 # 手册报告的导出文件夹
 
 # --- Obsidian 集成（可选） ---
 IGT_VAULT_DIR=                   # Obsidian 仓库根目录
