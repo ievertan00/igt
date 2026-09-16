@@ -40,54 +40,14 @@ test('applyTheme correctly mutates colors properties, updates currentTheme, and 
   assert.strictEqual(colors.cyan, themes.light.cyan);
   assert.strictEqual(colors.yellow, themes.light.yellow);
 
-  // Apply 'tokyo-night' theme
-  const resultTokyo = applyTheme('tokyo-night');
-  assert.strictEqual(resultTokyo, true);
-  assert.strictEqual(ui.currentTheme, 'tokyo-night');
-  assert.strictEqual(colors.cyan, themes['tokyo-night'].cyan);
-  assert.strictEqual(colors.yellow, themes['tokyo-night'].yellow);
+  assert.deepStrictEqual(Object.keys(themes).sort(), ['auto', 'dark', 'light']);
+  for (const removed of ['tokyo-night', 'catppuccin', 'gruvbox', 'academic']) {
+    assert.strictEqual(applyTheme(removed), false);
+  }
 
-  // Apply 'catppuccin' theme
-  const resultCat = applyTheme('catppuccin');
-  assert.strictEqual(resultCat, true);
-  assert.strictEqual(ui.currentTheme, 'catppuccin');
-  assert.strictEqual(colors.cyan, themes.catppuccin.cyan);
-  assert.strictEqual(colors.yellow, themes.catppuccin.yellow);
-
-  // Apply 'gruvbox' theme
-  const resultGruv = applyTheme('gruvbox');
-  assert.strictEqual(resultGruv, true);
-  assert.strictEqual(ui.currentTheme, 'gruvbox');
-  assert.strictEqual(colors.cyan, themes.gruvbox.cyan);
-  assert.strictEqual(colors.yellow, themes.gruvbox.yellow);
-
-  // Apply 'nord-light' theme
-  const resultNordLight = applyTheme('nord-light');
-  assert.strictEqual(resultNordLight, true);
-  assert.strictEqual(ui.currentTheme, 'nord-light');
-  assert.strictEqual(colors.cyan, themes['nord-light'].cyan);
-  assert.strictEqual(colors.yellow, themes['nord-light'].yellow);
-
-  // Apply 'tokyo-night-light' theme
-  const resultTokyoLight = applyTheme('tokyo-night-light');
-  assert.strictEqual(resultTokyoLight, true);
-  assert.strictEqual(ui.currentTheme, 'tokyo-night-light');
-  assert.strictEqual(colors.cyan, themes['tokyo-night-light'].cyan);
-  assert.strictEqual(colors.yellow, themes['tokyo-night-light'].yellow);
-
-  // Apply 'catppuccin-latte' theme
-  const resultLatte = applyTheme('catppuccin-latte');
-  assert.strictEqual(resultLatte, true);
-  assert.strictEqual(ui.currentTheme, 'catppuccin-latte');
-  assert.strictEqual(colors.cyan, themes['catppuccin-latte'].cyan);
-  assert.strictEqual(colors.yellow, themes['catppuccin-latte'].yellow);
-
-  // Apply 'academic' theme
-  const resultAcademic = applyTheme('academic');
-  assert.strictEqual(resultAcademic, true);
-  assert.strictEqual(ui.currentTheme, 'academic');
-  assert.strictEqual(colors.cyan, themes.academic.cyan);
-  assert.strictEqual(colors.yellow, themes.academic.yellow);
+  // Theme changes only affect semantic colors, never terminal-wide settings.
+  assert.equal(themes.auto.termBg, undefined);
+  assert.equal(themes.dark.termFg, undefined);
 
   // Clean up state
   applyTheme('auto');
