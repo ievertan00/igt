@@ -13,8 +13,6 @@
   "OllamaFamily": "gemma",
   "OllamaGemmaFlashModel": "gemma4:12b",
   "OllamaGemmaProModel": "gemma4:12b",
-  "OllamaPhiFlashModel": "phi4",
-  "OllamaPhiProModel": "phi4",
   "Tts": {
     "BaseUrl": "http://localhost:8880",
     "Voice": "af_heart",

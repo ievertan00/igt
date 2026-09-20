@@ -72,6 +72,25 @@ test("daily plan handles a fresh learner without prompting for nonexistent cards
   await runToday(async () => { assert.fail("No review prompt expected"); }, null, {});
 });
 
+test("daily plan shows coach tasks from the diagnosis seam", async (t) => {
+  let output = "";
+  t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
+  t.mock.method(api, "getStats", async () => ({ dueCounts: { grammar: 0, vocab: 0 }, priorities: [] }));
+  t.mock.method(api, "getTodayEffort", async () => ({ inputs_today: 1, vocab_added_today: 0, grammar_reviewed: 0, vocab_reviewed: 0 }));
+  const config = {
+    loadLearningDiagnosis: async () => ({
+      priorities: [{
+        errorType: "Grammar / Verb Tense",
+        practiceAttempts: 0,
+        prescription: [{ name: "识别", task: "标记时间线", check: "完成 5 题" }],
+      }],
+    }),
+  };
+  await runToday(async () => { assert.fail("No review prompt expected"); }, null, config);
+  assert.match(output, /Coach tasks for today/);
+  assert.match(output, /标记时间线/);
+});
+
 test("listen uses English translation and quiz feedback even with automatic voice off", async (t) => {
   const spoken = [];
   t.mock.method(globalThis, "fetch", async (_url, options) => {
@@ -202,4 +221,20 @@ test("add replays the returned English entry, not a Chinese lookup term", async 
   await handleCommand("/listen", ctx);
   await new Promise(setImmediate);
   assert.equal(spoken.at(-1), "follow up. I will follow up tomorrow.");
+});
+
+test("word review subcommand opens the vocabulary SRS deck", async (t) => {
+  let output = "";
+  let spawned = false;
+  t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
+  t.mock.method(api, "seedVocab", async () => ({ seeded: 0 }));
+  t.mock.method(api, "getDue", async () => ({ cards: [] }));
+  t.mock.method(childProcess, "spawn", () => {
+    spawned = true;
+    throw new Error("lookup subprocess should not run");
+  });
+  const ctx = { config: {}, askLine: async () => null, rl: null, setSigint() {} };
+  await handleCommand("/word review 5", ctx);
+  assert.equal(spawned, false);
+  assert.match(output, /No vocab cards due/);
 });

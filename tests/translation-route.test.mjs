@@ -121,6 +121,7 @@ describe("quiz routes", () => {
   let malformedFirst = false;
   let quizWriterCalls = 0;
   let quizHistory = [];
+  const persistedAttempts = [];
   const records = [{
     error_type: "Articles",
     original_text: "I went to bank.",
@@ -139,6 +140,7 @@ describe("quiz routes", () => {
       if (prompt.includes("quiz writer")) {
         quizWriterCalls += 1;
         const request = JSON.parse(input);
+        assert.match(request.context_plan, /^(work-email|meeting|customer-issue|daily-routine|travel|social)$/);
         if (request.excluded_questions?.includes("我去了我们常去的那家银行。")) {
           return JSON.stringify({ questions: [{ chinese: "我昨天在车站遇到了大学同学。", reference_answer: "I ran into a college classmate at the station yesterday.", focus: "Past tense", error_type: "Verb Tense" }] });
         }
@@ -149,6 +151,7 @@ describe("quiz routes", () => {
             prompt: "我去了我们常去的那家银行。",
             reference_answer: "I went to the bank we usually use.",
             focus: "Use the definite article for a specific place.",
+            context: "work-email",
           }],
         });
       }
@@ -169,6 +172,7 @@ describe("quiz routes", () => {
     loadQuizRecords: async () => records,
     loadQuizHistory: async () => quizHistory,
     persistQuizQuestions: async () => 0,
+    persistPracticeAttempt: async (attempt) => { persistedAttempts.push(attempt); return persistedAttempts.length; },
   });
 
   function callRoute(url, body) {
@@ -259,6 +263,7 @@ describe("quiz routes", () => {
         reference_answer: "I went to the bank yesterday.",
         focus: "Definite article",
         error_type: "Articles",
+        context: "customer-issue",
       },
       answer: "I went to the bank yesterday.",
     });
@@ -267,6 +272,10 @@ describe("quiz routes", () => {
     assert.strictEqual(result.status, 200);
     assert.strictEqual(result.body.data.score, 88);
     assert.match(result.body.data.feedback_zh, /冠词/);
+    assert.equal(persistedAttempts.at(-1).activityType, "quiz");
+    assert.equal(persistedAttempts.at(-1).targetErrorType, "Articles");
+    assert.equal(persistedAttempts.at(-1).contextLabel, "customer-issue");
+    assert.equal(persistedAttempts.at(-1).learnerAnswer, "I went to the bank yesterday.");
   });
 
   it("rejects an empty English answer", async () => {

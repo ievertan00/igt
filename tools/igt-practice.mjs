@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
 import { ui, paint, colors, Spinner, wrapText } from "../lib/cli/ui/index.mjs";
+import { savePracticeAttempt } from "../lib/features/practice/attempts.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -359,6 +360,15 @@ function gradeAnswer(exercise, userAnswer) {
   return user === correct;
 }
 
+function isUsableExercise(exercise) {
+  return exercise && typeof exercise === "object"
+    && String(exercise.question || "").trim()
+    && Array.isArray(exercise.options)
+    && exercise.options.length === 4
+    && String(exercise.answer || "").trim()
+    && String(exercise.explanation || "").trim();
+}
+
 const BOX_WIDTH = 72;
 const BOX_INNER_WIDTH = BOX_WIDTH - 6; // subtract borders (│ , │) + padding
 
@@ -394,7 +404,7 @@ function displayResult(exercise, isCorrect) {
 }
 
 // Export for testing
-export { generateExercises, getErrorTypes, getLinguisticContext, gradeAnswer };
+export { generateExercises, getErrorTypes, getLinguisticContext, gradeAnswer, isUsableExercise };
 
 // Main practice loop
 async function runPractice() {
@@ -511,7 +521,8 @@ async function runPractice() {
     }
   }
 
-  if (!Array.isArray(exercises) || exercises.length === 0) {
+  exercises = Array.isArray(exercises) ? exercises.filter(isUsableExercise) : [];
+  if (exercises.length === 0) {
     console.log("\n⚠️  Failed to generate exercises.");
     db.close();
     rl.close();
@@ -528,18 +539,24 @@ async function runPractice() {
     const ex = exercises[i];
     displayExercise(ex, i + 1, exercises.length);
 
-    // Get user answer (no skipping allowed)
+    // Get user answer; q lets a learner finish a partial session safely.
     let userAnswer;
     while (true) {
-      userAnswer = await askQuestion("Your answer (A/B/C/D): ");
+      userAnswer = await askQuestion("Your answer (A/B/C/D, or q to finish): ");
+      if (userAnswer && userAnswer.trim().toLowerCase() === "q") break;
       if (userAnswer && userAnswer.trim().length > 0) break;
       console.log("⚠️  Please provide an answer to continue.");
+    }
+
+    if (userAnswer && userAnswer.trim().toLowerCase() === "q") {
+      console.log("\nLeaving practice early; saving the answered questions.");
+      break;
     }
 
     // Grade
     const isCorrect = gradeAnswer(ex, userAnswer);
     if (isCorrect) correctCount++;
-    results.push({ exercise: ex, correct: isCorrect });
+    results.push({ exercise: ex, correct: isCorrect, learnerAnswer: userAnswer.trim() });
 
     // Show result
     displayResult(ex, isCorrect);
@@ -611,6 +628,23 @@ async function runPractice() {
 
   // Save session to data warehouse and update history
   try {
+    for (const result of results) {
+      try {
+        await savePracticeAttempt({
+          activityType: "drill",
+          targetErrorType: errorTypes.map((item) => item.error_type).join(", "),
+          targetPattern: result.exercise.question,
+          contextLabel: `drill:${selectedLevel}`,
+          prompt: result.exercise.question,
+          learnerAnswer: result.learnerAnswer || "(no answer)",
+          referenceAnswer: result.exercise.answer,
+          score: result.correct ? 100 : 0,
+          feedback: { explanation: result.exercise.explanation, correct: result.correct },
+        });
+      } catch (e) {
+        console.warn(`Could not record drill result: ${e.message}`);
+      }
+    }
     const sessionFile = savePracticeSession(exercises, results, { level: selectedLevel, errorSummary });
     savePracticeHistory(exercises);
     console.log(`\n💾 Session saved: ${sessionFile}`);

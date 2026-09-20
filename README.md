@@ -383,6 +383,8 @@ Shows today’s checked sentences, words added, and grammar/vocabulary cards rev
 
 When cards are due, choose `g` for five grammar cards, `w` for five vocabulary cards, or Enter to continue later. Review counts cover cards already in SQLite; `/word` also imports saved vocabulary notes.
 
+`/today` also shows pending tasks from the active coach plan. Mark one complete with `/coach --complete=<task-id>`; it will no longer appear in the next `/today` view.
+
 ### Analytics (`/stats`)
 
 The stats dashboard provides a comprehensive view of your learning journey:
@@ -588,9 +590,9 @@ node tools/igt-handbook.mjs --days=30 --clear-cache   # force full rebuild
 
 The output file is saved to `IGT_REPORT_PATH` (set in `.env`). The filename includes the date: `handbook_2026-05-07.md`. Opening it in Obsidian renders the collapsible callouts, tables, and tip boxes interactively.
 
-### Practice Exercises (`/practice`)
+### Production Practice (`/practice`)
 
-Generates exercises that target your most frequent error types. Mix of multiple-choice and fill-in-the-blank, calibrated to your CEFR level.
+Practises sentence and expression production in varied everyday and work scenarios. Multiple-choice grammar drills are a separate command: `/drill` (alias `/mc`).
 
 ```
 ❯ /practice
@@ -606,17 +608,19 @@ Your answer: C
   before another past event ("arrived").
 ```
 
-**Targeted Practice:**
-You can target specific weaknesses using the `--type` flag:
+Use the production modes directly:
 
 ```
-❯ /practice --type "Verb Tense"
+❯ /practice
+❯ /practice sentence 5
+❯ /practice expression 5
 ```
 
-Specify level and count directly:
+For multiple-choice grammar practice:
 
 ```
-❯ /practice B2 10
+❯ /drill --type "Verb Tense"
+❯ /drill B2 10
 ```
 
 Or from the command line:
@@ -653,12 +657,14 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | Command            | Description                                                       |
 | ------------------ | ----------------------------------------------------------------- |
 | `/review` (`/r`)   | SRS review session — drills all grammar flashcards due today      |
-| `/word` (`/w`)     | SRS review of your saved vocabulary; `/word --list` to browse     |
+| `/word` (`/w`)     | Vocabulary lookup, saving, and SRS review; `/word --list` to browse |
+| `/vocab-test` (`/vtest`) | Complete vocabulary test with realistic scenario production     |
 | `/today` | Grammar and vocabulary review counts, listening, writing, and conversation |
 | `/stats` (`/st`)   | Factual activity, recurring errors, mastery, and review statistics |
 | `/handbook` (`/h`) | Generate your personal error handbook (runs as background task)   |
-| `/practice` (`/p`) | Practice session targeting your top error types                   |
-| `/practice B2 10`  | Practice at CEFR level B2, 10 questions                           |
+| `/coach` (`/plan`)  | Use the Pro model to analyze general English ability and evidence-backed weaknesses, then save a two-week plan; use `--complete=<task-id>` to complete a task |
+| `/practice` (`/p`) | Produce sentences and expressions in varied real-life scenarios   |
+| `/drill` (`/mc`)   | Multiple-choice grammar drills by level or error type            |
 | `/quiz [1-10]`     | Personalized Chinese-to-English quiz with per-answer feedback     |
 | `/ask`             | Open a multi-turn grammar consultation thread (opt-in save)       |
 | `/chat`            | Free-conversation practice with gentle corrections (optional voice) |
@@ -756,12 +762,11 @@ IGT_TTS_MODEL=                   # optional; defaults to kokoro
   "DeepseekProModel": "deepseek-v4-pro",
   "OllamaBaseUrl": "http://localhost:11434",
   "OllamaFamily": "gemma",
-  "OllamaGemmaFlashModel": "gemma4:12b",
-  "OllamaPhiFlashModel": "phi4"
+  "OllamaGemmaFlashModel": "gemma4:12b"
 }
 ```
 
-Flash models handle grammar correction (speed-optimized); Pro models handle handbook and practice generation (quality-optimized). Ollama supports two local model families — switch between them in-session with `/gemma` and `/phi`, or set `OllamaFamily`. To use a different local model, update the matching `Ollama*Model` field — run `ollama list` to see what you have installed.
+Flash models handle grammar correction (speed-optimized); Pro models handle handbook and practice generation (quality-optimized). Ollama uses the configured Gemma model family. To use a different local model, update the matching `Ollama*Model` field — run `ollama list` to see what you have installed.
 
 All LLM prompts live in the `Prompts` section of `igt_config.json`. You can edit them to tune IGT's behavior without touching source files.
 

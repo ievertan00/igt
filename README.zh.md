@@ -383,6 +383,8 @@ igt
 
 有卡片待复习时，输入 `g` 复习五张语法卡，输入 `w` 复习五张词汇卡，直接回车稍后再练。数量统计 SQLite 中已有的卡片；`/word` 还会导入词汇笔记中的新词。
 
+`/today` 也会显示当前教练计划中尚未完成的任务。完成任务后运行 `/coach --complete=<任务编号>`，下次 `/today` 会移除该任务。
+
 ### 数据统计 (`/stats`)
 
 统计面板提供了学习旅程的全方位视图：
@@ -405,6 +407,10 @@ igt
 ### 个人错误手册 (`/handbook`)
 
 手册将你积累的错误记录转化为一份个性化参考文档。它不是泛泛的语法教材，而是分析你的真实错误，识别你专属的反复出现的子模式（你的"语言指纹"），并从你个人习惯的角度解释根本原因。
+
+除了错误分类，手册还会生成 **Learning Profile & Next Actions**：结合错误出现的次数、跨天重复、近期趋势、严重程度和 SRS 复习反馈，筛选出证据较充分的薄弱环节。每个优先项都会给出适合的主动回忆/新语境迁移练习，以及一个针对该弱项的外部学习资源。单次或证据不足的错误会标为低置信度，不会直接被当成稳定能力缺陷。
+
+建议流程：先运行 `/handbook --days=30`，按优先级完成 3 次主动回忆和 3 个新语境句子，隔天再运行一次手册，观察趋势是否从 `rising` 变为 `stable` 或 `improving`。
 
 在命令行运行：
 
@@ -587,9 +593,9 @@ node tools/igt-handbook.mjs --days=30 --clear-cache   # 强制完整重建
 
 输出文件保存在 `.env` 中 `IGT_REPORT_PATH` 指定的目录下，文件名包含日期：`handbook_2026-05-07.md`。用 Obsidian 打开后，可折叠标注块、表格和提示框会以交互方式渲染。
 
-### 专项练习 (`/practice`)
+### 产出练习 (`/practice`)
 
-生成针对你最频繁错误类型的练习题，包含选择题和填空题，难度与你的 CEFR 水平相匹配。
+`/practice` 专门练习句子和表达的主动产出，在不同日常和工作场景中写出完整英文。多选题改用独立命令 `/drill`（别名 `/mc`）。
 
 ```
 ❯ /practice
@@ -605,17 +611,19 @@ Your answer: C
   before another past event ("arrived").
 ```
 
-**定向练习:**
-你可以使用 `--type` 标志针对特定的弱点进行练习：
+可以选择产出模式：
 
 ```
-❯ /practice --type "Verb Tense"
+❯ /practice
+❯ /practice sentence 5
+❯ /practice expression 5
 ```
 
-可直接指定级别和题数：
+多选题练习使用独立命令：
 
 ```
-❯ /practice B2 10
+❯ /drill --type "Verb Tense"
+❯ /drill B2 10
 ```
 
 或在命令行中运行：
@@ -652,12 +660,14 @@ Delete last 1 input and all associated cards? [y/n] y
 | 命令                   | 说明                              |
 | -------------------- | ------------------------------- |
 | `/review` (`/r`)     | 间隔重复复习——逐一训练今日到期的语法闪卡           |
-| `/word` (`/w`)       | 复习已保存的词汇；`/word --list` 浏览词汇    |
+| `/word` (`/w`)       | 查询、保存和 SRS 复习词汇；`/word --list` 浏览词汇 |
+| `/vocab-test` (`/vtest`) | 完整词汇测试，在真实场景中使用词汇 |
 | `/today` | 语法与词汇待复习数量，以及听读、写作和对话建议 |
 | `/stats` (`/st`)     | 事实性活动、重复错误、掌握度和复习统计   |
 | `/handbook` (`/h`)   | 生成个人错误手册（后台运行）                  |
-| `/practice` (`/p`)   | 针对你的高频错误类型启动专项练习                |
-| `/practice B2 10`    | 以 B2 难度练习 10 题                  |
+| `/coach` (`/plan`)   | 使用高级模型分析英语综合能力、证据和薄弱环节，生成并保存两周学习计划；`--complete=<任务编号>` 完成，`--skip=<任务编号>` 跳过，`--resume=<任务编号>` 恢复 |
+| `/practice` (`/p`)   | 在不同场景中练习句子和表达的主动产出            |
+| `/drill` (`/mc`)     | 按级别或错误类型进行多选题语法练习              |
 | `/quiz [1-10]`       | 根据错误手册记录进行中译英测验，并逐题获得中文反馈        |
 | `/ask`               | 开启多轮语法咨询对话（可选保存）                |
 | `/chat`              | 自由对话练习，附带温和纠错（可选语音朗读）           |
@@ -755,12 +765,11 @@ IGT_TTS_MODEL=                   # 可选；默认 kokoro
   "DeepseekProModel": "deepseek-v4-pro",
   "OllamaBaseUrl": "http://localhost:11434",
   "OllamaFamily": "gemma",
-  "OllamaGemmaFlashModel": "gemma4:12b",
-  "OllamaPhiFlashModel": "phi4"
+  "OllamaGemmaFlashModel": "gemma4:12b"
 }
 ```
 
-Flash 模型负责语法检查（速度优先）；Pro 模型负责手册和练习生成（质量优先）。Ollama 支持两套本地模型家族——用 `/gemma` 和 `/phi` 在会话中切换，或设置 `OllamaFamily`。要更换本地模型，修改对应的 `Ollama*Model` 字段——运行 `ollama list` 可查看本地已安装的模型。
+Flash 模型负责语法检查（速度优先）；Pro 模型负责手册和练习生成（质量优先）。Ollama 使用已配置的 Gemma 模型家族。要更换本地模型，修改对应的 `Ollama*Model` 字段——运行 `ollama list` 可查看本地已安装的模型。
 
 所有 LLM 提示词存放在 `igt_config.json` 的 `Prompts` 部分，直接在那里编辑，无需改动源码。
 

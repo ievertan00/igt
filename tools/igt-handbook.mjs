@@ -2,11 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
-import { getErrorFrequency, getTrendData, getTotalStats, getExamples } from "../lib/features/handbook/queries.mjs";
+import { getErrorFrequency, getTrendData, getTotalStats, getLearningProfileData } from "../lib/features/handbook/queries.mjs";
 import { generateTailoredRule, generateOverallSummary } from "../lib/features/handbook/generator.mjs";
 import { clearCache, cacheStats } from "../lib/features/handbook/cache.mjs";
 import { buildReport } from "../lib/features/handbook/report.mjs";
 import { resolveModel } from "../lib/server/llm/model-resolver.mjs";
+import { buildLearningDiagnosis } from "../lib/features/learning-diagnosis/index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
@@ -62,9 +63,16 @@ if (provider === "ollama") {
   }
 }
 
-const [errorFrequency, trendData, stats] = await Promise.all([
-  getErrorFrequency(days), getTrendData(days), getTotalStats(days),
+const [errorFrequency, trendData, stats, learningData] = await Promise.all([
+  getErrorFrequency(days), getTrendData(days), getTotalStats(days), getLearningProfileData(days),
 ]);
+const learningProfile = await buildLearningDiagnosis({
+  days,
+  goal: "general English",
+  resourceMode: "local-and-web",
+  vaultDir: config.VaultDir,
+  loadData: async () => learningData,
+});
 
 const examplesByType = new Map();
 for (const err of errorFrequency) {
@@ -88,7 +96,7 @@ for (const r of ruleResults) {
 }
 
 const dateStr = new Date().toISOString().split("T")[0];
-const md = buildReport({ provider, handbookModel, date: dateStr, days, stats, errorFrequency, trendData, examplesByType, rules, overallSummary });
+const md = buildReport({ provider, handbookModel, date: dateStr, days, stats, errorFrequency, trendData, examplesByType, rules, overallSummary, learningProfile });
 
 const reportDir = config.ReportPath
   ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))

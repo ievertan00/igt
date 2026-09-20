@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
+import Database from "better-sqlite3";
 import configLoader from "../lib/shared/config-loader.mjs";
 import { ui, paint, colors, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 
@@ -18,6 +19,8 @@ const baseDir = config.VaultDir
 
 const VOCAB_FILE = config.VocabFile || "IGT Vocabulary.md";
 const NOTE_FILE = path.isAbsolute(VOCAB_FILE) ? VOCAB_FILE : path.join(baseDir, VOCAB_FILE);
+const DB_PATH = config.DbPath || "igt_data.db";
+const DATABASE_FILE = path.isAbsolute(DB_PATH) ? DB_PATH : path.join(projectRoot, DB_PATH);
 
 // ── Parse all entries from the vault file ─────────────────────────────────────
 function parseAllEntries() {
@@ -65,6 +68,30 @@ function parseEntry(raw) {
     memory:       get("Memory"),
     added:        dateMatch ? dateMatch[1].trim() : null,
   };
+}
+
+function loadSrsEntries() {
+  if (!fs.existsSync(DATABASE_FILE)) return [];
+  let db;
+  try {
+    db = new Database(DATABASE_FILE, { readonly: true });
+    return db.prepare(`
+      SELECT word, pos, zh, meaning, example, note
+      FROM srs_cards
+      WHERE source_type = 'vocab'
+        AND word IS NOT NULL
+        AND trim(word) <> ''
+      ORDER BY lower(word), id
+    `).all().map((entry) => ({
+      ...entry,
+      word: String(entry.word).trim(),
+      added: null,
+    }));
+  } catch {
+    return [];
+  } finally {
+    if (db) db.close();
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -204,19 +231,24 @@ if (lookupIdx !== -1) {
   process.exit(0);
 }
 
-if (entries.length === 0) {
-  console.log(`\n  ${paint(colors.yellow, "No vocabulary saved yet.")}  Use ${paint(colors.cyan, "/add <word>")} to add words.\n`);
-  process.exit(0);
-}
-
 // ── List mode ─────────────────────────────────────────────────────────────────
 if (args.includes("--list") || args.includes("list")) {
-  ui.header("Vocabulary", `${entries.length} word(s) saved`);
+  const srsEntries = loadSrsEntries();
+  if (srsEntries.length === 0) {
+    console.log(`\n  ${paint(colors.yellow, "No vocabulary in the SRS deck yet.")}  Use ${paint(colors.cyan, "/word add <word>")} to add words.\n`);
+    process.exit(0);
+  }
+  ui.header("SRS Vocabulary", `${srsEntries.length} word(s) in the review deck`);
   console.log("");
-  for (const e of entries) {
+  for (const e of srsEntries) {
     renderEntry(e);
     console.log("");
   }
+  process.exit(0);
+}
+
+if (entries.length === 0) {
+  console.log(`\n  ${paint(colors.yellow, "No vocabulary saved yet.")}  Use ${paint(colors.cyan, "/add <word>")} to add words.\n`);
   process.exit(0);
 }
 
