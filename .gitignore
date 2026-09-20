@@ -14,6 +14,7 @@ package-lock.json
 handbook_*.md
 assessment_*.md
 docs/
+archive/
 tests/*
 !tests/learning-workflows.test.mjs
 CLAUDE.md
