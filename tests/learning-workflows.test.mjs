@@ -56,7 +56,7 @@ test("daily plan shows vocabulary activity without grammar inputs and opens voca
   t.mock.method(api, "seedVocab", async () => { seeded++; return {}; });
   t.mock.method(api, "getDue", async ({ type }) => { reviewType = type; return { cards: [] }; });
   await runToday(async () => "w", null, {});
-  assert.match(output, /145 due/);
+  assert.doesNotMatch(output, /145 due/);
   assert.match(output, /8 due/);
   assert.match(output, /Words added: 3/);
   assert.match(output, /0 grammar · 4 vocabulary/);
@@ -156,8 +156,8 @@ test("help exposes vocabulary, listening, and everyday/work workflows", (t) => {
   let output = "";
   t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
   showHelp();
-  for (const command of ["/add", "/word", "/voice", "/listen", "/quiz", "/today"]) assert.ok(output.includes(command));
-  assert.match(output, /work email/);
+  for (const command of ["/word", "/practice", "/text", "/ask", "/listen", "/coach", "/stats"]) assert.ok(output.includes(command));
+  assert.doesNotMatch(output, /\/add|\/voice|\/quiz|\/today/);
   assert.doesNotMatch(output, /on by default/);
 });
 
@@ -169,7 +169,7 @@ import configLoader from "../lib/shared/config-loader.mjs";
 import { getStats } from "../lib/db/stats.mjs";
 import { closeAll } from "../lib/db/connection.mjs";
 
-test("stats counts all due grammar and vocabulary cards, excluding future cards", async (t) => {
+test("stats exposes only vocabulary due cards after grammar SRS removal", async (t) => {
   const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const cacheDir = path.join(projectRoot, ".cache");
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -188,7 +188,7 @@ test("stats counts all due grammar and vocabulary cards, excluding future cards"
   closeAll();
   t.mock.method(configLoader, "load", () => ({ DbPath: dbPath }));
   const result = await getStats();
-  assert.deepEqual(result.dueCounts, { grammar: 145, vocab: 8 });
+  assert.deepEqual(result.dueCounts, { grammar: 0, vocab: 8 });
 });
 
 import childProcess from "node:child_process";

@@ -31,7 +31,7 @@
 2. **听读跟练：**输入 `/listen` 播放最近的英文表达；查词后会播放英文词条及第一条可用例句。跟读后，试着自己造句。也可以用 `/listen <英文>` 指定内容，用 `/listen --stop` 停止播放。
 3. **实际使用：**直接输入日常记录或工作消息，例如 “I will follow up with the client tomorrow.”，用 `/explain` 理解纠错。也可以先翻译中文，再播放英文译文。
 4. **情境对话：**进入 `/chat`，输入 “Help me practise asking a colleague for clarification.”。对话内支持 `/voice on`、`/voice off`、`/voice status`、`/listen` 和 `/exit`，这些命令不会发送给模型。
-5. **之后复习：**用 `/word 5` 回忆词汇，用 `/review 5` 复习语法，用 `/quiz 3` 根据错误记录练习新的中译英题目。
+5. **之后复习：**用 `/word 5` 回忆词汇，用 `/quiz 3` 根据错误记录练习新的中译英题目。
 
 `/listen` 也能播放最近的纠正句、翻译中的英文、Quiz 推荐表达、对话回复或已揭示的复习答案。关闭对话自动语音后仍可按需播放，沿用现有 TTS 配置。跟读属于自主练习；IGT 不录音，也不评估发音。
 
@@ -369,11 +369,11 @@ igt
 """
 ```
 
-### 间隔重复闪卡复习（`/review`）
+### 词汇间隔重复闪卡复习（`/word review`）
 
 每个错误都会生成一张闪卡。SM-2 算法负责调度每张卡片：答对了复习间隔会延长（1 天 → 4 天 → 10 天……），答错了则重置为明天。答案以 **diff 高亮**方式展示——修改的词标绿，一眼看出差在哪里。随着时间推移，已掌握的错误类型不再出现。
 
-![/review 截图](assets/04_review.png)
+![词汇复习截图](assets/04_review.png)
 
 系统优先进行完全匹配判断。如果你的答案措辞不同但语义正确，会由 AI 快速裁定是否接受。
 
@@ -459,7 +459,7 @@ node tools/igt-handbook.mjs --days=30
 ### 🎯 Strategic Goals
 
 1. 未来两周专项训练"现在完成时 vs. 一般过去时 + 时间状语"的区分；
-   每天使用 /review 复习闪卡。
+   每天使用 /word review 复习闪卡。
 2. 在 /practice 练习中针对介词搭配——固定动词介词组合
    （arrive at、good at、depend on）占剩余介词错误的大部分。
 
@@ -659,7 +659,7 @@ Delete last 1 input and all associated cards? [y/n] y
 
 | 命令                   | 说明                              |
 | -------------------- | ------------------------------- |
-| `/review` (`/r`)     | 间隔重复复习——逐一训练今日到期的语法闪卡           |
+| `/word review`       | 间隔重复复习——逐一训练今日到期的词汇闪卡           |
 | `/word` (`/w`)       | 查询、保存和 SRS 复习词汇；`/word --list` 浏览词汇 |
 | `/vocab-test` (`/vtest`) | 完整词汇测试，在真实场景中使用词汇 |
 | `/today` | 语法与词汇待复习数量，以及听读、写作和对话建议 |
@@ -737,7 +737,7 @@ IGT_PRACTICE_FILE=               # 仓库内的练习日志路径
 IGT_ASK_FILE=                    # 仓库内的 /ask 咨询日志（单文件）
 IGT_ASK_DIR=                     # 仓库内的 /ask 独立笔记目录
 
-# --- 文本转语音（可选；/chat 语音、/review [a]） ---
+# --- 文本转语音（可选；/chat 语音、/word review [a]） ---
 IGT_TTS_BASE_URL=http://localhost:8880  # 兼容 OpenAI 的 /v1/audio/speech 服务
 IGT_TTS_SIDECAR=                 # 需自动启动的适配器脚本（留空 = 无）
 IGT_TTS_STREAM=false             # 低延迟 ffplay 流式播放（需 ffmpeg）
@@ -745,7 +745,7 @@ IGT_TTS_VOICE=                   # 可选；默认 af_heart
 IGT_TTS_MODEL=                   # 可选；默认 kokoro
 ```
 
-> **文本转语音。** `/chat` 的语音朗读（以及 `/review` 中的 `[a]` 键）需要一个讲 OpenAI `/v1/audio/speech` 协议的本地 TTS 服务，可在 `IGT_TTS_BASE_URL` 处访问。支持两种后端：
+> **文本转语音。** `/chat` 的语音朗读（以及 `/word review` 中的 `[a]` 键）需要一个讲 OpenAI `/v1/audio/speech` 协议的本地 TTS 服务，可在 `IGT_TTS_BASE_URL` 处访问。支持两种后端：
 >
 > - **Kokoro**（默认）——原生兼容 OpenAI、内置预设音色的服务（[Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI)，端口 `8880`），无需适配器。
 > - **CosyVoice3**——克隆参考音色（支持跨语言）。它运行在一个本地小型 shim（`tools/cosyvoice-tts-shim.mjs`，通过 `IGT_TTS_SIDECAR` 自动启动）之后，该 shim 前置一个 CosyVoice Docker 容器。配置见 `.env.example` 中的 CosyVoice 配置段与 `tools/cosyvoice/`。

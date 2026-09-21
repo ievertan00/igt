@@ -31,7 +31,7 @@ Use `/help` to browse commands by learning activity, or `/today` to see your rev
 2. **Listen and repeat:** `/listen` plays the latest English expression and, after a vocabulary lookup, its first available example. Repeat aloud, then make your own sentence. Use `/listen <English text>` for a specific phrase and `/listen --stop` to stop playback.
 3. **Use it:** type a daily update or work message, such as “I will follow up with the client tomorrow.” Use `/explain` to understand any correction, or translate a Chinese expression and replay the English.
 4. **Converse:** open `/chat` and describe a situation: “Help me practise asking a colleague for clarification.” Inside chat, `/voice on`, `/voice off`, `/voice status`, `/listen`, and `/exit` are local controls.
-5. **Recall it later:** `/word 5` reviews vocabulary, `/review 5` reviews grammar, and `/quiz 3` gives fresh Chinese-to-English practice based on recorded mistakes.
+5. **Recall it later:** `/word 5` reviews vocabulary, and `/quiz 3` gives fresh Chinese-to-English practice based on recorded mistakes.
 
 `/listen` also remembers the latest correction, the English side of a translation, quiz feedback, a chat reply, or a revealed review answer. It works on demand even when automatic chat voice is off. Playback uses your existing TTS configuration. Listening and repeating are self-practice; IGT does not record or assess pronunciation.
 
@@ -369,11 +369,11 @@ Press """ on a new line to submit.
 """
 ```
 
-### SRS Flashcard Review (`/review`)
+### Vocabulary SRS Review (`/word review`)
 
 Every error you make generates a flashcard. The SM-2 algorithm schedules each card: answer correctly and the interval grows (1 day → 4 days → 10 days…); miss it and it resets to tomorrow. The answer is revealed with **diff highlighting** — changed words shown in green so you see exactly what was wrong. Over time you stop seeing cards for errors you've mastered.
 
-![/review screenshot](assets/04_review.png)
+![vocabulary review screenshot](assets/04_review.png)
 
 Grading is exact-match first. If your answer differs in phrasing but is semantically correct, a quick AI call decides whether to accept it.
 
@@ -455,7 +455,7 @@ errors (spelling, punctuation) are rare, suggesting strong written foundations.
 ### 🎯 Strategic Goals
 
 1. Drill the present-perfect vs. simple-past contrast with time-adverb triggers for
-   the next 2 weeks; use the /review deck daily.
+   the next 2 weeks; use the /word review deck daily.
 2. Target Preposition Usage in /practice sessions — fixed verb–preposition pairs
    (arrive at, good at, depend on) account for your 9 remaining preposition errors.
 
@@ -656,7 +656,7 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 
 | Command            | Description                                                       |
 | ------------------ | ----------------------------------------------------------------- |
-| `/review` (`/r`)   | SRS review session — drills all grammar flashcards due today      |
+| `/word review`     | SRS review session — drills vocabulary cards due today            |
 | `/word` (`/w`)     | Vocabulary lookup, saving, and SRS review; `/word --list` to browse |
 | `/vocab-test` (`/vtest`) | Complete vocabulary test with realistic scenario production     |
 | `/today` | Grammar and vocabulary review counts, listening, writing, and conversation |
@@ -734,7 +734,7 @@ IGT_PRACTICE_FILE=               # practice log path within vault
 IGT_ASK_FILE=                    # /ask consultation log (single file) within vault
 IGT_ASK_DIR=                     # /ask separate-notes directory within vault
 
-# --- Text-to-Speech (optional; /chat voice, /review [a]) ---
+# --- Text-to-Speech (optional; /chat voice, /word review [a]) ---
 IGT_TTS_BASE_URL=http://localhost:8880  # OpenAI-compatible /v1/audio/speech server
 IGT_TTS_SIDECAR=                 # adapter script to auto-launch (blank = none)
 IGT_TTS_STREAM=false             # low-latency ffplay streaming (needs ffmpeg)
@@ -742,7 +742,7 @@ IGT_TTS_VOICE=                   # optional; defaults to af_heart
 IGT_TTS_MODEL=                   # optional; defaults to kokoro
 ```
 
-> **Text-to-speech.** Spoken replies in `/chat` (and the `[a]` key in `/review`) need a local TTS server speaking the OpenAI `/v1/audio/speech` protocol, reachable at `IGT_TTS_BASE_URL`. Two backends are supported:
+> **Text-to-speech.** Spoken replies in `/chat` (and the `[a]` key in `/word review`) need a local TTS server speaking the OpenAI `/v1/audio/speech` protocol, reachable at `IGT_TTS_BASE_URL`. Two backends are supported:
 >
 > - **Kokoro** (default) — a native OpenAI-compatible server with preset voices ([Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on port `8880`). No adapter needed.
 > - **CosyVoice3** — clones a reference voice (cross-lingual). It runs behind a small local shim (`tools/cosyvoice-tts-shim.mjs`, auto-launched via `IGT_TTS_SIDECAR`) that fronts a CosyVoice Docker container. See the CosyVoice profile in `.env.example` and `tools/cosyvoice/` for setup.

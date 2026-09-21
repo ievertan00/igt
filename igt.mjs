@@ -13,7 +13,6 @@ import { api } from "./lib/cli/api-client.mjs";
 import { startServer, stopServer, startTtsSidecar, stopTtsSidecar } from "./lib/cli/server-manager.mjs";
 import { handleCommand } from "./lib/cli/commands/dispatch.mjs";
 import { runGrammarCheck } from "./lib/cli/commands/grammar.mjs";
-import { showSessionSummary } from "./lib/cli/commands/stats.mjs";
 import { resolveModel } from "./lib/server/llm/model-resolver.mjs";
 import { validateInput, isMainlyChinese } from "./lib/cli/validate-input.mjs";
 import { runTrans } from "./lib/cli/commands/translation.mjs";
@@ -316,7 +315,6 @@ async function main() {
     if (["exit", "quit", "q"].includes(text.toLowerCase())) {
       stopUI();
       process.stdout.write(process.platform === "win32" ? "\x1b[2J\x1b[0f" : "\x1b[2J\x1b[H");
-      await showSessionSummary(sessionSentenceCount);
       rl.close();
       await asyncExit();
     }
