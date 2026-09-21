@@ -17,9 +17,10 @@ test('chat handles voice and exit locally without sending commands to the model'
 });
 
 import { runToday } from "../lib/cli/commands/stats.mjs";
+import { runReview } from "../lib/cli/commands/review.mjs";
 import { runVoice, runListen } from "../lib/cli/commands/listen.mjs";
 import { runTrans } from "../lib/cli/commands/translation.mjs";
-import { runQuiz, runWordQuiz } from "../lib/cli/commands/quiz.mjs";
+import { runWordPractice } from "../lib/cli/commands/quiz.mjs";
 import { showHelp } from "../lib/cli/commands/help.mjs";
 
 test("voice on/off are idempotent and status does not toggle", () => {
@@ -111,13 +112,8 @@ test("listen uses English translation and quiz feedback even with automatic voic
   assert.equal(spoken.at(-1), "Please clarify the deadline.");
 
   const question = { chinese: "我昨天完成了报告。", error_type: "Verb Tense", reference_answer: "I finished the report yesterday." };
-  t.mock.method(api, "generateQuiz", async () => ({ data: { questions: [question] } }));
-  t.mock.method(api, "evaluateQuiz", async () => ({ data: { score: 80, corrected_answer: question.reference_answer, feedback_zh: "注意过去时。" } }));
-  ctx.askLine = async () => "I finish the report yesterday.";
-  await runQuiz([], ctx);
   runListen([], ctx);
   await new Promise(setImmediate);
-  assert.equal(spoken.at(-1), question.reference_answer);
   assert.equal(isEnabled(ctx.config), false);
   const calls = spoken.length;
   runListen(["--stop"], ctx);
@@ -131,21 +127,23 @@ test("word quiz generates scenario production prompts and evaluates usage", asyn
   let output = "";
   let generatedCount = null;
   t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
-  t.mock.method(api, "generateWordQuiz", async (count) => {
+  t.mock.method(api, "generatePractice", async (mode, count) => {
     generatedCount = count;
+    assert.equal(mode, "word");
     return { data: { questions: [{
-      word: "fall behind",
+      kind: "expression",
+      target_word: "fall behind",
       pos: "phrasal verb",
-      chinese: "你的项目进度落后了，向经理解释原因。",
+      prompt_zh: "你的项目进度落后了，向经理解释原因。",
       focus: "Pair with 'on' to name what you are behind on.",
       reference_answer: "I've fallen behind on the project because I was out sick.",
     }] } };
   });
-  t.mock.method(api, "evaluateWordQuiz", async () => ({
+  t.mock.method(api, "evaluatePractice", async () => ({
     data: { score: 85, corrected_answer: "I've fallen behind on the project because I was out sick.", feedback_zh: "用 fall behind on 表示落后于某事。" },
   }));
   const ctx = { setSigint() {}, rl: null, askLine: async () => "I fell behind the project because I was sick." };
-  await runWordQuiz([], ctx);
+  await runWordPractice([], ctx);
   assert.equal(generatedCount, 5);
   assert.match(output, /用词造句/);
   assert.match(output, /场景/);
@@ -237,4 +235,27 @@ test("word review subcommand opens the vocabulary SRS deck", async (t) => {
   await handleCommand("/word review 5", ctx);
   assert.equal(spawned, false);
   assert.match(output, /No vocab cards due/);
+});
+
+test("vocabulary review hides English and grades blank recall as incorrect", async (t) => {
+  let output = "";
+  let grade = null;
+  let deleted = null;
+  t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
+  t.mock.method(api, "getDue", async () => ({ cards: [{
+    id: 42,
+    source_type: "vocab",
+    word: "follow up",
+    pos: "phrasal verb",
+    zh: "跟进",
+    meaning: "to do something after an earlier action",
+    example: "I will follow up tomorrow.",
+  }] }));
+  t.mock.method(api, "gradeCard", async (_id, correct) => { grade = correct; return { next: { intervalDays: 1 } }; });
+  t.mock.method(api, "deleteCard", async (id) => { deleted = id; return {}; });
+  const answers = ["", "d"];
+  await runReview(async () => answers.shift(), null, 1, "vocab", { Tts: { Enabled: false } });
+  assert.equal(grade, false);
+  assert.equal(deleted, 42);
+  assert.match(output, /Your answer: \(blank\)/);
 });
