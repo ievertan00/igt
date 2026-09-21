@@ -152,12 +152,12 @@ test("word quiz generates scenario production prompts and evaluates usage", asyn
   assert.match(output, /fall behind/);
 });
 
-test("help exposes vocabulary, listening, and everyday/work workflows", (t) => {
+test("help exposes the public learning workflows", (t) => {
   let output = "";
   t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
   showHelp();
-  for (const command of ["/word", "/practice", "/text", "/ask", "/listen", "/coach", "/stats"]) assert.ok(output.includes(command));
-  assert.doesNotMatch(output, /\/add|\/voice|\/quiz|\/today/);
+  for (const command of ["/word", "/w", "/a", "/practice", "/practice word", "/practice sentence", "/practice choice", "/pw", "/ps", "/pc", "/text", "/ask", "/coach", "/stats", "/theme", "/provider", "/voice"]) assert.ok(output.includes(command));
+  assert.doesNotMatch(output, /\/add(?:\s|$)|\/listen|\/retry|\/vocab|\/drill|\/mc|\/quiz|\/today/);
   assert.doesNotMatch(output, /on by default/);
 });
 
@@ -196,7 +196,7 @@ import { syncBuiltinESMExports } from "node:module";
 import { EventEmitter } from "node:events";
 import { handleCommand } from "../lib/cli/commands/dispatch.mjs";
 
-test("add replays the returned English entry, not a Chinese lookup term", async (t) => {
+test("word lookup-and-add replays the returned English entry", async (t) => {
   const spoken = [];
   t.mock.method(globalThis, "fetch", async (_url, options) => {
     spoken.push(JSON.parse(options.body).input);
@@ -217,8 +217,8 @@ test("add replays the returned English entry, not a Chinese lookup term", async 
   syncBuiltinESMExports();
   t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
   const ctx = { config: { Theme: "auto", Tts: { Enabled: false } }, setSigint() {} };
-  await handleCommand("/add 跟进", ctx);
-  await handleCommand("/listen", ctx);
+  await handleCommand("/word 跟进", ctx);
+  runListen([], ctx);
   await new Promise(setImmediate);
   assert.equal(spoken.at(-1), "follow up. I will follow up tomorrow.");
 });
