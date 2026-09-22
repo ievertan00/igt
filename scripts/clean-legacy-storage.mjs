@@ -9,7 +9,6 @@ const LEGACY_TABLES = [
   "diagnoses",
   "assessments",
   "consultations",
-  "practice_attempts",
   "inputs",
   "sessions",
 ];

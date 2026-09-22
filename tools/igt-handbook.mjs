@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
-import { getErrorFrequency, getTrendData, getTotalStats, getLearningProfileData } from "../lib/features/handbook/queries.mjs";
+import { getErrorFrequency, getTrendData, getTotalStats, getLearningProfileData, getExamples } from "../lib/features/handbook/queries.mjs";
 import { generateTailoredRule, generateOverallSummary } from "../lib/features/handbook/generator.mjs";
 import { clearCache, cacheStats } from "../lib/features/handbook/cache.mjs";
 import { buildReport } from "../lib/features/handbook/report.mjs";

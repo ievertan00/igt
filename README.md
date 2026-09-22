@@ -27,11 +27,11 @@ A command-line English learning companion for everyday life and work communicati
 
 Use `/help` to browse commands by learning activity, or `/today` to see your review counts and choose a short session.
 
-1. **Learn an expression:** `/add follow up`. Read its meaning, collocations, and examples; choose whether to save it.
+1. **Learn an expression:** `/word follow up`. Read its meaning, collocations, and examples; choose whether to save it.
 2. **Listen and repeat:** `/listen` plays the latest English expression and, after a vocabulary lookup, its first available example. Repeat aloud, then make your own sentence. Use `/listen <English text>` for a specific phrase and `/listen --stop` to stop playback.
 3. **Use it:** type a daily update or work message, such as “I will follow up with the client tomorrow.” Use `/explain` to understand any correction, or translate a Chinese expression and replay the English.
 4. **Converse:** open `/chat` and describe a situation: “Help me practise asking a colleague for clarification.” Inside chat, `/voice on`, `/voice off`, `/voice status`, `/listen`, and `/exit` are local controls.
-5. **Recall it later:** `/word 5` reviews vocabulary, and `/quiz 3` gives fresh Chinese-to-English practice based on recorded mistakes.
+5. **Recall it later:** `/word 5` reviews vocabulary. Use `/practice sentence` or `/practice choice` for grammar production and choice practice.
 
 `/listen` also remembers the latest correction, the English side of a translation, quiz feedback, a chat reply, or a revealed review answer. It works on demand even when automatic chat voice is off. Playback uses your existing TTS configuration. Listening and repeating are self-practice; IGT does not record or assess pronunciation.
 
@@ -273,14 +273,13 @@ ollama --version
 
 #### Step 2 — Download a model
 
-IGT ships with two local model families you can switch between at any time — **Gemma 4** (Google) and **Phi-4** (Microsoft, 14B parameters — good quality, fits in 8 GB RAM). Pull whichever you want to use:
+IGT currently uses the configured **Gemma** local model family. Pull the model named in `igt_config.json` (the default is `gemma4:12b`):
 
 ```sh
-ollama pull gemma4:12b    # default family
-ollama pull phi4          # alternative family
+ollama pull gemma4:12b
 ```
 
-Each download is several GB and only needs to happen once. Inside IGT, switch families live with `/gemma` and `/phi`. To point a family at a different model, edit its `Ollama*Model` field in `igt_config.json` (run `ollama list` to see what you have installed).
+The download is several GB and only needs to happen once. To point Ollama at a different local model, edit its `Ollama*Model` field in `igt_config.json` (run `ollama list` to see what you have installed).
 
 #### Step 3 — Configure IGT to use Ollama
 
@@ -393,16 +392,6 @@ The stats dashboard provides a comprehensive view of your learning journey:
 
 - **Effort Trend**: A visual 7-day chart of your input volume.
 - **Mastery Breakdown**: Identifies your most frequent error types (Top 3 Priorities).
-
-### Personalized Translation Quiz (`/quiz`)
-
-`/quiz` turns the same real error history used by your handbook into active Chinese-to-English practice. It generates fresh Chinese prompts around your recurring grammar weaknesses, accepts valid English alternatives, and gives a score, corrected expression, and concise feedback in Chinese after every answer.
-
-```text
-/quiz                 # 5 questions from the last 30 days
-/quiz 10              # 10 questions
-/quiz 5 --days=0      # use all error history
-```
 
 ### Error Handbook (`/handbook`)
 
@@ -592,10 +581,10 @@ The output file is saved to `IGT_REPORT_PATH` (set in `.env`). The filename incl
 
 ### Production Practice (`/practice`)
 
-Practises sentence and expression production in varied everyday and work scenarios. Multiple-choice grammar drills are a separate command: `/drill` (alias `/mc`).
+Practises vocabulary, sentence production, and multiple-choice grammar in varied everyday and work scenarios. Choose a mode after `/practice`:
 
 ```
-❯ /practice
+❯ /practice sentence
 
 Exercise 1 of 10  [Verb Tense]
 By the time she arrived, we _____ dinner.
@@ -611,16 +600,9 @@ Your answer: C
 Use the production modes directly:
 
 ```
-❯ /practice
+❯ /practice word
 ❯ /practice sentence 5
-❯ /practice expression 5
-```
-
-For multiple-choice grammar practice:
-
-```
-❯ /drill --type "Verb Tense"
-❯ /drill B2 10
+❯ /practice choice 5
 ```
 
 Or from the command line:
@@ -630,9 +612,9 @@ node tools/igt-practice.mjs --count=15
 node tools/igt-practice.mjs --type "Article Usage"   # target a specific error type
 ```
 
-### Vocabulary Lookup (`/add`)
+### Vocabulary Lookup (`/word`)
 
-Look up any word and save it to your local Markdown vocabulary vault. Review saved words with `/vocab`.
+Look up any word and save it to your local Markdown vocabulary vault. Review saved words with `/word review`.
 
 ![/add and /vocab screenshot](assets/07_vocab.png)
 
@@ -657,20 +639,20 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | Command            | Description                                                       |
 | ------------------ | ----------------------------------------------------------------- |
 | `/word review`     | SRS review session — drills vocabulary cards due today            |
-| `/word` (`/w`)     | Vocabulary lookup, saving, and SRS review; `/word --list` to browse |
-| `/vocab-test` (`/vtest`) | Complete vocabulary test with realistic scenario production     |
+| `/word` (`/w`, `/a`) | Vocabulary lookup, saving, and SRS review; `/word --list` to browse |
+| `/practice word`   | Vocabulary production practice                                  |
+| `/practice sentence` | Sentence production practice                                  |
+| `/practice choice` | Multiple-choice grammar practice                                |
 | `/today` | Grammar and vocabulary review counts, listening, writing, and conversation |
 | `/stats` (`/st`)   | Factual activity, recurring errors, mastery, and review statistics |
 | `/handbook` (`/h`) | Generate your personal error handbook (runs as background task)   |
 | `/coach` (`/plan`)  | Use the Pro model to analyze general English ability and evidence-backed weaknesses, then save a two-week plan; use `--complete=<task-id>` to complete a task |
-| `/practice` (`/p`) | Produce sentences and expressions in varied real-life scenarios   |
-| `/drill` (`/mc`)   | Multiple-choice grammar drills by level or error type            |
-| `/quiz [1-10]`     | Personalized Chinese-to-English quiz with per-answer feedback     |
+| `/practice` (`/p`) | Unified word, sentence, and choice practice entry point          |
 | `/ask`             | Open a multi-turn grammar consultation thread (opt-in save)       |
 | `/chat`            | Free-conversation practice with gentle corrections (optional voice) |
 | `/explain` (`/e`)  | Explain your last grammar correction in an `/ask` thread          |
 | `/translate` (`/tr`) | Translate between Chinese and English (auto-detects direction)  |
-| `/add <words>` (`/a`) | Look up one or more comma-separated words and save them to your vocab vault |
+| `/text`            | Open an editor and analyze a complete text document               |
 | `/retry`           | Re-run your last input with the same model                        |
 | `/undo [N]` (`/u`) | Delete the last N inputs and their flashcards (default: 1)        |
 | `/voice [on\|off\|status]` | Control automatic chat speech, including inside `/chat` |
@@ -679,7 +661,6 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | `/qwen`            | Switch to Alibaba Qwen                                            |
 | `/deepseek`        | Switch to Deepseek                                                |
 | `/ollama`          | Switch to the default local Ollama model                         |
-| `/phi`             | Switch to local Phi-4 (Ollama)                                    |
 | `/gemma`           | Switch to local Gemma 4 (Ollama)                                 |
 | `/llm status`      | Show active provider, configured keys, and model names            |
 | `/theme`           | Switch the UI color theme                                         |

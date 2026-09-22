@@ -254,7 +254,7 @@ test("vocabulary review hides English and grades blank recall as incorrect", asy
   t.mock.method(api, "gradeCard", async (_id, correct) => { grade = correct; return { next: { intervalDays: 1 } }; });
   t.mock.method(api, "deleteCard", async (id) => { deleted = id; return {}; });
   const answers = ["", "d"];
-  await runReview(async () => answers.shift(), null, 1, "vocab", { Tts: { Enabled: false } });
+  await runReview(async () => answers.shift(), null, 1, { Tts: { Enabled: false } });
   assert.equal(grade, false);
   assert.equal(deleted, 42);
   assert.match(output, /Your answer: \(blank\)/);

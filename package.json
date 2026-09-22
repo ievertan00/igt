@@ -10,7 +10,7 @@
     "index-books": "node scripts/index-books.mjs",
     "index-wikipedia": "node scripts/index-wikipedia.mjs",
     "verify-learning-resources": "node scripts/verify-learning-resources.mjs",
-    "test:learning": "node --test --test-isolation=none tests/word-quiz-route.test.mjs tests/learning-plans.test.mjs tests/learning-context.test.mjs tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs"
+    "test:learning": "node --test --test-isolation=none tests/learning-plans.test.mjs tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
