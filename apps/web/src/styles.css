@@ -4,3 +4,21 @@
 .lookup-row { display: flex; gap: 10px; } input { flex: 1; border: 1px solid #d8d0c4; border-radius: 7px; padding: 12px; background: #fffdf8; } .evaluation { margin-top: 20px; border-top: 1px solid #eee8df; padding-top: 16px; }
 .handbook-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; } .handbook-list button { border: 1px solid #d8d0c4; background: #fffdf8; border-radius: 7px; padding: 10px 14px; cursor: pointer; } .handbook-list button.selected { background: #1d2940; color: #fff; } .handbook-list span { margin-left: 8px; opacity: .65; }
 .review-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; } .review-actions button { border: 1px solid #d8d0c4; background: #fffdf8; border-radius: 7px; padding: 10px 16px; cursor: pointer; } .review-actions button:hover { background: #1d2940; color: #fff; }
+.nav-group { margin-top: 14px; }
+.group-label { width: 100%; border: 0; background: transparent; color: #8e98ab; text-align: left; padding: 6px 10px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; }
+.group-label.active { color: #ff816f; }
+.group-label:hover, .group-label:focus-visible { color: #fff; }
+.nav-child { padding-left: 20px; }
+.daily-effort { margin-top: 24px; }
+.effort-row { display: grid; grid-template-columns: 42px 1fr 22px; align-items: center; gap: 8px; margin-top: 8px; }
+.effort-row small { color: #84909d; }
+.effort-row strong { font-size: 12px; color: #4d866f; text-align: right; }
+.effort-track { height: 8px; border-radius: 99px; background: #eee8df; overflow: hidden; }
+.effort-track span { display: block; height: 100%; min-width: 2px; border-radius: inherit; background: #d46e5c; }
+.translation-result { color: #1d2940; font-size: 22px; }
+.asset-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.asset-row { border: 1px solid #eee8df; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.asset-row strong { font-size: 12px; }
+.asset-ok { color: #4d866f; }
+.asset-missing { color: #b46a5d; }
+@media (max-width: 760px) { .asset-list { grid-template-columns: repeat(2, 1fr); } }

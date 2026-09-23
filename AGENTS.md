@@ -16,6 +16,8 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `lib/domain/` — reusable learning and parsing rules
 - `lib/features/` — feature workflows such as practice, handbook, modules, and text analysis
 - `lib/server/` — local HTTP server, routes, migrations, and LLM provider integration
+- `apps/local/` — independent Local Web Runtime entrypoint
+- `apps/web/` — Vite + React + TypeScript Web client
 - `lib/db/` — SQLite access and persistence
 - `scripts/` — database, import, indexing, and verification utilities
 - `tests/` — Node test-suite
@@ -29,6 +31,11 @@ Install dependencies with `npm install`.
 - Run the learning workflow tests: `npm run test:learning`
 - Verify local learning resources: `npm run verify-learning-resources`
 - Launch the CLI directly: `node igt.mjs`
+- Build the Web client: `npm run web:build`
+- Type-check the Web client: `npm run web:typecheck`
+- Run the independent Web development chain: `npm run web:dev`
+- Run the production Local Web Runtime: `npm run web:start`
+- Run Web acceptance checks: `npm run test:web-dev`, `npm run test:runtime`, `npm run test:static`, `npm run test:web`, `npm run test:coach-cache`, `npm run test:vocabulary-sync`, `npm run test:review-log-contract`, and `npm run test:config-paths`
 
 There is no single full-suite npm script; run individual tests with `node --test tests/<file>.test.mjs` when needed.
 
@@ -39,6 +46,7 @@ There is no single full-suite npm script; run individual tests with `node --test
 - Public CLI commands and their help text are defined by `lib/cli/commands/dispatch.mjs`, `lib/cli/commands/help.mjs`, and `lib/cli/commands/registry.mjs`; update all three when changing the command surface.
 - The main practice entry point is `/practice` with `word`, `sentence`, and `choice` modes. Vocabulary lookup and review are under `/word`.
 - Preserve the evidence boundary in learning features: a correction or one successful answer is not proof of durable mastery.
+- Vocabulary Markdown is the content authority; Local Runtime startup synchronizes it into rebuildable SQLite SRS cards without overwriting review scheduling state.
 
 ## Verification notes
 

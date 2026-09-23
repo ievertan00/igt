@@ -16,6 +16,7 @@ A command-line English learning companion for everyday life and work communicati
   - [Option A — Online AI (Gemini, Qwen, Deepseek)](#option-a--online-ai-gemini-qwen-deepseek)
   - [Option B — Local AI with Ollama (No API Key)](#option-b--local-ai-with-ollama-no-api-key)
 - [Features](#features)
+- [Local Web](#local-web)
 - [Commands](#commands)
 - [Configuration Reference](#configuration-reference)
 - [Architecture](#architecture)
@@ -632,6 +633,37 @@ Use `/undo 3` to remove the last 3 inputs.
 
 ---
 
+## Local Web
+
+The local Web workspace runs independently from the CLI REPL. It uses the same local SQLite, Markdown assets, and configured LLM through the Local Runtime.
+
+```powershell
+npm install
+npm run web:dev       # Vite + Local Runtime; defaults to 5173 and 18964
+npm run web:start     # production Web from apps/web/dist
+```
+
+For a production start, build first with `npm run web:build`. Set `IGT_DEV_API_PORT` and `IGT_WEB_PORT` in `.env` when the development ports are occupied. The Runtime binds to `127.0.0.1` by default; `IGT_SERVER_PORT=0` selects an available production port.
+
+Useful acceptance checks:
+
+```powershell
+npm run web:typecheck
+npm run test:web-dev
+npm run test:runtime
+npm run test:static
+npm run test:web
+npm run test:coach-cache
+npm run test:vocabulary-sync
+npm run test:review-log-contract
+npm run test:config-paths
+npm run test:migration-backup
+```
+
+The Local Runtime synchronizes Vocabulary Markdown into rebuildable SQLite SRS
+cards at startup. Markdown remains the content authority; review scheduling
+fields are preserved during synchronization.
+
 ## Commands
 
 Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (shown in parentheses).
@@ -755,10 +787,11 @@ All LLM prompts live in the `Prompts` section of `igt_config.json`. You can edit
 
 ## Architecture
 
-`igt.mjs` (interactive loop) spawns a persistent HTTP server (`lib/server/index.mjs`) on port `18964` at launch. Each grammar check is an HTTP POST to `http://127.0.0.1:18964/grammar`. The server returns structured JSON; the client owns rendering.
+`igt.mjs` (interactive loop) can start the independent Local Web Runtime (`lib/server/index.mjs`) on an injected fixed or dynamic local port. Each grammar check is an HTTP POST to the runtime; the server returns structured JSON and the client owns rendering. `npm run web:start` uses the same runtime without starting the CLI REPL.
 
 ```
-igt.mjs  ──POST /grammar──►  lib/server/index.mjs
+CLI / Web ──HTTP──►  Local Web Runtime
+                         lib/server/index.mjs
                                     │
                           runMigrations() at boot
                           LLMProviderManager
