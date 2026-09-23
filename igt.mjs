@@ -294,6 +294,8 @@ async function main() {
   process.on("SIGHUP", () => asyncExit());
 
   const grammarCtx = {
+    askLine,
+    rl,
     onSigint: (h) => {
       sigintHandler = h;
     },

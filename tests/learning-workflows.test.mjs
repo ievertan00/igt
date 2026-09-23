@@ -17,7 +17,7 @@ test('chat handles voice and exit locally without sending commands to the model'
 });
 
 import { runToday } from "../lib/cli/commands/stats.mjs";
-import { runReview } from "../lib/cli/commands/review.mjs";
+import { normalizeVocabAnswer, runReview } from "../lib/cli/commands/review.mjs";
 import { runVoice, runListen } from "../lib/cli/commands/listen.mjs";
 import { runTrans } from "../lib/cli/commands/translation.mjs";
 import { runWordPractice } from "../lib/cli/commands/quiz.mjs";
@@ -258,4 +258,10 @@ test("vocabulary review hides English and grades blank recall as incorrect", asy
   assert.equal(grade, false);
   assert.equal(deleted, 42);
   assert.match(output, /Your answer: \(blank\)/);
+});
+
+test("vocabulary review ignores spaces and hyphens in either spelling", async () => {
+  assert.equal(normalizeVocabAnswer("follow-up"), normalizeVocabAnswer("follow up"));
+  assert.equal(normalizeVocabAnswer("follow up"), normalizeVocabAnswer("followup"));
+  assert.equal(normalizeVocabAnswer("follow-up"), normalizeVocabAnswer("followup"));
 });

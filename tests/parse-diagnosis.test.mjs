@@ -13,12 +13,10 @@ const opts = { logPath: path.join(os.tmpdir(), "igt-test-parse.log") };
 
 test("parses well-formed JSON response", () => {
   const raw = JSON.stringify({
-    review: "Looks fine.",
     correction: "I am happy.",
     refine: "I'm happy.",
-    diagnoses: [{ error_type: "Grammar / Verb Tense", severity: "Minor", explanation: "use am" }],
-    rule: "Use am with I.",
-    tip: "Practice this.",
+    diagnoses: [{ error_type: "Grammar / Verb Tense", severity: "Minor", explanation: "use am", evidence: "I am" }],
+    remember: "Use am with I.",
   });
   const result = parseDiagnosis(raw, errorTypes, opts);
   assert.equal(result.correction, "I am happy.");
@@ -26,15 +24,14 @@ test("parses well-formed JSON response", () => {
 });
 
 test("strips fenced code block wrapping", () => {
-  const raw = "```json\n" + JSON.stringify({ review: "x", correction: "y", refine: "", diagnoses: [], rule: "", tip: "" }) + "\n```";
+  const raw = "```json\n" + JSON.stringify({ correction: "y", refine: "", diagnoses: [], remember: "" }) + "\n```";
   const result = parseDiagnosis(raw, errorTypes, opts);
-  assert.equal(result.review, "x");
+  assert.equal(result.correction, "y");
 });
 
-test("non-JSON falls back to review field", () => {
+test("non-JSON is rejected instead of creating a legacy review field", () => {
   const raw = "This is just plain text, no JSON here.";
-  const result = parseDiagnosis(raw, errorTypes, opts);
-  assert.ok(result.review.length > 0, "review should contain the raw text");
+  assert.throws(() => parseDiagnosis(raw, errorTypes, opts), /invalid JSON/);
 });
 
 test("diagnosis with missing explanation falls back to the type label", () => {
