@@ -6,6 +6,13 @@
     "igt": "./igt.mjs"
   },
   "scripts": {
+    "web:dev": "node scripts/web-dev.mjs",
+    "web:build": "vite build --config apps/web/vite.config.ts",
+    "web:preview": "vite preview --config apps/web/vite.config.ts --host 127.0.0.1",
+    "web:start": "node lib/server/index.mjs",
+    "test:web": "node scripts/web-smoke.mjs",
+    "test:static": "node scripts/static-smoke.mjs",
+    "test:contracts": "node scripts/api-client-smoke.mjs",
     "init-db": "node scripts/init-db.mjs",
     "index-books": "node scripts/index-books.mjs",
     "index-wikipedia": "node scripts/index-wikipedia.mjs",
@@ -18,10 +25,17 @@
     "dotenv": "^17.4.2",
     "openai": "^6.39.1",
     "pdf-parse": "^2.4.5",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "undici": "^8.2.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "puppeteer": "^25.1.0"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "puppeteer": "^25.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
   }
 }

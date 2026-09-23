@@ -3,7 +3,11 @@ const views = document.querySelectorAll('.view');
 function showView(name) {
   const target = labels[name] ? name : 'dashboard';
   views.forEach((view) => view.classList.toggle('active', view.id === `view-${target}`));
-  document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.view === target));
+  document.querySelectorAll('.nav-item').forEach((item) => {
+    const active = item.dataset.view === target;
+    item.classList.toggle('active', active);
+    item.setAttribute('aria-current', active ? 'page' : 'false');
+  });
   document.querySelector('#page-label').textContent = labels[target];
   history.replaceState(null, '', `#${target}`);
   document.querySelector('.sidebar')?.classList.remove('open');

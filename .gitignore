@@ -33,5 +33,6 @@ scripts/dev/
 practice.js
 assets/logo.jpg
 graphify-out/
+apps/web/dist/
 output/
 tools/cosyvoice/server.py.container-bak

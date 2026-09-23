@@ -5,7 +5,7 @@
     <title>IGT · Independent Growth Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="assets/app.css">
   </head>
   <body>
     <div class="app-shell">
@@ -13,7 +13,7 @@
         <a class="brand" href="#dashboard"><span class="brand-mark"><span></span><span></span><span></span></span><span>IGT</span></a>
         <div class="side-label">学习工作台</div>
         <nav class="nav-list" aria-label="主导航">
-          <button class="nav-item active" data-view="dashboard"><span class="nav-icon">⌂</span>总览</button><button class="nav-item" data-view="grammar"><span class="nav-icon">Aa</span>语法检查</button><button class="nav-item" data-view="coach"><span class="nav-icon">↗</span>Coach 计划</button><button class="nav-item" data-view="review"><span class="nav-icon">◎</span>词汇复习</button><button class="nav-item" data-view="ask"><span class="nav-icon">?</span>Ask</button>
+          <button class="nav-item active" data-view="dashboard"><span class="nav-icon nav-icon-home" aria-hidden="true"></span>总览</button><button class="nav-item" data-view="grammar"><span class="nav-icon nav-icon-grammar" aria-hidden="true"></span>语法检查</button><button class="nav-item" data-view="coach"><span class="nav-icon nav-icon-plan" aria-hidden="true"></span>Coach 计划</button><button class="nav-item" data-view="review"><span class="nav-icon nav-icon-review" aria-hidden="true"></span>词汇复习</button><button class="nav-item" data-view="ask"><span class="nav-icon nav-icon-ask" aria-hidden="true"></span>Ask</button>
         </nav>
         <div class="sidebar-spacer"></div><div class="asset-status"><div class="status-dot"></div><div><strong>本地资产已同步</strong><span>Markdown 是你的主数据</span></div></div><div class="side-footer">独立学习工具 <span>·</span> v0.1 demo</div>
       </aside>
@@ -32,6 +32,6 @@
         <section class="view" id="view-ask"><div class="page-heading compact"><div><span class="eyebrow">ASK · SAVED AS MARKDOWN</span><h1>把一个问题问到底</h1><p>解释可以继续追问；决定保存时，整段咨询会写入独立 Ask Markdown。</p></div></div><div class="ask-layout"><div class="panel ask-thread"><div class="thread-label">当前咨询 · 未保存</div><div class="chat-bubble user">为什么 suggest 不能像 tell 一样接人再接 to do？</div><div class="chat-bubble assistant"><strong>因为它们的补语结构不同。</strong><p>tell someone to do 是 tell 的固定结构；suggest 的常见结构是 suggest doing 或 suggest that someone do。可以把它们当作两个需要分别提取的句型。</p><span class="source-note">基于 grammar reference · 2 个相关条目</span></div><div class="ask-compose"><textarea placeholder="继续追问…"></textarea><button class="primary-button">发送 <span>→</span></button></div></div><aside class="panel ask-save"><span class="eyebrow">YOUR NOTES</span><h2>保存这次理解</h2><p>保存后，它会成为独立的 Markdown 资产。它可以帮助 Coach 识别你的主动学习兴趣，但不会被当作语法错误证据。</p><button class="secondary-button" id="save-ask">保存到 Ask Markdown</button><div class="saved-message" id="saved-message">✓ 已保存到 Ask Markdown</div></aside></div></section>
       </main>
     </div>
-    <script src="/assets/app.js"></script>
+    <script src="assets/app.js"></script>
   </body>
 </html>
