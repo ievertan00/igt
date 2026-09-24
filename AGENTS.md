@@ -51,3 +51,13 @@ There is no single full-suite npm script; run individual tests with `node --test
 ## Verification notes
 
 The working tree may contain live SQLite `-wal`/`-shm` files and uncommitted feature work. Inspect `git status` before editing and do not reset, clean, or overwrite unrelated changes.
+
+## UI Development Rules
+
+For UI-related tasks:
+- Read docs/DESIGN.md before making design decisions.
+- Follow the existing design tokens and shared components.
+- Preserve product functionality and business logic.
+- Do not independently introduce a new visual style.
+- Verify rendered results in a browser when available.
+- Check affected sibling pages after shared component changes.

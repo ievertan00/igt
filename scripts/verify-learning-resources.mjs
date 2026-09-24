@@ -1,5 +1,6 @@
 import { RESOURCE_CATALOG } from "../lib/features/handbook/profile.mjs";
 import { verifyResourceUrl } from "../lib/features/learning-diagnosis/resources.mjs";
+import { beijingISO } from "../lib/shared/timezone.mjs";
 
 let failed = 0;
 for (const resource of RESOURCE_CATALOG) {
@@ -9,7 +10,7 @@ for (const resource of RESOURCE_CATALOG) {
     title: resource.title,
     url: resource.url,
     ...result,
-    checkedAt: new Date().toISOString(),
+    checkedAt: beijingISO(),
   }) + "\n");
 }
 if (failed > 0) {

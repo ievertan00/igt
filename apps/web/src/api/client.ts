@@ -62,4 +62,15 @@ export const webApi = {
   generatePractice: (mode = "sentence", count = 3) => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count }) }),
   evaluatePractice: (question: unknown, answer: string) => requestJson<any>("/practice/evaluate", { method: "POST", body: JSON.stringify({ question, answer }) }),
   getHandbook: (errorType = "") => requestJson<any>(`/handbook?days=90${errorType ? `&errorType=${encodeURIComponent(errorType)}` : ""}`),
+  speakWord: async (text: string): Promise<HTMLAudioElement> => {
+    const res = await fetch("/tts/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+    if (!res.ok) {
+      let msg = `TTS ${res.status}`;
+      try { const err = await res.json(); if (err?.error) msg = err.error; } catch {}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    return new Audio(url);
+  },
 };

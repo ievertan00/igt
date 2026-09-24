@@ -76,7 +76,7 @@ log(`  Found ${needCards.length} input(s) with corrections but no card.`);
 if (!dryRun && needCards.length > 0) {
   const insert = db.prepare(`
     INSERT INTO srs_cards (source_type, source_id, prompt, answer, due_date)
-    VALUES ('input', ?, ?, ?, date('now'))
+    VALUES ('input', ?, ?, ?, date('now', 'localtime'))
   `);
   db.transaction(() => {
     for (const r of needCards) insert.run(r.id, r.original_text.trim(), r.correction.trim());

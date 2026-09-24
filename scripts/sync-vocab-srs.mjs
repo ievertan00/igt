@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import configLoader from "../lib/shared/config-loader.mjs";
+import { beijingISO } from "../lib/shared/timezone.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const config = configLoader.load();
@@ -37,10 +38,12 @@ function parseEntries(content) {
     const raw = block.join("\n");
     const field = (name) => raw.match(new RegExp(`\\*\\*${name}:\\*\\*\\s*(.+)`))?.[1]?.trim() || "";
     const word = heading[1].trim();
+    const examples = [field("Example 1") || field("Example"), field("Example 2"), field("Example 3")].filter(Boolean);
     if (word) entries.push({
       word,
       key: normalizeWord(word),
-      pos: field("PoS"),
+      pos: field("PoS").split(" · ")[0],
+      vocabDetails: { phonetic: field("PoS").split(" · ").slice(1).join(" · "), synonyms: field("Synonyms"), collocations: field("Collocations"), examples, note: field("Note") },
       zh: field("中文"),
       meaning: field("Meaning"),
       example: field("Example 1") || field("Example"),
@@ -52,7 +55,7 @@ function parseEntries(content) {
 
 function changed(source, card) {
   return ["word", "pos", "zh", "meaning", "example", "note"]
-    .some((field) => String(source[field] || "") !== String(card[field] || ""));
+    .some((field) => String(source[field] || "") !== String(card[field] || "")) || JSON.stringify(source.vocabDetails) !== (card.vocab_details || "null");
 }
 
 const sourceEntries = parseEntries(fs.readFileSync(sourcePath, "utf8"));
@@ -64,13 +67,13 @@ const uniqueEntries = sourceEntries.filter((entry) => !duplicateKeys.has(entry.k
 const db = new Database(dbPath, { readonly: !apply });
 try {
   if (apply) {
-    const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+    const stamp = beijingISO().replace(/[-:TZ.]/g, "").slice(0, 14);
     const backupPath = path.join(projectRoot, `igt_data.db.before-vocab-sync-${stamp}.backup`);
     await db.backup(backupPath);
     console.log(`Backup: ${backupPath}`);
   }
   const cards = db.prepare(`
-    SELECT id, word, pos, zh, meaning, example, note
+    SELECT id, word, pos, zh, meaning, example, note, vocab_details
     FROM srs_cards
     WHERE source_type = 'vocab'
   `).all();
@@ -100,21 +103,21 @@ try {
 
   const insert = db.prepare(`
     INSERT INTO srs_cards
-      (source_type, prompt, answer, due_date, word, pos, zh, meaning, example, note)
-    VALUES ('vocab', ?, ?, date('now'), ?, ?, ?, ?, ?, ?)
+      (source_type, prompt, answer, due_date, word, pos, zh, meaning, example, note, vocab_details)
+    VALUES ('vocab', ?, ?, date('now', 'localtime'), ?, ?, ?, ?, ?, ?, ?)
   `);
   const update = db.prepare(`
     UPDATE srs_cards
-    SET word = ?, prompt = ?, answer = ?, pos = ?, zh = ?, meaning = ?, example = ?, note = ?
+    SET word = ?, prompt = ?, answer = ?, pos = ?, zh = ?, meaning = ?, example = ?, note = ?, vocab_details = ?
     WHERE id = ? AND source_type = 'vocab'
   `);
   const sync = db.transaction(() => {
     for (const entry of missing) {
-      insert.run(entry.word, entry.word, entry.word, entry.pos, entry.zh, entry.meaning, entry.example, entry.note);
+      insert.run(entry.word, entry.word, entry.word, entry.pos, entry.zh, entry.meaning, entry.example, entry.note, JSON.stringify(entry.vocabDetails));
     }
     for (const entry of updates) {
       const card = byKey.get(entry.key);
-      update.run(entry.word, entry.word, entry.word, entry.pos, entry.zh, entry.meaning, entry.example, entry.note, card.id);
+      update.run(entry.word, entry.word, entry.word, entry.pos, entry.zh, entry.meaning, entry.example, entry.note, JSON.stringify(entry.vocabDetails), card.id);
     }
   });
   sync();

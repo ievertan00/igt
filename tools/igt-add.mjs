@@ -6,6 +6,7 @@ import Database from "better-sqlite3";
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
 import { cleanEnglishCounterpart, isMainlyChinese } from "../lib/shared/add-input.mjs";
 import { ui, paint, colors, Spinner, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
+import { beijingDate } from "../lib/shared/timezone.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -317,7 +318,7 @@ if (saveAns.toLowerCase() === "n") {
 rl.close();
 
 // ── Build markdown block ──────────────────────────────────────────────────────
-const today = new Date().toISOString().slice(0, 10);
+const today = beijingDate();
 let mdBlock = `\n${raw.trim()}\n`;
 if (hook) mdBlock += `**Memory:** ${hook}\n`;
 mdBlock += `*Added: ${today}*\n`;
@@ -342,7 +343,7 @@ if (fields.word && fields.zh) {
       db.prepare(`
         INSERT INTO srs_cards
           (source_type, source_id, prompt, answer, due_date, word, pos, zh, meaning, example, note)
-        VALUES ('vocab', NULL, ?, ?, date('now'), ?, ?, ?, ?, ?, ?)
+        VALUES ('vocab', NULL, ?, ?, date('now', 'localtime'), ?, ?, ?, ?, ?, ?)
       `).run(
         fields.word, fields.word,
         fields.word, fields.pos || "", fields.zh || "",

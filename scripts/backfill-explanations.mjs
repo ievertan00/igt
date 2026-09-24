@@ -32,6 +32,7 @@ import { fileURLToPath } from "node:url";
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
 import { classifyErrorType, getErrorTypePath } from "../lib/domain/error-types.mjs";
 import { GRAMMAR_RESPONSE_SCHEMA } from "../lib/domain/parse-diagnosis.mjs";
+import { beijingISO } from "../lib/shared/timezone.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const projectRoot = path.join(path.dirname(__filename), "..");
@@ -74,7 +75,7 @@ if (mode === "orphan") {
          FROM srs_cards
         WHERE source_type = 'input'
           AND source_id IS NULL
-          ${dueOnly ? "AND due_date <= date('now')" : ""}
+          ${dueOnly ? "AND due_date <= date('now', 'localtime')" : ""}
         ORDER BY id ASC
         ${limit ? `LIMIT ${Math.max(1, limit | 0)}` : ""}`
     )
@@ -215,7 +216,7 @@ for (let i = 0; i < queue.length; i++) {
   try {
     db.transaction(() => {
       if (item.kind === "orphan") {
-        const timestamp = new Date().toISOString();
+        const timestamp = beijingISO();
         const res = insertInput.run(timestamp, item.original, item.correction);
         const inputId = res.lastInsertRowid;
         for (const d of normalized) {

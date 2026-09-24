@@ -8,6 +8,7 @@ import { clearCache, cacheStats } from "../lib/features/handbook/cache.mjs";
 import { buildReport } from "../lib/features/handbook/report.mjs";
 import { resolveModel } from "../lib/server/llm/model-resolver.mjs";
 import { buildLearningDiagnosis } from "../lib/features/learning-diagnosis/index.mjs";
+import { beijingDate } from "../lib/shared/timezone.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
@@ -95,7 +96,7 @@ for (const r of ruleResults) {
   if (r.status === "fulfilled" && r.value && r.value[1]) rules.set(r.value[0], r.value[1]);
 }
 
-const dateStr = new Date().toISOString().split("T")[0];
+const dateStr = beijingDate();
 const md = buildReport({ provider, handbookModel, date: dateStr, days, stats, errorFrequency, trendData, examplesByType, rules, overallSummary, learningProfile });
 
 const reportDir = config.ReportPath

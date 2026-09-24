@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import readline from "readline";
 import { ui, paint, colors, Spinner, wrapText } from "../lib/cli/ui/index.mjs";
 import { savePracticeAttempt } from "../lib/features/practice/attempts.mjs";
+import { beijingDate } from "../lib/shared/timezone.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,7 +52,7 @@ function savePracticeHistory(exercises) {
 
 function savePracticeSession(exercises, results, meta) {
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
+  const dateStr = beijingDate(now);
   const timeStr = now.toTimeString().slice(0, 5);
   
   // Resolve practice log file path

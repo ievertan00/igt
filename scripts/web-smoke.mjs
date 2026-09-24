@@ -81,10 +81,19 @@ try {
     await page.click("a[href='#grammar']");
     assert.match(await page.$eval("h1", (node) => node.textContent), /把一句话交给 IGT/);
     assert.deepEqual(await page.$$eval(".group-label.active", (nodes) => nodes.map((node) => node.textContent)), ["语言工具"]);
-    assert.equal(await page.$eval("textarea", (node) => node.getAttribute("aria-label")), "Grammar 英文输入");
+    assert.equal(await page.$eval("textarea", (node) => node.labels?.[0]?.textContent), "你的英文表达");
     await page.focus("textarea");
     assert.equal(await page.$eval(":focus", (node) => node.tagName), "TEXTAREA");
     await page.setViewport({ width: 390, height: 844 });
+    assert.equal(await page.$eval(".menu-toggle", (node) => node.getAttribute("aria-expanded")), "false");
+    await page.click(".menu-toggle");
+    assert.equal(await page.$eval(".menu-toggle", (node) => node.getAttribute("aria-expanded")), "true");
+    await page.click(".nav-child");
+    assert.equal(await page.$eval(".menu-toggle", (node) => node.getAttribute("aria-expanded")), "false");
+    await page.click(".menu-toggle");
+    await page.click(".nav-group .nav-child:nth-of-type(3)");
+    await page.waitForFunction(() => location.hash === "#translation");
+    assert.equal(await page.$eval(".menu-toggle", (node) => node.getAttribute("aria-expanded")), "false");
     await page.goto("http://127.0.0.1:4173/#coach", { waitUntil: "networkidle0" });
     assert.match(await page.$eval("h1", (node) => node.textContent), /你的下一轮学习计划/);
     for (const route of ["translation", "word-lookup", "word-review", "practice", "ask", "handbook", "coach"]) {
@@ -95,7 +104,7 @@ try {
       assert.ok(heading, `missing heading for #${route}`);
     }
     await page.goto("http://127.0.0.1:4173/#ask", { waitUntil: "networkidle0" });
-    assert.equal(await page.$eval("textarea", (node) => node.getAttribute("aria-label")), "Ask 问题");
+    assert.equal(await page.$eval("textarea", (node) => node.labels?.[0]?.textContent), "你的问题");
     await page.type("textarea", "How should I use the present perfect?");
     await page.click("button.primary");
     await page.waitForFunction(() => document.body.textContent.includes("Use the present perfect"));
@@ -116,7 +125,7 @@ try {
     await page.click("button.primary");
     await page.waitForFunction(() => document.body.textContent.includes("Could you clarify the deadline?"));
     await page.goto("http://127.0.0.1:4173/#word-lookup", { waitUntil: "networkidle0" });
-    assert.equal(await page.$eval("input", (node) => node.getAttribute("aria-label")), "单词或短语查询");
+    assert.equal(await page.$eval("input", (node) => node.labels?.[0]?.textContent), "查询单词或短语");
     await page.type("input", "consolidate");
     await page.click("button.primary");
     await page.waitForFunction(() => document.body.textContent.includes("consolidate"));

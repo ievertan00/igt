@@ -13,7 +13,7 @@ db.exec(`CREATE TABLE srs_cards (
   prompt TEXT NOT NULL, answer TEXT NOT NULL, ease REAL DEFAULT 2.5,
   interval_days INTEGER DEFAULT 1, due_date TEXT NOT NULL, last_reviewed TEXT,
   total_reviews INTEGER DEFAULT 0, correct_streak INTEGER DEFAULT 0, word TEXT,
-  pos TEXT, zh TEXT, meaning TEXT, example TEXT, note TEXT
+  pos TEXT, zh TEXT, meaning TEXT, example TEXT, note TEXT, vocab_details TEXT
 )`);
 
 try {

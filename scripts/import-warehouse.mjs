@@ -124,7 +124,7 @@ if (fs.existsSync(CSV_FILE)) {
   const exists = db.prepare(`SELECT COUNT(*) AS n FROM srs_cards WHERE source_type='input' AND prompt=?`);
   const insert = db.prepare(`
     INSERT INTO srs_cards (source_type, source_id, prompt, answer, due_date)
-    VALUES ('input', NULL, ?, ?, date('now'))
+    VALUES ('input', NULL, ?, ?, date('now', 'localtime'))
   `);
 
   db.transaction(() => {
@@ -150,7 +150,7 @@ if (fs.existsSync(VOCAB_FILE)) {
   const exists = db.prepare(`SELECT COUNT(*) AS n FROM srs_cards WHERE source_type='vocab' AND word=?`);
   const insert = db.prepare(`
     INSERT INTO srs_cards (source_type, source_id, prompt, answer, due_date, word, pos, zh, meaning, example, note)
-    VALUES ('vocab', NULL, ?, ?, date('now'), ?, ?, ?, ?, ?, ?)
+    VALUES ('vocab', NULL, ?, ?, date('now', 'localtime'), ?, ?, ?, ?, ?, ?)
   `);
 
   db.transaction(() => {
