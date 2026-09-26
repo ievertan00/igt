@@ -1,4 +1,4 @@
-type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "practice" | "ask" | "handbook" | "coach" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume";
+type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume";
 
 const paths: Record<IconName, string> = {
   dashboard: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
@@ -10,6 +10,7 @@ const paths: Record<IconName, string> = {
   ask: "M21 11a8 8 0 0 1-8 8H7l-4 3V7a4 4 0 0 1 4-4h6a8 8 0 0 1 8 8 M7 8h9 M7 12h6",
   handbook: "M12 5v16 M12 5C9 3 5 3 2 4v15c3-1 7-1 10 2 M12 5c3-2 7-2 10-1v15c-3-1-7-1-10 2",
   coach: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M16 8l-2 6-6 2 2-6 6-2",
+  settings: "M12 3v2 M12 19v2 M3 12h2 M19 12h2 M5.64 5.64l1.42 1.42 M16.94 16.94l1.42 1.42 M18.36 5.64l-1.42 1.42 M7.06 16.94l-1.42 1.42 M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8",
   chevron: "M8 10l4 4 4-4",
   menu: "M4 6h16 M4 12h16 M4 18h16",
   close: "M6 6l12 12 M6 18L18 6",

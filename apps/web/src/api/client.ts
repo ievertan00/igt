@@ -47,6 +47,8 @@ export async function requestJson<T>(url: string, init: RequestJsonInit = {}): P
 
 export const webApi = {
   getRuntime: () => requestJson<any>("/runtime"),
+  getLlmSettings: () => requestJson<any>("/settings/llm"),
+  saveLlmSettings: (settings: unknown) => requestJson<any>("/settings/llm", { method: "POST", body: JSON.stringify(settings) }),
   getDashboard: () => requestJson<any>("/dashboard"),
   checkGrammar: (text: string) => requestJson<any>("/grammar", { method: "POST", body: JSON.stringify({ text }) }),
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
