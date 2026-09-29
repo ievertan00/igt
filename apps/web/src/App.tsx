@@ -14,26 +14,21 @@ type Route =
   | "coach"
   | "settings";
 const items: Array<[Route, string]> = [
-  ["grammar", "语法检查"],
-  ["translation", "翻译"],
-  ["word-lookup", "单词查询"],
-  ["word-review", "单词复习"],
-  ["practice", "练习"],
-  ["ask", "语法查询"],
+  ["grammar", "Grammar"],
+  ["translation", "Translate"],
+  ["word-lookup", "Vocabulary"],
+  ["word-review", "Review"],
+  ["practice", "Practice"],
+  ["ask", "Ask"],
   ["handbook", "Handbook"],
   ["coach", "Coach"],
-  ["settings", "模型设置"],
+  ["settings", "Model settings"],
 ];
-const groups: Array<[string, Array<[Route, string]>]> = [
-  ["语言工具", items.slice(0, 3)],
-  ["练习工作台", items.slice(3, 5)],
-  ["Ask", items.slice(5, 6)],
-  ["学习系统", items.slice(6, 8)],
-];
+
 
 function formatActivityTimestamp(value: unknown) {
   const date = new Date(String(value || ""));
-  if (Number.isNaN(date.getTime())) return "时间未知";
+  if (Number.isNaN(date.getTime())) return "Unknown date";
   const pad = (part: number) => String(part).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
@@ -47,8 +42,8 @@ function Dashboard() {
       .then(setData)
       .catch((e) => setError(e.message));
   }, []);
-  if (error) return <State title="总览暂时不可用" detail={error} />;
-  if (!data) return <State title="正在读取学习状态…" />;
+  if (error) return <State title="Overview is unavailable" detail={error} />;
+  if (!data) return <State title="Loading your learning activity…" />;
   const focus = data.coach?.focus;
   return (
     <>
@@ -56,27 +51,27 @@ function Dashboard() {
         eyebrow="OVERVIEW"
         title={
           <>
-            今天，继续把表达
+            Make a little progress.
             <br />
-            <em>变成自己的。</em>
+            <em>Make it yours.</em>
           </>
         }
-        detail="你的学习证据正在形成。先完成一次短复测，再决定下一步。"
+        detail="Look back at your recent work, then choose what to practise next."
       />
       <section className="focus">
         <div>
           <span className="focus-label">
             <Icon name="coach" />
-            当前关注
+            Current focus
           </span>
-          <h2>{focus?.error_type || "从真实表达开始"}</h2>
+          <h2>{focus?.error_type || "Start with your own words"}</h2>
           <p>
             {focus
-              ? `最近记录 ${focus.hits} 次，适合安排一次延迟复测。`
-              : "还没有足够的稳定模式，先提交一句真实英文。"}
+              ? `Seen ${focus.hits} times recently. Try revisiting it after a break.`
+              : "Start with a sentence to build a picture of your learning."}
           </p>
           <a className="primary" href="#grammar">
-            开始表达
+            Write a sentence
             <Icon name="arrow" />
           </a>
         </div>
@@ -89,10 +84,10 @@ function Dashboard() {
         />
       </section>
       <div className="columns">
-        <Panel title="最近的表达" icon="grammar">
+        <Panel title="Recent writing" icon="grammar">
           {(data.recentActivity || []).slice(0, 5).map((item: any) => {
             const original = String(item.userInput || "");
-            const correction = String(item.correction || "已记录");
+            const correction = String(item.correction || "Recorded");
             const isLong = original.length > 160 || correction.length > 160;
             return (
               <article className="activity activity-entry" key={item.entryId}>
@@ -101,27 +96,27 @@ function Dashboard() {
                 </time>
                 <div className="activity-copy">
                   <section className="activity-copy-section">
-                    <span className="activity-label">原句</span>
+                    <span className="activity-label">Original</span>
                     <p className={isLong ? "activity-preview is-clamped" : "activity-preview"}>
                       {original}
                     </p>
                   </section>
                   <section className="activity-copy-section activity-correction">
-                    <span className="activity-label">修正</span>
+                    <span className="activity-label">Correction</span>
                     <p className={isLong ? "activity-preview is-clamped" : "activity-preview"}>
                       {correction}
                     </p>
                   </section>
                   {isLong && (
                     <details className="activity-full">
-                      <summary>展开完整记录</summary>
+                      <summary>Read full entry</summary>
                       <div className="activity-full-content">
                         <section>
-                          <strong>原句</strong>
+                          <strong>Original</strong>
                           <p>{original}</p>
                         </section>
                         <section>
-                          <strong>修正</strong>
+                          <strong>Correction</strong>
                           <p>{correction}</p>
                         </section>
                       </div>
@@ -131,19 +126,19 @@ function Dashboard() {
               </article>
             );
           })}
-          {!data.recentActivity?.length && <State title="还没有 Review 记录" />}
+          {!data.recentActivity?.length && <State title="No review entries yet" />}
         </Panel>
-        <Panel title="学习节奏" icon="word-review">
+        <Panel title="Your learning rhythm" icon="word-review">
           <div className="stat">
             {data.stats?.totalInputs || 0}
             <small> review entries</small>
           </div>
           <p>
-            今日 {data.today?.inputs_today || 0} 条 · Vocabulary due{" "}
+            Today: {data.today?.inputs_today || 0} entries · Words due{" "}
             {data.stats?.dueCounts?.vocab || 0}
           </p>
-          <div className="daily-effort" aria-label="最近七天活动">
-            <span className="eyebrow">最近 7 天</span>
+          <div className="daily-effort" aria-label="Activity over the last seven days">
+            <span className="eyebrow">Last 7 days</span>
             {(data.stats?.dailyEffort || [])
               .slice()
               .reverse()
@@ -159,7 +154,7 @@ function Dashboard() {
           </div>
         </Panel>
       </div>
-      <Panel title="核心资产" icon="handbook">
+      <Panel title="Your learning library" icon="handbook">
         <div className="asset-list">
           {[
             ["Review log", data.assets?.reviewLog],
@@ -170,7 +165,7 @@ function Dashboard() {
             <div className="asset-row" key={String(label)}>
               <span>{label}</span>
               <strong className={available ? "asset-ok" : "asset-missing"}>
-                {available ? "可用" : "未找到"}
+                {available ? "Available" : "Not found"}
               </strong>
             </div>
           ))}
@@ -185,13 +180,21 @@ function Grammar() {
   const [result, setResult] = useState<any>();
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState("");
+  const [checkedText, setCheckedText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [didSave, setDidSave] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   async function submit() {
-    if (!text.trim()) return;
+    if (!text.trim() || busy || saving) return;
+    const submitted = text.trim();
     setBusy(true);
     setSaved("");
+    setResult(undefined);
+    setDidSave(false);
     try {
-      setResult(await webApi.checkGrammar(text));
+      setResult(await webApi.checkGrammar(submitted));
+      setCheckedText(submitted);
     } catch (e: any) {
       setResult({ error: e.message });
     } finally {
@@ -201,15 +204,16 @@ function Grammar() {
 
   async function save() {
     const data = result?.result || result?.data;
-    if (!data) return;
-    setBusy(true);
+    if (!data || saving || didSave) return;
+    setSaving(true);
     try {
-      const response = await webApi.saveGrammar(text, data);
-      setSaved(response.persistence?.saved ? "已保存到 Review log" : "Review log 未保存");
+      const response = await webApi.saveGrammar(checkedText, data);
+      setDidSave(Boolean(response.persistence?.saved));
+      setSaved(response.persistence?.saved ? "Saved to your review log." : "Your review log was not saved. Try again.");
     } catch (e: any) {
-      setSaved("保存失败：" + e.message);
+      setSaved("Could not save: " + e.message);
     } finally {
-      setBusy(false);
+      setSaving(false);
     }
   }
 
@@ -219,52 +223,61 @@ function Grammar() {
   );
 
   return (
-    <div className="grammar-page">
-      <Heading
-        eyebrow="GRAMMAR CHECK"
-        title="把一句话交给 IGT"
-        detail="查看原句、修正和原因，再把值得记住的提示保存下来。"
-      />
-      <Panel title="你的英文表达" icon="grammar">
-        <label className="form-label" htmlFor="grammar-input">
-          你的英文表达
-        </label>
-        <textarea
-          id="grammar-input"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="例如：I suggested him to join the call."
-        />
-        <button className="primary" onClick={submit} disabled={busy}>
-          {busy ? "检查中…" : "检查这句话 →"}
-        </button>
-      </Panel>
-      {result?.error && <State title="检查失败" detail={result.error} />}
+    <div className={`grammar-page${result ? " has-result" : ""}`}>
+      <div className="grammar-intro">
+        <h1>Your English,<br /><span>clearer<span className="accent-dot">.</span></span></h1>
+        <p>A thought. A sentence. A little better every day.</p>
+      </div>
+      <form className="grammar-composer" onSubmit={(event) => { event.preventDefault(); void submit(); }} aria-busy={busy}>
+        <label className="sr-only" htmlFor="grammar-input">Your English sentence</label>
+        <textarea ref={inputRef} id="grammar-input" value={text} disabled={busy}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.nativeEvent.isComposing) {
+              event.preventDefault(); void submit();
+            }
+          }}
+          placeholder="Write something in English…" aria-describedby="grammar-hint" />
+        <div className="composer-actions">
+          <span id="grammar-hint">{busy ? "Finding a clearer way to say it…" : "A sentence or a short paragraph"}</span>
+          <button className="primary" type="submit" disabled={busy || saving || !text.trim()}>
+            {busy ? <><span className="loading-spinner" />Checking…</> : <>Check my English<Icon name="arrow" /></>}
+          </button>
+        </div>
+      </form>
+      {!result && !busy && <div className="grammar-examples">
+        <span>Need a starting point?</span>
+        <button type="button" className="text-button" onClick={() => {
+          setText("I suggested him to join the call."); inputRef.current?.focus();
+        }}>Try an example<Icon name="arrow" /></button>
+      </div>}
+      <p className="grammar-note">Understand the changes. Keep what you learn. Save only when you choose.</p>
+      {result?.error && <State title="Could not check your English. Try again." detail={result.error} />}
       {data && (
-        <div className="correction-detail">
+        <div className="correction-detail" aria-live="polite">
           <DetailSection variant="original" icon="document" title="Original">
-            <p>{data.originalText || text}</p>
+            <p>{data.originalText || checkedText}</p>
           </DetailSection>
           <DetailSection variant="correction" icon="check" title="Correction">
-            <p>{data.correction || "暂无修正"}</p>
+            <p>{data.correction || "No correction needed."}</p>
           </DetailSection>
-          <DetailSection variant="natural" icon="spark" title="More natural">
-            <p>{data.refine || "暂无更自然表达"}</p>
-          </DetailSection>
+          {data.refine && <DetailSection variant="natural" icon="spark" title="More natural">
+            <p>{data.refine || "No alternative wording provided."}</p>
+          </DetailSection>}
           <DetailSection variant="why" icon="info" title="Why">
             {diagnoses.length ? (
               diagnoses.map((item: string, index: number) => <p key={index}>{item}</p>)
             ) : (
-              <p>暂无诊断说明</p>
+              <p>No explanation provided.</p>
             )}
           </DetailSection>
           <DetailSection variant="remember" icon="idea" title="Remember">
-            <p>{data.remember || "暂无记忆提示"}</p>
+            <p>{data.remember || "No reminder provided."}</p>
           </DetailSection>
           <div className="correction-actions">
-            <button className="primary save-review" onClick={save} disabled={busy}>
+            <button className="primary save-review" onClick={save} disabled={busy || saving || didSave}>
               <Icon name="bookmark" />
-              {busy ? "保存中…" : "保存到 Review log"}
+              {saving ? "Saving…" : didSave ? "Saved to review log" : "Save to review log"}
             </button>
             {saved && (
               <p className="status" role="status">
@@ -298,40 +311,40 @@ function Translation() {
     <>
       <Heading
         eyebrow="TRANSLATION"
-        title="把意思说得自然"
-        detail="选择中英互译方向，输入句子并获取自然、贴合语境的译文。"
+        title="Find the right words."
+        detail="Translate between Chinese and English, with meaning and context intact."
       />
-      <Panel title="翻译输入" icon="translation">
+      <Panel title="Your text" icon="translation">
         <div className="switches">
           <button
             className={direction === "zh2en" ? "selected" : ""}
             onClick={() => setDirection("zh2en")}
           >
-            中 → 英
+            Chinese → English
           </button>
           <button
             className={direction === "en2zh" ? "selected" : ""}
             onClick={() => setDirection("en2zh")}
           >
-            英 → 中
+            English → Chinese
           </button>
         </div>
         <label className="form-label" htmlFor="translation-input">
-          输入要翻译的句子
+          Text to translate
         </label>
         <textarea
           id="translation-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="输入要翻译的句子…"
+          placeholder="Write or paste the text to translate…"
         />
         <button className="primary" onClick={submit} disabled={busy}>
-          {busy ? "翻译中…" : "开始翻译 →"}
+          {busy ? "Translating…" : "Translate →"}
         </button>
       </Panel>
-      {result?.error && <State title="翻译失败" detail={result.error} />}
+      {result?.error && <State title="Translation failed. Try again." detail={result.error} />}
       {translation && (
-        <Panel title="翻译结果" icon="translation">
+        <Panel title="Translation" icon="translation">
           <p className="translation-result">{translation}</p>
           {result.data?.notes && <p>{result.data.notes}</p>}
         </Panel>
@@ -357,19 +370,19 @@ function Ask() {
         { question: current, answer: result.data?.answer || result.data },
       ]);
     } catch (e: any) {
-      setTurns((old) => [...old, { question: current, answer: `请求失败：${e.message}` }]);
+      setTurns((old) => [...old, { question: current, answer: `Request failed: ${e.message}` }]);
     } finally {
       setBusy(false);
     }
   }
   async function save() {
-    setSaved("正在保存 Ask Markdown…");
+    setSaved("Saving your conversation…");
     setSaveBusy(true);
     try {
       const result = await webApi.saveAsk(turns);
-      setSaved(result.saved ? "已保存到 Ask Markdown" : "当前没有可保存的咨询");
+      setSaved(result.saved ? "Conversation saved" : "There is no conversation to save yet.");
     } catch (e: any) {
-      setSaved(`保存失败：${e.message}`);
+      setSaved(`Could not save: ${e.message}`);
     } finally {
       setSaveBusy(false);
     }
@@ -378,31 +391,31 @@ function Ask() {
     <>
       <Heading
         eyebrow="ASK"
-        title="把一个问题问到底"
-        detail="提出语言问题并持续追问，探索用法、语气和表达差异。"
+        title="Stay curious."
+        detail="Explore usage, tone, and the subtle differences. Ask a follow-up whenever you need."
       />
-      <Panel title="当前咨询" icon="ask">
+      <Panel title="Your conversation" icon="ask">
         {turns.map((turn, index) => (
           <div className="ask-turn" key={`${turn.question}-${index}`}>
             <strong>{turn.question}</strong>
             <p>{turn.answer}</p>
           </div>
         ))}
-        {!turns.length && <State title="还没有问题" detail="从一个具体的语言问题开始。" />}
+        {!turns.length && <State title="What would you like to understand?" detail="Start with a question about English." />}
         <label className="form-label" htmlFor="ask-input">
-          你的问题
+          Your question
         </label>
         <textarea
           id="ask-input"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="继续追问…"
+          placeholder="Ask about a phrase, a rule, or a difference…"
         />
         <button className="primary" onClick={send} disabled={busy}>
-          {busy ? "思考中…" : "发送 →"}
+          {busy ? "Thinking…" : "Ask →"}
         </button>
         <button className="secondary" onClick={save} disabled={saveBusy}>
-          {saveBusy ? "保存中…" : "保存到 Ask Markdown"}
+          {saveBusy ? "Saving…" : "Save conversation"}
         </button>
         {saved && <p className="status">{saved}</p>}
       </Panel>
@@ -438,40 +451,40 @@ function WordReview() {
     <div className="word-review-page">
       <Heading
         eyebrow="VOCABULARY · SRS ONLY"
-        title="词汇复习"
-        detail="先根据中文提示回忆英文，再揭示答案并评分。"
+        title="Bring words back."
+        detail="Recall the English word from the Chinese clue. Reveal it, then rate your recall."
       />
-      {error && <State title="复习失败" detail={error} />}
+      {error && <State title="Could not load your review. Try again." detail={error} />}
       {!error && !card && (
-        <Panel title="今日状态" icon="word-review" className="review-empty-state">
+        <Panel title="Your review today" icon="word-review" className="review-empty-state">
           <State
-            title={cards.length ? "今日复习完成" : "没有到期卡片"}
+            title={cards.length ? "All done for today." : "You are all caught up."}
             detail={
               cards.length
-                ? `完成 ${cards.length} 张词汇卡。`
-                : "稍后再来，或先从词汇 Markdown 添加内容。"
+                ? `You reviewed ${cards.length} vocabulary cards.`
+                : "Come back later, or look up a word and save it to your vocabulary."
             }
           />
         </Panel>
       )}
       {card && (
         <Panel
-          title={`今日第 ${index + 1} / ${cards.length} 张`}
+          title={`Card ${index + 1} of ${cards.length}`}
           icon="word-review"
           className="review-card"
         >
-          <div className="review-progress" aria-label={`第 ${index + 1} 张，共 ${cards.length} 张`}>
+          <div className="review-progress" aria-label={`Card ${index + 1} of ${cards.length}`}>
             <span style={{ width: `${((index + 1) / cards.length) * 100}%` }} />
           </div>
           {!revealed ? (
             <div className="review-prompt">
-              <span className="review-kicker">先回忆英文单词</span>
-              <h2>{card.zh || "回忆这个英文表达"}</h2>
-              <p>{card.meaning || "根据中文提示回忆，再揭示完整词卡。"}</p>
+              <span className="review-kicker">Recall before you reveal</span>
+              <h2>{card.zh || "Recall this English expression"}</h2>
+              <p>{card.meaning || "Use the Chinese clue, then reveal the word."}</p>
               <div className="review-prompt-actions">
                 <AudioButton text={card.word || card.answer} reviewPrompt />
                 <button className="primary" onClick={() => setRevealed(true)}>
-                  显示完整词卡
+                  Reveal word
                   <span className="review-cta-icon" aria-hidden="true">
                     <Icon name="arrow" />
                   </span>
@@ -496,19 +509,19 @@ function WordReview() {
               <div className="review-actions">
                 <button onClick={() => grade("again")}>
                   <span>Again</span>
-                  <small>未想起</small>
+                  <small>Could not recall</small>
                 </button>
                 <button onClick={() => grade("hard")}>
                   <span>Hard</span>
-                  <small>费力想起</small>
+                  <small>With difficulty</small>
                 </button>
                 <button onClick={() => grade("good")}>
                   <span>Good</span>
-                  <small>正常想起</small>
+                  <small>Remembered</small>
                 </button>
                 <button onClick={() => grade("easy")}>
                   <span>Easy</span>
-                  <small>轻松想起</small>
+                  <small>Effortless</small>
                 </button>
               </div>
             </>
@@ -541,26 +554,26 @@ function Coach() {
       <div className="coach-header">
         <Heading
           eyebrow="COACH · EVIDENCE"
-          title="根据学习证据，安排下一步"
-          detail="查看样本、练习重点与证据限制，决定接下来要练什么。"
+          title="Find your next step."
+          detail="Use your learning history to choose a useful practice focus."
         />
         <button className="secondary" onClick={() => load(true)} disabled={busy}>
-          {busy ? "分析中…" : "重新分析资产"}
+          {busy ? "Analysing…" : "Refresh analysis"}
         </button>
       </div>
-      {error && <State title="Coach 暂时不可用" detail={error} />}
-      {!data && !error && <State title="正在分析学习证据…" />}
+      {error && <State title="Coach is unavailable" detail={error} />}
+      {!data && !error && <State title="Looking at your learning history…" />}
       {data && (
         <>
-          <Panel title="分析样本" className="coach-sample">
+          <Panel title="Learning history" className="coach-sample">
             <dl className="coach-sample-grid">
-              <div><dt>表达记录</dt><dd>{data.sample?.totalInputs || 0}<span>条输入</span></dd></div>
-              <div><dt>语法诊断</dt><dd>{data.sample?.totalDiagnoses || 0}<span>条诊断</span></dd></div>
-              <div><dt>观察窗口</dt><dd>{data.windowDays ?? "—"}<span>天</span></dd></div>
+              <div><dt>Writing entries</dt><dd>{data.sample?.totalInputs || 0}<span> entries</span></dd></div>
+              <div><dt>Grammar observations</dt><dd>{data.sample?.totalDiagnoses || 0}<span> observations</span></dd></div>
+              <div><dt>Time window</dt><dd>{data.windowDays ?? "—"}<span> days</span></dd></div>
             </dl>
           </Panel>
           {(data.priorities || []).length > 0 ? (
-            <Panel title="优先练习重点" className="coach-priorities">
+            <Panel title="Where to focus" className="coach-priorities">
               {(data.priorities || []).map((item: any) => (
                 <article className="coach-priority" key={item.errorType}>
                   <h3>{item.errorType}</h3>
@@ -570,7 +583,7 @@ function Coach() {
                       <li key={phase.phase}>
                         <strong>{phase.name}</strong>
                         {phase.task && <p>{phase.task}</p>}
-                        {phase.check && <p className="coach-check"><span>检查方式</span>{phase.check}</p>}
+                        {phase.check && <p className="coach-check"><span>How to check</span>{phase.check}</p>}
                       </li>
                     ))}
                   </ol>
@@ -578,14 +591,14 @@ function Coach() {
               ))}
             </Panel>
           ) : (
-            <Panel title="当前暂无线索" className="coach-empty-priorities">
-              <p>现有样本还不足以确定优先练习重点。继续记录真实表达与诊断后，再查看新的分析。</p>
+            <Panel title="A little more practice first." className="coach-empty-priorities">
+              <p>There is not enough evidence to choose a focus yet. Keep saving your writing and feedback, then check back.</p>
             </Panel>
           )}
-          <Panel title="证据限制" className="coach-limitations">
+          <Panel title="What this evidence can tell us" className="coach-limitations">
             {data.limitations?.length ? (
               <ul>{data.limitations.map((item: string) => <li key={item}>{item}</li>)}</ul>
-            ) : <p>当前分析没有返回额外限制说明。</p>}
+            ) : <p>No additional limitations were provided for this analysis.</p>}
           </Panel>
         </>
       )}
@@ -613,7 +626,7 @@ function WordLookup() {
   async function add() {
     try {
       const result = await webApi.addWord(entry);
-      setStatus(result.persistence?.saved ? "已保存到 Vocabulary Markdown" : "这个词已经存在");
+      setStatus(result.persistence?.saved ? "Saved to your vocabulary" : "This word is already in your vocabulary.");
     } catch (e: any) {
       setStatus(e.message);
     }
@@ -625,12 +638,12 @@ function WordLookup() {
     <div className="word-page">
       <Heading
         eyebrow="WORD LOOKUP"
-        title="查一个词，也把它留下"
-        detail="查询结果可以保存到 Vocabulary Markdown，并进入词汇复习。"
+        title="Meet your next word."
+        detail="Explore a word, hear it in context, and save it for your next review."
       />
-      <Panel title="查询单词或短语" icon="word-lookup" className="lookup-form">
+      <Panel title="Word or phrase" icon="word-lookup" className="lookup-form">
         <label className="form-label" htmlFor="word-lookup-input">
-          查询单词或短语
+          Word or phrase
         </label>
         <div className="lookup-row">
           <input
@@ -638,14 +651,14 @@ function WordLookup() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && lookup()}
-            placeholder="例如：consolidate"
+            placeholder="Try “consolidate”"
           />
           <button className="primary" onClick={lookup} disabled={busy}>
             {busy ? (
-              "查询中…"
+              "Looking it up…"
             ) : (
               <>
-                查询
+                Look up
                 <Icon name="arrow" />
               </>
             )}
@@ -657,7 +670,7 @@ function WordLookup() {
           <WordDetails entry={entry} examples={examples} />
           <button className="primary" onClick={add}>
             <Icon name="handbook" />
-            加入词汇资产
+            Save to vocabulary
             <Icon name="arrow" />
           </button>
         </Panel>
@@ -806,28 +819,28 @@ function Practice() {
   const question = questions[index];
   const prompt = question?.kind === "choice" ? question.question : question?.prompt_zh;
   const modeHint: Record<string, string> = {
-    word: "选词填空练习：填入目标单词，补全句子",
-    sentence: "造句写作练习：使用选定词汇，在全新语境下自主造句",
-    choice: "阅读理解选择题：根据短文选择最佳答案",
+    word: "Fill the gap with the target word to complete the sentence.",
+    sentence: "Use your vocabulary to write an original sentence in a new context.",
+    choice: "Read the passage and choose the best answer.",
   };
   const modeName: Record<string, string> = {
-    word: "选词填空",
-    sentence: "造句",
-    choice: "阅读理解选择题",
+    word: "word",
+    sentence: "sentence",
+    choice: "reading",
   };
 
   return (
     <>
       <Heading
         eyebrow="PRACTICE"
-        title="在新语境里自己写出来"
-        detail="选择练习类型和题目数量，在新语境中回忆词汇并练习表达。"
+        title="Make the words your own."
+        detail="Choose a short practice session. Recall your vocabulary and use it in a new context."
       />
       {!question && (
-        <Panel title="开始一次练习" icon="practice" className="practice-setup">
+        <Panel title="Set up your practice" icon="practice" className="practice-setup">
           <div className="practice-field">
-            <span className="practice-field-label">练习类型</span>
-            <div className="switches" role="group" aria-label="Practice 模式">
+            <span className="practice-field-label">Practice type</span>
+            <div className="switches" role="group" aria-label="Practice mode">
               <button
                 className={mode === "word" ? "selected" : ""}
                 aria-pressed={mode === "word"}
@@ -856,7 +869,7 @@ function Practice() {
             </p>
           </div>
           <fieldset className="question-count">
-            <legend>题目数量</legend>
+            <legend>Number of questions</legend>
             <div className="count-options">
               {[3, 5, 10].map((value) => (
                 <label className={count === value ? "selected" : ""} key={value}>
@@ -868,12 +881,12 @@ function Practice() {
                     onChange={() => setCount(value)}
                   />
                   <span>{value}</span>
-                  <span>题</span>
+                  <span>questions</span>
                 </label>
               ))}
             </div>
           </fieldset>
-          <State title={"准备生成 " + count + " 道" + modeName[mode] + "练习"} />
+          <State title={count + " questions · " + modeName[mode] + " practice"} />
           <button
             className="primary practice-generate"
             onClick={generate}
@@ -883,11 +896,11 @@ function Practice() {
             {busy ? (
               <>
                 <span className="loading-spinner" aria-hidden="true" />
-                生成中…
+                Preparing…
               </>
             ) : (
               <>
-                生成练习
+                Start practice
                 <Icon name="arrow" />
               </>
             )}
@@ -896,13 +909,13 @@ function Practice() {
       )}
       {question && (
         <Panel
-          title={"第 " + (index + 1) + " / " + questions.length + " 题"}
+          title={"Question " + (index + 1) + " of " + questions.length}
           icon="practice"
           className="practice-question"
         >
           <div
             className="practice-progress"
-            aria-label={"第 " + (index + 1) + " 题，共 " + questions.length + " 题"}
+            aria-label={"Question " + (index + 1) + " of " + questions.length}
           >
             <span style={{ width: ((index + 1) / questions.length) * 100 + "%" }} />
           </div>
@@ -911,10 +924,10 @@ function Practice() {
               {question.kind === "choice" ? "CHOICE" : mode.toUpperCase()}
             </span>
             <h2>{prompt}</h2>
-            <p>{question.focus || question.explanation || "完成这道练习。"}</p>
+            <p>{question.focus || question.explanation || "Complete this exercise."}</p>
           </div>
           {question.kind === "choice" ? (
-            <div className="practice-options" role="group" aria-label="选择答案">
+            <div className="practice-options" role="group" aria-label="Choose an answer">
               {(question.options || []).map((option: string, optionIndex: number) => (
                 <button
                   className={answer === option ? "selected" : ""}
@@ -930,32 +943,32 @@ function Practice() {
           ) : (
             <>
               <label className="form-label" htmlFor="practice-input">
-                你的英文答案
+                Your answer in English
               </label>
               <textarea
                 id="practice-input"
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="写出你的英文答案…"
+                placeholder="Write your answer in English…"
               />
             </>
           )}
           <button className="primary" onClick={evaluate} disabled={busy || !answer.trim()}>
             {busy ? (
-              "评价中…"
+              "Reviewing…"
             ) : (
               <>
-                提交评价
+                Check answer
                 <Icon name="arrow" />
               </>
             )}
           </button>
-          {evaluation?.error && <State title="这道题暂时无法评价" detail={evaluation.error} />}
+          {evaluation?.error && <State title="Could not review this answer. Try again." detail={evaluation.error} />}
           {evaluation && !evaluation.error && (
             <PracticeEvaluation
               evaluation={evaluation}
               answer={answer}
-              nextLabel={index + 1 < questions.length ? "下一题" : "完成本轮"}
+              nextLabel={index + 1 < questions.length ? "Next question" : "Finish session"}
               onNext={() => {
                 setIndex((n) => n + 1);
                 setAnswer("");
@@ -970,10 +983,10 @@ function Practice() {
 }
 
 const practiceVerdicts: Record<string, string> = {
-  excellent: "表达准确自然",
-  good: "整体表达准确",
-  needs_work: "还有提升空间",
-  incorrect: "需要重新梳理",
+  excellent: "Clear and natural",
+  good: "Well expressed",
+  needs_work: "Room to improve",
+  incorrect: "Give it another look",
 };
 
 function PracticeEvaluation({
@@ -996,35 +1009,35 @@ function PracticeEvaluation({
   const score = Number.isFinite(Number(evaluation.score))
     ? Math.max(0, Math.min(100, Number(evaluation.score)))
     : undefined;
-  const verdict = practiceVerdicts[evaluation.verdict] || "本题反馈";
+  const verdict = practiceVerdicts[evaluation.verdict] || "Your feedback";
   return (
-    <section className="evaluation" aria-live="polite" aria-label="练习评价结果">
+    <section className="evaluation" aria-live="polite" aria-label="Practice feedback">
       <div className="evaluation-summary">
         {score !== undefined && (
           <div className="evaluation-score">
             <strong>{score}</strong>
-            <span>分</span>
+            <span>/ 100</span>
           </div>
         )}
         <div>
-          <span className="evaluation-phase-label">本题反馈</span>
+          <span className="evaluation-phase-label">Your feedback</span>
           <h3>{verdict}</h3>
-          <p>{evaluation.feedback_zh || "请对照修订表达，检查语义和语法。"}</p>
+          <p>{evaluation.feedback_zh || "Compare your answer with the revision. Check the meaning and grammar."}</p>
         </div>
       </div>
       <div className="evaluation-phases">
         <section className="evaluation-phase">
           <span className="phase-index">01</span>
           <div>
-            <h4>你的答案</h4>
+            <h4>Your answer</h4>
             <p>{answer}</p>
           </div>
         </section>
         <section className="evaluation-phase evaluation-correction">
           <span className="phase-index">02</span>
           <div>
-            <h4>参考修订</h4>
-            <p>{evaluation.corrected_answer || "暂无修订建议"}</p>
+            <h4>Suggested revision</h4>
+            <p>{evaluation.corrected_answer || "No revision provided."}</p>
           </div>
         </section>
         {(strengths.length > 0 || improvements.length > 0) && (
@@ -1033,7 +1046,7 @@ function PracticeEvaluation({
             <div className="evaluation-notes-grid">
               {strengths.length > 0 && (
                 <div>
-                  <h4>做得好的地方</h4>
+                  <h4>What worked</h4>
                   <ul>
                     {strengths.map((item: string, index: number) => (
                       <li key={index}>{item}</li>
@@ -1043,7 +1056,7 @@ function PracticeEvaluation({
               )}
               {improvements.length > 0 && (
                 <div>
-                  <h4>下一步可调整</h4>
+                  <h4>What to work on</h4>
                   <ul>
                     {improvements.map((item: string, index: number) => (
                       <li key={index}>{item}</li>
@@ -1077,7 +1090,7 @@ function Handbook() {
       setData(value);
       setSelected(value.selected || "");
     } catch {
-      setError("Handbook 暂时无法读取，请稍后重试。");
+      setError("Your handbook could not be loaded. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -1092,7 +1105,7 @@ function Handbook() {
       setData(nextData);
       setSelected(nextData.selected || "");
     } catch {
-      setError("分类暂时无法切换，请稍后重试。");
+      setError("This category could not be loaded. Please try again.");
     } finally {
       setLoadingSelection(false);
     }
@@ -1103,35 +1116,35 @@ function Handbook() {
       <div className="coach-header">
         <Heading
           eyebrow="HANDBOOK · REFERENCE"
-          title="从真实错误找到解释"
-          detail="查看过往表达中的错误类型、修正与记忆提示。"
+          title="Learn from your own words."
+          detail="Revisit patterns in your writing, with corrections and reminders worth keeping."
         />
         <button className="secondary" onClick={load} disabled={busy || loadingSelection}>
-          {busy ? "读取中…" : "重新读取"}
+          {busy ? "Loading…" : "Refresh"}
         </button>
       </div>
       {!data && (busy ? (
-        <State title="正在读取 Handbook…" />
+        <State title="Loading your handbook…" />
       ) : error ? (
-        <Panel title="暂时无法读取">
+        <Panel title="Unable to load">
           <div className="handbook-empty">
-            <State title="学习资料暂时没有加载成功" detail={error} />
-            <button className="primary" onClick={load}>重试</button>
+            <State title="Your learning notes could not be loaded." detail={error} />
+            <button className="primary" onClick={load}>Try again</button>
           </div>
         </Panel>
       ) : null)}
       {data && (
         <>
-          <Panel title="记录概况" className="coach-sample">
+          <Panel title="Your writing history" className="coach-sample">
             <dl className="coach-sample-grid">
-              <div><dt>表达记录</dt><dd>{data.stats?.total_inputs || 0}<span>条输入</span></dd></div>
-              <div><dt>语法诊断</dt><dd>{data.stats?.total_diagnoses || 0}<span>条诊断</span></dd></div>
-              <div><dt>观察窗口</dt><dd>{data.days ?? "—"}<span>天</span></dd></div>
+              <div><dt>Writing entries</dt><dd>{data.stats?.total_inputs || 0}<span> entries</span></dd></div>
+              <div><dt>Grammar observations</dt><dd>{data.stats?.total_diagnoses || 0}<span> observations</span></dd></div>
+              <div><dt>Time window</dt><dd>{data.days ?? "—"}<span> days</span></dd></div>
             </dl>
           </Panel>
           {hasFrequencies ? (
             <>
-              <div className="handbook-list" aria-label="按错误类型筛选">
+              <div className="handbook-list" aria-label="Filter by error type">
                 {data.frequencies.map((item: any) => (
                   <button
                     className={selected === item.error_type ? "selected" : ""}
@@ -1144,28 +1157,28 @@ function Handbook() {
                   </button>
                 ))}
               </div>
-              {error && <State title="分类暂时无法切换" detail={error} />}
+              {error && <State title="Could not change category" detail={error} />}
               <Panel title={selected}>
-                {loadingSelection ? <State title="正在读取实例…" /> : data.examples?.length ? (
+                {loadingSelection ? <State title="Loading examples…" /> : data.examples?.length ? (
                   data.examples.map((item: any, index: number) => (
                     <article className="activity handbook-example" key={`${item.original_text}-${index}`}>
-                      <div><span>原句</span><p>{item.original_text}</p></div>
-                      <div><span>修正</span><p>{item.correction}</p></div>
-                      {item.refine && <div><span>更自然的表达</span><p>{item.refine}</p></div>}
-                      {item.explanation && <div><span>原因</span><p>{item.explanation}</p></div>}
-                      {item.remember && <div><span>记忆提示</span><p>{item.remember}</p></div>}
+                      <div><span>Original</span><p>{item.original_text}</p></div>
+                      <div><span>Correction</span><p>{item.correction}</p></div>
+                      {item.refine && <div><span>More natural</span><p>{item.refine}</p></div>}
+                      {item.explanation && <div><span>Why</span><p>{item.explanation}</p></div>}
+                      {item.remember && <div><span>Remember</span><p>{item.remember}</p></div>}
                     </article>
                   ))
                 ) : (
-                  <div className="handbook-empty"><State title="这个分类还没有可展示的实例" detail="可以继续记录新的英文表达，累积更多可参考的例子。" /></div>
+                  <div className="handbook-empty"><State title="No examples in this category yet." detail="Keep saving your writing to build a collection of useful examples." /></div>
                 )}
               </Panel>
             </>
           ) : (
-            <Panel title="当前暂无线索" className="coach-empty-priorities">
+            <Panel title="A little more practice first." className="coach-empty-priorities">
               <div className="handbook-empty">
-                <p>最近 {data.days} 天还没有可展示的错误诊断。记录真实表达并完成语法检查后，相关修正和解释会整理在这里。</p>
-                <a className="primary" href="#grammar">开始一次语法检查<Icon name="arrow" /></a>
+                <p>No grammar observations in the last {data.days} days. Check and save a sentence to start collecting corrections and explanations here.</p>
+                <a className="primary" href="#grammar">Check a sentence<Icon name="arrow" /></a>
               </div>
             </Panel>
           )}
@@ -1174,26 +1187,11 @@ function Handbook() {
     </div>
   );
 }
-function Placeholder({ title }: { title: string }) {
-  return (
-    <>
-      <Heading
-        eyebrow="WORKSPACE"
-        title={title}
-        detail="页面骨架已就绪，正在接入对应的真实工作流。"
-      />
-      <Panel title="Local Web 工作区" icon="handbook">
-        <State title="Application API 已准备" detail="下一步将接入该工作区的页面交互和状态流。" />
-      </Panel>
-    </>
-  );
-}
-
 const providerNames: Record<string, string> = {
   gemini: "Google Gemini",
-  qwen: "通义千问",
+  qwen: "Qwen",
   deepseek: "DeepSeek",
-  ollama: "Ollama 本地模型",
+  ollama: "Ollama (local)",
 };
 
 function LlmSettings() {
@@ -1209,12 +1207,12 @@ function LlmSettings() {
   useEffect(() => {
     webApi.getLlmSettings().then((settings) => {
       if (!settings?.providers || !settings?.provider) {
-        throw new Error("模型设置接口尚未加载。请重启 Local Web Runtime 后重试。");
+        throw new Error("Settings are unavailable. Restart IGT and try again.");
       }
       setData(settings);
       setActiveProvider(settings.provider);
       setEditProvider(settings.provider);
-    }).catch((e: any) => setError(e.message || "无法读取模型设置"));
+    }).catch((e: any) => setError(e.message || "Could not load model settings"));
   }, []);
 
   const providerSettings = data?.providers?.[editProvider];
@@ -1245,38 +1243,38 @@ function LlmSettings() {
       setData((old: any) => ({ ...old, provider: saved.provider, providers: saved.providers }));
       setApiKeys({});
       setClearApiKeys({});
-      setStatus("模型设置已保存并生效。未填写的密钥保持原样。");
+      setStatus("Settings saved and applied. Existing keys were kept where the field was left blank.");
     } catch (e: any) {
-      setError(e.message || "保存模型设置失败");
+      setError(e.message || "Could not save settings");
     } finally {
       setBusy(false);
     }
   }
 
-  if (error && !data) return <State title="模型设置暂时不可用" detail={error} />;
-  if (!data) return <State title="正在读取模型设置…" />;
+  if (error && !data) return <State title="Model settings are unavailable" detail={error} />;
+  if (!data) return <State title="Loading model settings…" />;
 
   return (
     <div className="llm-settings">
       <div className="heading">
-        <h1>模型设置</h1>
-        <p>选择 IGT 使用的服务，分别配置快速任务与复杂任务所用模型。</p>
+        <h1>Model settings</h1>
+        <p>Choose your AI provider and the models used for everyday and complex tasks.</p>
       </div>
-      <Panel title="当前服务" icon="settings">
+      <Panel title="AI provider" icon="settings">
         <div className="settings-grid">
           <div className="settings-field">
-            <label className="form-label" htmlFor="llm-active-provider">用于 IGT 请求</label>
+            <label className="form-label" htmlFor="llm-active-provider">Active provider</label>
             <select id="llm-active-provider" value={activeProvider} onChange={(e) => setActiveProvider(e.target.value)}>
               {Object.entries(providerNames).map(([key, label]) => <option value={key} key={key}>{label}</option>)}
             </select>
-            <small>保存后，语法、翻译、练习和 Ask 等请求将使用此服务。</small>
+            <small>This provider will handle your requests after you save.</small>
           </div>
           <div className="settings-field">
-            <label className="form-label" htmlFor="llm-edit-provider">编辑服务配置</label>
+            <label className="form-label" htmlFor="llm-edit-provider">Configure a provider</label>
             <select id="llm-edit-provider" value={editProvider} onChange={(e) => setEditProvider(e.target.value)}>
               {Object.entries(providerNames).map(([key, label]) => <option value={key} key={key}>{label}</option>)}
             </select>
-            <small>服务配置分别保存；更改密钥或模型后点击下方保存。</small>
+            <small>Configure each provider separately, then save your changes.</small>
           </div>
         </div>
         {editProvider !== "ollama" && (
@@ -1289,46 +1287,46 @@ function LlmSettings() {
               disabled={Boolean(clearApiKeys[editProvider])}
               value={apiKeys[editProvider] || ""}
               onChange={(e) => setApiKeys((old) => ({ ...old, [editProvider]: e.target.value }))}
-              placeholder={providerSettings?.keyConfigured ? `已配置 ${providerSettings.keyMasked} · 输入新密钥以替换` : "粘贴 API key"}
+              placeholder={providerSettings?.keyConfigured ? `Configured ${providerSettings.keyMasked} · Enter a key to replace` : "Paste your API key"}
             />
-            <small>密钥保存在本机 .env 文件中，不会再次显示。留空会保留现有密钥。</small>
-            {providerSettings?.keyConfigured && <label className="settings-check"><input type="checkbox" checked={Boolean(clearApiKeys[editProvider])} onChange={(e) => setClearApiKeys((old) => ({ ...old, [editProvider]: e.target.checked }))} /> 保存时移除此服务的密钥</label>}
+            <small>Your key is stored on this device and will not be shown again. Leave blank to keep it.</small>
+            {providerSettings?.keyConfigured && <label className="settings-check"><input type="checkbox" checked={Boolean(clearApiKeys[editProvider])} onChange={(e) => setClearApiKeys((old) => ({ ...old, [editProvider]: e.target.checked }))} /> Remove this provider’s key when saving</label>}
           </div>
         )}
         <div className="settings-field settings-models">
-          <span className="form-label">任务模型</span>
+          <span className="form-label">Models</span>
           <div className="settings-grid">
             <label className="settings-field" htmlFor="llm-flash-model">
-              <span className="form-label">Flash · 快速任务</span>
+              <span className="form-label">Flash · Everyday tasks</span>
               <input id="llm-flash-model" value={providerSettings?.models?.flash || ""} onChange={(e) => updateModel("flash", e.target.value)} />
-              <small>语法检查、翻译与 Ask</small>
+              <small>Grammar, translation, and Ask</small>
             </label>
             <label className="settings-field" htmlFor="llm-pro-model">
-              <span className="form-label">Pro · 复杂任务</span>
+              <span className="form-label">Pro · Complex tasks</span>
               <input id="llm-pro-model" value={providerSettings?.models?.pro || ""} onChange={(e) => updateModel("pro", e.target.value)} />
-              <small>Handbook、Coach 与文本分析</small>
+              <small>Handbook, Coach, and text analysis</small>
             </label>
           </div>
         </div>
         {editProvider !== "gemini" && (
           <div className="settings-field settings-endpoint">
-            <label className="form-label" htmlFor="llm-endpoint">{editProvider === "ollama" ? "Ollama 服务地址" : `${providerNames[editProvider]} API 地址`}</label>
+            <label className="form-label" htmlFor="llm-endpoint">{editProvider === "ollama" ? "Ollama endpoint" : `${providerNames[editProvider]} API endpoint`}</label>
             <input id="llm-endpoint" type="url" value={providerSettings?.baseUrl || ""} onChange={(e) => updateBaseUrl(e.target.value)} />
-            <small>{editProvider === "ollama" ? "本机 Ollama OpenAI 接口地址" : "兼容 OpenAI API 的服务入口"}</small>
+            <small>{editProvider === "ollama" ? "Your local Ollama OpenAI-compatible endpoint" : "OpenAI-compatible API endpoint"}</small>
           </div>
         )}
       </Panel>
-      {error && <State title="保存失败" detail={error} />}
+      {error && <State title="Could not save" detail={error} />}
       {status && <p className="settings-status" role="status">{status}</p>}
-      <button className="primary" disabled={busy} onClick={save}>{busy ? "保存中…" : "保存模型设置"}</button>
+      <button className="primary" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save settings"}</button>
     </div>
   );
 }
 
-function Heading({ eyebrow, title, detail }: { eyebrow: string; title: React.ReactNode; detail: string }) {
+function Heading({ title, detail }: { eyebrow: string; title: React.ReactNode; detail: string }) {
   return (
     <div className="heading">
-      <span className="heading-eyebrow">{eyebrow}</span>
+      
       <h1>{title}</h1>
       <p>{detail}</p>
     </div>
@@ -1391,14 +1389,14 @@ function AudioButton({
   );
   function playBrowserSpeech() {
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-      return Promise.reject(new Error("浏览器系统语音不可用"));
+      return Promise.reject(new Error("Browser speech is unavailable"));
     }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     return new Promise<void>((resolve, reject) => {
       utterance.onend = () => resolve();
-      utterance.onerror = () => reject(new Error("浏览器系统语音播放失败"));
+      utterance.onerror = () => reject(new Error("Browser speech playback failed"));
       window.speechSynthesis.speak(utterance);
     });
   }
@@ -1406,7 +1404,7 @@ function AudioButton({
     try {
       await playBrowserSpeech();
     } catch (fallbackError: any) {
-      setError(`${message}；${fallbackError.message || "浏览器语音不可用"}`);
+      setError(`${message}；${fallbackError.message || "Browser speech is unavailable"}`);
     } finally {
       setBusy(false);
     }
@@ -1422,17 +1420,17 @@ function AudioButton({
         const tooShort =
           Number.isFinite(audio.duration) && audio.duration > 0 && audio.duration < 0.2;
         releaseAudio(audio);
-        if (tooShort) void fallbackToBrowserSpeech("TTS 返回了空音频");
+        if (tooShort) void fallbackToBrowserSpeech("The audio was empty");
         else setBusy(false);
       };
       audio.onerror = () => {
         releaseAudio(audio);
-        void fallbackToBrowserSpeech("浏览器无法解码 TTS 音频");
+        void fallbackToBrowserSpeech("The audio could not be played");
       };
       await audio.play();
     } catch (e: any) {
       if (audioRef.current) releaseAudio(audioRef.current);
-      await fallbackToBrowserSpeech(e.message || "TTS 播放失败");
+      await fallbackToBrowserSpeech(e.message || "Audio playback failed");
     }
   }
   if (!text) return null;
@@ -1443,152 +1441,85 @@ function AudioButton({
         className={`audio-btn${small ? " audio-btn-sm" : ""}${error ? " audio-err" : ""}`}
         onClick={play}
         disabled={busy}
-        aria-label={busy ? "播放中…" : reviewPrompt ? "听取英文单词发音" : `朗读: ${text}`}
-        title={error || "朗读"}
+        aria-label={busy ? "Playing…" : reviewPrompt ? "Listen to the English word" : `Read aloud: ${text}`}
+        title={error || "Read aloud"}
       >
         <Icon name="volume" />
       </button>
       {error && (
         <span className="audio-error" role="status" aria-live="polite">
-          播放失败：{error}
+          Playback failed: {error}
         </span>
       )}
     </span>
   );
 }
 
+const primaryRoutes: Route[] = ["grammar", "translation", "word-lookup", "word-review", "practice", "ask"];
+const learningRoutes: Array<[Route, string]> = [["dashboard", "Overview"], ["handbook", "Handbook"], ["coach", "Coach"]];
+function currentRoute(): Route {
+  const hash = location.hash.slice(1);
+  return hash === "dashboard" || items.some(([key]) => key === hash) ? hash as Route : "grammar";
+}
 export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [route, setRoute] = useState<Route>((location.hash.slice(1) || "dashboard") as Route);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    语言工具: true,
-    练习工作台: true,
-    Ask: true,
-    学习系统: true,
-  });
+  const [route, setRoute] = useState<Route>(currentRoute);
+  const moreRef = useRef<HTMLDetailsElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const onHash = () => {
       if (location.hash === "#main-content") return;
-      setRoute((location.hash.slice(1) || "dashboard") as Route);
+      setRoute(currentRoute());
       setMenuOpen(false);
+      if (moreRef.current) moreRef.current.open = false;
+      mainRef.current?.focus();
+      window.scrollTo(0, 0);
+    };
+    const dismiss = (event: PointerEvent) => {
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) moreRef.current.open = false;
     };
     addEventListener("hashchange", onHash);
-    return () => removeEventListener("hashchange", onHash);
+    addEventListener("pointerdown", dismiss);
+    return () => { removeEventListener("hashchange", onHash); removeEventListener("pointerdown", dismiss); };
   }, []);
-  const title = items.find(([key]) => key === route)?.[1] || "总览";
-  const page =
-    route === "dashboard" ? (
-      <Dashboard />
-    ) : route === "grammar" ? (
-      <Grammar />
-    ) : route === "translation" ? (
-      <Translation />
-    ) : route === "ask" ? (
-      <Ask />
-    ) : route === "word-review" ? (
-      <WordReview />
-    ) : route === "coach" ? (
-      <Coach />
-    ) : route === "word-lookup" ? (
-      <WordLookup />
-    ) : route === "practice" ? (
-      <Practice />
-    ) : route === "handbook" ? (
-      <Handbook />
-    ) : route === "settings" ? (
-      <LlmSettings />
-    ) : (
-      <Placeholder title={title} />
-    );
-  return (
-    <div className="shell">
-      <a className="skip-link" href="#main-content">
-        跳到主内容
-      </a>
-      <aside>
-        <div className="sidebar-top">
-          <a className="brand" href="#dashboard">
-            <Icon name="handbook" />
-            IGT
-          </a>
-          <button
-            className="menu-toggle"
-            aria-label={menuOpen ? "收起导航" : "展开导航"}
-            aria-expanded={menuOpen}
-            aria-controls="workspace-nav"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <Icon name={menuOpen ? "close" : "menu"} />
-            <span>导航</span>
-          </button>
-        </div>
-        <nav
-          id="workspace-nav"
-          aria-label="学习工作台"
-          className={menuOpen ? "workspace-nav is-open" : "workspace-nav"}
-        >
-          <span className="side-label">学习工作台</span>
-          <button
-            className={`nav ${route === "dashboard" ? "active" : ""}`}
-            aria-current={route === "dashboard" ? "page" : undefined}
-            onClick={() => {
-              location.hash = "dashboard";
-              setMenuOpen(false);
-            }}
-          >
-            <Icon name="dashboard" />
-            总览
-          </button>
-          {groups.map(([group, groupItems]) => {
-            const active = groupItems.some(([key]) => route === key);
-            return (
-              <section className="nav-group" key={group}>
-                <button
-                  className={`group-label ${active ? "active" : ""}`}
-                  aria-expanded={openGroups[group]}
-                  onClick={() => setOpenGroups((old) => ({ ...old, [group]: !old[group] }))}
-                >
-                  <span>{group}</span>
-                  <Icon name="chevron" />
-                </button>
-                {openGroups[group] &&
-                  groupItems.map(([key, label]) => (
-                    <button
-                      className={`nav nav-child ${route === key ? "active" : ""}`}
-                      key={key}
-                      aria-current={route === key ? "page" : undefined}
-                      onClick={() => {
-                        location.hash = key;
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <Icon name={key} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-              </section>
-            );
-          })}
-          <button
-            className={`nav ${route === "settings" ? "active" : ""}`}
-            aria-current={route === "settings" ? "page" : undefined}
-            onClick={() => { location.hash = "settings"; setMenuOpen(false); }}
-          >
-            <Icon name="settings" />
-            <span>模型设置</span>
-          </button>
-        </nav>
-      </aside>
-      <main id="main-content" tabIndex={-1}>
-        <header>
-          <span className="breadcrumb">
-            IGT <span>/</span> <strong>{title}</strong>
-          </span>
-        </header>
-        {page}
-      </main>
-    </div>
-  );
+  const title = route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
+  useEffect(() => { document.title = title + " · IGT"; }, [title]);
+  const pages: Record<Route, React.ReactNode> = {
+    grammar: <Grammar />, dashboard: <Dashboard />, translation: <Translation />, ask: <Ask />,
+    "word-review": <WordReview />, "word-lookup": <WordLookup />, coach: <Coach />,
+    practice: <Practice />, handbook: <Handbook />, settings: <LlmSettings />,
+  };
+  return <div className="shell">
+    <a className="skip-link" href="#main-content">Skip to content</a>
+    <header className="topbar" onKeyDown={(event) => {
+      if (event.key === "Escape") {
+        if (moreRef.current?.open) { moreRef.current.open = false; moreRef.current.querySelector("summary")?.focus(); }
+        else if (menuOpen) { setMenuOpen(false); menuRef.current?.focus(); }
+      }
+    }}>
+      <a className="brand" href="#grammar" aria-label="IGT home"><span className="brand-mark"><Icon name="grammar" /></span>igt<span className="brand-period">.</span></a>
+      <button ref={menuRef} className="menu-toggle" aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+        aria-expanded={menuOpen} aria-controls="workspace-nav" onClick={() => setMenuOpen(!menuOpen)}>
+        <Icon name={menuOpen ? "close" : "menu"} /><span>Menu</span>
+      </button>
+      <nav id="workspace-nav" aria-label="Main navigation" className={menuOpen ? "top-nav is-open" : "top-nav"}>
+        {items.filter(([key]) => primaryRoutes.includes(key)).map(([key, label]) =>
+          <a href={"#" + key} key={key} className={route === key ? "nav-link active" : "nav-link"} aria-current={route === key ? "page" : undefined}>{label}</a>)}
+        <details className="learning-menu" ref={moreRef}>
+          <summary className={learningRoutes.some(([key]) => key === route) ? "active" : ""}>My learning<Icon name="chevron" /></summary>
+          <div className="learning-links">{learningRoutes.map(([key, label]) =>
+            <a key={key} href={"#" + key} aria-current={route === key ? "page" : undefined}><Icon name={key} />{label}</a>)}</div>
+        </details>
+        <a className="settings-link" href="#settings" aria-current={route === "settings" ? "page" : undefined}><Icon name="settings" /><span>Settings</span></a>
+      </nav>
+    </header>
+    <main ref={mainRef} id="main-content" tabIndex={-1} className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}>
+      {route !== "grammar" && <div className="page-context"><a href="#grammar">Your workspace</a><span>/</span><span>{title}</span></div>}
+      {pages[route]}
+    </main>
+    <footer className="site-footer"><span>Small steps. Better English.</span><div><a href="#handbook">Your handbook</a><a href="#coach">Find your next step<Icon name="arrow" /></a></div></footer>
+  </div>;
 }
 
 function DetailSection({

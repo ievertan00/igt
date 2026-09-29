@@ -1635,6 +1635,134 @@ main:has(.word-review-page) {
   background: var(--word-page-bg);
 }
 
+/* Atmospheric finish: warm ambient light, quiet material depth, and a composed
+   entrance for each workspace. All motion remains optional for reduced-motion users. */
+.shell {
+  background:
+    radial-gradient(ellipse at 86% 2%, rgb(227 125 104 / 8%), transparent 34rem),
+    radial-gradient(ellipse at 56% 76%, rgb(49 91 153 / 4%), transparent 42rem),
+    var(--color-bg-page);
+}
+
+aside {
+  background:
+    radial-gradient(ellipse at 8% 0%, rgb(227 125 104 / 13%), transparent 22rem),
+    linear-gradient(165deg, #141e30 0%, var(--color-bg-sidebar) 54%);
+}
+
+main {
+  min-width: 0;
+  animation: workspace-arrive 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+main > header {
+  border-color: color-mix(in srgb, var(--color-border) 64%, transparent);
+}
+
+main > .heading,
+main > .focus,
+main > .columns,
+main > .panel,
+main > .practice-page,
+main > .word-review-page,
+main > .grammar-page,
+main > .translation-page,
+main > .ask-page,
+main > .coach-page,
+main > .handbook-page,
+main > .settings-page {
+  animation: content-arrive 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+main > .heading { animation-delay: 40ms; }
+main > .focus { animation-delay: 110ms; }
+main > .columns { animation-delay: 180ms; }
+main > .panel:nth-of-type(n + 3) { animation-delay: 240ms; }
+
+.panel {
+  border-color: color-mix(in srgb, var(--color-border) 66%, white);
+  box-shadow:
+    0 1px 1px rgb(23 32 51 / 3%),
+    0 10px 28px rgb(23 32 51 / 4%),
+    inset 0 1px 0 rgb(255 255 255 / 78%);
+  transition:
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.panel:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
+  box-shadow:
+    0 2px 3px rgb(23 32 51 / 3%),
+    0 16px 36px rgb(23 32 51 / 7%),
+    inset 0 1px 0 rgb(255 255 255 / 84%);
+}
+
+.focus {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 18px 42px rgb(16 24 39 / 13%),
+    0 3px 10px rgb(16 24 39 / 7%),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+.focus-image {
+  filter: saturate(0.82) contrast(1.02);
+  transition: filter 900ms cubic-bezier(0.22, 1, 0.36, 1), transform 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.focus:hover .focus-image {
+  filter: saturate(0.96) contrast(1.04);
+  transform: scale(1.025);
+}
+
+.primary {
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.primary:hover:not(:disabled) { transform: translateY(-1px); }
+.primary:active:not(:disabled) { transform: translateY(0) scale(0.985); }
+
+@keyframes workspace-arrive {
+  from { opacity: 0.72; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes content-arrive {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  .panel:hover { transform: none; }
+  .focus:hover .focus-image { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main,
+  main > .heading,
+  main > .focus,
+  main > .columns,
+  main > .panel,
+  main > .practice-page,
+  main > .word-review-page,
+  main > .grammar-page,
+  main > .translation-page,
+  main > .ask-page,
+  main > .coach-page,
+  main > .handbook-page,
+  main > .settings-page {
+    animation: none;
+  }
+}
+
 .word-review-page .review-kicker {
   min-height: 32px;
   padding: 6px 12px;
