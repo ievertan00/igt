@@ -61,7 +61,7 @@ export const webApi = {
   analyzeCoach: () => requestJson<any>("/coach/analyze", { method: "POST", body: "{}" }),
   lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`),
   addWord: (entry: unknown) => requestJson<any>("/word/add", { method: "POST", body: JSON.stringify({ entry }) }),
-  generatePractice: (mode = "sentence", count = 3) => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count }), timeoutMs: 120_000 }),
+  generatePractice: (mode = "sentence", count = 3, difficulty = "standard") => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count, difficulty }), timeoutMs: 120_000 }),
   evaluatePractice: (question: unknown, answer: string) => requestJson<any>("/practice/evaluate", { method: "POST", body: JSON.stringify({ question, answer }) }),
   getHandbook: (errorType = "") => requestJson<any>(`/handbook?days=90${errorType ? `&errorType=${encodeURIComponent(errorType)}` : ""}`),
   speakWord: async (text: string): Promise<HTMLAudioElement> => {

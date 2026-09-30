@@ -781,7 +781,10 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
 function Practice() {
   const [mode, setMode] = useState("sentence");
   const [count, setCount] = useState(3);
+  const [difficulty, setDifficulty] = useState("standard");
   const [generationError, setGenerationError] = useState("");
+  const [sessionNotice, setSessionNotice] = useState("");
+  const [saveWarning, setSaveWarning] = useState("");
   const [questions, setQuestions] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -790,6 +793,8 @@ function Practice() {
   function handleModeChange(next: string) {
     setMode(next);
     setGenerationError("");
+    setSessionNotice("");
+    setSaveWarning("");
   }
 
   async function generate() {
@@ -797,9 +802,10 @@ function Practice() {
     setGenerationError("");
     setEvaluation(undefined);
     try {
-      const result = await webApi.generatePractice(mode, count);
+      const result = await webApi.generatePractice(mode, count, difficulty);
       const generated = result.data?.questions || [];
       if (!generated.length) throw new Error("No practice questions were returned. Please try again.");
+      if (generated.length < count) setSessionNotice(`Prepared ${generated.length} of ${count} new questions. Your saved questions were not repeated.`);
       setQuestions(generated);
       setIndex(0);
       setAnswer("");
@@ -819,6 +825,7 @@ function Practice() {
     try {
       const result = await webApi.evaluatePractice(question, answer);
       setEvaluation(result.data);
+      setSaveWarning(result.persistence?.saved === false ? result.persistence.warning : "");
     } catch (e: any) {
       setEvaluation({ error: e.message });
     } finally {
@@ -838,6 +845,7 @@ function Practice() {
     sentence: "sentence writing",
     choice: "grammar questions",
   };
+  const difficultyName: Record<string, string> = { easy: "Easy", standard: "Standard", challenge: "Challenge" };
 
   return (
     <>
@@ -896,7 +904,27 @@ function Practice() {
               ))}
             </div>
           </fieldset>
-          <State title={count + " questions · " + modeName[mode] + " practice"} />
+          <fieldset className="practice-difficulty">
+            <legend>Difficulty</legend>
+            <div className="count-options">
+              {(["easy", "standard", "challenge"] as const).map((value) => (
+                <label className={difficulty === value ? "selected" : ""} key={value}>
+                  <input type="radio" name="practice-difficulty" value={value} checked={difficulty === value} onChange={() => setDifficulty(value)} />
+                  <span>{difficultyName[value]}</span>
+                </label>
+              ))}
+            </div>
+            <p className="practice-mode-hint">Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks for more precise, connected English.</p>
+          </fieldset>
+          <div className="practice-instructions">
+            <h3>How to practise</h3>
+            <ol>
+              <li>Choose a type, difficulty, and number of questions. Each new session draws from questions you have not seen before.</li>
+              <li>For Word, write an English sentence that fits the Chinese situation and uses the target word. For Sentence, write a complete English sentence. For Choose, select the best of four answers.</li>
+              <li>Check each answer to see feedback and a reference answer, then move to the next question. Your attempts are recorded so you can review your progress.</li>
+            </ol>
+          </div>
+          <State title={count + " questions · " + difficultyName[difficulty] + " · " + modeName[mode] + " practice"} />
           <button
             className="primary practice-generate"
             onClick={generate}
@@ -926,6 +954,7 @@ function Practice() {
           icon="practice"
           className="practice-question"
         >
+          {sessionNotice && <p className="practice-warning" role="status">{sessionNotice}</p>}
           <div
             className="practice-progress"
             aria-label={"Question " + (index + 1) + " of " + questions.length}
@@ -937,7 +966,9 @@ function Practice() {
               {question.kind === "choice" ? "GRAMMAR CHOICE" : mode === "word" ? "VOCABULARY" : "SENTENCE WRITING"}
             </span>
             <h2>{prompt}</h2>
-            <p>{question.focus || question.explanation || "Write your answer in English."}</p>
+            <p>{question.kind === "choice"
+              ? "Choose the best answer. The grammar explanation appears after you check it."
+              : question.focus || "Write your answer in English."}</p>
           </div>
           {question.kind === "choice" ? (
             <div className="practice-options" role="group" aria-label="Choose an answer">
@@ -946,7 +977,7 @@ function Practice() {
                   className={answer === option ? "selected" : ""}
                   aria-pressed={answer === option}
                   key={option}
-                  onClick={() => setAnswer(option)}
+                  onClick={() => { setAnswer(option); setEvaluation(undefined); setSaveWarning(""); }}
                 >
                   <span className="option-marker">{String.fromCharCode(65 + optionIndex)}</span>
                   {option}
@@ -961,7 +992,7 @@ function Practice() {
               <textarea
                 id="practice-input"
                 value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
+                onChange={(e) => { setAnswer(e.target.value); setEvaluation(undefined); setSaveWarning(""); }}
                 placeholder="Write your answer in English…"
               />
             </>
@@ -977,6 +1008,7 @@ function Practice() {
             )}
           </button>
           {evaluation?.error && <State title="Could not review this answer. Try again." detail={evaluation.error} />}
+          {saveWarning && <p className="practice-warning" role="status">{saveWarning}</p>}
           {evaluation && !evaluation.error && (
             <PracticeEvaluation
               evaluation={evaluation}
@@ -986,6 +1018,7 @@ function Practice() {
                 setIndex((n) => n + 1);
                 setAnswer("");
                 setEvaluation(undefined);
+                setSaveWarning("");
               }}
             />
           )}
