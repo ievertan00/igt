@@ -781,22 +781,32 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
 function Practice() {
   const [mode, setMode] = useState("sentence");
   const [count, setCount] = useState(3);
+  const [generationError, setGenerationError] = useState("");
   const [questions, setQuestions] = useState<any[]>([]);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [evaluation, setEvaluation] = useState<any>();
   const [busy, setBusy] = useState(false);
+  function handleModeChange(next: string) {
+    setMode(next);
+    setGenerationError("");
+  }
 
   async function generate() {
     setBusy(true);
+    setGenerationError("");
     setEvaluation(undefined);
     try {
       const result = await webApi.generatePractice(mode, count);
-      setQuestions(result.data?.questions || []);
+      const generated = result.data?.questions || [];
+      if (!generated.length) throw new Error("No practice questions were returned. Please try again.");
+      setQuestions(generated);
       setIndex(0);
       setAnswer("");
     } catch (e: any) {
-      setEvaluation({ error: e.message });
+      setGenerationError(e.code === "REQUEST_TIMEOUT"
+        ? "Preparing questions took too long. Please try again."
+        : e.message || "Practice could not be generated. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -819,22 +829,22 @@ function Practice() {
   const question = questions[index];
   const prompt = question?.kind === "choice" ? question.question : question?.prompt_zh;
   const modeHint: Record<string, string> = {
-    word: "Fill the gap with the target word to complete the sentence.",
-    sentence: "Use your vocabulary to write an original sentence in a new context.",
-    choice: "Read the passage and choose the best answer.",
+    word: "Practise a saved word or phrase, or a common one if your list is empty.",
+    sentence: "Write a sentence in English for the situation.",
+    choice: "Choose the most natural grammar correction.",
   };
   const modeName: Record<string, string> = {
-    word: "word",
-    sentence: "sentence",
-    choice: "reading",
+    word: "vocabulary gap fills",
+    sentence: "sentence writing",
+    choice: "grammar questions",
   };
 
   return (
     <>
       <Heading
         eyebrow="PRACTICE"
-        title="Make the words your own."
-        detail="Choose a short practice session. Recall your vocabulary and use it in a new context."
+        title="Put your English to work."
+        detail="Fill in a missing word, write your own sentence, or practise grammar with multiple-choice questions."
       />
       {!question && (
         <Panel title="Set up your practice" icon="practice" className="practice-setup">
@@ -844,23 +854,23 @@ function Practice() {
               <button
                 className={mode === "word" ? "selected" : ""}
                 aria-pressed={mode === "word"}
-                onClick={() => setMode("word")}
+                onClick={() => handleModeChange("word")}
               >
                 Word
               </button>
               <button
                 className={mode === "sentence" ? "selected" : ""}
                 aria-pressed={mode === "sentence"}
-                onClick={() => setMode("sentence")}
+                onClick={() => handleModeChange("sentence")}
               >
                 Sentence
               </button>
               <button
                 className={mode === "choice" ? "selected" : ""}
                 aria-pressed={mode === "choice"}
-                onClick={() => setMode("choice")}
+                onClick={() => handleModeChange("choice")}
               >
-                Choice
+                Choose
               </button>
             </div>
             <p className="practice-mode-hint">
@@ -907,6 +917,9 @@ function Practice() {
           </button>
         </Panel>
       )}
+      {!question && generationError && (
+        <State title="Could not prepare practice. Please try again." detail={generationError} />
+      )}
       {question && (
         <Panel
           title={"Question " + (index + 1) + " of " + questions.length}
@@ -921,10 +934,10 @@ function Practice() {
           </div>
           <div className="practice-prompt">
             <span className="review-kicker">
-              {question.kind === "choice" ? "CHOICE" : mode.toUpperCase()}
+              {question.kind === "choice" ? "GRAMMAR CHOICE" : mode === "word" ? "VOCABULARY" : "SENTENCE WRITING"}
             </span>
             <h2>{prompt}</h2>
-            <p>{question.focus || question.explanation || "Complete this exercise."}</p>
+            <p>{question.focus || question.explanation || "Write your answer in English."}</p>
           </div>
           {question.kind === "choice" ? (
             <div className="practice-options" role="group" aria-label="Choose an answer">
@@ -1515,7 +1528,7 @@ export function App() {
       </nav>
     </header>
     <main ref={mainRef} id="main-content" tabIndex={-1} className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}>
-      {route !== "grammar" && <div className="page-context"><a href="#grammar">Your workspace</a><span>/</span><span>{title}</span></div>}
+      {route !== "grammar" && <nav className="breadcrumb" aria-label="Breadcrumb"><a href="#grammar">Your workspace</a><span aria-hidden="true">/</span><span>{title}</span></nav>}
       {pages[route]}
     </main>
     <footer className="site-footer"><span>Small steps. Better English.</span><div><a href="#handbook">Your handbook</a><a href="#coach">Find your next step<Icon name="arrow" /></a></div></footer>

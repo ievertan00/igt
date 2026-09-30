@@ -56,7 +56,7 @@ p { overflow-wrap: anywhere; }
 .top-nav { display: flex; flex: 1; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; }
 .nav-link, .settings-link, .learning-menu summary { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 13px; border-radius: 8px; text-decoration: none; white-space: nowrap; }
 .nav-link:hover, .learning-menu summary:hover, .settings-link:hover { background: var(--wash); }
-.nav-link.active, .learning-menu summary.active { background: var(--wash); box-shadow: inset 0 -2px var(--ink); }
+.nav-link.active, .learning-menu summary.active { background: var(--accent); color: var(--ink); }
 .settings-link { margin-left: auto; color: var(--muted); }
 .settings-link[aria-current="page"] { color: var(--ink); background: var(--wash); }
 .learning-menu { position: relative; }
@@ -70,8 +70,35 @@ p { overflow-wrap: anywhere; }
 .menu-toggle { display: none; }
 .workspace { flex: 1; width: min(100% - 64px, 1080px); margin: 0 auto; padding: 28px 0 80px; min-width: 0; }
 .workspace:focus { outline: none; }
-.page-context { display: flex; gap: 12px; color: var(--muted); font-size: 13px; margin-bottom: 36px; }
-.page-context a { text-decoration: none; }
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 12px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 36px;
+}
+
+.breadcrumb a {
+  color: var(--control);
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.breadcrumb a:hover {
+  color: var(--ink);
+}
+
+.breadcrumb > span {
+  color: var(--line);
+  user-select: none;
+}
+
+.breadcrumb > span:last-of-type {
+  color: var(--ink);
+  font-weight: 500;
+}
 .heading { margin-bottom: 36px; max-width: 720px; }
 .heading h1 { margin-bottom: 14px; }
 .heading p { color: var(--muted); font-size: 16px; max-width: 62ch; margin-bottom: 0; }
@@ -172,6 +199,8 @@ p { overflow-wrap: anywhere; }
 .review-actions button:hover:not(:disabled) { background: var(--accent-soft); }
 .practice-field { margin-bottom: 24px; }
 .practice-mode-hint { display: flex; align-items: start; gap: 8px; color: var(--muted); font-size: 14px; }
+.practice-warning { color: var(--ink); background: var(--accent-soft); border-radius: 9px; padding: 10px 14px; margin-top: 12px; }
+.practice-warning .icon { color: var(--ink); }
 .question-count { border: 0; padding: 0; margin: 24px 0; }
 .count-options { display: flex; gap: 12px; flex-wrap: wrap; }
 .count-options label { display: flex; gap: 8px; align-items: center; border: 1px solid var(--control); border-radius: 9px; padding: 10px 14px; cursor: pointer; font-size: 14px; }

@@ -35,9 +35,9 @@ export async function requestJson<T>(url: string, init: RequestJsonInit = {}): P
     }
     return payload as T;
   } catch (error) {
-    if (error && typeof error === "object" && "code" in error) throw error;
     if (timedOut) throw webError("REQUEST_TIMEOUT", `Request timed out after ${timeoutMs} ms`, true, error);
     if (externalSignal?.aborted) throw webError("REQUEST_ABORTED", "Request was aborted", true, error);
+    if (error && typeof error === "object" && "code" in error) throw error;
     throw webError("NETWORK_ERROR", "Unable to reach the Local Web Runtime", true, error);
   } finally {
     if (timer) clearTimeout(timer);
@@ -61,7 +61,7 @@ export const webApi = {
   analyzeCoach: () => requestJson<any>("/coach/analyze", { method: "POST", body: "{}" }),
   lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`),
   addWord: (entry: unknown) => requestJson<any>("/word/add", { method: "POST", body: JSON.stringify({ entry }) }),
-  generatePractice: (mode = "sentence", count = 3) => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count }) }),
+  generatePractice: (mode = "sentence", count = 3) => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count }), timeoutMs: 120_000 }),
   evaluatePractice: (question: unknown, answer: string) => requestJson<any>("/practice/evaluate", { method: "POST", body: JSON.stringify({ question, answer }) }),
   getHandbook: (errorType = "") => requestJson<any>(`/handbook?days=90${errorType ? `&errorType=${encodeURIComponent(errorType)}` : ""}`),
   speakWord: async (text: string): Promise<HTMLAudioElement> => {
