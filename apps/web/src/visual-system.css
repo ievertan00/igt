@@ -70,35 +70,6 @@ p { overflow-wrap: anywhere; }
 .menu-toggle { display: none; }
 .workspace { flex: 1; width: min(100% - 64px, 1080px); margin: 0 auto; padding: 28px 0 80px; min-width: 0; }
 .workspace:focus { outline: none; }
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 4px 0 12px;
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 36px;
-}
-
-.breadcrumb a {
-  color: var(--muted);
-  text-decoration: none;
-  transition: color 160ms ease;
-}
-
-.breadcrumb a:hover {
-  color: var(--ink);
-}
-
-.breadcrumb > span {
-  color: var(--line);
-  user-select: none;
-}
-
-.breadcrumb > span:last-of-type {
-  color: var(--ink);
-  font-weight: 500;
-}
 .heading { margin-bottom: 36px; max-width: 720px; }
 .heading h1 { margin-bottom: 14px; }
 .heading p { color: var(--muted); font-size: 16px; max-width: 62ch; margin-bottom: 0; }

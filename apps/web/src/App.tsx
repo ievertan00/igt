@@ -2179,13 +2179,6 @@ export function App() {
         tabIndex={-1}
         className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}
       >
-        {route !== "grammar" && (
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <a href="#grammar">Your workspace</a>
-            <span aria-hidden="true">/</span>
-            <span aria-current="page">{title}</span>
-          </nav>
-        )}
         {pages[route]}
       </main>
       <footer className="site-footer">
