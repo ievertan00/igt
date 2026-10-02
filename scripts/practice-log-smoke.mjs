@@ -16,7 +16,8 @@ try {
       learnerAnswer: "Please clarify the deadline.",
       referenceAnswer: "Could you clarify the deadline?",
       score: 82,
-      feedback: { feedback_zh: "表达清楚，可以继续练习语气。" }
+      targetPattern: "Polite requesting",
+      feedback: { feedback_zh: "表达清楚，可以继续练习语气。", question_id: "language-p01-3", difficulty: "standard", style: "formal", focus_id: "P01", hints_used: 2 }
     }
   });
   assert.equal(result.saved, true);
@@ -24,6 +25,8 @@ try {
   assert.match(markdown, /Please clarify the deadline\./);
   assert.match(markdown, /Could you clarify the deadline\?/);
   assert.match(markdown, /Score: 82/);
+  assert.match(markdown, /Language focus: P01 · Polite requesting/);
+  assert.match(markdown, /Hints used: 2\/3/);
   console.log("practice log smoke ok");
 } finally {
   fs.rmSync(root, { recursive: true, force: true });

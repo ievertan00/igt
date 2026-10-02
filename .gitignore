@@ -17,6 +17,9 @@ docs/
 archive/
 tests/*
 !tests/learning-workflows.test.mjs
+!tests/practice-question-bank.test.mjs
+!tests/practice-route.test.mjs
+!tests/practice-client-timeout.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md

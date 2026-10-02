@@ -20,7 +20,7 @@ import { runToday } from "../lib/cli/commands/stats.mjs";
 import { normalizeVocabAnswer, runReview } from "../lib/cli/commands/review.mjs";
 import { runVoice, runListen } from "../lib/cli/commands/listen.mjs";
 import { runTrans } from "../lib/cli/commands/translation.mjs";
-import { runWordPractice } from "../lib/cli/commands/quiz.mjs";
+import { runPractice } from "../lib/cli/commands/practice.mjs";
 import { showHelp } from "../lib/cli/commands/help.mjs";
 
 test("voice on/off are idempotent and status does not toggle", () => {
@@ -123,40 +123,50 @@ test("listen uses English translation and quiz feedback even with automatic voic
   assert.equal(spoken.at(-1), "Thanks for your help.");
 });
 
-test("word quiz generates scenario production prompts and evaluates usage", async (t) => {
+test("sentence practice passes categories and reveals evaluated reference", async (t) => {
   let output = "";
-  let generatedCount = null;
-  t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
-  t.mock.method(api, "generatePractice", async (mode, count) => {
-    generatedCount = count;
-    assert.equal(mode, "word");
-    return { data: { questions: [{
-      kind: "expression",
-      target_word: "fall behind",
-      pos: "phrasal verb",
-      prompt_zh: "你的项目进度落后了，向经理解释原因。",
-      focus: "Pair with 'on' to name what you are behind on.",
-      reference_answer: "I've fallen behind on the project because I was out sick.",
-    }] } };
+  t.mock.method(process.stdout, "write", chunk => { output += chunk; return true; });
+  t.mock.method(api, "generatePractice", async (mode, count, filters) => {
+    assert.equal(mode, "sentence"); assert.equal(count, 3);
+    assert.deepEqual(filters, { difficulty: "easy", style: "formal", context: "work" });
+    return { data: { questions: [{ id: "q1", kind: "sentence", prompt_zh: "请确认会议时间。", difficulty: "easy", style: "formal", context: "work" }] } };
   });
-  t.mock.method(api, "evaluatePractice", async () => ({
-    data: { score: 85, corrected_answer: "I've fallen behind on the project because I was out sick.", feedback_zh: "用 fall behind on 表示落后于某事。" },
-  }));
-  const ctx = { setSigint() {}, rl: null, askLine: async () => "I fell behind the project because I was sick." };
-  await runWordPractice([], ctx);
-  assert.equal(generatedCount, 5);
-  assert.match(output, /用词造句/);
-  assert.match(output, /场景/);
-  assert.match(output, /fall behind/);
+  t.mock.method(api, "evaluatePractice", async () => ({ data: { score: 85, corrected_answer: "Please confirm the meeting time.", reference_answer: "Please confirm the meeting time.", feedback_zh: "表达清楚。" } }));
+  await runPractice(["3", "--difficulty", "easy", "--style", "formal", "--context", "work"], { rl: null, askLine: async () => "Please confirm the meeting time." });
+  assert.match(output, /中译英句子练习/); assert.match(output, /formal/); assert.match(output, /表达清楚/);
+});
+
+test("CLI practice reveals hints progressively and records assistance separately for each question", async (t) => {
+  let output = "";
+  const hints = { simple: "先看时间。", intermediate: "用一般过去时。", complete: "[主语] + [过去式] + [对象]" };
+  const seen = [];
+  t.mock.method(process.stdout, "write", chunk => { output += chunk; return true; });
+  t.mock.method(api, "generatePractice", async () => ({ data: { questions: [1, 2].map(n => ({
+    id: `hint-q${n}`, prompt_zh: "我昨天读了这本书。", hints,
+    difficulty: "easy", style: "neutral", context: "everyday",
+  })) } }));
+  t.mock.method(api, "evaluatePractice", async (question, answer, hintsUsed) => {
+    seen.push({ id: question.id, answer, hintsUsed });
+    return { data: { score: 90, corrected_answer: "I read this book yesterday.", feedback_zh: "意思准确。" } };
+  });
+  const lines = ["h", "h", "h", "h", "I read this book yesterday.", "I read this book yesterday."];
+  await runPractice(["2"], { rl: null, askLine: async () => {
+    if (lines.length === 6) assert.ok(!output.includes(hints.simple));
+    if (lines.length === 5) { assert.ok(output.includes(hints.simple)); assert.ok(!output.includes(hints.intermediate)); }
+    return lines.shift() ?? null;
+  } });
+  assert.deepEqual(seen.map(attempt => attempt.hintsUsed), [3, 0]);
+  assert.ok(seen.every(attempt => attempt.answer !== "h"));
+  assert.match(output, /没有更多提示/);
 });
 
 test("help exposes the public learning workflows", (t) => {
   let output = "";
   t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
   showHelp();
-  for (const command of ["/word", "/w", "/a", "/practice", "/practice word", "/practice sentence", "/practice choice", "/pw", "/ps", "/pc", "/text", "/ask", "/coach", "/stats", "/theme", "/provider", "/voice"]) assert.ok(output.includes(command));
+  for (const command of ["/word", "/w", "/a", "/practice", "/practice sentence", "/ps", "/text", "/ask", "/coach", "/stats", "/theme", "/provider", "/voice"]) assert.ok(output.includes(command));
   assert.doesNotMatch(output, /\/add(?:\s|$)|\/listen|\/retry|\/vocab|\/drill|\/mc|\/quiz|\/today/);
-  assert.doesNotMatch(output, /on by default/);
+  assert.doesNotMatch(output, /on by default|\/pw|\/pc|practice word|practice choice/);
 });
 
 import Database from "better-sqlite3";

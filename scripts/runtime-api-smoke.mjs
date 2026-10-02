@@ -62,6 +62,25 @@ try {
   const runtime = await getJson("/runtime");
   assert.equal(runtime.runtime, "local");
   assert.equal(runtime.userId, "local-user");
+  const practiceResponse = await fetch(`http://127.0.0.1:${port}/practice/generate`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ count: 3, difficulty: "standard", style: "formal", context: "work" }),
+  });
+  assert.equal(practiceResponse.status, 200);
+  const practice = (await practiceResponse.json()).data;
+  assert.equal(practice.questions.length, 3);
+  for (const question of practice.questions) {
+    assert.equal(question.kind, "sentence");
+    assert.equal(question.context, "work");
+    assert.equal(question.style, "formal");
+    assert.equal(question.difficulty, "standard");
+    assert.equal(question.reference_answer, undefined);
+    assert.equal(question.alternative_note, undefined);
+    assert.ok(question.id.startsWith("language-"));
+    assert.ok(question.focus_id);
+    assert.deepEqual(Object.keys(question.hints), ["simple", "intermediate", "complete"]);
+    assert.ok(question.metadata.purpose);
+  }
   const dashboard = await getJson("/dashboard");
   assert.equal(typeof dashboard, "object");
   assert.equal(typeof dashboard.assets, "object");

@@ -1,0 +1,507 @@
+[
+  {
+    "id": "G01.1",
+    "name": "Subject–verb",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G01.2",
+    "name": "Subject–verb–object",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G01.3",
+    "name": "Subject–verb–complement",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G01.4",
+    "name": "Two-object patterns",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G01.5",
+    "name": "Object complements",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G01.6",
+    "name": "Existential there",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G01.7",
+    "name": "Dummy it",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G02.1",
+    "name": "Yes/no questions",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G02.2",
+    "name": "Wh-questions",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G02.3",
+    "name": "Subject questions",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G02.4",
+    "name": "Indirect questions",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G02.5",
+    "name": "Negative scope",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G02.6",
+    "name": "Auxiliary choice",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G03.1",
+    "name": "Habits",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G03.2",
+    "name": "States",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G03.3",
+    "name": "Ongoing events",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G03.4",
+    "name": "Completed past",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G03.5",
+    "name": "Present relevance",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G03.6",
+    "name": "Continuing duration",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G03.7",
+    "name": "Earlier past",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G03.8",
+    "name": "Future arrangements",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G03.9",
+    "name": "Future intentions",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G03.10",
+    "name": "Predictions",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G04.1",
+    "name": "Ability",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G04.2",
+    "name": "Permission",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G04.3",
+    "name": "Obligation",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G04.4",
+    "name": "Lack of obligation",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G04.5",
+    "name": "Prohibition",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G04.6",
+    "name": "Advice",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G04.7",
+    "name": "Possibility",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G04.8",
+    "name": "Deduction",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G04.9",
+    "name": "Willingness",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G05.1",
+    "name": "General conditions",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G05.2",
+    "name": "Open future conditions",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G05.3",
+    "name": "Remote present/future",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G05.4",
+    "name": "Counterfactual past",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G05.5",
+    "name": "Mixed-time conditions",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G05.6",
+    "name": "Wishes",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G05.7",
+    "name": "Regrets",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G06.1",
+    "name": "Active/passive choice",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G06.2",
+    "name": "Agent omission",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G06.3",
+    "name": "Modal passive",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G06.4",
+    "name": "Reporting passive",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G06.5",
+    "name": "Have/get something done",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G06.6",
+    "name": "Make/let/have/get someone act",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.1",
+    "name": "Coordination",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G07.2",
+    "name": "Defining relatives",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.3",
+    "name": "Supplementary relatives",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.4",
+    "name": "Content clauses",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.5",
+    "name": "Time clauses",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G07.6",
+    "name": "Reason clauses",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G07.7",
+    "name": "Purpose clauses",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.8",
+    "name": "Result clauses",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.9",
+    "name": "Concession",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.10",
+    "name": "Comparison clauses",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.11",
+    "name": "Manner clauses",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.12",
+    "name": "Non-finite noun modifiers",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G07.13",
+    "name": "Non-finite adverbials",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G08.1",
+    "name": "Verb + to-infinitive",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G08.2",
+    "name": "Verb + -ing",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G08.3",
+    "name": "Verb + object + infinitive",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G08.4",
+    "name": "Verb + preposition",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G08.5",
+    "name": "Pattern changes meaning",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G09.1",
+    "name": "Articles",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G09.2",
+    "name": "Countability",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G09.3",
+    "name": "Singular/plural",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G09.4",
+    "name": "Determiners",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G09.5",
+    "name": "Quantifiers",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G09.6",
+    "name": "Possessives",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G09.7",
+    "name": "Pronoun reference",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G10.1",
+    "name": "Adjective/adverb choice",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G10.2",
+    "name": "Modifier position",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G10.3",
+    "name": "Degree",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G10.4",
+    "name": "Comparative/superlative",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G10.5",
+    "name": "Equal comparison",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G10.6",
+    "name": "Participial adjectives",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G11.1",
+    "name": "Time boundaries",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G11.2",
+    "name": "Location",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G11.3",
+    "name": "Movement",
+    "difficulty": "easy"
+  },
+  {
+    "id": "G11.4",
+    "name": "Duration",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G11.5",
+    "name": "Means",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G11.6",
+    "name": "Dependent prepositions",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G12.1",
+    "name": "End focus",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G12.2",
+    "name": "Fronting",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G12.3",
+    "name": "Clefts",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "G12.4",
+    "name": "Parallelism",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G12.5",
+    "name": "Ellipsis",
+    "difficulty": "standard"
+  },
+  {
+    "id": "G12.6",
+    "name": "Expansion/compression",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "V01",
+    "name": "Collocation",
+    "difficulty": "standard"
+  },
+  {
+    "id": "V02",
+    "name": "Multiword verbs",
+    "difficulty": "standard"
+  },
+  {
+    "id": "V03",
+    "name": "Word choice",
+    "difficulty": "standard"
+  },
+  {
+    "id": "V04",
+    "name": "Word formation",
+    "difficulty": "standard"
+  },
+  {
+    "id": "V05",
+    "name": "Conventional expressions",
+    "difficulty": "standard"
+  },
+  {
+    "id": "V06",
+    "name": "Meaning-preserving reformulation",
+    "difficulty": "standard"
+  },
+  {
+    "id": "P01",
+    "name": "Polite requesting",
+    "difficulty": "standard"
+  },
+  {
+    "id": "P02",
+    "name": "Tactful refusal",
+    "difficulty": "standard"
+  },
+  {
+    "id": "P03",
+    "name": "Diplomatic disagreement",
+    "difficulty": "challenge"
+  },
+  {
+    "id": "P04",
+    "name": "Acknowledging responsibility",
+    "difficulty": "standard"
+  },
+  {
+    "id": "P05",
+    "name": "Expressing uncertainty",
+    "difficulty": "standard"
+  },
+  {
+    "id": "P06",
+    "name": "Setting boundaries",
+    "difficulty": "standard"
+  },
+  {
+    "id": "P07",
+    "name": "Appropriate offers",
+    "difficulty": "standard"
+  }
+]

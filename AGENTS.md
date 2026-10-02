@@ -44,7 +44,7 @@ There is no single full-suite npm script; run individual tests with `node --test
 - Keep secrets, local paths, ports, and provider choices in `.env`; use `.env.example` as the template. Never commit `.env`.
 - Treat SQLite as local rebuildable state. Preserve Markdown exports and vault files as the user-readable learning record.
 - Public CLI commands and their help text are defined by `lib/cli/commands/dispatch.mjs`, `lib/cli/commands/help.mjs`, and `lib/cli/commands/registry.mjs`; update all three when changing the command surface.
-- The main practice entry point is `/practice` with `word`, `sentence`, and `choice` modes. Vocabulary lookup and review are under `/word`.
+- The main practice entry point is `/practice` for sentence translation from a seeded question bank, filtered by difficulty, style, and context. Vocabulary lookup and review are under `/word`.
 - Preserve the evidence boundary in learning features: a correction or one successful answer is not proof of durable mastery.
 - Vocabulary Markdown is the content authority; Local Runtime startup synchronizes it into rebuildable SQLite SRS cards without overwriting review scheduling state.
 

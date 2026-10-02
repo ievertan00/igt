@@ -32,7 +32,7 @@ Use `/help` to browse commands by learning activity, or `/today` to see your rev
 2. **Listen and repeat:** `/listen` plays the latest English expression and, after a vocabulary lookup, its first available example. Repeat aloud, then make your own sentence. Use `/listen <English text>` for a specific phrase and `/listen --stop` to stop playback.
 3. **Use it:** type a daily update or work message, such as “I will follow up with the client tomorrow.” Use `/explain` to understand any correction, or translate a Chinese expression and replay the English.
 4. **Converse:** open `/chat` and describe a situation: “Help me practise asking a colleague for clarification.” Inside chat, `/voice on`, `/voice off`, `/voice status`, `/listen`, and `/exit` are local controls.
-5. **Recall it later:** `/word 5` reviews vocabulary. Use `/practice sentence` or `/practice choice` for grammar production and choice practice.
+5. **Recall it later:** `/word 5` reviews vocabulary. Use `/practice` for Chinese-to-English sentence translation.
 
 `/listen` also remembers the latest correction, the English side of a translation, quiz feedback, a chat reply, or a revealed review answer. It works on demand even when automatic chat voice is off. Playback uses your existing TTS configuration. Listening and repeating are self-practice; IGT does not record or assess pronunciation.
 
@@ -580,38 +580,30 @@ node tools/igt-handbook.mjs --days=30 --clear-cache   # force full rebuild
 
 The output file is saved to `IGT_REPORT_PATH` (set in `.env`). The filename includes the date: `handbook_2026-05-07.md`. Opening it in Obsidian renders the collapsible callouts, tables, and tip boxes interactively.
 
-### Production Practice (`/practice`)
+### Sentence Translation Practice (`/practice`)
 
-Practises vocabulary, sentence production, and multiple-choice grammar in varied everyday and work scenarios. Choose a mode after `/practice`:
+Translate a Chinese sentence into English, then receive LLM feedback on meaning, grammar, naturalness, and tone. Practice contains sentence translation only.
 
-```
-❯ /practice sentence
+The active bank contains 303 authored questions across 101 language focuses, seeded into SQLite on startup by migration 022 (after migration 021 creates the bank). Every focus has clear-cue, contrast, and transfer variants. Starting a session does not call the LLM or require grammar history. Categories:
 
-Exercise 1 of 10  [Verb Tense]
-By the time she arrived, we _____ dinner.
-  A) finish       B) have finished
-  C) had finished D) were finishing
+- Difficulty: `easy`, `standard`, `challenge`.
+- Style: `casual`, `neutral`, `formal` (or `all`).
+- Context: `everyday`, `work`, `travel` (or `all`).
 
-Your answer: C
+`/practice` defaults to three standard questions across all styles and contexts. `/practice sentence` and `/ps` open the same workflow.
 
-✓ Correct — "had finished" (past perfect) is needed because the finishing happened
-  before another past event ("arrived").
-```
-
-Use the production modes directly:
-
-```
-❯ /practice word
-❯ /practice sentence 5
-❯ /practice choice 5
+```text
+/practice 5 --difficulty easy
+/practice sentence 3 --style formal --context work
 ```
 
-Or from the command line:
+Web Practice provides the same category filters and a 3 / 5 / 10 question selector. Questions are distinct within a session; less-used questions are selected first, with repeats allowed as the bank is covered. Category sizes vary; larger requests return the available set with a notice, and empty categories invite another selection.
 
-```sh
-node tools/igt-practice.mjs --count=15
-node tools/igt-practice.mjs --type "Article Usage"   # target a specific error type
-```
+Each question has three optional hints: a meaning cue, a construction cue, and a complete language pattern with unfilled slots. Web reveals them one at a time; type `h` in CLI Practice to reveal the next hint. Hints contain no finished translation or context narrative. References appear after evaluation, and valid alternative translations remain acceptable even when they use another construction. Attempts record hint usage and language categories alongside feedback; assisted success is not evidence of independent mastery.
+
+The bank includes communicative purpose, meaning relationship, register, tone, five situations, and six genres. The existing three context filters group daily life, social relationships, and services under `everyday`; finer situation labels remain in question metadata. Focus-level defaults and question difficulty are separate: transfer or subtle contrasts can change a question's band.
+
+The authored set is maintained in `lib/features/practice/language-seeds.mjs`, with focus definitions in `language-focuses.json`. Migration 023 removes the 81 original question rows by their exact seed IDs, leaving the new bank, custom questions, and recorded attempts intact. Sessions referring to removed questions must be restarted. Migration replay preserves usage counts and custom questions. Existing learner records and vocabulary review remain available.
 
 ### Vocabulary Lookup (`/word`)
 
@@ -672,9 +664,7 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | ------------------ | ----------------------------------------------------------------- |
 | `/word review`     | SRS review session — drills vocabulary cards due today            |
 | `/word` (`/w`, `/a`) | Vocabulary lookup, saving, and SRS review; `/word --list` to browse |
-| `/practice word`   | Vocabulary production practice                                  |
 | `/practice sentence` | Sentence production practice                                  |
-| `/practice choice` | Multiple-choice grammar practice                                |
 | `/today` | Grammar and vocabulary review counts, listening, writing, and conversation |
 | `/stats` (`/st`)   | Factual activity, recurring errors, mastery, and review statistics |
 | `/handbook` (`/h`) | Generate your personal error handbook (runs as background task)   |

@@ -22,12 +22,13 @@
     "test:config-paths": "node scripts/config-path-smoke.mjs",
     "test:web-dev": "node scripts/web-dev-smoke.mjs",
     "test:practice-log": "node scripts/practice-log-smoke.mjs",
+    "test:practice-web": "node scripts/practice-web-smoke.mjs",
     "test:migration-backup": "node scripts/migration-backup-smoke.mjs",
     "init-db": "node scripts/init-db.mjs",
     "index-books": "node scripts/index-books.mjs",
     "index-wikipedia": "node scripts/index-wikipedia.mjs",
     "verify-learning-resources": "node scripts/verify-learning-resources.mjs",
-    "test:learning": "node --test --test-isolation=none tests/learning-plans.test.mjs tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs"
+    "test:learning": "node --test --test-isolation=none tests/learning-plans.test.mjs tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
