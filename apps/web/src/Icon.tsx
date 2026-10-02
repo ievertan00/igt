@@ -1,4 +1,4 @@
-type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume";
+type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy";
 
 const paths: Record<IconName, string> = {
   dashboard: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
@@ -22,6 +22,7 @@ const paths: Record<IconName, string> = {
   idea: "M9 18h6 M10 22h4 M8.5 14.5a6 6 0 1 1 7 0c-.8.6-1.3 1.3-1.5 2.5h-4c-.2-1.2-.7-1.9-1.5-2.5",
   bookmark: "M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z",
   volume: "M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07",
+  copy: "M9 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
 };
 
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
+import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 
 type Route =
@@ -258,10 +259,10 @@ function Grammar() {
           <DetailSection variant="original" icon="document" title="Original">
             <p>{data.originalText || checkedText}</p>
           </DetailSection>
-          <DetailSection variant="correction" icon="check" title="Correction">
+          <DetailSection variant="correction" icon="check" title="Correction" action={<CopyButton value={data.correction} label="Correction" />}>
             <p>{data.correction || "No correction needed."}</p>
           </DetailSection>
-          {data.refine && <DetailSection variant="natural" icon="spark" title="More natural">
+          {data.refine && <DetailSection variant="natural" icon="spark" title="More natural" action={<CopyButton value={data.refine} label="More natural wording" />}>
             <p>{data.refine || "No alternative wording provided."}</p>
           </DetailSection>}
           <DetailSection variant="why" icon="info" title="Why">
@@ -398,7 +399,7 @@ function Ask() {
         {turns.map((turn, index) => (
           <div className="ask-turn" key={`${turn.question}-${index}`}>
             <strong>{turn.question}</strong>
-            <p>{turn.answer}</p>
+            <Markdown source={String(turn.answer ?? "")} />
           </div>
         ))}
         {!turns.length && <State title="What would you like to understand?" detail="Start with a question about English." />}
@@ -756,7 +757,10 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
                   <span className="example-number">{index + 1}</span>
                   <span className="example-copy">
                     <span className="example-text">{example}</span>
-                    <AudioButton text={example} small />
+                    <span className="example-controls">
+                      <AudioButton text={example} small />
+                      <CopyButton value={example} label={`Example ${index + 1}`} small />
+                    </span>
                   </span>
                 </li>
               ))}
@@ -1013,6 +1017,7 @@ function Practice() {
             <PracticeEvaluation
               evaluation={evaluation}
               answer={answer}
+              question={question}
               nextLabel={index + 1 < questions.length ? "Next question" : "Finish session"}
               onNext={() => {
                 setIndex((n) => n + 1);
@@ -1035,17 +1040,106 @@ const practiceVerdicts: Record<string, string> = {
   incorrect: "Give it another look",
 };
 
+function ChoiceExplanation({
+  evaluation,
+  question,
+  answer,
+}: {
+  evaluation: any;
+  question: any;
+  answer: string;
+}) {
+  const notes: { option: string; note: string }[] = Array.isArray(evaluation.option_notes)
+    ? evaluation.option_notes.filter((item: any) => item?.option && item?.note)
+    : [];
+  const options: string[] = Array.isArray(question?.options) ? question.options : [];
+  const selected = evaluation.selected_answer || answer;
+  const correctAnswer = evaluation.corrected_answer;
+  const noteFor = (option: string) =>
+    notes.find((item) => item.option.replace(/\s+/g, " ").trim().toLowerCase() === option.replace(/\s+/g, " ").trim().toLowerCase());
+
+  return (
+    <>
+      <p className="evaluation-lead">{evaluation.feedback_zh}</p>
+      {evaluation.clue_zh && (
+        <section className="evaluation-phase evaluation-clue">
+          <span className="phase-index" aria-hidden="true">01</span>
+          <div>
+            <h4>The clue that settles it</h4>
+            <p>{evaluation.clue_zh}</p>
+          </div>
+        </section>
+      )}
+      {(options.length > 0 || notes.length > 0) && (
+        <section className="evaluation-phase">
+          <span className="phase-index" aria-hidden="true">02</span>
+          <div className="evaluation-compare">
+            <h4>Your choice and the answer</h4>
+            <dl className="evaluation-answer-pair">
+              <div className={correctAnswer === selected ? "is-correct" : "is-miss"}>
+                <dt>You chose</dt>
+                <dd>
+                  <span className="evaluation-answer-mark" aria-hidden="true">{correctAnswer === selected ? "✓" : "✕"}</span>
+                  {selected}
+                </dd>
+              </div>
+              {correctAnswer !== selected && (
+                <div className="is-correct">
+                  <dt>The answer</dt>
+                  <dd>
+                    <span className="evaluation-answer-mark" aria-hidden="true">✓</span>
+                    {correctAnswer}
+                  </dd>
+                </div>
+              )}
+            </dl>
+            {notes.length > 0 && (
+              <ul className="evaluation-option-notes">
+                {notes.map((item) => {
+                  const isCorrect = item.option === correctAnswer;
+                  const isSelected = item.option === selected;
+                  return (
+                    <li key={item.option} className={isCorrect ? "is-correct" : isSelected ? "is-miss" : ""}>
+                      <span className="evaluation-option-text">
+                        <span className="evaluation-option-tag">{isCorrect ? "Correct answer" : isSelected ? "Your choice" : "Not this one"}</span>
+                        <span className="evaluation-option-value" lang="en">{item.option}</span>
+                      </span>
+                      <span className="evaluation-option-note">{item.note}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
+      {evaluation.rule_zh && (
+        <section className="evaluation-phase evaluation-rule">
+          <span className="phase-index" aria-hidden="true">03</span>
+          <div>
+            <h4>Remember</h4>
+            <p>{evaluation.rule_zh}</p>
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
 function PracticeEvaluation({
   evaluation,
   answer,
+  question,
   nextLabel,
   onNext,
 }: {
   evaluation: any;
   answer: string;
+  question: any;
   nextLabel: string;
   onNext: () => void;
 }) {
+  const isChoice = question?.kind === "choice";
   const strengths = Array.isArray(evaluation.strengths_zh)
     ? evaluation.strengths_zh.filter(Boolean)
     : [];
@@ -1068,52 +1162,60 @@ function PracticeEvaluation({
         <div>
           <span className="evaluation-phase-label">Your feedback</span>
           <h3>{verdict}</h3>
-          <p>{evaluation.feedback_zh || "Compare your answer with the revision. Check the meaning and grammar."}</p>
+          {isChoice && evaluation.feedback_zh ? null : (
+            <p>{evaluation.feedback_zh || "Compare your answer with the revision. Check the meaning and grammar."}</p>
+          )}
         </div>
       </div>
-      <div className="evaluation-phases">
-        <section className="evaluation-phase">
-          <span className="phase-index">01</span>
-          <div>
-            <h4>Your answer</h4>
-            <p>{answer}</p>
-          </div>
-        </section>
-        <section className="evaluation-phase evaluation-correction">
-          <span className="phase-index">02</span>
-          <div>
-            <h4>Suggested revision</h4>
-            <p>{evaluation.corrected_answer || "No revision provided."}</p>
-          </div>
-        </section>
-        {(strengths.length > 0 || improvements.length > 0) && (
-          <section className="evaluation-phase evaluation-notes">
-            <span className="phase-index">03</span>
-            <div className="evaluation-notes-grid">
-              {strengths.length > 0 && (
-                <div>
-                  <h4>What worked</h4>
-                  <ul>
-                    {strengths.map((item: string, index: number) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {improvements.length > 0 && (
-                <div>
-                  <h4>What to work on</h4>
-                  <ul>
-                    {improvements.map((item: string, index: number) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+      {isChoice ? (
+        <div className="evaluation-phases">
+          <ChoiceExplanation evaluation={evaluation} question={question} answer={answer} />
+        </div>
+      ) : (
+        <div className="evaluation-phases">
+          <section className="evaluation-phase">
+            <span className="phase-index">01</span>
+            <div>
+              <h4>Your answer</h4>
+              <p>{answer}</p>
             </div>
           </section>
-        )}
-      </div>
+          <section className="evaluation-phase evaluation-correction">
+            <span className="phase-index">02</span>
+            <div>
+              <h4>Suggested revision</h4>
+              <p>{evaluation.corrected_answer || "No revision provided."}</p>
+            </div>
+          </section>
+          {(strengths.length > 0 || improvements.length > 0) && (
+            <section className="evaluation-phase evaluation-notes">
+              <span className="phase-index">03</span>
+              <div className="evaluation-notes-grid">
+                {strengths.length > 0 && (
+                  <div>
+                    <h4>What worked</h4>
+                    <ul>
+                      {strengths.map((item: string, index: number) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {improvements.length > 0 && (
+                  <div>
+                    <h4>What to work on</h4>
+                    <ul>
+                      {improvements.map((item: string, index: number) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
       <button className="secondary evaluation-next" onClick={onNext}>
         {nextLabel}
         <Icon name="arrow" />
@@ -1501,6 +1603,74 @@ function AudioButton({
   );
 }
 
+function CopyButton({
+  value,
+  label,
+  small,
+}: {
+  value: string;
+  label: string;
+  small?: boolean;
+}) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  // execCommand still works where the async clipboard does not, such as a plain
+  // http:// LAN address, which is how this local app is often opened.
+  function copyViaSelection(value: string) {
+    const holder = document.createElement("textarea");
+    holder.value = value;
+    holder.setAttribute("readonly", "");
+    holder.style.position = "fixed";
+    holder.style.opacity = "0";
+    document.body.appendChild(holder);
+    holder.select();
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch {
+      copied = false;
+    }
+    holder.remove();
+    return copied;
+  }
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setState("copied");
+    } catch {
+      setState(copyViaSelection(value) ? "copied" : "failed");
+    }
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setState("idle"), 2400);
+  }
+  if (!value) return null;
+  return (
+    <span className="copy-control">
+      <button
+        type="button"
+        className={`copy-btn${small ? " copy-btn-sm" : ""}${state === "copied" ? " is-copied" : ""}${state === "failed" ? " is-failed" : ""}`}
+        onClick={() => void copy()}
+        aria-label={state === "copied" ? `Copied ${label}` : `Copy ${label}`}
+        title={
+          state === "copied"
+            ? "Copied"
+            : state === "failed"
+              ? "Copying failed — your browser blocked clipboard access"
+              : "Copy"
+        }
+      >
+        <Icon name={state === "copied" ? "check" : "copy"} />
+      </button>
+      <span className="sr-only" role="status" aria-live="polite">
+        {state === "copied" ? `${label} copied to clipboard` : state === "failed" ? `Could not copy ${label}` : ""}
+      </span>
+    </span>
+  );
+}
+
 const primaryRoutes: Route[] = ["grammar", "translation", "word-lookup", "word-review", "practice", "ask"];
 const learningRoutes: Array<[Route, string]> = [["dashboard", "Overview"], ["handbook", "Handbook"], ["coach", "Coach"]];
 function currentRoute(): Route {
@@ -1572,11 +1742,13 @@ function DetailSection({
   variant,
   icon,
   title,
+  action,
   children,
 }: {
   variant: string;
   icon: React.ComponentProps<typeof Icon>["name"];
   title: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -1588,7 +1760,14 @@ function DetailSection({
         <Icon name={icon} />
       </span>
       <div className="detail-content">
-        <h2 id={"detail-" + variant + "-title"}>{title}</h2>
+        {action ? (
+          <div className="detail-head">
+            <h2 id={"detail-" + variant + "-title"}>{title}</h2>
+            {action}
+          </div>
+        ) : (
+          <h2 id={"detail-" + variant + "-title"}>{title}</h2>
+        )}
         <div className="detail-copy">{children}</div>
       </div>
     </section>

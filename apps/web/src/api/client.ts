@@ -62,7 +62,13 @@ export const webApi = {
   lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`),
   addWord: (entry: unknown) => requestJson<any>("/word/add", { method: "POST", body: JSON.stringify({ entry }) }),
   generatePractice: (mode = "sentence", count = 3, difficulty = "standard") => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count, difficulty }), timeoutMs: 120_000 }),
-  evaluatePractice: (question: unknown, answer: string) => requestJson<any>("/practice/evaluate", { method: "POST", body: JSON.stringify({ question, answer }) }),
+  evaluatePractice: (question: unknown, answer: string) => requestJson<any>("/practice/evaluate", {
+    method: "POST",
+    body: JSON.stringify({ question, answer }),
+    // Checking a choice answer now writes its own explanation, so it needs the
+    // same budget as generating a question. Sentence and word keep their budget.
+    timeoutMs: (question as { kind?: string } | undefined)?.kind === "choice" ? 120_000 : 30_000,
+  }),
   getHandbook: (errorType = "") => requestJson<any>(`/handbook?days=90${errorType ? `&errorType=${encodeURIComponent(errorType)}` : ""}`),
   speakWord: async (text: string): Promise<HTMLAudioElement> => {
     const res = await fetch("/tts/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
