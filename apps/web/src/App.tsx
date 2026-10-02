@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
+import { useDailyReviewSession } from "./review-session";
 
 type Route =
   | "dashboard"
@@ -25,7 +26,6 @@ const items: Array<[Route, string]> = [
   ["coach", "Coach"],
   ["settings", "Model settings"],
 ];
-
 
 function formatActivityTimestamp(value: unknown) {
   const date = new Date(String(value || ""));
@@ -210,7 +210,11 @@ function Grammar() {
     try {
       const response = await webApi.saveGrammar(checkedText, data);
       setDidSave(Boolean(response.persistence?.saved));
-      setSaved(response.persistence?.saved ? "Saved to your review log." : "Your review log was not saved. Try again.");
+      setSaved(
+        response.persistence?.saved
+          ? "Saved to your review log."
+          : "Your review log was not saved. Try again.",
+      );
     } catch (e: any) {
       setSaved("Could not save: " + e.message);
     } finally {
@@ -220,54 +224,158 @@ function Grammar() {
 
   const data = result?.result || result?.data;
   const diagnoses = (data?.diagnoses || []).map((item: any) =>
-    typeof item === "string" ? item : item.explanation || item.message || JSON.stringify(item),
+    typeof item === "string"
+      ? { label: "Issue (Minor)", explanation: item }
+      : {
+          label: `${(item.error_type || "Issue").split(" / ").pop()} (${item.severity || "Minor"})`,
+          explanation: item.explanation || item.message || "No explanation provided.",
+        },
   );
+  const evaluation = (() => {
+    const supplied = typeof data?.evaluate === "string" ? data.evaluate.trim() : "";
+    if (
+      supplied &&
+      !/^(?:no evaluation provided|the original sentence could not be assessed|unable to assess)/i.test(
+        supplied,
+      )
+    )
+      return supplied;
+    const input = String(data?.originalText || checkedText).trim();
+    const normalize = (value: string) =>
+      value
+        .replace(/\s+/g, " ")
+        .replace(/[.!?]+$/, "")
+        .toLowerCase();
+    const issues = Array.isArray(data?.diagnoses) ? data.diagnoses : [];
+    if (input && data?.correction && normalize(input) !== normalize(data.correction)) {
+      const count = Math.max(1, issues.length);
+      return `The original sentence contains ${count === 1 ? "an error" : "several errors"}.`;
+    }
+    if (issues.length) {
+      return "The original sentence is understandable overall, with some wording that could be improved.";
+    }
+    if (input && data?.refine && normalize(input) !== normalize(data.refine)) {
+      return "The original sentence is grammatically correct. The suggested change is an optional improvement to naturalness.";
+    }
+    return "The original sentence is grammatically correct and clear.";
+  })();
 
   return (
     <div className={`grammar-page${result ? " has-result" : ""}`}>
       <div className="grammar-intro">
-        <h1>Your English,<br /><span>clearer<span className="accent-dot">.</span></span></h1>
+        <h1>
+          Your English,
+          <br />
+          <span>
+            clearer<span className="accent-dot">.</span>
+          </span>
+        </h1>
         <p>A thought. A sentence. A little better every day.</p>
       </div>
-      <form className="grammar-composer" onSubmit={(event) => { event.preventDefault(); void submit(); }} aria-busy={busy}>
-        <label className="sr-only" htmlFor="grammar-input">Your English sentence</label>
-        <textarea ref={inputRef} id="grammar-input" value={text} disabled={busy}
+      <form
+        className="grammar-composer"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit();
+        }}
+        aria-busy={busy}
+      >
+        <label className="sr-only" htmlFor="grammar-input">
+          Your English sentence
+        </label>
+        <textarea
+          ref={inputRef}
+          id="grammar-input"
+          value={text}
+          disabled={busy}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => {
-            if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.nativeEvent.isComposing) {
-              event.preventDefault(); void submit();
+            if (
+              (event.ctrlKey || event.metaKey) &&
+              event.key === "Enter" &&
+              !event.nativeEvent.isComposing
+            ) {
+              event.preventDefault();
+              void submit();
             }
           }}
-          placeholder="Write something in English…" aria-describedby="grammar-hint" />
+          placeholder="Write something in English…"
+          aria-describedby="grammar-hint"
+        />
         <div className="composer-actions">
-          <span id="grammar-hint">{busy ? "Finding a clearer way to say it…" : "A sentence or a short paragraph"}</span>
+          <span id="grammar-hint">
+            {busy ? "Finding a clearer way to say it…" : "A sentence or a short paragraph"}
+          </span>
           <button className="primary" type="submit" disabled={busy || saving || !text.trim()}>
-            {busy ? <><span className="loading-spinner" />Checking…</> : <>Check my English<Icon name="arrow" /></>}
+            {busy ? (
+              <>
+                <span className="loading-spinner" />
+                Checking…
+              </>
+            ) : (
+              <>
+                Check my English
+                <Icon name="arrow" />
+              </>
+            )}
           </button>
         </div>
       </form>
-      {!result && !busy && <div className="grammar-examples">
-        <span>Need a starting point?</span>
-        <button type="button" className="text-button" onClick={() => {
-          setText("I suggested him to join the call."); inputRef.current?.focus();
-        }}>Try an example<Icon name="arrow" /></button>
-      </div>}
-      <p className="grammar-note">Understand the changes. Keep what you learn. Save only when you choose.</p>
-      {result?.error && <State title="Could not check your English. Try again." detail={result.error} />}
+      {!result && !busy && (
+        <div className="grammar-examples">
+          <span>Need a starting point?</span>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              setText("I suggested him to join the call.");
+              inputRef.current?.focus();
+            }}
+          >
+            Try an example
+            <Icon name="arrow" />
+          </button>
+        </div>
+      )}
+      <p className="grammar-note">
+        Understand the changes. Keep what you learn. Save only when you choose.
+      </p>
+      {result?.error && (
+        <State title="Could not check your English. Try again." detail={result.error} />
+      )}
       {data && (
         <div className="correction-detail" aria-live="polite">
-          <DetailSection variant="original" icon="document" title="Original">
-            <p>{data.originalText || checkedText}</p>
+          <DetailSection variant="evaluate" icon="info" title="Evaluate">
+            <p>{evaluation}</p>
           </DetailSection>
-          <DetailSection variant="correction" icon="check" title="Correction" action={<CopyButton value={data.correction} label="Correction" />}>
+          <DetailSection
+            variant="correction"
+            icon="check"
+            title="Correction"
+            action={<CopyButton value={data.correction} label="Correction" />}
+          >
             <p>{data.correction || "No correction needed."}</p>
           </DetailSection>
-          {data.refine && <DetailSection variant="natural" icon="spark" title="More natural" action={<CopyButton value={data.refine} label="More natural wording" />}>
-            <p>{data.refine || "No alternative wording provided."}</p>
-          </DetailSection>}
+          {data.refine && (
+            <DetailSection
+              variant="natural"
+              icon="spark"
+              title="More natural"
+              action={<CopyButton value={data.refine} label="More natural wording" />}
+            >
+              <p>{data.refine || "No alternative wording provided."}</p>
+            </DetailSection>
+          )}
           <DetailSection variant="why" icon="info" title="Why">
             {diagnoses.length ? (
-              diagnoses.map((item: string, index: number) => <p key={index}>{item}</p>)
+              <ul className="grammar-why-list">
+                {diagnoses.map((item: { label: string; explanation: string }, index: number) => (
+                  <li key={index}>
+                    <strong>{item.label}</strong>
+                    <p>{item.explanation}</p>
+                  </li>
+                ))}
+              </ul>
             ) : (
               <p>No explanation provided.</p>
             )}
@@ -276,7 +384,11 @@ function Grammar() {
             <p>{data.remember || "No reminder provided."}</p>
           </DetailSection>
           <div className="correction-actions">
-            <button className="primary save-review" onClick={save} disabled={busy || saving || didSave}>
+            <button
+              className="primary save-review"
+              onClick={save}
+              disabled={busy || saving || didSave}
+            >
               <Icon name="bookmark" />
               {saving ? "Saving…" : didSave ? "Saved to review log" : "Save to review log"}
             </button>
@@ -402,7 +514,12 @@ function Ask() {
             <Markdown source={String(turn.answer ?? "")} />
           </div>
         ))}
-        {!turns.length && <State title="What would you like to understand?" detail="Start with a question about English." />}
+        {!turns.length && (
+          <State
+            title="What would you like to understand?"
+            detail="Start with a question about English."
+          />
+        )}
         <label className="form-label" htmlFor="ask-input">
           Your question
         </label>
@@ -424,48 +541,84 @@ function Ask() {
   );
 }
 function WordReview() {
-  const [cards, setCards] = useState<any[]>([]);
-  const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    webApi
-      .getReviewDue()
-      .then((data) => setCards(data.cards || []))
-      .catch((e) => setError(e.message));
-  }, []);
-  async function grade(rating: string) {
-    const card = cards[index];
-    if (!card) return;
-    try {
-      await webApi.gradeReview(card.id, rating);
-      setIndex((n) => n + 1);
-      setRevealed(false);
-    } catch (e: any) {
-      setError(e.message);
-    }
-  }
+  const {
+    cards,
+    index,
+    revealed,
+    loading,
+    grading,
+    starting,
+    startError,
+    error,
+    notice,
+    reveal,
+    grade,
+    retry,
+    startNew,
+  } = useDailyReviewSession();
   const card = cards[index];
   const details = card?.vocab_details;
   const examples = details?.examples?.length ? details.examples : [card?.example].filter(Boolean);
+  const complete = !loading && !error && !card;
+  const sessionAction = (
+    <div className="review-session-actions">
+      <button
+        className={complete ? "primary" : "secondary"}
+        onClick={startNew}
+        disabled={loading || grading || starting}
+        aria-busy={starting}
+      >
+        {starting ? "Starting…" : "Start a new session"}
+        <Icon name="arrow" />
+      </button>
+    </div>
+  );
   return (
     <div className="word-review-page">
-      <Heading
-        eyebrow="VOCABULARY · SRS ONLY"
-        title="Bring words back."
-        detail="Recall the English word from the Chinese clue. Reveal it, then rate your recall."
-      />
-      {error && <State title="Could not load your review. Try again." detail={error} />}
-      {!error && !card && (
-        <Panel title="Your review today" icon="word-review" className="review-empty-state">
+      <div className="review-header">
+        <Heading
+          eyebrow="VOCABULARY · SRS ONLY"
+          title="Bring words back."
+          detail="Recall the English word from the Chinese clue. Reveal it, then rate your recall."
+        />
+        {!complete && sessionAction}
+      </div>
+      {startError && (
+        <State title="Could not start a new session. Try again." detail={startError} />
+      )}
+      {loading && <State title="Loading your review…" />}
+      {notice && (
+        <p className="status" role="status">
+          {notice}
+        </p>
+      )}
+      {error && (
+        <>
           <State
-            title={cards.length ? "All done for today." : "You are all caught up."}
-            detail={
-              cards.length
-                ? `You reviewed ${cards.length} vocabulary cards.`
-                : "Come back later, or look up a word and save it to your vocabulary."
+            title={
+              card
+                ? "Could not save your rating. Try again."
+                : "Could not load your review. Try again."
             }
+            detail={error}
           />
+          {!card && <button onClick={retry}>Try again</button>}
+        </>
+      )}
+      {complete && (
+        <Panel title="Your review today" icon="word-review" className="review-empty-state">
+          <div className="review-completion" role="status">
+            <span className="review-completion-mark" aria-hidden="true">
+              <Icon name="check" />
+            </span>
+            <h3>{cards.length ? "All done for today." : "You are all caught up."}</h3>
+            <p>
+              {cards.length
+                ? `You reviewed ${cards.length} vocabulary cards.`
+                : "Come back later, or look up a word and save it to your vocabulary."}
+            </p>
+          </div>
+          {sessionAction}
         </Panel>
       )}
       {card && (
@@ -484,7 +637,7 @@ function WordReview() {
               <p>{card.meaning || "Use the Chinese clue, then reveal the word."}</p>
               <div className="review-prompt-actions">
                 <AudioButton text={card.word || card.answer} reviewPrompt />
-                <button className="primary" onClick={() => setRevealed(true)}>
+                <button className="primary" onClick={reveal} disabled={starting}>
                   Reveal word
                   <span className="review-cta-icon" aria-hidden="true">
                     <Icon name="arrow" />
@@ -507,20 +660,20 @@ function WordReview() {
                 }}
                 examples={examples}
               />
-              <div className="review-actions">
-                <button onClick={() => grade("again")}>
+              <div className="review-actions" aria-busy={grading}>
+                <button disabled={grading || starting} onClick={() => grade("again")}>
                   <span>Again</span>
                   <small>Could not recall</small>
                 </button>
-                <button onClick={() => grade("hard")}>
+                <button disabled={grading || starting} onClick={() => grade("hard")}>
                   <span>Hard</span>
                   <small>With difficulty</small>
                 </button>
-                <button onClick={() => grade("good")}>
+                <button disabled={grading || starting} onClick={() => grade("good")}>
                   <span>Good</span>
                   <small>Remembered</small>
                 </button>
-                <button onClick={() => grade("easy")}>
+                <button disabled={grading || starting} onClick={() => grade("easy")}>
                   <span>Easy</span>
                   <small>Effortless</small>
                 </button>
@@ -568,9 +721,27 @@ function Coach() {
         <>
           <Panel title="Learning history" className="coach-sample">
             <dl className="coach-sample-grid">
-              <div><dt>Writing entries</dt><dd>{data.sample?.totalInputs || 0}<span> entries</span></dd></div>
-              <div><dt>Grammar observations</dt><dd>{data.sample?.totalDiagnoses || 0}<span> observations</span></dd></div>
-              <div><dt>Time window</dt><dd>{data.windowDays ?? "—"}<span> days</span></dd></div>
+              <div>
+                <dt>Writing entries</dt>
+                <dd>
+                  {data.sample?.totalInputs || 0}
+                  <span> entries</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Grammar observations</dt>
+                <dd>
+                  {data.sample?.totalDiagnoses || 0}
+                  <span> observations</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Time window</dt>
+                <dd>
+                  {data.windowDays ?? "—"}
+                  <span> days</span>
+                </dd>
+              </div>
             </dl>
           </Panel>
           {(data.priorities || []).length > 0 ? (
@@ -578,13 +749,20 @@ function Coach() {
               {(data.priorities || []).map((item: any) => (
                 <article className="coach-priority" key={item.errorType}>
                   <h3>{item.errorType}</h3>
-                  {item.mechanism?.statement && <p className="coach-mechanism">{item.mechanism.statement}</p>}
+                  {item.mechanism?.statement && (
+                    <p className="coach-mechanism">{item.mechanism.statement}</p>
+                  )}
                   <ol className="coach-tasks">
                     {item.prescription?.slice(0, 2).map((phase: any) => (
                       <li key={phase.phase}>
                         <strong>{phase.name}</strong>
                         {phase.task && <p>{phase.task}</p>}
-                        {phase.check && <p className="coach-check"><span>How to check</span>{phase.check}</p>}
+                        {phase.check && (
+                          <p className="coach-check">
+                            <span>How to check</span>
+                            {phase.check}
+                          </p>
+                        )}
                       </li>
                     ))}
                   </ol>
@@ -593,13 +771,22 @@ function Coach() {
             </Panel>
           ) : (
             <Panel title="A little more practice first." className="coach-empty-priorities">
-              <p>There is not enough evidence to choose a focus yet. Keep saving your writing and feedback, then check back.</p>
+              <p>
+                There is not enough evidence to choose a focus yet. Keep saving your writing and
+                feedback, then check back.
+              </p>
             </Panel>
           )}
           <Panel title="What this evidence can tell us" className="coach-limitations">
             {data.limitations?.length ? (
-              <ul>{data.limitations.map((item: string) => <li key={item}>{item}</li>)}</ul>
-            ) : <p>No additional limitations were provided for this analysis.</p>}
+              <ul>
+                {data.limitations.map((item: string) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No additional limitations were provided for this analysis.</p>
+            )}
           </Panel>
         </>
       )}
@@ -627,7 +814,11 @@ function WordLookup() {
   async function add() {
     try {
       const result = await webApi.addWord(entry);
-      setStatus(result.persistence?.saved ? "Saved to your vocabulary" : "This word is already in your vocabulary.");
+      setStatus(
+        result.persistence?.saved
+          ? "Saved to your vocabulary"
+          : "This word is already in your vocabulary.",
+      );
     } catch (e: any) {
       setStatus(e.message);
     }
@@ -783,9 +974,11 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
   );
 }
 function Practice() {
-  const [mode, setMode] = useState("sentence");
+  const [style, setStyle] = useState("all");
+  const [context, setContext] = useState("all");
   const [count, setCount] = useState(3);
   const [difficulty, setDifficulty] = useState("standard");
+  const [hintsUsed, setHintsUsed] = useState(0);
   const [generationError, setGenerationError] = useState("");
   const [sessionNotice, setSessionNotice] = useState("");
   const [saveWarning, setSaveWarning] = useState("");
@@ -794,29 +987,32 @@ function Practice() {
   const [answer, setAnswer] = useState("");
   const [evaluation, setEvaluation] = useState<any>();
   const [busy, setBusy] = useState(false);
-  function handleModeChange(next: string) {
-    setMode(next);
+  async function generate() {
+    if (busy) return;
+    setBusy(true);
     setGenerationError("");
     setSessionNotice("");
     setSaveWarning("");
-  }
-
-  async function generate() {
-    setBusy(true);
-    setGenerationError("");
-    setEvaluation(undefined);
     try {
-      const result = await webApi.generatePractice(mode, count, difficulty);
+      const result = await webApi.generatePractice("sentence", count, difficulty, style, context);
       const generated = result.data?.questions || [];
-      if (!generated.length) throw new Error("No practice questions were returned. Please try again.");
-      if (generated.length < count) setSessionNotice(`Prepared ${generated.length} of ${count} new questions. Your saved questions were not repeated.`);
+      if (!generated.length)
+        throw new Error("No questions match these categories. Try a different style or context.");
+      if (generated.length < count)
+        setSessionNotice(
+          `Prepared ${generated.length} of ${count} questions available for these categories.`,
+        );
+      setEvaluation(undefined);
       setQuestions(generated);
       setIndex(0);
+      setHintsUsed(0);
       setAnswer("");
     } catch (e: any) {
-      setGenerationError(e.code === "REQUEST_TIMEOUT"
-        ? "Preparing questions took too long. Please try again."
-        : e.message || "Practice could not be generated. Please try again.");
+      setGenerationError(
+        e.code === "REQUEST_TIMEOUT"
+          ? "Preparing questions took too long. Please try again."
+          : e.message || "Practice could not be generated. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -824,10 +1020,10 @@ function Practice() {
 
   async function evaluate() {
     const question = questions[index];
-    if (!question || !answer.trim()) return;
+    if (!question || !answer.trim() || busy) return;
     setBusy(true);
     try {
-      const result = await webApi.evaluatePractice(question, answer);
+      const result = await webApi.evaluatePractice(question, answer, hintsUsed);
       setEvaluation(result.data);
       setSaveWarning(result.persistence?.saved === false ? result.persistence.warning : "");
     } catch (e: any) {
@@ -838,59 +1034,41 @@ function Practice() {
   }
 
   const question = questions[index];
-  const prompt = question?.kind === "choice" ? question.question : question?.prompt_zh;
-  const modeHint: Record<string, string> = {
-    word: "Practise a saved word or phrase, or a common one if your list is empty.",
-    sentence: "Write a sentence in English for the situation.",
-    choice: "Choose the most natural grammar correction.",
+  const prompt = question?.prompt_zh;
+  const categoryName: Record<string, string> = {
+    all: "All",
+    casual: "Casual",
+    neutral: "Neutral",
+    formal: "Formal",
+    everyday: "Everyday",
+    work: "Work",
+    travel: "Travel",
   };
-  const modeName: Record<string, string> = {
-    word: "vocabulary gap fills",
-    sentence: "sentence writing",
-    choice: "grammar questions",
+  const difficultyName: Record<string, string> = {
+    easy: "Easy",
+    standard: "Standard",
+    challenge: "Challenge",
   };
-  const difficultyName: Record<string, string> = { easy: "Easy", standard: "Standard", challenge: "Challenge" };
+  const hints = question
+    ? [question.hints?.simple, question.hints?.intermediate, question.hints?.complete].filter(
+        Boolean,
+      )
+    : [];
+  const hintLabels = ["Simple hint", "Intermediate hint", "Complete pattern"];
 
   return (
     <>
       <Heading
         eyebrow="PRACTICE"
         title="Put your English to work."
-        detail="Fill in a missing word, write your own sentence, or practise grammar with multiple-choice questions."
+        detail="Translate a Chinese sentence into English, then get feedback on meaning, grammar, and tone."
       />
       {!question && (
         <Panel title="Set up your practice" icon="practice" className="practice-setup">
-          <div className="practice-field">
-            <span className="practice-field-label">Practice type</span>
-            <div className="switches" role="group" aria-label="Practice mode">
-              <button
-                className={mode === "word" ? "selected" : ""}
-                aria-pressed={mode === "word"}
-                onClick={() => handleModeChange("word")}
-              >
-                Word
-              </button>
-              <button
-                className={mode === "sentence" ? "selected" : ""}
-                aria-pressed={mode === "sentence"}
-                onClick={() => handleModeChange("sentence")}
-              >
-                Sentence
-              </button>
-              <button
-                className={mode === "choice" ? "selected" : ""}
-                aria-pressed={mode === "choice"}
-                onClick={() => handleModeChange("choice")}
-              >
-                Choose
-              </button>
-            </div>
-            <p className="practice-mode-hint">
-              <Icon name="info" />
-              {modeHint[mode]}
-            </p>
-          </div>
-          <fieldset className="question-count">
+          <p className="practice-mode-hint">
+            Sentence translation · Choose your difficulty, style, and context.
+          </p>
+          <fieldset className="question-count" disabled={busy}>
             <legend>Number of questions</legend>
             <div className="count-options">
               {[3, 5, 10].map((value) => (
@@ -908,27 +1086,81 @@ function Practice() {
               ))}
             </div>
           </fieldset>
-          <fieldset className="practice-difficulty">
+          <fieldset className="practice-difficulty" disabled={busy}>
             <legend>Difficulty</legend>
             <div className="count-options">
               {(["easy", "standard", "challenge"] as const).map((value) => (
                 <label className={difficulty === value ? "selected" : ""} key={value}>
-                  <input type="radio" name="practice-difficulty" value={value} checked={difficulty === value} onChange={() => setDifficulty(value)} />
+                  <input
+                    type="radio"
+                    name="practice-difficulty"
+                    value={value}
+                    checked={difficulty === value}
+                    onChange={() => setDifficulty(value)}
+                  />
                   <span>{difficultyName[value]}</span>
                 </label>
               ))}
             </div>
-            <p className="practice-mode-hint">Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks for more precise, connected English.</p>
+            <p className="practice-mode-hint">
+              Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks for more
+              precise, connected English.
+            </p>
           </fieldset>
+          {[
+            {
+              label: "Style",
+              value: style,
+              set: setStyle,
+              options: ["all", "casual", "neutral", "formal"],
+            },
+            {
+              label: "Context",
+              value: context,
+              set: setContext,
+              options: ["all", "everyday", "work", "travel"],
+            },
+          ].map((filter) => (
+            <fieldset className="practice-difficulty" disabled={busy} key={filter.label}>
+              <legend>{filter.label}</legend>
+              <div className="count-options">
+                {filter.options.map((value) => (
+                  <label className={filter.value === value ? "selected" : ""} key={value}>
+                    <input
+                      type="radio"
+                      name={"practice-" + filter.label.toLowerCase()}
+                      value={value}
+                      checked={filter.value === value}
+                      onChange={() => filter.set(value)}
+                    />
+                    <span>{categoryName[value]}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))}
           <div className="practice-instructions">
             <h3>How to practise</h3>
             <ol>
-              <li>Choose a type, difficulty, and number of questions. Each new session draws from questions you have not seen before.</li>
-              <li>For Word, write an English sentence that fits the Chinese situation and uses the target word. For Sentence, write a complete English sentence. For Choose, select the best of four answers.</li>
-              <li>Check each answer to see feedback and a reference answer, then move to the next question. Your attempts are recorded so you can review your progress.</li>
+              <li>
+                Choose your categories and session size. Questions come from a ready-to-use bank;
+                less-used questions appear first.
+              </li>
+              <li>
+                Translate the Chinese sentence into English. Optional hints reveal a cue, a
+                construction, then an open pattern.
+              </li>
+              <li>
+                Check your translation for AI feedback and a reference answer, then continue. Your
+                attempts are recorded.
+              </li>
             </ol>
           </div>
-          <State title={count + " questions · " + difficultyName[difficulty] + " · " + modeName[mode] + " practice"} />
+          <State
+            title={
+              count + " questions · " + difficultyName[difficulty] + " · " + "sentence translation"
+            }
+          />
           <button
             className="primary practice-generate"
             onClick={generate}
@@ -958,7 +1190,11 @@ function Practice() {
           icon="practice"
           className="practice-question"
         >
-          {sessionNotice && <p className="practice-warning" role="status">{sessionNotice}</p>}
+          {sessionNotice && (
+            <p className="practice-warning" role="status">
+              {sessionNotice}
+            </p>
+          )}
           <div
             className="practice-progress"
             aria-label={"Question " + (index + 1) + " of " + questions.length}
@@ -967,40 +1203,57 @@ function Practice() {
           </div>
           <div className="practice-prompt">
             <span className="review-kicker">
-              {question.kind === "choice" ? "GRAMMAR CHOICE" : mode === "word" ? "VOCABULARY" : "SENTENCE WRITING"}
+              {difficultyName[question.difficulty]} · {categoryName[question.style]} ·{" "}
+              {categoryName[question.context]}
             </span>
             <h2>{prompt}</h2>
-            <p>{question.kind === "choice"
-              ? "Choose the best answer. The grammar explanation appears after you check it."
-              : question.focus || "Write your answer in English."}</p>
+            <p>Translate this sentence into English.</p>
+            {question.focus_id && (
+              <p className="practice-mode-hint">
+                {question.focus_id} · {question.focus}
+              </p>
+            )}
           </div>
-          {question.kind === "choice" ? (
-            <div className="practice-options" role="group" aria-label="Choose an answer">
-              {(question.options || []).map((option: string, optionIndex: number) => (
-                <button
-                  className={answer === option ? "selected" : ""}
-                  aria-pressed={answer === option}
-                  key={option}
-                  onClick={() => { setAnswer(option); setEvaluation(undefined); setSaveWarning(""); }}
-                >
-                  <span className="option-marker">{String.fromCharCode(65 + optionIndex)}</span>
-                  {option}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <>
-              <label className="form-label" htmlFor="practice-input">
-                Your answer in English
-              </label>
-              <textarea
-                id="practice-input"
-                value={answer}
-                onChange={(e) => { setAnswer(e.target.value); setEvaluation(undefined); setSaveWarning(""); }}
-                placeholder="Write your answer in English…"
-              />
-            </>
+          {hints.length > 0 && (
+            <section className="practice-hints" aria-label="Optional translation hints">
+              <button
+                type="button"
+                className="secondary"
+                disabled={busy || hintsUsed >= hints.length || !!(evaluation && !evaluation.error)}
+                aria-controls="practice-hint-list"
+                onClick={() => setHintsUsed((n) => Math.min(n + 1, hints.length))}
+              >
+                {hintsUsed < hints.length
+                  ? `Show ${hintLabels[hintsUsed].toLowerCase()}`
+                  : "All hints shown"}
+              </button>
+              <p className="practice-mode-hint">
+                {hintsUsed}/3 hints used · The complete pattern leaves the translation for you.
+              </p>
+              <ol id="practice-hint-list" aria-live="polite" aria-relevant="additions">
+                {hints.slice(0, hintsUsed).map((hint, i) => (
+                  <li key={i}>
+                    <strong>{hintLabels[i]}</strong>
+                    <p>{hint}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
           )}
+          <label className="form-label" htmlFor="practice-input">
+            Your translation in English
+          </label>
+          <textarea
+            id="practice-input"
+            value={answer}
+            disabled={busy}
+            onChange={(e) => {
+              setAnswer(e.target.value);
+              setEvaluation(undefined);
+              setSaveWarning("");
+            }}
+            placeholder="Write your translation in English…"
+          />
           <button className="primary" onClick={evaluate} disabled={busy || !answer.trim()}>
             {busy ? (
               "Reviewing…"
@@ -1011,16 +1264,23 @@ function Practice() {
               </>
             )}
           </button>
-          {evaluation?.error && <State title="Could not review this answer. Try again." detail={evaluation.error} />}
-          {saveWarning && <p className="practice-warning" role="status">{saveWarning}</p>}
+          {evaluation?.error && (
+            <State title="Could not review this answer. Try again." detail={evaluation.error} />
+          )}
+          {saveWarning && (
+            <p className="practice-warning" role="status">
+              {saveWarning}
+            </p>
+          )}
           {evaluation && !evaluation.error && (
             <PracticeEvaluation
               evaluation={evaluation}
               answer={answer}
-              question={question}
+              question={{ ...question, reference_answer: evaluation.reference_answer }}
               nextLabel={index + 1 < questions.length ? "Next question" : "Finish session"}
               onNext={() => {
                 setIndex((n) => n + 1);
+                setHintsUsed(0);
                 setAnswer("");
                 setEvaluation(undefined);
                 setSaveWarning("");
@@ -1040,92 +1300,6 @@ const practiceVerdicts: Record<string, string> = {
   incorrect: "Give it another look",
 };
 
-function ChoiceExplanation({
-  evaluation,
-  question,
-  answer,
-}: {
-  evaluation: any;
-  question: any;
-  answer: string;
-}) {
-  const notes: { option: string; note: string }[] = Array.isArray(evaluation.option_notes)
-    ? evaluation.option_notes.filter((item: any) => item?.option && item?.note)
-    : [];
-  const options: string[] = Array.isArray(question?.options) ? question.options : [];
-  const selected = evaluation.selected_answer || answer;
-  const correctAnswer = evaluation.corrected_answer;
-  const noteFor = (option: string) =>
-    notes.find((item) => item.option.replace(/\s+/g, " ").trim().toLowerCase() === option.replace(/\s+/g, " ").trim().toLowerCase());
-
-  return (
-    <>
-      <p className="evaluation-lead">{evaluation.feedback_zh}</p>
-      {evaluation.clue_zh && (
-        <section className="evaluation-phase evaluation-clue">
-          <span className="phase-index" aria-hidden="true">01</span>
-          <div>
-            <h4>The clue that settles it</h4>
-            <p>{evaluation.clue_zh}</p>
-          </div>
-        </section>
-      )}
-      {(options.length > 0 || notes.length > 0) && (
-        <section className="evaluation-phase">
-          <span className="phase-index" aria-hidden="true">02</span>
-          <div className="evaluation-compare">
-            <h4>Your choice and the answer</h4>
-            <dl className="evaluation-answer-pair">
-              <div className={correctAnswer === selected ? "is-correct" : "is-miss"}>
-                <dt>You chose</dt>
-                <dd>
-                  <span className="evaluation-answer-mark" aria-hidden="true">{correctAnswer === selected ? "✓" : "✕"}</span>
-                  {selected}
-                </dd>
-              </div>
-              {correctAnswer !== selected && (
-                <div className="is-correct">
-                  <dt>The answer</dt>
-                  <dd>
-                    <span className="evaluation-answer-mark" aria-hidden="true">✓</span>
-                    {correctAnswer}
-                  </dd>
-                </div>
-              )}
-            </dl>
-            {notes.length > 0 && (
-              <ul className="evaluation-option-notes">
-                {notes.map((item) => {
-                  const isCorrect = item.option === correctAnswer;
-                  const isSelected = item.option === selected;
-                  return (
-                    <li key={item.option} className={isCorrect ? "is-correct" : isSelected ? "is-miss" : ""}>
-                      <span className="evaluation-option-text">
-                        <span className="evaluation-option-tag">{isCorrect ? "Correct answer" : isSelected ? "Your choice" : "Not this one"}</span>
-                        <span className="evaluation-option-value" lang="en">{item.option}</span>
-                      </span>
-                      <span className="evaluation-option-note">{item.note}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </section>
-      )}
-      {evaluation.rule_zh && (
-        <section className="evaluation-phase evaluation-rule">
-          <span className="phase-index" aria-hidden="true">03</span>
-          <div>
-            <h4>Remember</h4>
-            <p>{evaluation.rule_zh}</p>
-          </div>
-        </section>
-      )}
-    </>
-  );
-}
-
 function PracticeEvaluation({
   evaluation,
   answer,
@@ -1139,7 +1313,6 @@ function PracticeEvaluation({
   nextLabel: string;
   onNext: () => void;
 }) {
-  const isChoice = question?.kind === "choice";
   const strengths = Array.isArray(evaluation.strengths_zh)
     ? evaluation.strengths_zh.filter(Boolean)
     : [];
@@ -1162,60 +1335,63 @@ function PracticeEvaluation({
         <div>
           <span className="evaluation-phase-label">Your feedback</span>
           <h3>{verdict}</h3>
-          {isChoice && evaluation.feedback_zh ? null : (
-            <p>{evaluation.feedback_zh || "Compare your answer with the revision. Check the meaning and grammar."}</p>
-          )}
+          <p>
+            {evaluation.feedback_zh ||
+              "Compare your answer with the revision. Check the meaning and grammar."}
+          </p>
         </div>
       </div>
-      {isChoice ? (
-        <div className="evaluation-phases">
-          <ChoiceExplanation evaluation={evaluation} question={question} answer={answer} />
-        </div>
-      ) : (
-        <div className="evaluation-phases">
-          <section className="evaluation-phase">
-            <span className="phase-index">01</span>
+      <div className="evaluation-phases">
+        <section className="evaluation-phase">
+          <span className="phase-index">01</span>
+          <div>
+            <h4>Your answer</h4>
+            <p>{answer}</p>
+          </div>
+        </section>
+        <section className="evaluation-phase evaluation-correction">
+          <span className="phase-index">02</span>
+          <div>
+            <h4>Suggested revision</h4>
+            <p>{evaluation.corrected_answer || "No revision provided."}</p>
+          </div>
+        </section>
+        {question.reference_answer && question.reference_answer !== evaluation.corrected_answer && (
+          <section className="evaluation-phase evaluation-reference">
             <div>
-              <h4>Your answer</h4>
-              <p>{answer}</p>
+              <h4>Reference translation</h4>
+              <p>{question.reference_answer}</p>
             </div>
           </section>
-          <section className="evaluation-phase evaluation-correction">
-            <span className="phase-index">02</span>
-            <div>
-              <h4>Suggested revision</h4>
-              <p>{evaluation.corrected_answer || "No revision provided."}</p>
+        )}
+        {(strengths.length > 0 || improvements.length > 0) && (
+          <section className="evaluation-phase evaluation-notes">
+            <span className="phase-index">03</span>
+            <div className="evaluation-notes-grid">
+              {strengths.length > 0 && (
+                <div>
+                  <h4>What worked</h4>
+                  <ul>
+                    {strengths.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {improvements.length > 0 && (
+                <div>
+                  <h4>What to work on</h4>
+                  <ul>
+                    {improvements.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </section>
-          {(strengths.length > 0 || improvements.length > 0) && (
-            <section className="evaluation-phase evaluation-notes">
-              <span className="phase-index">03</span>
-              <div className="evaluation-notes-grid">
-                {strengths.length > 0 && (
-                  <div>
-                    <h4>What worked</h4>
-                    <ul>
-                      {strengths.map((item: string, index: number) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {improvements.length > 0 && (
-                  <div>
-                    <h4>What to work on</h4>
-                    <ul>
-                      {improvements.map((item: string, index: number) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-        </div>
-      )}
+        )}
+      </div>
       <button className="secondary evaluation-next" onClick={onNext}>
         {nextLabel}
         <Icon name="arrow" />
@@ -1243,7 +1419,9 @@ function Handbook() {
       setBusy(false);
     }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
   async function choose(value: string) {
     if (value === selected || loadingSelection) return;
     setError("");
@@ -1271,23 +1449,44 @@ function Handbook() {
           {busy ? "Loading…" : "Refresh"}
         </button>
       </div>
-      {!data && (busy ? (
-        <State title="Loading your handbook…" />
-      ) : error ? (
-        <Panel title="Unable to load">
-          <div className="handbook-empty">
-            <State title="Your learning notes could not be loaded." detail={error} />
-            <button className="primary" onClick={load}>Try again</button>
-          </div>
-        </Panel>
-      ) : null)}
+      {!data &&
+        (busy ? (
+          <State title="Loading your handbook…" />
+        ) : error ? (
+          <Panel title="Unable to load">
+            <div className="handbook-empty">
+              <State title="Your learning notes could not be loaded." detail={error} />
+              <button className="primary" onClick={load}>
+                Try again
+              </button>
+            </div>
+          </Panel>
+        ) : null)}
       {data && (
         <>
           <Panel title="Your writing history" className="coach-sample">
             <dl className="coach-sample-grid">
-              <div><dt>Writing entries</dt><dd>{data.stats?.total_inputs || 0}<span> entries</span></dd></div>
-              <div><dt>Grammar observations</dt><dd>{data.stats?.total_diagnoses || 0}<span> observations</span></dd></div>
-              <div><dt>Time window</dt><dd>{data.days ?? "—"}<span> days</span></dd></div>
+              <div>
+                <dt>Writing entries</dt>
+                <dd>
+                  {data.stats?.total_inputs || 0}
+                  <span> entries</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Grammar observations</dt>
+                <dd>
+                  {data.stats?.total_diagnoses || 0}
+                  <span> observations</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Time window</dt>
+                <dd>
+                  {data.days ?? "—"}
+                  <span> days</span>
+                </dd>
+              </div>
             </dl>
           </Panel>
           {hasFrequencies ? (
@@ -1301,32 +1500,70 @@ function Handbook() {
                     aria-pressed={selected === item.error_type}
                     disabled={loadingSelection}
                   >
-                    {item.error_type}<span>{item.count}</span>
+                    {item.error_type}
+                    <span>{item.count}</span>
                   </button>
                 ))}
               </div>
               {error && <State title="Could not change category" detail={error} />}
               <Panel title={selected}>
-                {loadingSelection ? <State title="Loading examples…" /> : data.examples?.length ? (
+                {loadingSelection ? (
+                  <State title="Loading examples…" />
+                ) : data.examples?.length ? (
                   data.examples.map((item: any, index: number) => (
-                    <article className="activity handbook-example" key={`${item.original_text}-${index}`}>
-                      <div><span>Original</span><p>{item.original_text}</p></div>
-                      <div><span>Correction</span><p>{item.correction}</p></div>
-                      {item.refine && <div><span>More natural</span><p>{item.refine}</p></div>}
-                      {item.explanation && <div><span>Why</span><p>{item.explanation}</p></div>}
-                      {item.remember && <div><span>Remember</span><p>{item.remember}</p></div>}
+                    <article
+                      className="activity handbook-example"
+                      key={`${item.original_text}-${index}`}
+                    >
+                      <div>
+                        <span>Original</span>
+                        <p>{item.original_text}</p>
+                      </div>
+                      <div>
+                        <span>Correction</span>
+                        <p>{item.correction}</p>
+                      </div>
+                      {item.refine && (
+                        <div>
+                          <span>More natural</span>
+                          <p>{item.refine}</p>
+                        </div>
+                      )}
+                      {item.explanation && (
+                        <div>
+                          <span>Why</span>
+                          <p>{item.explanation}</p>
+                        </div>
+                      )}
+                      {item.remember && (
+                        <div>
+                          <span>Remember</span>
+                          <p>{item.remember}</p>
+                        </div>
+                      )}
                     </article>
                   ))
                 ) : (
-                  <div className="handbook-empty"><State title="No examples in this category yet." detail="Keep saving your writing to build a collection of useful examples." /></div>
+                  <div className="handbook-empty">
+                    <State
+                      title="No examples in this category yet."
+                      detail="Keep saving your writing to build a collection of useful examples."
+                    />
+                  </div>
                 )}
               </Panel>
             </>
           ) : (
             <Panel title="A little more practice first." className="coach-empty-priorities">
               <div className="handbook-empty">
-                <p>No grammar observations in the last {data.days} days. Check and save a sentence to start collecting corrections and explanations here.</p>
-                <a className="primary" href="#grammar">Check a sentence<Icon name="arrow" /></a>
+                <p>
+                  No grammar observations in the last {data.days} days. Check and save a sentence to
+                  start collecting corrections and explanations here.
+                </p>
+                <a className="primary" href="#grammar">
+                  Check a sentence
+                  <Icon name="arrow" />
+                </a>
               </div>
             </Panel>
           )}
@@ -1353,22 +1590,40 @@ function LlmSettings() {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    webApi.getLlmSettings().then((settings) => {
-      if (!settings?.providers || !settings?.provider) {
-        throw new Error("Settings are unavailable. Restart IGT and try again.");
-      }
-      setData(settings);
-      setActiveProvider(settings.provider);
-      setEditProvider(settings.provider);
-    }).catch((e: any) => setError(e.message || "Could not load model settings"));
+    webApi
+      .getLlmSettings()
+      .then((settings) => {
+        if (!settings?.providers || !settings?.provider) {
+          throw new Error("Settings are unavailable. Restart IGT and try again.");
+        }
+        setData(settings);
+        setActiveProvider(settings.provider);
+        setEditProvider(settings.provider);
+      })
+      .catch((e: any) => setError(e.message || "Could not load model settings"));
   }, []);
 
   const providerSettings = data?.providers?.[editProvider];
   const updateModel = (role: "flash" | "pro", value: string) => {
-    setData((old: any) => ({ ...old, providers: { ...old.providers, [editProvider]: { ...old.providers[editProvider], models: { ...old.providers[editProvider].models, [role]: value } } } }));
+    setData((old: any) => ({
+      ...old,
+      providers: {
+        ...old.providers,
+        [editProvider]: {
+          ...old.providers[editProvider],
+          models: { ...old.providers[editProvider].models, [role]: value },
+        },
+      },
+    }));
   };
   const updateBaseUrl = (value: string) => {
-    setData((old: any) => ({ ...old, providers: { ...old.providers, [editProvider]: { ...old.providers[editProvider], baseUrl: value } } }));
+    setData((old: any) => ({
+      ...old,
+      providers: {
+        ...old.providers,
+        [editProvider]: { ...old.providers[editProvider], baseUrl: value },
+      },
+    }));
   };
 
   async function save() {
@@ -1381,7 +1636,12 @@ function LlmSettings() {
         provider: activeProvider,
         apiKeys,
         clearApiKeys,
-        models: Object.fromEntries(Object.entries(data.providers).map(([name, value]: [string, any]) => [name, value.models])),
+        models: Object.fromEntries(
+          Object.entries(data.providers).map(([name, value]: [string, any]) => [
+            name,
+            value.models,
+          ]),
+        ),
         baseUrls: {
           OllamaBaseUrl: data.providers.ollama.baseUrl,
           QwenApiBase: data.providers.qwen.baseUrl,
@@ -1391,7 +1651,9 @@ function LlmSettings() {
       setData((old: any) => ({ ...old, provider: saved.provider, providers: saved.providers }));
       setApiKeys({});
       setClearApiKeys({});
-      setStatus("Settings saved and applied. Existing keys were kept where the field was left blank.");
+      setStatus(
+        "Settings saved and applied. Existing keys were kept where the field was left blank.",
+      );
     } catch (e: any) {
       setError(e.message || "Could not save settings");
     } finally {
@@ -1411,23 +1673,45 @@ function LlmSettings() {
       <Panel title="AI provider" icon="settings">
         <div className="settings-grid">
           <div className="settings-field">
-            <label className="form-label" htmlFor="llm-active-provider">Active provider</label>
-            <select id="llm-active-provider" value={activeProvider} onChange={(e) => setActiveProvider(e.target.value)}>
-              {Object.entries(providerNames).map(([key, label]) => <option value={key} key={key}>{label}</option>)}
+            <label className="form-label" htmlFor="llm-active-provider">
+              Active provider
+            </label>
+            <select
+              id="llm-active-provider"
+              value={activeProvider}
+              onChange={(e) => setActiveProvider(e.target.value)}
+            >
+              {Object.entries(providerNames).map(([key, label]) => (
+                <option value={key} key={key}>
+                  {label}
+                </option>
+              ))}
             </select>
             <small>This provider will handle your requests after you save.</small>
           </div>
           <div className="settings-field">
-            <label className="form-label" htmlFor="llm-edit-provider">Configure a provider</label>
-            <select id="llm-edit-provider" value={editProvider} onChange={(e) => setEditProvider(e.target.value)}>
-              {Object.entries(providerNames).map(([key, label]) => <option value={key} key={key}>{label}</option>)}
+            <label className="form-label" htmlFor="llm-edit-provider">
+              Configure a provider
+            </label>
+            <select
+              id="llm-edit-provider"
+              value={editProvider}
+              onChange={(e) => setEditProvider(e.target.value)}
+            >
+              {Object.entries(providerNames).map(([key, label]) => (
+                <option value={key} key={key}>
+                  {label}
+                </option>
+              ))}
             </select>
             <small>Configure each provider separately, then save your changes.</small>
           </div>
         </div>
         {editProvider !== "ollama" && (
           <div className="settings-field settings-key-field">
-            <label className="form-label" htmlFor="llm-api-key">{providerNames[editProvider]} API key</label>
+            <label className="form-label" htmlFor="llm-api-key">
+              {providerNames[editProvider]} API key
+            </label>
             <input
               id="llm-api-key"
               type="password"
@@ -1435,10 +1719,27 @@ function LlmSettings() {
               disabled={Boolean(clearApiKeys[editProvider])}
               value={apiKeys[editProvider] || ""}
               onChange={(e) => setApiKeys((old) => ({ ...old, [editProvider]: e.target.value }))}
-              placeholder={providerSettings?.keyConfigured ? `Configured ${providerSettings.keyMasked} · Enter a key to replace` : "Paste your API key"}
+              placeholder={
+                providerSettings?.keyConfigured
+                  ? `Configured ${providerSettings.keyMasked} · Enter a key to replace`
+                  : "Paste your API key"
+              }
             />
-            <small>Your key is stored on this device and will not be shown again. Leave blank to keep it.</small>
-            {providerSettings?.keyConfigured && <label className="settings-check"><input type="checkbox" checked={Boolean(clearApiKeys[editProvider])} onChange={(e) => setClearApiKeys((old) => ({ ...old, [editProvider]: e.target.checked }))} /> Remove this provider’s key when saving</label>}
+            <small>
+              Your key is stored on this device and will not be shown again. Leave blank to keep it.
+            </small>
+            {providerSettings?.keyConfigured && (
+              <label className="settings-check">
+                <input
+                  type="checkbox"
+                  checked={Boolean(clearApiKeys[editProvider])}
+                  onChange={(e) =>
+                    setClearApiKeys((old) => ({ ...old, [editProvider]: e.target.checked }))
+                  }
+                />{" "}
+                Remove this provider’s key when saving
+              </label>
+            )}
           </div>
         )}
         <div className="settings-field settings-models">
@@ -1446,27 +1747,54 @@ function LlmSettings() {
           <div className="settings-grid">
             <label className="settings-field" htmlFor="llm-flash-model">
               <span className="form-label">Flash · Everyday tasks</span>
-              <input id="llm-flash-model" value={providerSettings?.models?.flash || ""} onChange={(e) => updateModel("flash", e.target.value)} />
+              <input
+                id="llm-flash-model"
+                value={providerSettings?.models?.flash || ""}
+                onChange={(e) => updateModel("flash", e.target.value)}
+              />
               <small>Grammar, translation, and Ask</small>
             </label>
             <label className="settings-field" htmlFor="llm-pro-model">
               <span className="form-label">Pro · Complex tasks</span>
-              <input id="llm-pro-model" value={providerSettings?.models?.pro || ""} onChange={(e) => updateModel("pro", e.target.value)} />
+              <input
+                id="llm-pro-model"
+                value={providerSettings?.models?.pro || ""}
+                onChange={(e) => updateModel("pro", e.target.value)}
+              />
               <small>Handbook, Coach, and text analysis</small>
             </label>
           </div>
         </div>
         {editProvider !== "gemini" && (
           <div className="settings-field settings-endpoint">
-            <label className="form-label" htmlFor="llm-endpoint">{editProvider === "ollama" ? "Ollama endpoint" : `${providerNames[editProvider]} API endpoint`}</label>
-            <input id="llm-endpoint" type="url" value={providerSettings?.baseUrl || ""} onChange={(e) => updateBaseUrl(e.target.value)} />
-            <small>{editProvider === "ollama" ? "Your local Ollama OpenAI-compatible endpoint" : "OpenAI-compatible API endpoint"}</small>
+            <label className="form-label" htmlFor="llm-endpoint">
+              {editProvider === "ollama"
+                ? "Ollama endpoint"
+                : `${providerNames[editProvider]} API endpoint`}
+            </label>
+            <input
+              id="llm-endpoint"
+              type="url"
+              value={providerSettings?.baseUrl || ""}
+              onChange={(e) => updateBaseUrl(e.target.value)}
+            />
+            <small>
+              {editProvider === "ollama"
+                ? "Your local Ollama OpenAI-compatible endpoint"
+                : "OpenAI-compatible API endpoint"}
+            </small>
           </div>
         )}
       </Panel>
       {error && <State title="Could not save" detail={error} />}
-      {status && <p className="settings-status" role="status">{status}</p>}
-      <button className="primary" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save settings"}</button>
+      {status && (
+        <p className="settings-status" role="status">
+          {status}
+        </p>
+      )}
+      <button className="primary" disabled={busy} onClick={save}>
+        {busy ? "Saving…" : "Save settings"}
+      </button>
     </div>
   );
 }
@@ -1474,7 +1802,6 @@ function LlmSettings() {
 function Heading({ title, detail }: { eyebrow: string; title: React.ReactNode; detail: string }) {
   return (
     <div className="heading">
-      
       <h1>{title}</h1>
       <p>{detail}</p>
     </div>
@@ -1589,7 +1916,9 @@ function AudioButton({
         className={`audio-btn${small ? " audio-btn-sm" : ""}${error ? " audio-err" : ""}`}
         onClick={play}
         disabled={busy}
-        aria-label={busy ? "Playing…" : reviewPrompt ? "Listen to the English word" : `Read aloud: ${text}`}
+        aria-label={
+          busy ? "Playing…" : reviewPrompt ? "Listen to the English word" : `Read aloud: ${text}`
+        }
         title={error || "Read aloud"}
       >
         <Icon name="volume" />
@@ -1603,15 +1932,7 @@ function AudioButton({
   );
 }
 
-function CopyButton({
-  value,
-  label,
-  small,
-}: {
-  value: string;
-  label: string;
-  small?: boolean;
-}) {
+function CopyButton({ value, label, small }: { value: string; label: string; small?: boolean }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -1665,22 +1986,46 @@ function CopyButton({
         <Icon name={state === "copied" ? "check" : "copy"} />
       </button>
       <span className="sr-only" role="status" aria-live="polite">
-        {state === "copied" ? `${label} copied to clipboard` : state === "failed" ? `Could not copy ${label}` : ""}
+        {state === "copied"
+          ? `${label} copied to clipboard`
+          : state === "failed"
+            ? `Could not copy ${label}`
+            : ""}
       </span>
     </span>
   );
 }
 
-const primaryRoutes: Route[] = ["grammar", "translation", "word-lookup", "word-review", "practice", "ask"];
-const learningRoutes: Array<[Route, string]> = [["dashboard", "Overview"], ["handbook", "Handbook"], ["coach", "Coach"]];
+const primaryRoutes: Route[] = ["practice", "ask"];
+const learningRoutes: Array<[Route, string]> = [
+  ["dashboard", "Overview"],
+  ["handbook", "Handbook"],
+  ["coach", "Coach"],
+];
+const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }> = [
+  {
+    label: "Writing",
+    routes: [
+      ["grammar", "Grammar"],
+      ["translation", "Translate"],
+    ],
+  },
+  {
+    label: "Vocabulary",
+    routes: [
+      ["word-lookup", "Look up"],
+      ["word-review", "Review"],
+    ],
+  },
+];
 function currentRoute(): Route {
   const hash = location.hash.slice(1);
-  return hash === "dashboard" || items.some(([key]) => key === hash) ? hash as Route : "grammar";
+  return hash === "dashboard" || items.some(([key]) => key === hash) ? (hash as Route) : "grammar";
 }
 export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [route, setRoute] = useState<Route>(currentRoute);
-  const moreRef = useRef<HTMLDetailsElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -1688,54 +2033,173 @@ export function App() {
       if (location.hash === "#main-content") return;
       setRoute(currentRoute());
       setMenuOpen(false);
-      if (moreRef.current) moreRef.current.open = false;
+      navRef.current?.querySelectorAll("details").forEach((menu) => {
+        menu.open = false;
+      });
       mainRef.current?.focus();
       window.scrollTo(0, 0);
     };
     const dismiss = (event: PointerEvent) => {
-      if (moreRef.current && !moreRef.current.contains(event.target as Node)) moreRef.current.open = false;
+      if (!navRef.current?.contains(event.target as Node)) {
+        navRef.current?.querySelectorAll("details").forEach((menu) => {
+          menu.open = false;
+        });
+      }
     };
     addEventListener("hashchange", onHash);
     addEventListener("pointerdown", dismiss);
-    return () => { removeEventListener("hashchange", onHash); removeEventListener("pointerdown", dismiss); };
+    return () => {
+      removeEventListener("hashchange", onHash);
+      removeEventListener("pointerdown", dismiss);
+    };
   }, []);
-  const title = route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
-  useEffect(() => { document.title = title + " · IGT"; }, [title]);
+  const title =
+    route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
+  useEffect(() => {
+    document.title = title + " · IGT";
+  }, [title]);
   const pages: Record<Route, React.ReactNode> = {
-    grammar: <Grammar />, dashboard: <Dashboard />, translation: <Translation />, ask: <Ask />,
-    "word-review": <WordReview />, "word-lookup": <WordLookup />, coach: <Coach />,
-    practice: <Practice />, handbook: <Handbook />, settings: <LlmSettings />,
+    grammar: <Grammar />,
+    dashboard: <Dashboard />,
+    translation: <Translation />,
+    ask: <Ask />,
+    "word-review": <WordReview />,
+    "word-lookup": <WordLookup />,
+    coach: <Coach />,
+    practice: <Practice />,
+    handbook: <Handbook />,
+    settings: <LlmSettings />,
   };
-  return <div className="shell">
-    <a className="skip-link" href="#main-content">Skip to content</a>
-    <header className="topbar" onKeyDown={(event) => {
-      if (event.key === "Escape") {
-        if (moreRef.current?.open) { moreRef.current.open = false; moreRef.current.querySelector("summary")?.focus(); }
-        else if (menuOpen) { setMenuOpen(false); menuRef.current?.focus(); }
-      }
-    }}>
-      <a className="brand" href="#grammar" aria-label="IGT home"><span className="brand-mark"><Icon name="grammar" /></span>igt<span className="brand-period">.</span></a>
-      <button ref={menuRef} className="menu-toggle" aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-        aria-expanded={menuOpen} aria-controls="workspace-nav" onClick={() => setMenuOpen(!menuOpen)}>
-        <Icon name={menuOpen ? "close" : "menu"} /><span>Menu</span>
-      </button>
-      <nav id="workspace-nav" aria-label="Main navigation" className={menuOpen ? "top-nav is-open" : "top-nav"}>
-        {items.filter(([key]) => primaryRoutes.includes(key)).map(([key, label]) =>
-          <a href={"#" + key} key={key} className={route === key ? "nav-link active" : "nav-link"} aria-current={route === key ? "page" : undefined}>{label}</a>)}
-        <details className="learning-menu" ref={moreRef}>
-          <summary className={learningRoutes.some(([key]) => key === route) ? "active" : ""}>My learning<Icon name="chevron" /></summary>
-          <div className="learning-links">{learningRoutes.map(([key, label]) =>
-            <a key={key} href={"#" + key} aria-current={route === key ? "page" : undefined}><Icon name={key} />{label}</a>)}</div>
-        </details>
-        <a className="settings-link" href="#settings" aria-current={route === "settings" ? "page" : undefined}><Icon name="settings" /><span>Settings</span></a>
-      </nav>
-    </header>
-    <main ref={mainRef} id="main-content" tabIndex={-1} className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}>
-      {route !== "grammar" && <nav className="breadcrumb" aria-label="Breadcrumb"><a href="#grammar">Your workspace</a><span aria-hidden="true">/</span><span>{title}</span></nav>}
-      {pages[route]}
-    </main>
-    <footer className="site-footer"><span>Small steps. Better English.</span><div><a href="#handbook">Your handbook</a><a href="#coach">Find your next step<Icon name="arrow" /></a></div></footer>
-  </div>;
+  return (
+    <div className="shell">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <header
+        className="topbar"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            const openMenu = navRef.current?.querySelector<HTMLDetailsElement>("details[open]");
+            if (openMenu) {
+              openMenu.open = false;
+              openMenu.querySelector("summary")?.focus();
+            } else if (menuOpen) {
+              setMenuOpen(false);
+              menuRef.current?.focus();
+            }
+          }
+        }}
+      >
+        <a className="brand" href="#grammar" aria-label="IGT home">
+          <span className="brand-mark">
+            <Icon name="grammar" />
+          </span>
+          igt<span className="brand-period">.</span>
+        </a>
+        <button
+          ref={menuRef}
+          className="menu-toggle"
+          aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={menuOpen}
+          aria-controls="workspace-nav"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <Icon name={menuOpen ? "close" : "menu"} />
+          <span>Menu</span>
+        </button>
+        <nav
+          ref={navRef}
+          id="workspace-nav"
+          aria-label="Main navigation"
+          className={menuOpen ? "top-nav is-open" : "top-nav"}
+          onClick={(event) => {
+            if ((event.target as Element).closest("a")) {
+              navRef.current?.querySelectorAll("details").forEach((menu) => {
+                menu.open = false;
+              });
+              setMenuOpen(false);
+            }
+          }}
+        >
+          {navigationGroups.map((group) => (
+            <details key={group.label} className="learning-menu" name="workspace-navigation">
+              <summary className={group.routes.some(([key]) => key === route) ? "active" : ""}>
+                {group.label}
+                <Icon name="chevron" />
+              </summary>
+              <div className="learning-links">
+                {group.routes.map(([key, label]) => (
+                  <a key={key} href={"#" + key} aria-current={route === key ? "page" : undefined}>
+                    <Icon name={key} />
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </details>
+          ))}
+          {items
+            .filter(([key]) => primaryRoutes.includes(key))
+            .map(([key, label]) => (
+              <a
+                href={"#" + key}
+                key={key}
+                className={route === key ? "nav-link active" : "nav-link"}
+                aria-current={route === key ? "page" : undefined}
+              >
+                {label}
+              </a>
+            ))}
+          <details className="learning-menu" name="workspace-navigation">
+            <summary className={learningRoutes.some(([key]) => key === route) ? "active" : ""}>
+              My learning
+              <Icon name="chevron" />
+            </summary>
+            <div className="learning-links">
+              {learningRoutes.map(([key, label]) => (
+                <a key={key} href={"#" + key} aria-current={route === key ? "page" : undefined}>
+                  <Icon name={key} />
+                  {label}
+                </a>
+              ))}
+            </div>
+          </details>
+          <a
+            className="settings-link"
+            href="#settings"
+            aria-current={route === "settings" ? "page" : undefined}
+          >
+            <Icon name="settings" />
+            <span>Settings</span>
+          </a>
+        </nav>
+      </header>
+      <main
+        ref={mainRef}
+        id="main-content"
+        tabIndex={-1}
+        className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}
+      >
+        {route !== "grammar" && (
+          <nav className="breadcrumb" aria-label="Breadcrumb">
+            <a href="#grammar">Your workspace</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{title}</span>
+          </nav>
+        )}
+        {pages[route]}
+      </main>
+      <footer className="site-footer">
+        <span>Small steps. Better English.</span>
+        <div>
+          <a href="#handbook">Your handbook</a>
+          <a href="#coach">
+            Find your next step
+            <Icon name="arrow" />
+          </a>
+        </div>
+      </footer>
+    </div>
+  );
 }
 
 function DetailSection({

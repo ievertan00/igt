@@ -53,12 +53,10 @@ try {
         await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ persistence: { saved: true } }) });
       } else if (path === "/practice/generate" && request.method() === "POST") {
         practiceGenerateBody = JSON.parse(request.postData() || "{}");
-        const question = practiceGenerateBody.mode === "choice"
-          ? { kind: "choice", question: "选择正确表达", options: ["A correct answer", "Another answer"], answer: "A correct answer", explanation: "选择最自然的表达。", error_type: "Articles" }
-          : { kind: practiceGenerateBody.mode === "word" ? "expression" : "sentence", prompt_zh: "请说明截止日期", focus: "polite request", reference_answer: "Could you clarify the deadline?", target_word: "consolidate" };
+        const question = { id: "sentence-smoke", kind: "sentence", prompt_zh: "请说明截止日期", difficulty: practiceGenerateBody.difficulty, style: practiceGenerateBody.style, context: practiceGenerateBody.context };
         await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { mode: practiceGenerateBody.mode, questions: [question] } }) });
       } else if (path === "/practice/evaluate" && request.method() === "POST") {
-        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { score: 88, feedback_zh: "表达清楚。" }, persistence: { saved: true } }) });
+        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { score: 88, reference_answer: "Could you clarify the deadline?", corrected_answer: "Could you clarify the deadline?", feedback_zh: "表达清楚。" }, persistence: { saved: true } }) });
       } else if (path === "/ask" && request.method() === "POST") {
         askRequestBody = JSON.parse(request.postData() || "{}");
         await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { answer: "Use the present perfect for a present connection." } }) });
@@ -140,10 +138,13 @@ try {
     await page.click("button.primary");
     await page.waitForFunction(() => document.body.textContent.includes("88"));
     await page.reload({ waitUntil: "networkidle0" });
-    await page.click(".switches button:nth-child(3)");
+    assert.equal(await page.$('.switches'), null);
+    await page.click('input[name="practice-style"][value="formal"]');
+    await page.click('input[name="practice-context"][value="work"]');
     await page.click("button.primary");
-    await page.waitForFunction(() => document.body.textContent.includes("选择正确表达"));
-    assert.equal(practiceGenerateBody.mode, "choice");
+    await page.waitForFunction(() => document.body.textContent.includes("请说明截止日期"));
+    assert.equal(practiceGenerateBody.style, "formal");
+    assert.equal(practiceGenerateBody.context, "work");
     await page.goto("http://127.0.0.1:4173/#coach", { waitUntil: "networkidle0" });
     await page.click("button.secondary");
     await page.waitForFunction(() => document.body.textContent.includes("forced refresh completed"));
