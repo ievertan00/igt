@@ -9,6 +9,7 @@ package-lock.json
 *.db
 *.db-wal
 *.db-shm
+igt_data.db.backup-*
 *.csv
 *.log
 handbook_*.md
