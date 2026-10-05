@@ -32,6 +32,9 @@ function repairStaleMigrationIds(db) {
 
   if (!has("schema_version")) return 0;
   if (has("status_messages")) return 0;
+  // Migration 020 intentionally removes status_messages. Replaying historical
+  // migrations after later table rebuilds would target columns that no longer exist.
+  if (db.prepare("SELECT 1 FROM schema_version WHERE id = 20 AND filename = '020_remove_status_tips.sql'").get()) return 0;
 
   const files = fs.readdirSync(migrationsDir).filter((f) => /^\d+_.+\.(sql|mjs)$/.test(f));
   const ids = files.map((f) => parseInt(f.match(/^(\d+)_/)[1], 10));

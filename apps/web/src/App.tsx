@@ -1040,9 +1040,16 @@ function Practice() {
     casual: "Casual",
     neutral: "Neutral",
     formal: "Formal",
-    everyday: "Everyday",
-    work: "Work",
-    travel: "Travel",
+    "home-routines": "Home routines",
+    "restaurants-cafes": "Restaurants & cafés",
+    "supermarkets-shopping": "Supermarkets & shopping",
+    "cinema-entertainment": "Cinema & entertainment",
+    "friends-social": "Friends & social plans",
+    "health-pharmacy": "Health & pharmacy",
+    "work-study": "Work & study",
+    "commuting-transit": "Commuting & public transport",
+    "travel-accommodation": "Travel & accommodation",
+    "appointments-services": "Appointments & local services",
   };
   const difficultyName: Record<string, string> = {
     easy: "Easy",
@@ -1050,9 +1057,7 @@ function Practice() {
     challenge: "Challenge",
   };
   const hints = question
-    ? [question.hints?.simple, question.hints?.intermediate, question.hints?.complete].filter(
-        Boolean,
-      )
+    ? [question.hints?.simple, question.hints?.intermediate, question.hints?.complete].filter(Boolean)
     : [];
   const hintLabels = ["Simple hint", "Intermediate hint", "Complete pattern"];
 
@@ -1118,7 +1123,7 @@ function Practice() {
               label: "Context",
               value: context,
               set: setContext,
-              options: ["all", "everyday", "work", "travel"],
+              options: ["all", "home-routines", "restaurants-cafes", "supermarkets-shopping", "cinema-entertainment", "friends-social", "health-pharmacy", "work-study", "commuting-transit", "travel-accommodation", "appointments-services"],
             },
           ].map((filter) => (
             <fieldset className="practice-difficulty" disabled={busy} key={filter.label}>
@@ -1147,8 +1152,7 @@ function Practice() {
                 less-used questions appear first.
               </li>
               <li>
-                Translate the Chinese sentence into English. Optional hints reveal a cue, a
-                construction, then an open pattern.
+                Translate the Chinese sentence into English. Optional hints reveal a cue, a construction, then an open pattern.
               </li>
               <li>
                 Check your translation for AI feedback and a reference answer, then continue. Your
@@ -1203,8 +1207,7 @@ function Practice() {
           </div>
           <div className="practice-prompt">
             <span className="review-kicker">
-              {difficultyName[question.difficulty]} · {categoryName[question.style]} ·{" "}
-              {categoryName[question.context]}
+              {difficultyName[question.difficulty]} · {categoryName[question.style]} · {categoryName[question.context]}
             </span>
             <h2>{prompt}</h2>
             <p>Translate this sentence into English.</p>

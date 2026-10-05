@@ -1,0 +1,384 @@
+{
+  "version": 1,
+  "audit": "practice-context-audit-2026-10-04",
+  "corrections": [
+    {
+      "id": "language-g01.1-c3",
+      "expected_context": "work-study",
+      "context": "home-routines",
+      "content_sha256": "ebe343887b030c69ab603e81ad34faec2de72a6f161fb571c5430fef8c9b4c9a"
+    },
+    {
+      "id": "language-g01.7-4",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "6910fa6c9151770adc3dbe49615f1921220fce026ea24c5027cdb928b7814a74"
+    },
+    {
+      "id": "language-g02.1-3",
+      "expected_context": "supermarkets-shopping",
+      "context": "travel-accommodation",
+      "content_sha256": "a92a60e323096969674f0761b5d91c18e516b4d9d63fb7b31329ec68701dca92"
+    },
+    {
+      "id": "language-g02.1-c2",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "1889a33f4b7253259b2ae548f366ec47310a5449774b5b7868be27de9c8b88fd"
+    },
+    {
+      "id": "language-g02.2-c3",
+      "expected_context": "travel-accommodation",
+      "context": "work-study",
+      "content_sha256": "08fd95d41f7e63b5302a58e6631f3bc480940e6e8d6bd90b0f45a5def9e7e52d"
+    },
+    {
+      "id": "language-g02.5-c1",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "8b9ecab887904c74f289ed3afc0435a5708bfe420615d0094cd2ada8177f7f68"
+    },
+    {
+      "id": "language-g02.6-3",
+      "expected_context": "cinema-entertainment",
+      "context": "commuting-transit",
+      "content_sha256": "dfbadcd2e7cc4e9d72189a9a61cf468f3dd41800e312c3e273dc28b9edfed4a8"
+    },
+    {
+      "id": "language-g03.1-3",
+      "expected_context": "work-study",
+      "context": "commuting-transit",
+      "content_sha256": "dc57161a9dd914b1c2dd7967873e2c0b33238a946e5c82c7338c0414cd2f1562"
+    },
+    {
+      "id": "language-g03.1-c3",
+      "expected_context": "home-routines",
+      "context": "travel-accommodation",
+      "content_sha256": "703dad4368458493e87cf4dc07010c320c176de43bdb4635338abf0b24abdaf1"
+    },
+    {
+      "id": "language-g03.2-c3",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "10422cc1c63658c207cd809123e1916b53cc618071ab40d551858d23ca5eef9e"
+    },
+    {
+      "id": "language-g03.3-2",
+      "expected_context": "cinema-entertainment",
+      "context": "home-routines",
+      "content_sha256": "8eb6a55b96458be21cdb585288dfac81ab5ae7c3aecf23cbabdd049da8f24141"
+    },
+    {
+      "id": "language-g03.4-1",
+      "expected_context": "home-routines",
+      "context": "appointments-services",
+      "content_sha256": "ffaac77ad3d0fc3aa6b9e0fabe60bd65ab352011eff7bc2ba1c7be11751cc4ea"
+    },
+    {
+      "id": "language-g03.4-2",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "7fbb4a7a8bb66907172825f3ef729b69e250c2a7cbff830b06ad5bc92b150e30"
+    },
+    {
+      "id": "language-g03.4-3",
+      "expected_context": "restaurants-cafes",
+      "context": "travel-accommodation",
+      "content_sha256": "43db5fe7fe028c5f8869a80606d5de017fe03a2b51fd25feebe106bd98ca8c24"
+    },
+    {
+      "id": "language-g03.8-3",
+      "expected_context": "home-routines",
+      "context": "friends-social",
+      "content_sha256": "38d9cb3b3be4b1347853cf5b44739911e87322005b3d3894bb6ce748e05a8b58"
+    },
+    {
+      "id": "language-g04.1-2",
+      "expected_context": "home-routines",
+      "context": "health-pharmacy",
+      "content_sha256": "a1efe4fbe4c60d35e67a89717a505c5550f78509874dab0578ff4e9f212e9210"
+    },
+    {
+      "id": "language-g04.8-c1",
+      "expected_context": "restaurants-cafes",
+      "context": "work-study",
+      "content_sha256": "d0797c5dd77f05b13be94de6419e6939e92c03b9e9f4e517a4ea35a22974b0a8"
+    },
+    {
+      "id": "language-g04.8-c10",
+      "expected_context": "friends-social",
+      "context": "home-routines",
+      "content_sha256": "e13faddbe80eab6802158517f6adf3209e4bb2c02d13d03c7140b5c9e1daf866"
+    },
+    {
+      "id": "language-g05.2-4",
+      "expected_context": "home-routines",
+      "context": "friends-social",
+      "content_sha256": "46d631463dc7a651a1fc0fcce417ab7c422730265e1af54fc95151107ac7efbd"
+    },
+    {
+      "id": "language-g05.3-2",
+      "expected_context": "work-study",
+      "context": "commuting-transit",
+      "content_sha256": "bd4fe7a188a210dabf30e05f12824990d847334a0b3a7070a9300efb67e14621"
+    },
+    {
+      "id": "language-g05.3-c1",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "68158109818ceebe4c56a4967ec6726d08fa228113e18dea7958bf5273468217"
+    },
+    {
+      "id": "language-g05.4-c4",
+      "expected_context": "health-pharmacy",
+      "context": "work-study",
+      "content_sha256": "c7636fe61ee35878d0cdbd5c68869568d7410af7bd5bb9f5ae5bebf171401e27"
+    },
+    {
+      "id": "language-g05.4-x1",
+      "expected_context": "work-study",
+      "context": "home-routines",
+      "content_sha256": "31f77e1e398b08b622b0e1b4e81c87caba0995f5d326ae88fb441b0d1926b58d"
+    },
+    {
+      "id": "language-g05.5-c1",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "78c822eae06bfc684083e5c65ff9b732622e725e1431fc30852c731310bb19cd"
+    },
+    {
+      "id": "language-g06.3-3",
+      "expected_context": "home-routines",
+      "context": "supermarkets-shopping",
+      "content_sha256": "3d0f96fd5acc9b04ceee41afc3efacbb42118abcd9d84d52d8e5d1134017509d"
+    },
+    {
+      "id": "language-g06.3-c10",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "c2c43fabce4e92987a4754108003bdbeebc5de6116667d402c571f771b4a9bfd"
+    },
+    {
+      "id": "language-g06.5-2",
+      "expected_context": "home-routines",
+      "context": "appointments-services",
+      "content_sha256": "c0c163f594917556fb646c692d85860c0d8126d9390e3ff6623af78daf15996f"
+    },
+    {
+      "id": "language-g06.6-c1",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "41e4c9ebc44ca0760fd48b8632efe43d4f9d7c9e031832de19fb8dffd9fa3f42"
+    },
+    {
+      "id": "language-g07.10-c1",
+      "expected_context": "cinema-entertainment",
+      "context": "work-study",
+      "content_sha256": "453de57919c6bf5aff22e5e4680958a7455e2ae2d16ca76c53b2a0b046ca4280"
+    },
+    {
+      "id": "language-g07.3-1",
+      "expected_context": "health-pharmacy",
+      "context": "home-routines",
+      "content_sha256": "3c4b0a9d39e9d2e182fdce79c785d4614493c14b069dce18046c8a2cbd9799e8"
+    },
+    {
+      "id": "language-g07.4-c7",
+      "expected_context": "friends-social",
+      "context": "work-study",
+      "content_sha256": "ffe8d5ccf7879969b1b85c455f0fdefd24a3a160a43859eaba0af478ca08099d"
+    },
+    {
+      "id": "language-g07.4-c9",
+      "expected_context": "cinema-entertainment",
+      "context": "commuting-transit",
+      "content_sha256": "e3f5be8d5d422a04bb48b1beb4b10ad05069b75882a1d50ac78e3358d7a85316"
+    },
+    {
+      "id": "language-g07.7-c1",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "87aeac365ad8206dad2a71fc6e5952065eca43d515d1b65680896fc01bbada8b"
+    },
+    {
+      "id": "language-g07.9-c7",
+      "expected_context": "friends-social",
+      "context": "cinema-entertainment",
+      "content_sha256": "02d65c9e8241c7ccdd634234164720d6f3f3ea0b900b331b985c264b37fdf08a"
+    },
+    {
+      "id": "language-g08.1-c2",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "adfb7968c3ff654b0f0e4e668039a97ee81658e82183f8f52fdf8443d17936ae"
+    },
+    {
+      "id": "language-g08.3-4",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "ae644a93bb56263c3c6e39d76f71b7443ee0d40ae65a83c992ef36c0def5d396"
+    },
+    {
+      "id": "language-g08.4-2",
+      "expected_context": "appointments-services",
+      "context": "friends-social",
+      "content_sha256": "40f04a8c2665af28dfb59098d4605a486061841d33e74d383eee4a8ea0e0557e"
+    },
+    {
+      "id": "language-g08.5-c8",
+      "expected_context": "travel-accommodation",
+      "context": "commuting-transit",
+      "content_sha256": "58daa24a6547080770d9cd8a9e8e9f0c721fc04059e6669b9f21c54d8f1429a3"
+    },
+    {
+      "id": "language-g09.1-2",
+      "expected_context": "health-pharmacy",
+      "context": "work-study",
+      "content_sha256": "e0175153adb72918592405f9faa7e7a2386e556fec9e4171d0e9602edb4e81dc"
+    },
+    {
+      "id": "language-g09.4-c3",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "1cff2da7acfa8cdc43e2f2511c054134cf0abe563131aabff47fcbba228cd8f6"
+    },
+    {
+      "id": "language-g09.5-c3",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "994ae324f4c47521b9d929262246314851fe8a80dd524dc2def3960d27051555"
+    },
+    {
+      "id": "language-g09.7-4",
+      "expected_context": "cinema-entertainment",
+      "context": "work-study",
+      "content_sha256": "25ff00cfc6d3eef2cb289ea567017f02ce3ed9e2906472c038f69e5d004a2c76"
+    },
+    {
+      "id": "language-g10.4-c2",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "61efd43a232353f7acc2442149e376727ec3087c857ade2adf18be8d05f13621"
+    },
+    {
+      "id": "language-g11.1-3",
+      "expected_context": "commuting-transit",
+      "context": "travel-accommodation",
+      "content_sha256": "38882bf10077446698b8f4a632f56c0ef6950dd1ee5181005a6332c71d4292dd"
+    },
+    {
+      "id": "language-g11.1-c2",
+      "expected_context": "cinema-entertainment",
+      "context": "work-study",
+      "content_sha256": "a595f1b2b98eb284cdba5c79e2eed0df8131d94e376ac57fdc0b16eb73b60be9"
+    },
+    {
+      "id": "language-g11.5-1",
+      "expected_context": "work-study",
+      "context": "commuting-transit",
+      "content_sha256": "2c8dd3716e37f8251ba44e74714bba5c2f3b30f2483ed61f212065fa77b43a99"
+    },
+    {
+      "id": "language-g11.6-c3",
+      "expected_context": "supermarkets-shopping",
+      "context": "work-study",
+      "content_sha256": "4b3c387f5a3f0b2af75d52175440a2034e1a1c27d7e132b402bc01290116a874"
+    },
+    {
+      "id": "language-g12.3-c1",
+      "expected_context": "supermarkets-shopping",
+      "context": "work-study",
+      "content_sha256": "03ddc4e652474dce244e0a53f5822c4f19658fe8cf6302ee4b490d106142fabc"
+    },
+    {
+      "id": "language-g12.4-c4",
+      "expected_context": "supermarkets-shopping",
+      "context": "restaurants-cafes",
+      "content_sha256": "0e1e8262f8e9aaa15f6a8ce4d0e1588957c1264ba2e5527ec37a665f4fb19032"
+    },
+    {
+      "id": "language-g12.6-3",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "6b46b169eed93676a2206b33755f2443bdbbea502b151993d59b49c3dc404b76"
+    },
+    {
+      "id": "language-p01-c2",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "dd3d343d1112d27ec54ec0ad76e54021c4bcbbb0714cfa06f1bc50a0d9fc5b15"
+    },
+    {
+      "id": "language-p07-c2",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "2a73b1b242909878e42c4cc7541511413ec0c345083290053f8f9010d350fbbb"
+    },
+    {
+      "id": "language-v01-c2",
+      "expected_context": "commuting-transit",
+      "context": "work-study",
+      "content_sha256": "2e3bb50c6d35eaa9fa76937418489d6523a0a851d7b684961d374dc9cd689bc2"
+    },
+    {
+      "id": "language-v06-4",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "73cea889b4a929e6d661e1969e07b006f35c37cdf0c0ed08941f83750f8eff94"
+    },
+    {
+      "id": "language-v06-c1",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "f653089a0285a796376d76e677a42e6c365173f0847070d77ef53753d4e0480b"
+    },
+    {
+      "id": "native-027-indirect-question-06",
+      "expected_context": "cinema-entertainment",
+      "context": "commuting-transit",
+      "content_sha256": "9ebaa3a7bdca43a11c98c04348cf584a50c71c325231dc93db923bc5beeb498d"
+    },
+    {
+      "id": "native-027-mixed-conditional-01",
+      "expected_context": "restaurants-cafes",
+      "context": "home-routines",
+      "content_sha256": "678a86836b06f974fcb348e9377a5610ae669b989b7df2340eecf20ac9e597d5"
+    },
+    {
+      "id": "native-027-not-until-01",
+      "expected_context": "friends-social",
+      "context": "home-routines",
+      "content_sha256": "e965ac00e682725c061d760c4d340ae1f24e8f265866b19a3aa5d9f10da6328e"
+    },
+    {
+      "id": "native-027-ongoing-01",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "05fa37e9ad72b8886d99df51488d34599fbd8e2a497f0b9a36f73452a8530ef5"
+    },
+    {
+      "id": "native-027-preposition-gerund-07",
+      "expected_context": "supermarkets-shopping",
+      "context": "home-routines",
+      "content_sha256": "1e2987da1329eb034d01dcf40a49bdad44d2e210659d8b0a8c8c9908c10b8cb9"
+    },
+    {
+      "id": "native-027-relative-01",
+      "expected_context": "home-routines",
+      "context": "work-study",
+      "content_sha256": "c168efb37ce5da53f529b0c18f85d2bc7a444414f4ba5144a3b5d64b2a37f1c3"
+    },
+    {
+      "id": "native-027-relative-07",
+      "expected_context": "commuting-transit",
+      "context": "home-routines",
+      "content_sha256": "3b27ee27add0780b3ef518209913b27e04b9169e6c2bf8abe132648cf97c85d5"
+    },
+    {
+      "id": "native-027-relative-09",
+      "expected_context": "supermarkets-shopping",
+      "context": "restaurants-cafes",
+      "content_sha256": "78679f54cad0c88e682300924d2c61d754e016a1de95f33d57e7c92f8858575a"
+    }
+  ]
+}

@@ -42,7 +42,9 @@ There is no single full-suite npm script; run individual tests with `node --test
 ## Important conventions
 
 - Keep secrets, local paths, ports, and provider choices in `.env`; use `.env.example` as the template. Never commit `.env`.
-- Treat SQLite as local rebuildable state. Preserve Markdown exports and vault files as the user-readable learning record.
+- Preserve Markdown exports and vault files as the user-readable learning record. Practice question content is an exception: the actual configured `igt_data.db` is authoritative; never replace its content or usage with a test database, an old seed, or a historical report.
+- For Practice, read `lib/features/practice/SCHEMA.md`. `canonical-questions.json` is a versioned export of the actual database, not a competing authority. Run `npm run verify:practice-bank` before and after changes; deliberately export live content changes with `npm run export:practice-bank`. Tests rebuild only in memory and never write to the actual database.
+- Older Practice reports, archived database copies and graphify indexes are historical context; verify them against the live database and current source before using them. Never replay removed migrations 025–035 or their template expansion based on an old report.
 - Public CLI commands and their help text are defined by `lib/cli/commands/dispatch.mjs`, `lib/cli/commands/help.mjs`, and `lib/cli/commands/registry.mjs`; update all three when changing the command surface.
 - The main practice entry point is `/practice` for sentence translation from a seeded question bank, filtered by difficulty, style, and context. Vocabulary lookup and review are under `/word`.
 - Preserve the evidence boundary in learning features: a correction or one successful answer is not proof of durable mastery.

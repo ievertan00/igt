@@ -128,11 +128,11 @@ test("sentence practice passes categories and reveals evaluated reference", asyn
   t.mock.method(process.stdout, "write", chunk => { output += chunk; return true; });
   t.mock.method(api, "generatePractice", async (mode, count, filters) => {
     assert.equal(mode, "sentence"); assert.equal(count, 3);
-    assert.deepEqual(filters, { difficulty: "easy", style: "formal", context: "work" });
-    return { data: { questions: [{ id: "q1", kind: "sentence", prompt_zh: "请确认会议时间。", difficulty: "easy", style: "formal", context: "work" }] } };
+    assert.deepEqual(filters, { difficulty: "easy", style: "formal", context: "work-study" });
+    return { data: { questions: [{ id: "q1", kind: "sentence", prompt_zh: "请确认会议时间。", difficulty: "easy", style: "formal", context: "work-study" }] } };
   });
   t.mock.method(api, "evaluatePractice", async () => ({ data: { score: 85, corrected_answer: "Please confirm the meeting time.", reference_answer: "Please confirm the meeting time.", feedback_zh: "表达清楚。" } }));
-  await runPractice(["3", "--difficulty", "easy", "--style", "formal", "--context", "work"], { rl: null, askLine: async () => "Please confirm the meeting time." });
+  await runPractice(["3", "--difficulty", "easy", "--style", "formal", "--context", "work-study"], { rl: null, askLine: async () => "Please confirm the meeting time." });
   assert.match(output, /中译英句子练习/); assert.match(output, /formal/); assert.match(output, /表达清楚/);
 });
 
