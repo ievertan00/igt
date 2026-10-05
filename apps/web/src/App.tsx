@@ -17,7 +17,7 @@ type Route =
   | "settings";
 const items: Array<[Route, string]> = [
   ["grammar", "Grammar"],
-  ["translation", "Translate"],
+  ["translation", "Express"],
   ["word-lookup", "Vocabulary"],
   ["word-review", "Review"],
   ["practice", "Practice"],
@@ -403,11 +403,17 @@ function Grammar() {
     </div>
   );
 }
-function Translation() {
+function Express() {
   const [text, setText] = useState("");
   const [direction, setDirection] = useState("zh2en");
   const [result, setResult] = useState<any>();
   const [busy, setBusy] = useState(false);
+  const toEnglish = direction === "zh2en";
+  function changeDirection(nextDirection: string) {
+    if (nextDirection === direction) return;
+    setDirection(nextDirection);
+    setResult(undefined);
+  }
   async function submit() {
     if (!text.trim()) return;
     setBusy(true);
@@ -423,43 +429,57 @@ function Translation() {
   return (
     <>
       <Heading
-        eyebrow="TRANSLATION"
+        eyebrow="EXPRESS"
         title="Find the right words."
-        detail="Translate between Chinese and English, with meaning and context intact."
+        detail="Learn how to express your ideas in natural English, or understand what an English expression means in Chinese."
       />
       <Panel title="Your text" icon="translation">
         <div className="switches">
           <button
             className={direction === "zh2en" ? "selected" : ""}
-            onClick={() => setDirection("zh2en")}
+            aria-pressed={toEnglish}
+            disabled={busy}
+            onClick={() => changeDirection("zh2en")}
           >
             Chinese → English
           </button>
           <button
             className={direction === "en2zh" ? "selected" : ""}
-            onClick={() => setDirection("en2zh")}
+            aria-pressed={!toEnglish}
+            disabled={busy}
+            onClick={() => changeDirection("en2zh")}
           >
             English → Chinese
           </button>
         </div>
         <label className="form-label" htmlFor="translation-input">
-          Text to translate
+          {toEnglish ? "What do you want to say?" : "What do you want to understand?"}
         </label>
         <textarea
           id="translation-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Write or paste the text to translate…"
+          placeholder={
+            toEnglish
+              ? "Describe your idea in Chinese. You can include who you’re speaking to and the tone you want."
+              : "Paste an English sentence or passage. Include the context if it helps explain the meaning."
+          }
         />
-        <button className="primary" onClick={submit} disabled={busy}>
-          {busy ? "Translating…" : "Translate →"}
+        <button className="primary" onClick={submit} disabled={busy || !text.trim()}>
+          {busy
+            ? toEnglish ? "Finding the right words…" : "Explaining the meaning…"
+            : toEnglish ? "Say it in English →" : "Explain in Chinese →"}
         </button>
       </Panel>
-      {result?.error && <State title="Translation failed. Try again." detail={result.error} />}
+      {result?.error && <State title="Couldn’t find an expression. Try again." detail={result.error} />}
       {translation && (
-        <Panel title="Translation" icon="translation">
+        <Panel title={toEnglish ? "A natural way to say it" : "Meaning in Chinese"} icon="translation">
           <p className="translation-result">{translation}</p>
-          {result.data?.notes && <p>{result.data.notes}</p>}
+          {result.data?.notes && (
+            <DetailSection variant="remember" icon="idea" title={toEnglish ? "Why this works" : "Expression notes"}>
+              <p>{result.data.notes}</p>
+            </DetailSection>
+          )}
         </Panel>
       )}
     </>
@@ -1755,7 +1775,7 @@ function LlmSettings() {
                 value={providerSettings?.models?.flash || ""}
                 onChange={(e) => updateModel("flash", e.target.value)}
               />
-              <small>Grammar, translation, and Ask</small>
+              <small>Grammar, Express, and Ask</small>
             </label>
             <label className="settings-field" htmlFor="llm-pro-model">
               <span className="form-label">Pro · Complex tasks</span>
@@ -2010,7 +2030,7 @@ const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }>
     label: "Writing",
     routes: [
       ["grammar", "Grammar"],
-      ["translation", "Translate"],
+      ["translation", "Express"],
     ],
   },
   {
@@ -2068,7 +2088,7 @@ export function App() {
   const pages: Record<Route, React.ReactNode> = {
     grammar: <Grammar />,
     dashboard: <Dashboard />,
-    translation: <Translation />,
+    translation: <Express />,
     ask: <Ask />,
     "word-review": <WordReview />,
     "word-lookup": <WordLookup />,
