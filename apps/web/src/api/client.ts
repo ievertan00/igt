@@ -69,6 +69,7 @@ export const webApi = {
     // same budget as generating a question. Sentence and word keep their budget.
     timeoutMs: (question as { kind?: string } | undefined)?.kind === "choice" ? 120_000 : 30_000,
   }),
+  getStatusMessage: () => requestJson<any>("/status-message"),
   getHandbook: (errorType = "") => requestJson<any>(`/handbook?days=90${errorType ? `&errorType=${encodeURIComponent(errorType)}` : ""}`),
   speakWord: async (text: string): Promise<HTMLAudioElement> => {
     const res = await fetch("/tts/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });

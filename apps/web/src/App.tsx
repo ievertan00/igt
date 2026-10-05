@@ -2028,9 +2028,13 @@ function currentRoute(): Route {
 export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [route, setRoute] = useState<Route>(currentRoute);
+  const [statusMsg, setStatusMsg] = useState("");
   const navRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    webApi.getStatusMessage().then((m) => setStatusMsg(m.content)).catch(() => {});
+  }, []);
   useEffect(() => {
     const onHash = () => {
       if (location.hash === "#main-content") return;
@@ -2185,14 +2189,12 @@ export function App() {
         {pages[route]}
       </main>
       <footer className="site-footer">
-        <span>Small steps. Better English.</span>
-        <div>
-          <a href="#handbook">Your handbook</a>
-          <a href="#coach">
-            Find your next step
-            <Icon name="arrow" />
-          </a>
-        </div>
+        <span className="site-footer-motto">Small steps. Better English.</span>
+        {statusMsg && (
+          <span className="site-footer-status" role="status">
+            {statusMsg}
+          </span>
+        )}
       </footer>
     </div>
   );
