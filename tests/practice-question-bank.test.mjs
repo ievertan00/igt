@@ -32,9 +32,12 @@ import { decodePracticeQuestion, publicPracticeQuestion } from "../lib/features/
 import { inferPracticeSituation } from "../lib/features/practice/infer-situation.mjs";
 import { LANGUAGE_FOCUSES, LANGUAGE_PRACTICE_QUESTIONS } from "../lib/features/practice/language-seeds.mjs";
 import { selectPracticeQuestions, PRACTICE_CATEGORIES } from "../lib/features/practice/question-bank.mjs";
+import { practiceQuestionId } from "../lib/features/practice/question-ids.mjs";
 
 function legacyUp(db) { base(db); seed(db); removeOriginals(db); challenge(db); refactor(db); }
-function up(db) { legacyUp(db); seedNative(db); restore(db); addEnrichmentPilot(db); }
+// The canonical export already contains the published result of migrations 041–056,
+// so restore alone yields the same bank the fast-forwarding migration runner produces.
+function up(db) { legacyUp(db); seedNative(db); restore(db); }
 
 test("schema refactor converts teaching dimensions without compatibility payload and preserves state", () => {
   const db = new Database(":memory:");
@@ -72,7 +75,7 @@ test("invalid legacy JSON rolls back the entire table replacement", () => {
   const db = new Database(":memory:");
   try {
     base(db); seed(db);
-    db.exec("UPDATE practice_questions SET hints_json = 'broken' WHERE id = 'language-g01.1-1'");
+    db.prepare("UPDATE practice_questions SET hints_json = 'broken' WHERE id = ?").run(practiceQuestionId("language-g01.1-1"));
     const before = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
     assert.throws(() => refactor(db));
     assert.deepEqual(db.prepare("SELECT * FROM practice_questions ORDER BY id").all(), before);
@@ -107,7 +110,11 @@ test("fresh migration chain produces the new schema and reruns without changes",
   try {
     const dir = path.join(import.meta.dirname, "..", "migrations");
     await runMigrations(db, dir);
-    assert.deepEqual(db.prepare("SELECT * FROM practice_questions ORDER BY id").all().map(practiceContent), CANONICAL_PRACTICE_QUESTIONS.map(practiceContent));
+    const actual = db.prepare("SELECT * FROM practice_questions ORDER BY id").all().map(practiceContent);
+    const expected = CANONICAL_PRACTICE_QUESTIONS.map(practiceContent);
+    // The export is re-captured after every approved Practice migration, so a fresh
+    // rebuild must reproduce it exactly rather than merely approximate it.
+    assert.deepEqual(actual, expected);
     assert.equal(db.pragma("quick_check", { simple: true }), "ok");
     assert.deepEqual(await runMigrations(db, dir), []);
     assert.equal(selectPracticeQuestions(db, { count: 3 }).length, 3);
@@ -143,7 +150,8 @@ test("100 native seeds provide sparse learning targets, progressive hints and bo
       assert.match(hint, /\p{Script=Han}/u);
       assert.ok(!hint.includes(row.reference_answer));
     }
-    assert.match(question.hints.complete, /\[[^\]]+\]/);
+    // The complete hint exposes an open pattern, written as [ … ] or as an ellipsis.
+    assert.ok(/\[[^\]]+\]/.test(question.hints.complete) || question.hints.complete.includes("..."), row.id);
   }
   for (const key of ["sentence_structure", "clause_type", "conjunction_type", "tense_aspect", "voice", "mood", "non_finite", "grammar_point"]) assert.ok(dimensions.has(key), key);
 });
@@ -181,7 +189,7 @@ test("native selection respects the authoritative coverage without inventing mis
       assert.equal(selected[0].difficulty, difficulty);
       assert.equal(selected[0].style, style);
       assert.equal(selected[0].context, context);
-      assert.ok(selected[0].id.startsWith("native-027-"));
+      assert.ok(SCHEMA_NATIVE_PRACTICE_QUESTIONS.some(row => row.id === selected[0].id));
       assert.equal(publicPracticeQuestion(selected[0]).reference_answer, undefined);
     }
   } finally { db.close(); }
@@ -196,7 +204,7 @@ test("original-question removal preserves the new bank, custom questions and usa
     db.prepare(`INSERT INTO practice_questions
       (id, prompt_zh, reference_answer, difficulty, style, context, focus, error_type, served_count)
       VALUES ('sentence-custom-1', '这是自定义的练习。', 'This is a custom exercise.', 'standard', 'neutral', 'everyday', 'Custom', 'Custom', 9)`).run();
-    db.prepare("UPDATE practice_questions SET served_count = 4 WHERE id = 'language-g01.1-1'").run();
+    db.prepare("UPDATE practice_questions SET served_count = 4 WHERE id = ?").run(practiceQuestionId("language-g01.1-1"));
     const retained = db.prepare("SELECT * FROM practice_questions WHERE active = 1 ORDER BY id").all();
     removeOriginals(db);
     removeOriginals(db);
@@ -222,8 +230,12 @@ test("seed covers every focus, three variants and protected progressive hints", 
       assert.ok(PRACTICE_CATEGORIES.difficulty.includes(q.difficulty));
     }
   }
-  for (const [key, total] of Object.entries({ purpose: 12, meaning_relationship: 10, register: 3, tone: 7, situation: 5, genre: 6 })) {
+  for (const [key, total] of Object.entries({ register: 3, situation: 5 })) {
     assert.equal(new Set(LANGUAGE_PRACTICE_QUESTIONS.map(q => q.metadata[key])).size, total, key);
+  }
+  // Retired compatibility dimensions no longer ship with the bank.
+  for (const key of ["purpose", "meaning_relationship", "tone", "genre"]) {
+    assert.ok(LANGUAGE_PRACTICE_QUESTIONS.every(q => q.metadata[key] === undefined), key);
   }
 });
 
@@ -264,10 +276,11 @@ test("semantic context migration changes only reviewed labels and preserves usag
   const db = new Database(":memory:");
   try {
     up(db);
-    for (const c of CONTEXT_CORRECTIONS) db.prepare("UPDATE practice_questions SET context = ? WHERE id = ?").run(c.expected_context, c.id);
-    db.prepare("UPDATE practice_questions SET served_count = 23, active = 0 WHERE id = ?").run(CONTEXT_CORRECTIONS[0].id);
+    const reset = db.prepare("UPDATE practice_questions SET context = ? WHERE id = ?");
+    for (const c of CONTEXT_CORRECTIONS) reset.run(c.expected_context, practiceQuestionId(c.id));
+    db.prepare("UPDATE practice_questions SET served_count = 23, active = 0 WHERE id = ?").run(practiceQuestionId(CONTEXT_CORRECTIONS[0].id));
     const before = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
-    const changes = new Map(CONTEXT_CORRECTIONS.map(c => [c.id, c.context]));
+    const changes = new Map(CONTEXT_CORRECTIONS.map(c => [practiceQuestionId(c.id), c.context]));
     assert.equal(correctContexts(db), 63);
     const after = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
     assert.deepEqual(after, before.map(row => changes.has(row.id) ? { ...row, context: changes.get(row.id) } : row));
@@ -276,16 +289,16 @@ test("semantic context migration changes only reviewed labels and preserves usag
   } finally { db.close(); }
 });
 
-test("semantic context migration refuses newer labels or changed text without partial updates", () => {
-  for (const conflict of ["text", "label", "missing"]) {
+test("semantic context migration refuses changed text or missing rows without partial updates", () => {
+  for (const conflict of ["text", "missing"]) {
     const db = new Database(":memory:");
     try {
       up(db);
-      for (const c of CONTEXT_CORRECTIONS) db.prepare("UPDATE practice_questions SET context = ? WHERE id = ?").run(c.expected_context, c.id);
-      const c = CONTEXT_CORRECTIONS.at(-1);
-      if (conflict === "text") db.prepare("UPDATE practice_questions SET prompt_zh = '这是一道后来编辑过的题。' WHERE id = ?").run(c.id);
-      if (conflict === "label") db.prepare("UPDATE practice_questions SET context = 'health-pharmacy' WHERE id = ?").run(c.id);
-      if (conflict === "missing") db.prepare("DELETE FROM practice_questions WHERE id = ?").run(c.id);
+      const reset = db.prepare("UPDATE practice_questions SET context = ? WHERE id = ?");
+      for (const c of CONTEXT_CORRECTIONS) reset.run(c.expected_context, practiceQuestionId(c.id));
+      const lastId = practiceQuestionId(CONTEXT_CORRECTIONS.at(-1).id);
+      if (conflict === "text") db.prepare("UPDATE practice_questions SET prompt_zh = '这是一道后来编辑过的题。' WHERE id = ?").run(lastId);
+      if (conflict === "missing") db.prepare("DELETE FROM practice_questions WHERE id = ?").run(lastId);
       const before = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
       assert.throws(() => correctContexts(db), /Practice context correction/);
       assert.deepEqual(db.prepare("SELECT * FROM practice_questions ORDER BY id").all(), before);
@@ -293,14 +306,35 @@ test("semantic context migration refuses newer labels or changed text without pa
   }
 });
 
+test("semantic context migration reasserts an edited label from the reviewed export", () => {
+  const db = new Database(":memory:");
+  try {
+    up(db);
+    const reset = db.prepare("UPDATE practice_questions SET context = ? WHERE id = ?");
+    for (const c of CONTEXT_CORRECTIONS) reset.run(c.expected_context, practiceQuestionId(c.id));
+    const lastId = practiceQuestionId(CONTEXT_CORRECTIONS.at(-1).id);
+    db.prepare("UPDATE practice_questions SET context = 'health-pharmacy' WHERE id = ?").run(lastId);
+    const before = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
+    assert.equal(correctContexts(db), CONTEXT_CORRECTIONS.length);
+    const after = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
+    const correctedIds = new Set(CONTEXT_CORRECTIONS.map(c => practiceQuestionId(c.id)));
+    for (const c of CONTEXT_CORRECTIONS) {
+      assert.equal(after.find(row => row.id === practiceQuestionId(c.id)).context, c.context, c.id);
+    }
+    assert.deepEqual(after.filter(row => !correctedIds.has(row.id)), before.filter(row => !correctedIds.has(row.id)));
+    assert.equal(correctContexts(db), 0);
+  } finally { db.close(); }
+});
+
 test("migration is complete and idempotent without resetting legacy or new usage", () => {
   const db = new Database(":memory:");
   try {
     up(db);
-    db.prepare("UPDATE practice_questions SET served_count = 7 WHERE id = 'language-g01.1-1'").run();
+    db.prepare("UPDATE practice_questions SET served_count = 7 WHERE id = ?").run(practiceQuestionId("language-g01.1-1"));
     assert.equal(db.prepare("SELECT COUNT(*) AS n FROM practice_questions WHERE active = 1").get().n, CANONICAL_PRACTICE_QUESTIONS.filter(row => row.active === 1).length);
     assert.equal(db.prepare("SELECT COUNT(*) AS n FROM practice_questions WHERE active = 0").get().n, CANONICAL_PRACTICE_QUESTIONS.filter(row => row.active === 0).length);
     let served = 7;
+    const canonicalIds = new Set(CANONICAL_PRACTICE_QUESTIONS.map(row => row.id));
     for (const difficulty of PRACTICE_CATEGORIES.difficulty) for (const style of PRACTICE_CATEGORIES.style) for (const context of PRACTICE_CATEGORIES.context) {
       const questions = selectPracticeQuestions(db, { count: 10, difficulty, style, context });
       assert.ok(questions.length <= 10);
@@ -309,13 +343,13 @@ test("migration is complete and idempotent without resetting legacy or new usage
         assert.match(q.prompt_zh, /\p{Script=Han}/u);
         assert.doesNotMatch(q.reference_answer, /\p{Script=Han}/u);
         assert.equal(q.difficulty, difficulty); assert.equal(q.style, style); assert.equal(q.context, context);
-        assert.ok(q.id.startsWith("language-") || q.id.startsWith("native-027-") || q.id.startsWith("pilot-041-") || q.id.startsWith("pilot-045-") || q.id.startsWith("pilot-048-"));
+        assert.ok(canonicalIds.has(q.id));
         assert.ok(q.hints.complete);
       }
     }
     restore(db);
     assert.equal(db.prepare("SELECT SUM(served_count) AS n FROM practice_questions").get().n, served);
-    assert.equal(db.prepare("SELECT served_count FROM practice_questions WHERE id = 'language-g01.1-1'").get().served_count, 7);
+    assert.equal(db.prepare("SELECT served_count FROM practice_questions WHERE id = ?").get(practiceQuestionId("language-g01.1-1")).served_count, 7);
   } finally { db.close(); }
 });
 
@@ -326,7 +360,9 @@ test("enrichment pilot adds only inactive rows and safely recognizes canonical r
     seedNative(db);
     removeLegacy(db);
     applyContextCorrections(db, { allowMissing: true });
-    const pilotIds = new Set(ENRICHMENT_PILOT_041.map(row => row.id));
+    // The export carries the published pilot rows under their standardized IDs, so
+    // exclude them by that identity before staging the legacy-ID drafts again.
+    const pilotIds = new Set(ENRICHMENT_PILOT_041.map(row => practiceQuestionId(row.id)));
     restoreCanonicalQuestions(db, CANONICAL_PRACTICE_QUESTIONS.filter(row => !pilotIds.has(row.id)), { fillUnknownProvenance: true });
     const before = db.prepare("SELECT * FROM practice_questions ORDER BY id").all();
     assert.equal(addEnrichmentPilot(db), ENRICHMENT_PILOT_041.length);

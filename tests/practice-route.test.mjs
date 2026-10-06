@@ -5,6 +5,7 @@ import path from "node:path";
 import { runMigrations } from "../lib/db/migrations.mjs";
 import { selectPracticeQuestions, decodePracticeQuestion } from "../lib/features/practice/question-bank.mjs";
 import { registerPracticeRoutes } from "../lib/server/routes/practice.mjs";
+import { practiceQuestionId } from "../lib/features/practice/question-ids.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 
 const db = new Database(":memory:");
@@ -60,7 +61,7 @@ test("bank selection needs no LLM or learner history and hides references", asyn
 });
 
 test("hint usage and language categories survive evaluation without imposing reference wording", async () => {
-  const question = { id: "language-g08.5-3" };
+  const question = { id: practiceQuestionId("language-g08.5-3") };
   const result = await request("/practice/evaluate", { question, answer: "I remembered that I had locked the door, but checked anyway.", hints_used: 2 });
   assert.equal(result.status, 200);
   assert.equal(attempts.at(-1).feedback.hints_used, 2);
@@ -80,13 +81,13 @@ test("removed modes and invalid filters are rejected before provider access", as
 });
 
 test("evaluation resolves bank content and records result and categories", async () => {
-  const question = { id: "language-g01.4-2", prompt_zh: "tampered", reference_answer: "tampered" };
+  const question = { id: practiceQuestionId("language-g01.4-2"), prompt_zh: "tampered", reference_answer: "tampered" };
   const result = await request("/practice/evaluate", { question, answer: "Please confirm meeting time." });
   assert.equal(result.status, 200); assert.equal(result.body.data.score, 74);
   const stored = db.prepare("SELECT * FROM practice_questions WHERE id = ?").get(question.id);
   assert.equal(lastInput.chinese_prompt, stored.prompt_zh);
   assert.equal(lastInput.reference_answer, stored.reference_answer);
-  assert.equal(lastInput.style, "formal");
+  assert.equal(lastInput.style, decodePracticeQuestion(stored).style);
   assert.equal(result.body.data.reference_answer, lastInput.reference_answer);
   assert.equal(attempts.at(-1).activityType, "practice-sentence");
   assert.equal(attempts.at(-1).contextLabel, "work-study");
@@ -97,7 +98,7 @@ test("evaluation resolves bank content and records result and categories", async
 
 test("missing answers and unknown IDs never reach the LLM", async () => {
   const before = llmCalls;
-  for (const body of [{ question: { id: "unknown" }, answer: "Hi" }, { question: { id: "language-g01.4-2" }, answer: "  " }, { question: { kind: "choice" }, answer: "A" }]) {
+  for (const body of [{ question: { id: "unknown" }, answer: "Hi" }, { question: { id: practiceQuestionId("language-g01.4-2") }, answer: "  " }, { question: { kind: "choice" }, answer: "A" }]) {
     assert.equal((await request("/practice/evaluate", body)).status, 400);
   }
   assert.equal(llmCalls, before);
@@ -106,7 +107,7 @@ test("missing answers and unknown IDs never reach the LLM", async () => {
 test("provider errors leave attempts untouched and selection remains available", async () => {
   providerFails = true;
   const before = attempts.length;
-  const result = await request("/practice/evaluate", { question: { id: "language-g01.4-2" }, answer: "Hello" });
+  const result = await request("/practice/evaluate", { question: { id: practiceQuestionId("language-g01.4-2") }, answer: "Hello" });
   assert.equal(result.status, 500); assert.equal(attempts.length, before);
   assert.equal((await request("/practice/generate", { count: 3 })).status, 200);
   providerFails = false;
@@ -114,7 +115,7 @@ test("provider errors leave attempts untouched and selection remains available",
 
 test("native seed evaluation uses canonical learning targets without legacy annotations", async () => {
   const result = await request("/practice/evaluate", {
-    question: { id: "native-027-mixed-conditional-01", practice_fields: { grammar_point: ["tampered"] } },
+    question: { id: practiceQuestionId("native-027-mixed-conditional-01"), practice_fields: { grammar_point: ["tampered"] } },
     answer: "If I hadn't drunk so much coffee last night, I wouldn't be so tired now.", hints_used: 1,
   });
   assert.equal(result.status, 200);

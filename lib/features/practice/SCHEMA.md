@@ -38,6 +38,22 @@ Migration 036 rebuilds `practice_questions` with these columns, in order:
 `id`, `prompt_zh`, `reference_answer`, `difficulty`, `context`,
 `practice_fields_json`, `hint_json`, `generated_by`, `served_count`, `active`.
 
+## Question ID convention
+
+Every current question ID uses the opaque format `practice-YYYYMM-NNNN`, for
+example `practice-202610-0001`. `YYYYMM` is the ID batch month and `NNNN` is a
+four-digit sequence unique within that batch. Do not encode context, grammar,
+difficulty, provenance, or wording in an ID; those properties can change while
+the identity stays stable. Reserve the next unused sequence in the batch and
+reject duplicates.
+
+Migration 061 assigned this format to all 1,005 current rows. It preserves every
+other field, including `served_count` and `active`. The complete old-to-new mapping
+is stored in `practice-question-id-map.json`; it also lets historical seed groups
+and compatibility views resolve their original IDs. Migrations 001–060 retain
+old IDs as historical input and are not rewritten. New migrations must use the
+standard format directly.
+
 `practice_fields_json` is a sparse JSON object describing intended learning targets.
 Each dimension holds an array of strings so one sentence can practise several
 clause types, tenses, or constructions. Omit unknown or irrelevant dimensions;
