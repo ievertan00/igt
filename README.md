@@ -1,13 +1,16 @@
-# Interactive Grammar Tool (IGT)
+# IGT — Your English, clearer.
 
-A command-line English learning companion for everyday life and work communication. Check your writing, understand corrections, build vocabulary, listen and repeat, practise conversations, and revisit what you have learned through spaced review.
+IGT is a personal English-learning workspace for clearer communication at work and in everyday life. Its local Web app brings grammar feedback, **Express** coaching, vocabulary, sentence Practice, Ask, Handbook, and Coach together in one place. Your learning data stays on your device in a local database and Markdown files.
 
-![Grammar check screenshot](assets/1.jpg)
+Prefer the terminal? IGT also includes a command-line companion for writing feedback, translation, conversation, listening, and review.
+
+![IGT CLI grammar feedback screenshot](assets/1.jpg)
 
 ---
 
 ## Table of Contents
 
+- [IGT Web](#igt-web)
 - [A Connected Learning Routine](#a-connected-learning-routine)
 - [Before You Start](#before-you-start)
 - [Installation (Step by Step)](#installation-step-by-step)
@@ -24,9 +27,19 @@ A command-line English learning companion for everyday life and work communicati
 
 ---
 
+## IGT Web
+
+**Your English, clearer.** IGT Web is the visual home for your English-learning routine. Move between focused workspaces for Grammar, Express, Vocabulary, Review, sentence Practice, Ask, Handbook, and Coach. Use **Express** to shape what you want to say or understand, with natural English and helpful language notes rather than word-for-word translation.
+
+The Web app runs locally and connects to IGT's Local Runtime. It uses your configured AI provider and local learning data; it is not a hosted account or cloud service. Start with the [Local Web setup](#local-web) after installing dependencies.
+
+The terminal workflow remains available with `igt` or `node igt.mjs` for learners who prefer commands.
+
+---
+
 ## A connected learning routine
 
-Use `/help` to browse commands by learning activity, or `/today` to see your review counts and choose a short session.
+In the CLI, use `/help` to browse commands by learning activity, or `/today` to see your review counts and choose a short session.
 
 1. **Learn an expression:** `/word follow up`. Read its meaning, collocations, and examples; choose whether to save it.
 2. **Listen and repeat:** `/listen` plays the latest English expression and, after a vocabulary lookup, its first available example. Repeat aloud, then make your own sentence. Use `/listen <English text>` for a specific phrase and `/listen --stop` to stop playback.
@@ -627,7 +640,7 @@ Use `/undo 3` to remove the last 3 inputs.
 
 ## Local Web
 
-The local Web workspace runs independently from the CLI REPL. It uses the same local SQLite, Markdown assets, and configured LLM through the Local Runtime.
+IGT Web is the visual learning workspace branded **IGT · Your English, clearer.** Its navigation includes Grammar, Express, Vocabulary, Review, Practice, Ask, Handbook, and Coach. The app runs independently from the CLI REPL and uses the same local SQLite database, Markdown learning files, and configured LLM through the Local Runtime.
 
 ```powershell
 npm install
