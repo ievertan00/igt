@@ -21,9 +21,9 @@ const REQUIRED_FIELDS = [
 ];
 
 const VALID_CONTEXTS = new Set([
-  "work-study", "home-routines", "travel-accommodation", "supermarkets-shopping",
-  "restaurants-cafes", "health-pharmacy", "friends-social", "commuting-transit",
-  "cinema-entertainment", "appointments-services",
+  "work", "home", "travel", "shopping",
+  "dining", "health", "social", "transit",
+  "entertainment", "services",
 ]);
 
 const VALID_REGISTERS = new Set(["informal", "neutral", "formal"]);
@@ -125,18 +125,18 @@ function main() {
   
   // Check against known empty cells
   const emptyCells = [
-    "challenge|formal|appointments-services", "challenge|formal|cinema-entertainment",
-    "challenge|formal|commuting-transit", "challenge|formal|home-routines",
-    "challenge|formal|restaurants-cafes", "challenge|formal|health-pharmacy",
-    "challenge|informal|supermarkets-shopping", "challenge|informal|health-pharmacy",
-    "challenge|neutral|restaurants-cafes", "challenge|neutral|health-pharmacy",
-    "easy|formal|cinema-entertainment", "easy|formal|commuting-transit",
-    "easy|formal|friends-social", "easy|formal|restaurants-cafes",
-    "easy|formal|supermarkets-shopping", "easy|formal|health-pharmacy",
-    "easy|informal|appointments-services", "easy|informal|cinema-entertainment",
-    "standard|formal|restaurants-cafes", "standard|formal|health-pharmacy",
-    "standard|informal|appointments-services", "standard|informal|commuting-transit",
-    "standard|informal|supermarkets-shopping", "standard|informal|health-pharmacy",
+    "challenge|formal|services", "challenge|formal|entertainment",
+    "challenge|formal|transit", "challenge|formal|home",
+    "challenge|formal|dining", "challenge|formal|health",
+    "challenge|informal|shopping", "challenge|informal|health",
+    "challenge|neutral|dining", "challenge|neutral|health",
+    "easy|formal|entertainment", "easy|formal|transit",
+    "easy|formal|social", "easy|formal|dining",
+    "easy|formal|shopping", "easy|formal|health",
+    "easy|informal|services", "easy|informal|entertainment",
+    "standard|formal|dining", "standard|formal|health",
+    "standard|informal|services", "standard|informal|transit",
+    "standard|informal|shopping", "standard|informal|health",
   ];
   
   console.log("\nEmpty cell coverage:");

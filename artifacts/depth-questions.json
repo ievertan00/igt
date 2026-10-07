@@ -1,0 +1,602 @@
+{
+  "depth-054-001": {
+    "prompt_zh": "上次开会的笔记我已经整理好了，发到你邮箱了。",
+    "reference_answer": "I've sorted out the notes from last time's meeting and sent them to your email.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["Present perfect for recently completed action", "Coordination with and"],
+    "hint_json": {"simple": "在说一件事做完了，另一件也同步完成了——都和现在有关。","intermediate": "两个动作都发生在最近，用现在完成时串联，and 连接。","complete": "I've _____ the notes from last time's meeting and _____ them to your email."},
+    "primary_target": "completed-past-subject-verb",
+    "learning_goal": "Use present perfect to describe a recently completed task with current relevance.",
+    "learning_rationale": "Present perfect signals that a completed action has bearing on the present moment."
+  },
+  "depth-054-002": {
+    "prompt_zh": "这栋楼的电梯昨天就坏了，到现在也没人来修。",
+    "reference_answer": "The lift in this building broke yesterday, and no one has come to fix it yet.",
+    "difficulty": "standard", "context": "home-routines", "register": "informal",
+    "grammar_point": ["Past simple for specific past time", "Present perfect with yet"],
+    "hint_json": {"simple": "一件事昨天发生了，但到现在还没有人来处理。","intermediate": "前半句用过去时 + 昨天这个具体时间。后半句用现在完成时 + yet 表达「到现在还没」。","complete": "The lift in this building _____ yesterday, and no one has come to fix it _____."},
+    "primary_target": "completed-past-subject-verb",
+    "learning_goal": "Use past simple for a specific past event and present perfect with 'yet' for an unresolved situation.",
+    "learning_rationale": "Combining past simple (specific time) and present perfect (up to now) is a core narrative pattern."
+  },
+  "depth-054-003": {
+    "prompt_zh": "申请流程比我想的要简单，只需要填一张表就行了。",
+    "reference_answer": "The application process was simpler than I expected — all I had to do was fill in a form.",
+    "difficulty": "standard", "context": "appointments-services", "register": "neutral",
+    "grammar_point": ["Comparative with than + clause", "All + pronoun + had to do was + base form"],
+    "hint_json": {"simple": "在说实际体验比预期简单——只需做一件事。","intermediate": "前半句用 比较级 + than I expected 表达「比我想的……」。后半句用 all I had to do was 强调简单。","complete": "The application process was _____ than I expected — all I had to do was _____ a form."},
+    "primary_target": "activity-comparison",
+    "learning_goal": "Compare expected vs actual difficulty using comparative structures and emphasize simplicity.",
+    "learning_rationale": "'Simpler than I expected' and 'all I had to do was' are everyday patterns for expressing pleasant surprises."
+  },
+  "depth-054-004": {
+    "prompt_zh": "我以为要排很久的队，结果只等了五分钟就轮到了。",
+    "reference_answer": "I thought I'd have to queue for ages, but I only waited five minutes before it was my turn.",
+    "difficulty": "standard", "context": "supermarkets-shopping", "register": "informal",
+    "grammar_point": ["Thought + would for past expectation", "Before-clause for sequence"],
+    "hint_json": {"simple": "预期会很久，实际却很快。","intermediate": "前半句用 thought I'd have to 表达过去的预期。后半句用 only + 时间 + before 表达实际很快。","complete": "I thought I'd have to _____ for ages, but I only waited five minutes before it was _____."},
+    "primary_target": "activity-comparison",
+    "learning_goal": "Express a contrast between expectation and reality using 'thought I'd' and 'only + time'.",
+    "learning_rationale": "Contrasting expectations with outcomes is one of the most common narrative patterns in everyday English."
+  },
+  "depth-054-005": {
+    "prompt_zh": "你说话的语气听起来不太高兴，是不是我刚才说错什么了？",
+    "reference_answer": "You sound a bit upset — did I say something wrong just now?",
+    "difficulty": "standard", "context": "friends-social", "register": "informal",
+    "grammar_point": ["Sound + adjective for impression", "Did for past simple question"],
+    "hint_json": {"simple": "注意到对方的情绪变化，问是不是自己造成的。","intermediate": "前半句用 sound + 形容词表达「听起来……」。后半句用 did I + 动词原形问是不是自己做了什么。","complete": "You _____ a bit upset — did I _____ something wrong just now?"},
+    "primary_target": "adjective-adverb-choice",
+    "learning_goal": "Use sensory verbs with adjectives to describe impressions and ask for clarification.",
+    "learning_rationale": "'Sound/look/feel + adjective' is the natural pattern for describing perceived emotional states."
+  },
+  "depth-054-006": {
+    "prompt_zh": "他跑得很快，但最后一百米明显慢了。",
+    "reference_answer": "He ran very fast, but he slowed down noticeably in the last hundred metres.",
+    "difficulty": "easy", "context": "cinema-entertainment", "register": "informal",
+    "grammar_point": ["Adverb of manner", "Adverb ending in -ly"],
+    "hint_json": {"simple": "前半句说跑得快，后半句说后来变慢了——两个方式词。","intermediate": "fast 本身就是副词不加 ly。noticeable 加 ly 变副词修饰 slowed down。","complete": "He ran very _____, but he slowed down _____ in the last hundred metres."},
+    "primary_target": "adjective-adverb-choice",
+    "learning_goal": "Distinguish adverb forms and place them correctly after verbs.",
+    "learning_rationale": "Some adverbs have the same form as adjectives (fast, hard, late), while others add -ly — a common confusion point."
+  },
+  "depth-054-007": {
+    "prompt_zh": "我已经帮您约好了下周二下午三点的牙医，到时候提前十分钟到就行。",
+    "reference_answer": "I've already booked you in for next Tuesday at three in the afternoon — just arrive ten minutes early.",
+    "difficulty": "standard", "context": "health-pharmacy", "register": "formal",
+    "grammar_point": ["Present perfect for completed service", "Imperative with just"],
+    "hint_json": {"simple": "已经帮对方预约好了，告诉对方时间和到诊要求。","intermediate": "前半句用现在完成时 + already 表达已完成的预约。后半句用 just + 祈使句。","complete": "I've already _____ you in for next Tuesday at three — just _____ ten minutes early."},
+    "primary_target": "appointment-arrange",
+    "learning_goal": "Use present perfect to confirm a completed booking and give arrival instructions.",
+    "learning_rationale": "'I've booked you in for' is the idiomatic phrase for confirming appointments on someone's behalf."
+  },
+  "depth-054-008": {
+    "prompt_zh": "我想约一下理发店的王师傅，他这周六上午有空吗？",
+    "reference_answer": "I'd like to book an appointment with Mr Wang at the barber's — is he free this Saturday morning?",
+    "difficulty": "standard", "context": "appointments-services", "register": "neutral",
+    "grammar_point": ["Would like to for polite request", "Be free for availability question"],
+    "hint_json": {"simple": "在问一个理发师的时间安排——想约、问空不空。","intermediate": "前半句用 I'd like to + 动词原形表达想预约。后半句用 be free + 时间段问是否有空。","complete": "I'd like to _____ an appointment with Mr Wang at the barber's — is he _____ this Saturday morning?"},
+    "primary_target": "appointment-arrange",
+    "learning_goal": "Make a polite appointment request and check availability using 'I'd like to' and 'be free'.",
+    "learning_rationale": "'I'd like to book' and 'Is he free...' are the standard polite formulas for making service appointments."
+  },
+  "depth-054-009": {
+    "prompt_zh": "从我家到公司坐地铁大约要四十分钟，包括换乘的时间。",
+    "reference_answer": "It takes about forty minutes to get from my place to the office by subway, including the transfer.",
+    "difficulty": "standard", "context": "commuting-transit", "register": "neutral",
+    "grammar_point": ["It takes + duration + to-infinitive", "Including for additional detail"],
+    "hint_json": {"simple": "在说通勤时间，还补充了换乘。","intermediate": "用 it takes + 时间 + to + 动词原形表达「需要多少时间做某事」。用 including 补充时间构成。","complete": "It _____ about forty minutes to get from my place to the office by subway, _____ the transfer."},
+    "primary_target": "arrive-duration",
+    "learning_goal": "Express commute duration using 'it takes' and add details with 'including'.",
+    "learning_rationale": "'It takes + time' is the universal template for describing how long journeys take in English."
+  },
+  "depth-054-010": {
+    "prompt_zh": "走到最近的药店大概要十分钟，不过路上有家便利店可以先看看。",
+    "reference_answer": "It'll take about ten minutes to walk to the nearest pharmacy, though there's a convenience store on the way you could check first.",
+    "difficulty": "challenge", "context": "health-pharmacy", "register": "informal",
+    "grammar_point": ["It'll take + duration + to-infinitive", "Though for contrast", "Modal for suggestion"],
+    "hint_json": {"simple": "在说走到药店的时间，并提供了一个途中替代方案。","intermediate": "主句用 it'll take + 时间。用 though 引入一个让步的替代方案，could 做建议。","complete": "It'll _____ about ten minutes to walk to the nearest pharmacy, though there's a convenience store you _____ check first."},
+    "primary_target": "arrive-duration",
+    "learning_goal": "Express journey duration with a concessive alternative suggestion.",
+    "learning_rationale": "Real-world navigation advice often pairs duration estimates with 'though' for flexible alternatives."
+  },
+  "depth-054-011": {
+    "prompt_zh": "请问这部电影适合十二岁的孩子看吗？有没有什么不太合适的镜头？",
+    "reference_answer": "Is this film suitable for a twelve-year-old? Are there any scenes that might not be appropriate?",
+    "difficulty": "standard", "context": "cinema-entertainment", "register": "informal",
+    "grammar_point": ["Be suitable for + noun phrase", "Indefinite article with zero article choice"],
+    "hint_json": {"simple": "在问电影是否适合某个年龄段，担心有不合适的内容。","intermediate": "第一句用 be suitable for + 年龄段。第二句用 Are there any 提问存在。","complete": "Is this film suitable for _____ twelve-year-old? Are there any scenes that might not be _____?"},
+    "primary_target": "article-use",
+    "learning_goal": "Choose between a/an and zero article when describing general categories of people.",
+    "learning_rationale": "The choice between 'a twelve-year-old' and 'twelve-year-olds' signals whether you mean a specific child or children in general."
+  },
+  "depth-054-012": {
+    "prompt_zh": "手机放口袋里不小心拨出去了，不好意思打扰了。",
+    "reference_answer": "My phone dialled by accident in my pocket — sorry to bother you.",
+    "difficulty": "standard", "context": "friends-social", "register": "informal",
+    "grammar_point": ["By accident for unintended actions", "Sorry to + base form for apology"],
+    "hint_json": {"simple": "在解释是一个意外电话，道歉。","intermediate": "前半句用 by accident 表达非故意的行为。后半句用 sorry to + 动词原形道歉。","complete": "My phone dialled by _____ in my pocket — sorry to _____ you."},
+    "primary_target": "article-use",
+    "learning_goal": "Use 'by accident' correctly and apologise with 'sorry to + verb'.",
+    "learning_rationale": "'By accident' is a fixed phrase with no article — a common collocation learners need to memorise."
+  },
+  "depth-054-013": {
+    "prompt_zh": "音乐会已经开始了，我们恐怕进不去了。",
+    "reference_answer": "The concert has already started — I'm afraid we won't be able to get in.",
+    "difficulty": "standard", "context": "cinema-entertainment", "register": "informal",
+    "grammar_point": ["Present perfect with already", "I'm afraid for bad news", "Won't be able to for future inability"],
+    "hint_json": {"simple": "已经在说一个无法改变的事实——太晚了进不去了。","intermediate": "前半句用现在完成时 + already。后半句用 I'm afraid 引出坏消息，won't be able to 表达无法进。","complete": "The concert has already _____ — I'm afraid we won't be able to _____ in."},
+    "primary_target": "ask-entry-after-lateness",
+    "learning_goal": "Express that an event has started and acknowledge the consequence of missing entry.",
+    "learning_rationale": "'I'm afraid + consequence' softens bad news, and 'has already started' establishes the irreversible fact."
+  },
+  "depth-054-014": {
+    "prompt_zh": "还有半小时才开场，我们先找个地方坐坐吧。",
+    "reference_answer": "There's still half an hour before it starts — let's find somewhere to sit.",
+    "difficulty": "easy", "context": "cinema-entertainment", "register": "informal",
+    "grammar_point": ["There is + time + before", "Let's for suggestion"],
+    "hint_json": {"simple": "时间还早，建议先休息。","intermediate": "前半句用 there's + 时间 + before 表达还剩多少时间。后半句用 let's 做建议。","complete": "There's still half an hour _____ it starts — let's _____ somewhere to sit."},
+    "primary_target": "ask-entry-after-lateness",
+    "learning_goal": "State remaining time before an event and make a suggestion for the wait.",
+    "learning_rationale": "'There's still + time + before' is the natural way to express how much waiting time remains."
+  },
+  "depth-054-015": {
+    "prompt_zh": "我昨天请假去办签证，结果大使馆系统坏了，白跑一趟。",
+    "reference_answer": "I took the day off yesterday to get my visa sorted, but the embassy's system was down — a wasted trip.",
+    "difficulty": "standard", "context": "appointments-services", "register": "informal",
+    "grammar_point": ["Took + time + off to", "Result clause with was down", "Appositive for summary"],
+    "hint_json": {"simple": "请假去办事，结果系统坏了没办成。","intermediate": "前半句用 took the day off to + 动词原形。中间用 but 引出意外结果。最后用名词短语总结。","complete": "I took the day off yesterday to _____ my visa sorted, but the embassy's system was _____ — a wasted trip."},
+    "primary_target": "ask-for-absence",
+    "learning_goal": "Narrate taking time off for a purpose and an unexpected outcome.",
+    "learning_rationale": "'Took the day off to + V' is the standard pattern for explaining work absences with a purpose."
+  },
+  "depth-054-016": {
+    "prompt_zh": "家里水管漏水，我明天得请半天假等工人来修。",
+    "reference_answer": "There's a leak in the pipe at home — I'll need to take half a day off tomorrow to wait for the plumber.",
+    "difficulty": "standard", "context": "home-routines", "register": "informal",
+    "grammar_point": ["There is + problem description", "Need to take + time + off"],
+    "hint_json": {"simple": "家里有故障，需要请假在家等维修。","intermediate": "前半句用 there's 引出问题。后半句用 need to take + 时间 + off 请假。","complete": "There's a leak in the pipe at home — I'll need to _____ half a day off tomorrow to wait for the _____."},
+    "primary_target": "ask-for-absence",
+    "learning_goal": "Explain a home emergency and state the need for time off.",
+    "learning_rationale": "'Need to take time off to + V' clearly links the leave request to a practical reason."
+  },
+  "depth-054-017": {
+    "prompt_zh": "这本语法书确实讲得很清楚，我推荐给好几个同事了。",
+    "reference_answer": "This grammar book really does explain things clearly — I've recommended it to several colleagues.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["Emphatic do/does/did", "Present perfect for repeated action"],
+    "hint_json": {"simple": "在强调一本书确实好，已经推荐给多人。","intermediate": "前半句用 does + 动词原形强调「确实」。后半句用现在完成时表示推荐过多次。","complete": "This grammar book really _____ explain things clearly — I've recommended it to several _____."},
+    "primary_target": "auxiliary-choice",
+    "learning_goal": "Use emphatic 'does' to add conviction and present perfect for repeated past actions.",
+    "learning_rationale": "Emphatic auxiliary ('does explain') is a powerful tool for sincere recommendations in English."
+  },
+  "depth-054-018": {
+    "prompt_zh": "照理说他应该已经到了，会不会是走错路了？",
+    "reference_answer": "He should have arrived by now — do you think he might have taken a wrong turn?",
+    "difficulty": "challenge", "context": "friends-social", "register": "informal",
+    "grammar_point": ["Should have + past participle for expectation", "Might have + PP for speculation"],
+    "hint_json": {"simple": "在推测为什么人还没到——按理该到了，可能出错了。","intermediate": "前半句用 should have + 过去分词表达「按理已经……」。后半句用 might have + 过去分词猜测。","complete": "He should have _____ by now — do you think he might have _____ a wrong turn?"},
+    "primary_target": "auxiliary-choice",
+    "learning_goal": "Use 'should have' for unfulfilled expectations and 'might have' for past speculation.",
+    "learning_rationale": "Speculating about past events requires precise auxiliary choice between obligation (should) and possibility (might)."
+  },
+  "depth-054-019": {
+    "prompt_zh": "虽然是临时通知，但我相信团队能应付得来。",
+    "reference_answer": "Even though it's short notice, I believe the team can handle it.",
+    "difficulty": "standard", "context": "work-study", "register": "neutral",
+    "grammar_point": ["Even though for concessive", "Can for confidence in ability"],
+    "hint_json": {"simple": "承认情况不理想，但表达对能力的信任。","intermediate": "前半句用 Even though 引导让步。后半句用 I believe + 从句表示信任。","complete": "_____ it's short notice, I believe the team can _____ it."},
+    "primary_target": "avoid-blame",
+    "learning_goal": "Acknowledge a difficult situation while expressing confidence in the team.",
+    "learning_rationale": "Leadership language uses concessive structures to acknowledge reality without undermining confidence."
+  },
+  "depth-054-020": {
+    "prompt_zh": "不是你的错，服务器昨天就出问题了，跟你的修改没关系。",
+    "reference_answer": "It's not your fault — the server's been having problems since yesterday, and your changes had nothing to do with it.",
+    "difficulty": "challenge", "context": "work-study", "register": "informal",
+    "grammar_point": ["It's not your fault for reassurance", "Present perfect continuous for ongoing issue", "Have nothing to do with"],
+    "hint_json": {"simple": "在安慰对方不是他的责任，解释真正的原因。","intermediate": "开头用 It's not your fault 澄清。中间用现在完成进行时说明问题持续。最后用 had nothing to do with 撇清关系。","complete": "It's not your _____ — the server's been having problems since yesterday, and your changes had nothing to _____ with it."},
+    "primary_target": "avoid-blame",
+    "learning_goal": "Reassure someone they are not at fault and explain the real cause.",
+    "learning_rationale": "'It's not your fault' and 'had nothing to do with' are essential for defusing workplace tension."
+  },
+  "depth-054-021": {
+    "prompt_zh": "公司要求所有新员工在入职前必须完成安全培训。",
+    "reference_answer": "The company requires that all new employees complete safety training before starting.",
+    "difficulty": "challenge", "context": "work-study", "register": "formal",
+    "grammar_point": ["Require that + subject + base verb (subjunctive)", "Before + gerund"],
+    "hint_json": {"simple": "在说一条公司规定——入职前必须培训。","intermediate": "主句用 require that + 主语 + 动词原形（虚拟语气）。用 before + V-ing 表达时间。","complete": "The company requires that all new employees _____ safety training before _____."},
+    "primary_target": "base-verb-after-demands",
+    "learning_goal": "Use the subjunctive base verb form after 'require that' in formal policy statements.",
+    "learning_rationale": "Formal English uses the subjunctive (base verb after 'require/suggest/insist that') — a hallmark of professional writing."
+  },
+  "depth-054-022": {
+    "prompt_zh": "我建议你把这份报告在提交之前再找人校对一遍。",
+    "reference_answer": "I suggest that you have someone proofread this report once more before submitting it.",
+    "difficulty": "challenge", "context": "work-study", "register": "formal",
+    "grammar_point": ["Suggest that + subject + base verb", "Have someone + base verb (causative)", "Before + gerund"],
+    "hint_json": {"simple": "在建议找别人再检查一遍。","intermediate": "用 suggest that + 主语 + 动词原形。用 have someone + 动词原形表达「找人做」。","complete": "I suggest that you have someone _____ this report once more before _____ it."},
+    "primary_target": "base-verb-after-demands",
+    "learning_goal": "Combine subjunctive mood with causative structure in a professional recommendation.",
+    "learning_rationale": "Subjunctive + causative ('suggest that you have someone + V') is a compact pattern for formal work advice."
+  },
+  "depth-054-023": {
+    "prompt_zh": "这道工序要求工人必须戴护目镜。",
+    "reference_answer": "This procedure requires that workers must wear safety goggles.",
+    "difficulty": "standard", "context": "work-study", "register": "formal",
+    "grammar_point": ["Require that + subject + base verb", "Must for mandatory requirement"],
+    "hint_json": {"simple": "一条安全规定——必须戴防护。","intermediate": "主句用 require that + 主语 + 动词原形。must 和动词原形一起用更正式。","complete": "This procedure requires that workers _____ safety goggles."},
+    "primary_target": "be-allowed-to",
+    "learning_goal": "Use 'require that' with base verb for mandatory workplace safety rules.",
+    "learning_rationale": "Safety instructions use 'require that + base verb' for unambiguous mandatory language."
+  },
+  "depth-054-024": {
+    "prompt_zh": "实验室里不能吃东西，但可以在休息室喝咖啡。",
+    "reference_answer": "You're not allowed to eat in the lab, but you can have coffee in the break room.",
+    "difficulty": "easy", "context": "work-study", "register": "neutral",
+    "grammar_point": ["Be not allowed to for prohibition", "Can for permission"],
+    "hint_json": {"simple": "说哪里不能做什么、哪里可以做什么。","intermediate": "前半句用 be not allowed to 表达禁止。后半句用 can 给予许可。","complete": "You're not _____ to eat in the lab, but you can _____ coffee in the break room."},
+    "primary_target": "be-allowed-to",
+    "learning_goal": "Distinguish prohibition (not allowed to) from permission (can) in workplace rules.",
+    "learning_rationale": "'Not allowed to' signals a rule, while 'can' signals a permission — different authority levels."
+  },
+  "depth-054-025": {
+    "prompt_zh": "我已经打电话确认了酒店预订，他们说房间会保留到晚上十点。",
+    "reference_answer": "I've called to confirm the hotel booking — they said the room would be held until ten at night.",
+    "difficulty": "standard", "context": "travel-accommodation", "register": "neutral",
+    "grammar_point": ["Present perfect for recently completed call", "Reported speech with would", "Passive for hotel policy"],
+    "hint_json": {"simple": "已经电话确认了预订，转述酒店的政策。","intermediate": "前半句用现在完成时。后半句转述用 they said + would be + 过去分词。","complete": "I've called to _____ the hotel booking — they said the room would be _____ until ten."},
+    "primary_target": "booking-confirmation",
+    "learning_goal": "Confirm a booking by phone and relay hotel policy using reported speech.",
+    "learning_rationale": "Hotel confirmation calls require present perfect for the completed call and reported speech for policy relay."
+  },
+  "depth-054-026": {
+    "prompt_zh": "麻烦帮我查一下，我用这个名字订的标间还有吗？",
+    "reference_answer": "Could you check if the standard room I booked under this name is still available?",
+    "difficulty": "standard", "context": "travel-accommodation", "register": "formal",
+    "grammar_point": ["Could for polite request", "Embedded if-clause", "Book under + name"],
+    "hint_json": {"simple": "在请前台查自己的预订还存不存在。","intermediate": "用 Could you check if 开头做请求。book under + 名字 表达「用什么名字订的」。","complete": "Could you check if the standard room I booked _____ this name is still _____?"},
+    "primary_target": "booking-confirmation",
+    "learning_goal": "Make a polite hotel inquiry with embedded questions and 'book under + name'.",
+    "learning_rationale": "'Book under + name' is the standard phrase for identifying reservations — not 'book with' or 'book by'."
+  },
+  "depth-054-027": {
+    "prompt_zh": "我们想订一间可以看到海景的双人房，最好是高楼层。",
+    "reference_answer": "We'd like to book a double room with a sea view, preferably on a high floor.",
+    "difficulty": "standard", "context": "travel-accommodation", "register": "formal",
+    "grammar_point": ["Would like to + base form", "With + noun for feature", "Preferably for soft preference"],
+    "hint_json": {"simple": "在提订房要求——房型、景色、楼层偏好。","intermediate": "用 We'd like to book 表达想订。用 with + 名词描述特征。用 preferably 软性表达偏好。","complete": "We'd like to _____ a double room with a sea view, preferably on a _____ floor."},
+    "primary_target": "booking-request",
+    "learning_goal": "Make a hotel room request with feature descriptions and soft preferences.",
+    "learning_rationale": "'Preferably' adds a preference without making it a deal-breaker — key for polite booking language."
+  },
+  "depth-054-028": {
+    "prompt_zh": "我看你们的网站上显示这周末还有空房，能帮我预留一间吗？",
+    "reference_answer": "I saw on your website that you still have vacancies this weekend — could you hold a room for me?",
+    "difficulty": "standard", "context": "travel-accommodation", "register": "neutral",
+    "grammar_point": ["Past simple for prior observation", "That-clause for reported info", "Could for polite request"],
+    "hint_json": {"simple": "已经看过网站说有房，现在请预留。","intermediate": "前半句用 I saw + that 从句转述网上看到的信息。后半句用 could you + 动词原形请求预留。","complete": "I saw on your website that you still have _____ this weekend — could you _____ a room for me?"},
+    "primary_target": "booking-request",
+    "learning_goal": "Reference online information and make a reservation request using 'I saw that' + 'could you'.",
+    "learning_rationale": "'I saw on your website that' frames the request with prior knowledge — polite and efficient."
+  },
+  "depth-054-029": {
+    "prompt_zh": "从这儿坐大巴到机场大概多久？我怕赶不上飞机。",
+    "reference_answer": "How long does it take to get to the airport by bus from here? I'm worried I might miss my flight.",
+    "difficulty": "standard", "context": "commuting-transit", "register": "informal",
+    "grammar_point": ["How long does it take to + verb", "I'm worried + might for anxiety"],
+    "hint_json": {"simple": "在问路程时间并表达担心。","intermediate": "前半句用 How long does it take to + 动词原形问时间。后半句用 I'm worried + might 表达担忧。","complete": "How long does it take to get to the airport by bus _____ here? I'm worried I might _____ my flight."},
+    "primary_target": "bus-station-location",
+    "learning_goal": "Ask about journey duration and express a time-related worry.",
+    "learning_rationale": "'I'm worried I might + V' is the natural collocation for expressing travel anxiety."
+  },
+  "depth-054-030": {
+    "prompt_zh": "售票处在大厅右边，你看到一个蓝色指示牌就到了。",
+    "reference_answer": "The ticket office is on the right side of the hall — you'll see a blue sign and then you're there.",
+    "difficulty": "easy", "context": "commuting-transit", "register": "neutral",
+    "grammar_point": ["Prepositional phrase for location", "And then for sequence"],
+    "hint_json": {"simple": "在说售票处在哪儿——看到什么标志就到了。","intermediate": "前半句用 be + 介词短语说位置。后半句用 see + 标志 + and then 表达。","complete": "The ticket office is on the right side of the _____ — you'll see a blue sign and then you're _____."},
+    "primary_target": "bus-station-location",
+    "learning_goal": "Give a location description with a visual landmark for confirmation.",
+    "learning_rationale": "Landmark-based directions ('see X and you're there') are easier to follow than compass directions."
+  },
+  "depth-054-031": {
+    "prompt_zh": "我打电话是想问一下，你们那款蓝色沙发还有现货吗？",
+    "reference_answer": "I'm calling to check whether you still have that blue sofa in stock.",
+    "difficulty": "standard", "context": "supermarkets-shopping", "register": "neutral",
+    "grammar_point": ["I'm calling to + base form", "Whether-clause for embedded question", "In stock"],
+    "hint_json": {"simple": "打电话咨询商品的库存情况。","intermediate": "用 I'm calling to + 动词原形说明目的。用 whether 引导间接问句，in stock 表达「有现货」。","complete": "I'm calling to _____ whether you still have that blue sofa in _____."},
+    "primary_target": "call-to-book",
+    "learning_goal": "Use 'I'm calling to' and embedded questions for telephone stock inquiries.",
+    "learning_rationale": "'I'm calling to + V' is the standard telephone opener; 'in stock' is the correct inventory term."
+  },
+  "depth-054-032": {
+    "prompt_zh": "我刚才打电话问了，那家餐厅不接受当天预订，得提前两天。",
+    "reference_answer": "I just called and checked — that restaurant doesn't take same-day bookings; you need to book two days ahead.",
+    "difficulty": "standard", "context": "restaurants-cafes", "register": "informal",
+    "grammar_point": ["Doesn't + base form for policy", "Need to + base form for requirement"],
+    "hint_json": {"simple": "已电话确认过，餐厅有预订规则。","intermediate": "前半句转述电话结果用 doesn't + 动词原形。后半句用 need to + 动词原形说要求。","complete": "I just called and checked — that restaurant doesn't _____ same-day bookings; you need to _____ two days ahead."},
+    "primary_target": "call-to-book",
+    "learning_goal": "Relay booking information obtained by phone using reported facts and requirements.",
+    "learning_rationale": "'Doesn't take + bookings' and 'need to book + ahead' are the natural collocations for reservation rules."
+  },
+  "depth-054-033": {
+    "prompt_zh": "这两款手机价钱差不多，但拍照效果差很多。",
+    "reference_answer": "These two phones cost about the same, but the camera quality differs a lot.",
+    "difficulty": "standard", "context": "supermarkets-shopping", "register": "informal",
+    "grammar_point": ["Comparative with about the same", "Differ + a lot for big difference"],
+    "hint_json": {"simple": "两款产品价格接近但一个功能差距大。","intermediate": "前半句用 about the same 表达差不多。后半句用 differ + a lot 表达差别大。","complete": "These two phones _____ about the same, but the camera quality _____ a lot."},
+    "primary_target": "comparative-adjective",
+    "learning_goal": "Compare products using 'about the same' and 'differ a lot' for nuanced comparison.",
+    "learning_rationale": "'About the same' and 'differ a lot' are more natural than formal comparative structures in casual shopping talk."
+  },
+  "depth-054-034": {
+    "prompt_zh": "今天的天气比昨天暖和多了，可以少穿一件。",
+    "reference_answer": "It's much warmer today than yesterday — you can wear one less layer.",
+    "difficulty": "easy", "context": "home-routines", "register": "informal",
+    "grammar_point": ["Comparative with much + -er", "Can for suggestion"],
+    "hint_json": {"simple": "天气比昨天暖和很多，穿衣建议。","intermediate": "用 much + 比较级 + than 表达「……得多」。后半句用 can + 动词原形给建议。","complete": "It's much _____ today than yesterday — you can _____ one less layer."},
+    "primary_target": "comparative-adjective",
+    "learning_goal": "Use 'much + comparative' to express a significant difference in degree.",
+    "learning_rationale": "'Much warmer' is far more natural than 'more warm' — a core comparative pattern learners must internalise."
+  },
+  "depth-054-035": {
+    "prompt_zh": "这件事越早处理越好，不然小问题会变成大麻烦。",
+    "reference_answer": "The sooner this is dealt with, the better — or a small issue could turn into a big problem.",
+    "difficulty": "challenge", "context": "appointments-services", "register": "neutral",
+    "grammar_point": ["The + comparative, the + comparative", "Could turn into for potential outcome"],
+    "hint_json": {"simple": "越早越好——不然小变大。","intermediate": "用 the sooner..., the better... 结构。后半句用 could turn into 表达可能的结果。","complete": "The _____ this is dealt with, the _____ — or a small issue could turn into a big problem."},
+    "primary_target": "comparison-clause",
+    "learning_goal": "Use 'the sooner..., the better' double comparative pattern to express urgency.",
+    "learning_rationale": "Double comparatives ('the more...the more') are a compact way to express proportional relationships."
+  },
+  "depth-054-036": {
+    "prompt_zh": "他吃得比我多，但怎么也吃不胖。",
+    "reference_answer": "He eats more than I do, but he never seems to put on weight.",
+    "difficulty": "standard", "context": "friends-social", "register": "informal",
+    "grammar_point": ["Comparative with than + pronoun + auxiliary", "Seem to for observation"],
+    "hint_json": {"simple": "在说一个人吃得多但不胖。","intermediate": "前半句用 more than + 代词 + do 比较。后半句用 never seems to 表达「怎么也不」。","complete": "He eats more than I _____, but he never seems to _____ on weight."},
+    "primary_target": "comparison-clause",
+    "learning_goal": "Use 'than + pronoun + auxiliary' for comparison and 'never seems to' for counter-expectation.",
+    "learning_rationale": "The 'than + pronoun + do' pattern prevents the common error of 'more than me' in formal contexts."
+  },
+  "depth-054-037": {
+    "prompt_zh": "做完这页练习就可以休息了，你已经连续学了快两个小时了。",
+    "reference_answer": "You can take a break after finishing this page — you've been studying for almost two hours straight.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["Can after temporal clause", "Present perfect continuous for duration", "For + time + straight"],
+    "hint_json": {"simple": "说做完当前任务就能休息了，并说明已经努力了多久。","intermediate": "前半句用 after + V-ing 表达时间条件。后半句用现在完成进行时 + for 时间段。","complete": "You can take a break after _____ this page — you've been studying for _____ two hours straight."},
+    "primary_target": "completing-activities",
+    "learning_goal": "Use 'after + gerund' for sequencing and present perfect continuous for ongoing duration.",
+    "learning_rationale": "'After + V-ing' is the most natural way to express 'when you finish X' in English."
+  },
+  "depth-054-038": {
+    "prompt_zh": "我把这堆邮件回完了就去吃午饭，你先去吧。",
+    "reference_answer": "I'll go for lunch after I've replied to this pile of emails — you go ahead.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["Future time clause with present perfect", "Go ahead for permission to precede"],
+    "hint_json": {"simple": "在说做完任务后的计划，让对方先去。","intermediate": "前半句用 I'll + 动词原形 + after + 现在完成时表达「做完后就去」。后半句用 go ahead。","complete": "I'll go for lunch after I've _____ to this pile of emails — you go _____."},
+    "primary_target": "completing-activities",
+    "learning_goal": "Use 'after + present perfect' in a future time clause and 'go ahead' to release someone.",
+    "learning_rationale": "English uses present perfect (not future) after time conjunctions like 'after' — a rule many languages don't share."
+  },
+  "depth-054-039": {
+    "prompt_zh": "如果你能提前一天把资料发给我，我可以帮你过一遍。",
+    "reference_answer": "If you can send me the materials a day in advance, I can go over them for you.",
+    "difficulty": "standard", "context": "work-study", "register": "neutral",
+    "grammar_point": ["If-clause with can for ability", "Main clause with can for offer"],
+    "hint_json": {"simple": "有条件地提供帮助——提前发资料就帮看。","intermediate": "前半句用 if + can 表达条件。后半句用 can + 动词短语表达「可以帮……」。","complete": "If you can send me the materials a day _____, I can go _____ them for you."},
+    "primary_target": "conditional-earlier-availability",
+    "learning_goal": "Use a conditional with 'can' on both sides to offer conditional help.",
+    "learning_rationale": "Dual 'can' conditionals (ability → offer) elegantly express help conditional on someone else's action."
+  },
+  "depth-054-040": {
+    "prompt_zh": "要是你早一天跟我说，我就能帮你改签机票了。",
+    "reference_answer": "If you had told me a day earlier, I could have helped you change the flight.",
+    "difficulty": "challenge", "context": "travel-accommodation", "register": "informal",
+    "grammar_point": ["Third conditional", "Could have + past participle for lost opportunity"],
+    "hint_json": {"simple": "在说一个已经错过的机会——早知道就能帮忙了。","intermediate": "用 if + had + 过去分词 (过去完成时) + could have + 过去分词表达本来可以。","complete": "If you had _____ me a day earlier, I could have _____ you change the flight."},
+    "primary_target": "conditional-earlier-availability",
+    "learning_goal": "Use third conditional to express a missed opportunity due to timing.",
+    "learning_rationale": "Third conditional captures regret and hindsight — one of the most emotionally expressive English structures."
+  },
+  "depth-054-041": {
+    "prompt_zh": "等你到了机场再给我打电话，我手机一直开着。",
+    "reference_answer": "Call me when you get to the airport — I'll keep my phone on.",
+    "difficulty": "easy", "context": "travel-accommodation", "register": "informal",
+    "grammar_point": ["When-clause with present simple", "Imperative + when"],
+    "hint_json": {"simple": "让对方到了再联系——说了自己这边会保持联系畅通。","intermediate": "前半句用 祈使句 + when 从句（现在时）。后半句用 I'll keep + 状态。","complete": "Call me when you _____ to the airport — I'll keep my phone _____."},
+    "primary_target": "conditional-past-when",
+    "learning_goal": "Use 'when + present simple' in a future-oriented command.",
+    "learning_rationale": "English uses present simple (not future) in 'when' clauses referring to the future."
+  },
+  "depth-054-042": {
+    "prompt_zh": "上次我等你的时候顺便把下周的行程安排好了。",
+    "reference_answer": "Last time I waited for you, I went ahead and sorted out next week's itinerary.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["When-clause with past simple", "Went ahead and for initiative"],
+    "hint_json": {"simple": "在说上次等人的时候顺便做了什么。","intermediate": "前半句用 when 从句 + 过去时描述过去场景。后半句用 went ahead and 表示主动做。","complete": "Last time I waited for _____, I went ahead and _____ out next week's itinerary."},
+    "primary_target": "conditional-past-when",
+    "learning_goal": "Narrate a past sequence using 'when + past' and 'went ahead and + past'.",
+    "learning_rationale": "'Went ahead and + V' signals proactive initiative during a wait — a natural conversational expression."
+  },
+  "depth-054-043": {
+    "prompt_zh": "如果你感兴趣的话，我把活动详情发给你。",
+    "reference_answer": "If you're interested, I'll send you the event details.",
+    "difficulty": "easy", "context": "friends-social", "register": "neutral",
+    "grammar_point": ["First conditional with present simple", "Will for offer"],
+    "hint_json": {"simple": "在说如果有兴趣就发详细信息。","intermediate": "用 if + 一般现在时（条件），主句用 I'll + 动词原形（结果）。","complete": "If you're _____, I'll _____ you the event details."},
+    "primary_target": "conditional-present-tense",
+    "learning_goal": "Use first conditional with present simple in the if-clause for real future possibilities.",
+    "learning_rationale": "The if-clause in first conditionals uses present tense even though it refers to the future."
+  },
+  "depth-054-044": {
+    "prompt_zh": "只要有两个人报名，这个课程就会照常开。",
+    "reference_answer": "As long as two people sign up, the course will run as usual.",
+    "difficulty": "standard", "context": "work-study", "register": "neutral",
+    "grammar_point": ["As long as for minimum condition", "Will for certain future"],
+    "hint_json": {"simple": "在说最少需要多少人才能开课。","intermediate": "用 as long as + 主语 + 动词原形表达条件。主句用 will + 动词原形说结果。","complete": "As long as two people _____ up, the course will _____ as usual."},
+    "primary_target": "conditional-present-tense",
+    "learning_goal": "Use 'as long as' to express a minimum condition for a guaranteed outcome.",
+    "learning_rationale": "'As long as' is the most common alternative to 'if' for minimum-threshold conditions."
+  },
+  "depth-054-045": {
+    "prompt_zh": "如果你能在下班之前把报表交上来，我就不用周末加班了。",
+    "reference_answer": "If you can hand in the report before the end of the day, I won't have to work over the weekend.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["If-clause with can", "Won't have to for avoided obligation"],
+    "hint_json": {"simple": "在说一个条件——准时交就不用加班。","intermediate": "前半句用 if you can + 动词原形表达条件。后半句用 won't have to 表达「就不用……」。","complete": "If you can hand in the report _____ the end of the day, I won't have to _____ over the weekend."},
+    "primary_target": "conditional-request",
+    "learning_goal": "Use a conditional to link someone's action to your own avoided obligation.",
+    "learning_rationale": "Linking 'if you can' with 'I won't have to' creates polite workplace leverage without direct demands."
+  },
+  "depth-054-046": {
+    "prompt_zh": "你能不能帮我把这份翻译校对一下？不需要改内容，只看看有没有语法错误就行。",
+    "reference_answer": "Could you proofread this translation for me? No need to change the content — just check for grammar errors.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["Could for polite request", "No need to for reassuring", "Just for limitation"],
+    "hint_json": {"simple": "在请人帮忙看看翻译，说清楚只看语法不用改内容。","intermediate": "开头用 Could you + 动词原形做请求。用 No need to 表达不用做什么。用 just 限定范围。","complete": "Could you _____ this translation for me? No need to change the content — just _____ for grammar errors."},
+    "primary_target": "conditional-request",
+    "learning_goal": "Make a polite request with specific scope limitations using 'no need to' and 'just'.",
+    "learning_rationale": "Scoping requests with 'no need to + V' and 'just + V' makes the ask feel smaller and more likely to be accepted."
+  },
+  "depth-054-047": {
+    "prompt_zh": "我在群里说了好几次了，但好像没人在意这个问题。",
+    "reference_answer": "I've mentioned it several times in the group chat, but no one seems to care about this issue.",
+    "difficulty": "standard", "context": "work-study", "register": "informal",
+    "grammar_point": ["Present perfect with several times", "Seem to for observation"],
+    "hint_json": {"simple": "在说已经反复提过某件事但没人关注。","intermediate": "前半句用现在完成时 + several times 表达反复做过。后半句用 no one seems to 表达「好像没人……」。","complete": "I've mentioned it several times in the group chat, but no one _____ to care about this issue."},
+    "primary_target": "conflict-report",
+    "learning_goal": "Report repeated communication and perceived unresponsiveness using present perfect and 'seems to'.",
+    "learning_rationale": "'Seems to' softens a complaint from accusation to observation — crucial for workplace diplomacy."
+  },
+  "depth-054-048": {
+    "prompt_zh": "我觉得咱们之间的沟通出问题了，上次的决定根本没传达给我。",
+    "reference_answer": "I think there's a breakdown in communication between us — the decision from last time wasn't even passed on to me.",
+    "difficulty": "challenge", "context": "work-study", "register": "formal",
+    "grammar_point": ["There is + abstract problem", "Passive voice for missed communication", "Even for emphasis"],
+    "hint_json": {"simple": "在反映沟通问题——上次的决定没传到。","intermediate": "开头用 I think there's 引出问题。后半句用被动 wasn't passed on 强调信息没有传达。even 加强语气。","complete": "I think there's a breakdown in _____ between us — the decision from last time wasn't even _____ on to me."},
+    "primary_target": "conflict-report",
+    "learning_goal": "Address a communication gap using nominalised problems and passive voice to stay objective.",
+    "learning_rationale": "Nominalising ('a breakdown in communication') depersonalises conflict — a key professional communication skill."
+  },
+  "depth-054-049": {
+    "prompt_zh": "请在三天之内回复这封邮件，否则名额会被取消。",
+    "reference_answer": "Please reply to this email within three days, or your spot will be cancelled.",
+    "difficulty": "standard", "context": "appointments-services", "register": "formal",
+    "grammar_point": ["Within + duration for deadline", "Please + imperative", "Or for consequence"],
+    "hint_json": {"simple": "在给一个邮件回复的截止时间，并说明后果。","intermediate": "用 Please + 动词原形 + within 时间表达礼貌的截止要求。用 or 引出后果，用被动 will be cancelled 表达取消。","complete": "Please reply to this email _____ three days, or your spot will be _____."},
+    "primary_target": "confirm-within-time",
+    "learning_goal": "Give a deadline with consequences in formal written English.",
+    "learning_rationale": "'Please + V + within + time, or + passive consequence' is a template for formal deadline communications."
+  },
+  "depth-054-050": {
+    "prompt_zh": "收到请回复，如果在周五之前没有确认，我们默认你放弃这次机会。",
+    "reference_answer": "Please confirm receipt — if we don't hear back by Friday, we'll assume you've given up this opportunity.",
+    "difficulty": "challenge", "context": "work-study", "register": "formal",
+    "grammar_point": ["Confirm receipt for acknowledgment", "If + negative present for deadline", "Will assume for default action"],
+    "hint_json": {"simple": "要求确认收到，并说明沉默的默认含义。","intermediate": "开头用 Please confirm receipt。后半句用 if + 否定现在时 + by 时间，主句用 will assume。","complete": "Please _____ receipt — if we don't hear back by _____, we'll assume you've _____ this opportunity."},
+    "primary_target": "confirm-within-time",
+    "learning_goal": "Use formal acknowledgment language and a conditional default assumption.",
+    "learning_rationale": "'Confirm receipt' and 'if we don't hear back by...' are stock phrases for formal deadline communications."
+  },
+  "depth-054-051": {
+    "prompt_zh": "搬到这儿已经三年了，但我还是不太习惯这儿的冬天。",
+    "reference_answer": "I've been living here for three years now, but I still haven't quite got used to the winters.",
+    "difficulty": "standard", "context": "home-routines", "register": "informal",
+    "grammar_point": ["Present perfect continuous for duration up to now", "Still haven't + PP for ongoing challenge"],
+    "hint_json": {"simple": "已经住了三年了，但还是不太适应气候。","intermediate": "前半句用现在完成进行时 + for 表达持续。后半句用 still haven't got used to 表达还不适应。","complete": "I've been living here for three years _____, but I still haven't quite got _____ to the winters."},
+    "primary_target": "continue-duration",
+    "learning_goal": "Use present perfect continuous to express ongoing duration and 'still haven't got used to' for persistent difficulty.",
+    "learning_rationale": "'Still haven't got used to' expresses ongoing adjustment struggles better than simple present."
+  },
+  "depth-054-052": {
+    "prompt_zh": "雨从昨天晚上就开始下了，到现在还没停。",
+    "reference_answer": "It's been raining since last night, and it still hasn't stopped.",
+    "difficulty": "standard", "context": "home-routines", "register": "informal",
+    "grammar_point": ["Present perfect continuous with since", "Still + negative present perfect"],
+    "hint_json": {"simple": "在说一场从昨晚持续到现在的雨。","intermediate": "前半句用 has been + V-ing + since 时间点。后半句用 still hasn't + 过去分词表达还没停。","complete": "It's been raining _____ last night, and it still hasn't _____."},
+    "primary_target": "continue-duration",
+    "learning_goal": "Use present perfect continuous with 'since' and 'still' for weather duration.",
+    "learning_rationale": "Weather-talk is one of the most common contexts for present perfect continuous in everyday English."
+  },
+  "depth-054-053": {
+    "prompt_zh": "我们认识快十年了，但每次见面还是能聊很久。",
+    "reference_answer": "We've known each other for almost ten years, but every time we meet we can still talk for ages.",
+    "difficulty": "standard", "context": "friends-social", "register": "informal",
+    "grammar_point": ["Present perfect with for + duration", "Every time + present for habitual", "Can still for persistent ability"],
+    "hint_json": {"simple": "在说一段长期的友谊——认识了很久，交流依然很好。","intermediate": "前半句用现在完成时 + for 时间段表示认识多久。后半句用 every time + 一般现在时。","complete": "We've known each other for almost ten _____, but every time we meet we can _____ talk for ages."},
+    "primary_target": "continuing-duration",
+    "learning_goal": "Use present perfect with 'for' to describe long-term relationships.",
+    "learning_rationale": "'Have known + for + duration' is the standard template for describing relationship length."
+  },
+  "depth-054-054": {
+    "prompt_zh": "他学钢琴已经学了五年了，今年准备考八级。",
+    "reference_answer": "He's been learning the piano for five years now, and he's preparing for the grade eight exam this year.",
+    "difficulty": "standard", "context": "home-routines", "register": "neutral",
+    "grammar_point": ["Present perfect continuous with for", "Present continuous for current plan"],
+    "hint_json": {"simple": "在说一个人学琴的时长和今年的考试计划。","intermediate": "前半句用现在完成进行时 + for 表达学了多久。后半句用 be + V-ing 表达今年的准备。","complete": "He's been learning the piano for five years _____, and he's _____ for the grade eight exam this year."},
+    "primary_target": "continuing-duration",
+    "learning_goal": "Use present perfect continuous for learning duration and present continuous for current goals.",
+    "learning_rationale": "'Have been learning + for' and 'is preparing for' smoothly transition from past effort to present goal."
+  },
+  "depth-054-055": {
+    "prompt_zh": "请问可以麻烦您把音乐调小声一点吗？我这边在开会。",
+    "reference_answer": "Would you mind turning the music down a bit? I'm in a meeting here.",
+    "difficulty": "standard", "context": "home-routines", "register": "formal",
+    "grammar_point": ["Would you mind + gerund for polite request", "A bit for softening"],
+    "hint_json": {"simple": "在很礼貌地请别人把音量调低——并说明原因。","intermediate": "用 Would you mind + V-ing 做非常礼貌的请求。a bit 软化语气。","complete": "Would you mind _____ the music down a bit? I'm in a _____ here."},
+    "primary_target": "control-ask",
+    "learning_goal": "Make a polite request for volume adjustment using 'Would you mind + gerund'.",
+    "learning_rationale": "'Would you mind + V-ing' is the most polite formula for asking someone to change their behaviour."
+  },
+  "depth-054-056": {
+    "prompt_zh": "麻烦您把空调温度调高一点，这个房间太冷了。",
+    "reference_answer": "Could you turn the air conditioning up a little? This room is freezing.",
+    "difficulty": "easy", "context": "work-study", "register": "neutral",
+    "grammar_point": ["Could you + base form for request", "Turn up for increase"],
+    "hint_json": {"simple": "请人调温度——房间太冷。","intermediate": "用 Could you + 动词原形做请求。turn up 是「调高」。","complete": "Could you turn the air conditioning _____ a little? This room is _____."},
+    "primary_target": "control-ask",
+    "learning_goal": "Use 'Could you turn up/down' to request temperature adjustment with a reason.",
+    "learning_rationale": "'Turn up/down' are the everyday phrasal verbs for adjusting settings — far more natural than 'increase/decrease'."
+  },
+  "depth-054-057": {
+    "prompt_zh": "一般情况下，这种申请需要三个工作日来处理。",
+    "reference_answer": "Generally speaking, this type of application takes three working days to process.",
+    "difficulty": "standard", "context": "appointments-services", "register": "formal",
+    "grammar_point": ["Generally speaking for generalisation", "It takes + duration + to-infinitive"],
+    "hint_json": {"simple": "在说处理的常规时间。","intermediate": "用 Generally speaking 开头表达一般情况。用 takes + 时间 + to + 动词原形。","complete": "Generally _____, this type of application takes three working days to _____."},
+    "primary_target": "conventional-expression",
+    "learning_goal": "Use 'generally speaking' to frame a general rule and 'takes + time + to + V' for duration.",
+    "learning_rationale": "'Generally speaking' is the most common opener for stating rules, policies, or norms in English."
+  },
+  "depth-054-058": {
+    "prompt_zh": "别着急，慢慢来——这种事急不得。",
+    "reference_answer": "Take your time — these things can't be rushed.",
+    "difficulty": "easy", "context": "friends-social", "register": "informal",
+    "grammar_point": ["Take your time for patience", "Can't be + past participle for impossibility"],
+    "hint_json": {"simple": "在安慰人别急。","intermediate": "前半句用 Take your time 表达「慢慢来」。后半句用 can't be + 过去分词表达「急不来」。","complete": "Take your _____ — these things can't be _____."},
+    "primary_target": "conventional-expression",
+    "learning_goal": "Use 'take your time' and 'can't be rushed' to reassure someone.",
+    "learning_rationale": "'Take your time' and 'can't be rushed' are fixed expressions that convey patience and understanding."
+  },
+  "depth-054-059": {
+    "prompt_zh": "能不能帮我把这份表格填一下？有几个地方我不太确定怎么填。",
+    "reference_answer": "Could you help me fill out this form? There are a few parts I'm not sure how to fill in.",
+    "difficulty": "standard", "context": "appointments-services", "register": "neutral",
+    "grammar_point": ["Could you help me + base form", "Be not sure how to + verb"],
+    "hint_json": {"simple": "在请人帮忙填表，因为有些地方不会填。","intermediate": "前半句用 Could you help me + 动词原形做请求。后半句用 be not sure how to + 动词原形。","complete": "Could you help me _____ this form? There are a few parts I'm not sure how to _____."},
+    "primary_target": "fill-out-form",
+    "learning_goal": "Ask for form-filling help and explain uncertainty about specific fields.",
+    "learning_rationale": "'Fill out' vs 'fill in' — 'fill out' is for the whole form, 'fill in' is for individual fields."
+  },
+  "depth-054-060": {
+    "prompt_zh": "这张表填完之后请签上名字和日期，然后再交到前台。",
+    "reference_answer": "Once you've filled out this form, please sign and date it, then hand it in at reception.",
+    "difficulty": "standard", "context": "appointments-services", "register": "formal",
+    "grammar_point": ["Once + present perfect for completion", "Please + imperative sequence"],
+    "hint_json": {"simple": "在说填完表格后的三个步骤。","intermediate": "用 Once + 现在完成时表达「填完之后」。后面用祈使句序列说三个动作。","complete": "Once you've _____ this form, please sign and date it, then hand it _____ at reception."},
+    "primary_target": "fill-out-form",
+    "learning_goal": "Use 'once + present perfect' to sequence post-completion steps.",
+    "learning_rationale": "'Once you've + PP' is the standard pattern for 'after you finish doing X' in written instructions."
+  }
+}

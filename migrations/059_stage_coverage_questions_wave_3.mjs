@@ -1,7 +1,8 @@
 import { practiceQuestionId } from "../lib/features/practice/question-ids.mjs";
+import { normalizePracticeContext } from "../lib/features/practice/contexts.mjs";
 
 const q = (id, zh, answer, difficulty, context, target, goal, rationale, register, grammar, simple, intermediate, complete) => ({
-  id, prompt_zh: zh, reference_answer: answer, difficulty, context,
+  id, prompt_zh: zh, reference_answer: answer, difficulty, context: normalizePracticeContext(context),
   practice_fields_json: JSON.stringify({ primary_target: [target], learning_goal: [goal], learning_rationale: [rationale], register: [register], grammar_point: grammar }),
   hint_json: JSON.stringify({ simple, intermediate, complete }), generated_by: "codex-review-draft", active: 0,
 });

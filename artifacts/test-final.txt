@@ -1,0 +1,200 @@
+[1m[38;2;132;85;0mChat[0m [38;2;74;77;88m— English conversation practice[0m
+[38;2;74;77;88mTalk about your day or practise a situation. /voice controls replies; /exit or Ctrl+C leaves.[0m
+[38;2;74;77;88m🔇 Voice off[0m [38;2;74;77;88m— /voice to toggle[0m
+[38;2;74;77;88m──────────────────────────────────────────────────────────────────[0m
+[38;2;74;77;88mChat voice on.
+[0m[38;2;74;77;88m
+  Chat ended.
+
+[0m[38;2;74;77;88mChat voice off.
+[0m[38;2;74;77;88mChat voice off.
+[0m[38;2;74;77;88mChat voice on.
+[0m[38;2;74;77;88mChat voice on.
+[0m[38;2;74;77;88mChat voice on.
+[0m[38;2;74;77;88mChat voice off.
+[0m[38;2;74;77;88mChat voice off.
+[0m[1m[38;2;132;85;0mChat[0m [38;2;74;77;88m— English conversation practice[0m
+[38;2;74;77;88mTalk about your day or practise a situation. /voice controls replies; /exit or Ctrl+C leaves.[0m
+[38;2;74;77;88m🔇 Voice off[0m [38;2;74;77;88m— /voice to toggle[0m
+[38;2;74;77;88m──────────────────────────────────────────────────────────────────[0m
+[38;2;74;77;88mChat controls: /voice [on|off|status], /exit.
+[0m
+[2K
+[38;2;74;77;88m[partner][0m
+What happened next?
+
+[38;2;74;77;88m
+  Chat ended.
+
+[0m
+  [38;2;20;113;166mToday's learning[0m
+  [38;2;74;77;88m────────────────────────────────────────────[0m
+  Sentences checked: 0 · Words added: 0
+  Cards reviewed: 0 grammar · 0 vocabulary
+
+  [38;2;132;85;0mChoose a short practice session[0m
+  Vocabulary  0 due — /word 5 (also imports newly saved words)
+  Listen      Repeat an English expression after a correction, translation, or word lookup.
+              Repeat aloud, then use the expression in your own sentence.
+  Express     Write a short daily update or work message at the main prompt.
+              Use one saved expression; /explain explores the feedback.
+  Converse    /chat — try clarifying a request or giving a work update.
+
+  Start with your own sentences; recorded mistakes will guide future quizzes.
+  [38;2;74;77;88m────────────────────────────────────────────[0m
+[38;2;74;77;88mChat voice off.
+[0m
+[2K[1m[38;2;74;77;88m中文[0m
+[38;2;74;77;88m请说明截止日期[0m
+
+[1m[38;2;112;77;176mEnglish[0m
+[38;2;112;77;176mCould you clarify the deadline?[0m
+
+
+[38;2;74;77;88mListen, then repeat aloud.
+[0m[38;2;132;85;0m  Voice off — TTS service returned 503. Use /voice to retry.
+[0m✔ coach evidence keeps independent input separate from generated practice (1.0949ms)
+✔ coach parser rejects fabricated evidence and requires four phases (0.6194ms)
+✔ coach uses model output and does not create a plan when model returns no priorities (1.8257ms)
+✔ coach preserves exact error types and model-authored phases (0.4509ms)
+✔ renders a two-week coach plan from diagnosis evidence (0.2614ms)
+✔ selects one actionable task per priority for today (0.1123ms)
+✔ labels practice evidence without overclaiming improvement (0.0565ms)
+✔ renders real input and generated practice contexts separately (0.0681ms)
+✔ adapts the next phase to follow-up evidence (0.0662ms)
+✔ ranks repeated recent weaknesses and exposes evidence-bound actions (0.2545ms)
+✔ does not call a single isolated record a stable weakness (0.0961ms)
+✔ computes error rate, cross-session persistence, and practice recurrence (0.152ms)
+✔ reports an improving trend when recent error opportunities fall (0.0747ms)
+✔ measures transfer evidence across production contexts (0.4761ms)
+✔ keeps high-confidence real input contexts separate from practice contexts (0.0944ms)
+✔ promotes repeated low-scoring vocabulary practice into a diagnosis priority (0.1213ms)
+✔ does not treat an isolated practice attempt as a completed retest (0.0734ms)
+✔ buildLearningDiagnosis returns a goal-aware training prescription (0.181ms)
+✔ does not invent resources when web resources are disabled (0.1266ms)
+✔ reports context limits when production contexts are not yet recorded (0.1015ms)
+✔ builds a coach prescription for a vocabulary weakness (0.1084ms)
+✔ prefers matching Obsidian notes when a vault is configured (1.7484ms)
+✔ marks an old web resource as needing re-verification (0.077ms)
+✔ verifies resource URLs with HEAD and falls back to GET when required (0.2322ms)
+✔ does not verify non-HTTPS resource URLs (0.0621ms)
+✔ does not expose a stale web URL as a recommendation (0.1268ms)
+✔ uses a recent runtime resource check instead of a static catalog claim (0.1332ms)
+✔ learning plans persist scheduled tasks and exclude completed tasks (997.1236ms)
+✔ a matching practice attempt completes and links the due plan task (985.9302ms)
+✔ a failed delayed retest creates reinforcement instead of advancing the plan (1192.5962ms)
+✔ a learner can skip and later resume a pending task (1211.5177ms)
+✔ pausing a plan removes due tasks without creating a replacement (1327.9828ms)
+✔ chat handles voice and exit locally without sending commands to the model (1.2711ms)
+✔ voice on/off are idempotent and status does not toggle (0.4021ms)
+✔ chat sends ordinary English and keeps unknown slash commands local (0.8015ms)
+✔ daily plan shows vocabulary activity without grammar inputs and opens vocabulary review (0.5321ms)
+✔ daily plan handles a fresh learner without prompting for nonexistent cards (0.1836ms)
+✔ daily plan shows coach tasks from the diagnosis seam (0.1871ms)
+(node:38964) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[2K[1m[38;2;74;77;88mEnglish[0m
+[38;2;74;77;88mPlease clarify the deadline.[0m
+
+[1m[38;2;112;77;176m中文[0m
+[38;2;112;77;176m请说明截止日期。[0m
+
+
+[38;2;74;77;88mListen, then repeat aloud.
+[0m[38;2;74;77;88mListen, then repeat aloud.
+[0m[38;2;74;77;88mListen, then repeat aloud.
+[0m
+✔ listen uses English translation and quiz feedback even with automatic voice off (2.8229ms)
+✔ sentence practice passes categories and reveals evaluated reference (0.9617ms)
+✔ CLI practice reveals hints progressively and records assistance separately for each question (0.4027ms)
+✔ help exposes the public learning workflows (0.3821ms)
+✔ stats exposes only vocabulary due cards after grammar SRS removal (67.8394ms)
+
+[38;2;74;77;88mListen, then repeat aloud.
+[0m✔ word lookup-and-add replays the returned English entry (1.0269ms)
+✔ word review subcommand opens the vocabulary SRS deck (0.182ms)
+✔ vocabulary review hides English and grades blank recall as incorrect (2.2258ms)
+✔ vocabulary review ignores spaces and hyphens in either spelling (0.0861ms)
+✔ finds relevant markdown notes without exposing unrelated files (2.7607ms)
+✔ ignores hidden directories and unreadable or oversized candidates (1.4879ms)
+✔ applies a fresh SQL migration and records it (15.2869ms)
+✔ re-running is a no-op (idempotent) (11.1483ms)
+✔ applies an .mjs migration via exported up(db) (16.6638ms)
+✔ applies later migrations when earlier are already recorded (restore-from-backup) (15.2254ms)
+✔ missing .mjs up() throws (5.5645ms)
+✔ practice attempts are persisted with target and feedback evidence (1188.6227ms)
+✔ practice attempts reject unknown production contexts but preserve internal activity labels (1345.8294ms)
+✔ practice selection sends all categories (4.6488ms)
+✔ an abort caused by timeout is reported as a retryable timeout (1.5505ms)
+✔ schema refactor converts teaching dimensions without compatibility payload and preserves state (30.7683ms)
+✔ invalid legacy JSON rolls back the entire table replacement (9.0782ms)
+✔ sparse and extensible multi-target questions work without legacy columns (24.6861ms)
+✖ fresh migration chain produces the new schema and reruns without changes (87.3093ms)
+✔ 100 native seeds provide sparse learning targets, progressive hints and both difficulty levels (1.3685ms)
+✔ native seed migration adds exactly 100 rows and preserves old rows and serving state on replay (32.6639ms)
+✔ native selection respects the authoritative coverage without inventing missing combinations (54.0731ms)
+✔ original-question removal preserves the new bank, custom questions and usage, and is idempotent (11.2803ms)
+✔ seed covers every focus, three variants and protected progressive hints (1.0669ms)
+✔ legacy payload removal preserves all other content and state and is idempotent (29.8033ms)
+✔ restoration upgrades databases with pre-cleanup JSON before comparing the clean export (49.093ms)
+✔ semantic context migration changes only reviewed labels and preserves usage on replay (49.6204ms)
+✔ semantic context migration refuses newer labels or changed text without partial updates (100.1834ms)
+✔ migration is complete and idempotent without resetting legacy or new usage (37.9124ms)
+✔ enrichment pilot adds only inactive rows and safely recognizes canonical restoration (27.3521ms)
+✔ second review updates staged pilot revisions atomically and idempotently (1.0437ms)
+✔ second enrichment batch stages unique drafts and applies guarded refinements (1.0083ms)
+✔ approved social and restaurant batch publishes atomically and idempotently (0.7608ms)
+✔ third enrichment batch inserts unique inactive drafts idempotently (0.8285ms)
+✔ delegated review refinements are guarded and the third batch publishes idempotently (2.0225ms)
+✔ questions remain unique within sessions and repeat only after less-used questions (54.3583ms)
+✔ authoritative restoration preserves existing content, activation and serving state (28.8093ms)
+✔ authoritative restoration rejects conflicting content without partial insertions (25.3312ms)
+✔ historical import commands refuse to replace edited live provenance (34.2486ms)
+✔ bank selection needs no LLM or learner history and hides references (1.78ms)
+✔ hint usage and language categories survive evaluation without imposing reference wording (0.6545ms)
+✔ removed modes and invalid filters are rejected before provider access (0.2766ms)
+✔ evaluation resolves bank content and records result and categories (0.2417ms)
+✔ missing answers and unknown IDs never reach the LLM (0.1352ms)
+✔ provider errors leave attempts untouched and selection remains available (0.5555ms)
+✔ native seed evaluation uses canonical learning targets without legacy annotations (0.2189ms)
+▶ translation route
+  ✔ should return 400 if text is missing (0.201ms)
+  ✔ should call llm and return translation successfully (0.4005ms)
+  ✔ should handle plain text fallback correctly (0.1599ms)
+✔ translation route (0.9367ms)
+▶ Ollama structured output
+  ✔ passes the canonical JSON schema to Ollama's format field (0.3495ms)
+✔ Ollama structured output (0.4049ms)
+▶ quiz content quality
+  ✔ detects exact and near-duplicate Chinese prompts (0.2076ms)
+  ✔ rejects meta-instructions and non-English reference answers (0.302ms)
+  ✔ formats feedback into spaced sections and prioritizes one recommendation (0.4915ms)
+✔ quiz content quality (1.1157ms)
+ℹ tests 96
+ℹ suites 3
+ℹ pass 95
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9267.7047
+
+✖ failing tests:
+
+test at tests\practice-question-bank.test.mjs:105:1
+✖ fresh migration chain produces the new schema and reruns without changes (87.3093ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  883 !== 823
+  
+      at TestContext.<anonymous> (file:///C:/Users/Evertan/.igt/tests/practice-question-bank.test.mjs:116:12)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 883,
+    expected: 823,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

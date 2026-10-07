@@ -4,9 +4,7 @@
 
 The actual configured project `igt_data.db` is the authority for Practice content.
 `canonical-questions.json` is its versioned export; it must never override a newer
-live edit. As of the 2026-10-04 reconciliation, the export and a fresh migration
-rebuild both contain 754 questions with identical content, hints, metadata and
-provenance. Runtime `served_count` and attempt history are intentionally not seeds.
+live edit. Runtime `served_count` and attempt history are intentionally not seeds.
 
 - `npm run verify:practice-bank` reads the actual database, compares every content
   field against the export and an in-memory rebuild, and checks migration replay.
@@ -37,6 +35,17 @@ Migration 036 rebuilds `practice_questions` with these columns, in order:
 
 `id`, `prompt_zh`, `reference_answer`, `difficulty`, `context`,
 `practice_fields_json`, `hint_json`, `generated_by`, `served_count`, `active`.
+
+## Context labels
+
+The `context` column uses one lowercase English word. The current allowed labels
+are `home`, `dining`, `shopping`, `entertainment`, `social`, `health`, `work`,
+`transit`, `travel`, and `services`. They identify the main communicative setting;
+fine-grained details belong in question text and learning metadata. Historical
+multiword labels are accepted only at compatibility boundaries and normalized
+before storage. Migration 062 converts every current row without changing any
+other column. Do not rewrite `practice_fields_json.situation` as part of this
+column-only change.
 
 ## Question ID convention
 

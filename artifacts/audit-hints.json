@@ -1,0 +1,502 @@
+{
+  "language-g04.7-c10": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "That path on the map seems to lead to the lake, but it may _____"
+  },
+  "language-g04.7-c2": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "If we take the coastal road now, it may _____"
+  },
+  "language-g04.7-c3": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "Her not replying does not necessarily mean she is upset; she may _____"
+  },
+  "language-g04.7-c4": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "Even if the sensor has briefly resumed reporting, the anomaly could _____"
+  },
+  "language-g04.7-c5": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "The shop is closed on Mondays, although holiday arrangements may _____"
+  },
+  "language-g04.7-c6": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "The most direct transfer may _____"
+  },
+  "language-g04.7-c7": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "试着用 may/might/could 中的一个来翻译\"可能/也许\"。"
+  },
+  "language-g04.7-c8": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "The food smells a little burnt, though it might _____"
+  },
+  "language-g04.7-c9": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "试着用 may/might/could 中的一个来翻译\"可能/也许\"。"
+  },
+  "language-g04.7-x1": {
+    "simple": "要表达的是\"不一定\"或\"有可能\"的意思，不是确定的。",
+    "intermediate": "这句里有一个不确定的判断——如果条件变了，结论也可能是另一种。用 may、might 或 could 来表达这种不确定性。",
+    "complete": "The light being on does not necessarily mean the circuit is working properly; a faulty switch could _____"
+  },
+  "language-g04.8-c10": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have + 过去分词来表达\"一定是做了……\"。"
+  },
+  "language-g04.8-c2": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have been + 过去分词来表达\"一定是被……\"。"
+  },
+  "language-g04.8-c3": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must + 动词原形来表达\"必须是……\"。"
+  },
+  "language-g04.8-c4": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have + 过去分词来表达\"一定是做了……\"。"
+  },
+  "language-g04.8-c5": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have been + 过去分词来表达\"一定是被……\"。"
+  },
+  "language-g04.8-c6": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have + 过去分词来表达\"一定是做了……\"。"
+  },
+  "language-g04.8-c7": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have + 过去分词来表达\"一定是做了……\"。"
+  },
+  "language-g04.8-c8": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must + 动词原形来表达\"必须是……\"。"
+  },
+  "language-g04.8-c9": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must have + 过去分词来表达\"一定是做了……\"。"
+  },
+  "language-g04.8-x1": {
+    "simple": "需要一个表示\"一定是\"或\"想必是\"的表达，因为前面已经给出了推理的依据。",
+    "intermediate": "用 must have + 过去分词来表达\"从证据推出过去肯定发生了某事\"。如果推理是当前状态，用 must be。",
+    "complete": "用 must + 动词原形来表达\"必须是……\"。"
+  },
+  "language-g05.4-c10": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c2": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c3": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c4": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c5": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c6": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c7": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c8": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-c9": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g05.4-x1": {
+    "simple": "要表达\"要是当初……就不会……\"这种与过去事实相反的情况。",
+    "intermediate": "if 从句用 had + 过去分词 (过去完成时)，主句用 would/could/might + have + 过去分词。",
+    "complete": "If + [主语] + had (not) + 过去分词..., [主语] + would/could + have + 过去分词..."
+  },
+  "language-g06.3-c10": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "can be + 过去分词 + ..."
+  },
+  "language-g06.3-c2": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "should be + 过去分词 + ..."
+  },
+  "language-g06.3-c3": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "must be + 过去分词 + ..."
+  },
+  "language-g06.3-c4": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "has to be + 过去分词 + ..."
+  },
+  "language-g06.3-c5": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "may be + 过去分词 + ..."
+  },
+  "language-g06.3-c6": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "should be + 过去分词 + ..."
+  },
+  "language-g06.3-c7": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "must be + 过去分词 + ..."
+  },
+  "language-g06.3-c8": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "should be + 过去分词 + ..."
+  },
+  "language-g06.3-c9": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "must/should/can + be + 过去分词来表达被动。"
+  },
+  "language-g06.3-x1": {
+    "simple": "主语是动作的承受者，不是执行者——要说明\"可以被……\"或\"必须被……\"。",
+    "intermediate": "用 must/should/can/may + be + 过去分词来表达\"必须/应该/可以/可能被……\"。",
+    "complete": "should be + 过去分词 + ..."
+  },
+  "language-g07.4-c10": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 how 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-c2": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 what 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-c3": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 + 主语 + 谓语 (陈述语序，不要倒装)。"
+  },
+  "language-g07.4-c4": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 + 主语 + 谓语 (陈述语序，不要倒装)。"
+  },
+  "language-g07.4-c5": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "whether 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-c6": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 what 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-c7": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 how 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-c8": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "whether 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-c9": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "whether 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.4-x1": {
+    "simple": "从句本身是一个完整的信息——谁做了什么、什么时候、去哪里等等——被嵌在一个更大的句子里。",
+    "intermediate": "用陈述语序转述问句：疑问词后接主语再接谓语，不要再倒装。记住间接引语中不能用 do/does/did。",
+    "complete": "疑问词 how 后直接接主语和谓语，保持陈述语序。"
+  },
+  "language-g07.9-c10": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c2": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c3": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Even though [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c4": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c5": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c6": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c7": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c8": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Even though [让步内容], [主句结果]。"
+  },
+  "language-g07.9-c9": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g07.9-x1": {
+    "simple": "前半句说一个事实，后半句说\"尽管如此，结果还是不同\"。",
+    "intermediate": "用 although/even though 开头或 though/although 在中间来表达\"虽然……但是……\"。",
+    "complete": "Although [让步内容], [主句结果]。"
+  },
+  "language-g08.5-c10": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "remember + V-ing = 记得做过(已做)。"
+  },
+  "language-g08.5-c2": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "remember + V-ing = 记得做过(已做)。"
+  },
+  "language-g08.5-c3": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "try + V-ing = 尝试用……方式。"
+  },
+  "language-g08.5-c4": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "try + V-ing = 尝试用……方式。"
+  },
+  "language-g08.5-c5": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "forget + to + 动词原形 = 忘记去做。"
+  },
+  "language-g08.5-c6": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "注意动词后面是 to do (未做) 还是 doing (已做/方式)。"
+  },
+  "language-g08.5-c7": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "注意动词后面是 to do (未做) 还是 doing (已做/方式)。"
+  },
+  "language-g08.5-c8": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "注意动词后面是 to do (未做) 还是 doing (已做/方式)。"
+  },
+  "language-g08.5-c9": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "remember + to + 动词原形 = 记得去做(还没做)。"
+  },
+  "language-g08.5-x1": {
+    "simple": "注意动词后面接 -ing 还是 to do 意思不同。这里是\"记得做过\"还是\"记得要做\"、\"尝试做某事\"还是\"试图去做\"？",
+    "intermediate": "remember/forget + to do = 记得/忘记要去做(未做)；remember/forget + doing = 记得/忘记做过(已做)。try + to do = 试图去做；try + doing = 试试看。",
+    "complete": "remember + V-ing = 记得做过(已做)。"
+  },
+  "language-g09.5-c10": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "a few + 可数名词复数 = 几个……。"
+  },
+  "language-g09.5-c11": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "注意数量词 + 名词的搭配（可数/不可数）。"
+  },
+  "language-g09.5-c12": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "a little + 不可数名词 = 一点……。"
+  },
+  "language-g09.5-c4": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "very few + 可数名词复数 = 极少。"
+  },
+  "language-g09.5-c5": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "hardly any + 名词 = 几乎没有。"
+  },
+  "language-g09.5-c6": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "a few + 可数名词复数 = 几个……。"
+  },
+  "language-g09.5-c7": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "注意数量词 + 名词的搭配（可数/不可数）。"
+  },
+  "language-g09.5-c8": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "very few + 可数名词复数 = 极少。"
+  },
+  "language-g09.5-c9": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "a little + 不可数名词 = 一点……。"
+  },
+  "language-g09.5-x1": {
+    "simple": "要表达数量的多少——\"一点\"\"几个\"\"几乎没有\"\"很多\"，注意可数和不可数名词的区别。",
+    "intermediate": "a few + 可数名词 (几个)；a little + 不可数名词 (一点)；hardly any + 可数或不可数 (几乎没有)；a great many + 可数 (大量)。",
+    "complete": "hardly any + 名词 = 几乎没有。"
+  },
+  "language-g11.6-c10": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：compatible with。"
+  },
+  "language-g11.6-c11": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：is on。"
+  },
+  "language-g11.6-c12": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：plants in。"
+  },
+  "language-g11.6-c4": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：cautious about。"
+  },
+  "language-g11.6-c5": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：have to。"
+  },
+  "language-g11.6-c6": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词后面的固定介词搭配。"
+  },
+  "language-g11.6-c7": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：date on。"
+  },
+  "language-g11.6-c8": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：leads to。"
+  },
+  "language-g11.6-c9": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：used to。"
+  },
+  "language-g11.6-x1": {
+    "simple": "这句话里有些动词或形容词后面必须跟特定的介词，不能乱搭配。",
+    "intermediate": "常见的固定搭配：depend on、rely on、lead to、be used to、be good at、be worried about、insist on、base on。",
+    "complete": "注意动词/形容词后的固定介词搭配：good at。"
+  },
+  "language-g12.4-c10": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c2": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c3": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c4": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c5": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c6": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c7": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c8": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-c9": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  },
+  "language-g12.4-x1": {
+    "simple": "这段话里有多件事或描述，它们在结构上应该保持平行——开头相同、词性一致。",
+    "intermediate": "并列的动作都用相同的动词形式（都是原形、都是 -ing、都是过去式、或者都是 to + 动词原形）。",
+    "complete": "确保并列的三项在形式上一一平行：都是同样的动词形态或名词短语。"
+  }
+}

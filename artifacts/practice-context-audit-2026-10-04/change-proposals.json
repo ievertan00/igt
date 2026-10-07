@@ -1,0 +1,451 @@
+{
+  "audit_version": 1,
+  "captured_at": "2026-10-04T12:35:41.772Z",
+  "question_rows_sha256": "6a231544a758e6a98cc5757cec51297d39fe3ff6e54dc9316a9b7e95445d9901",
+  "approved": false,
+  "applied": false,
+  "proposals": [
+    {
+      "question_id": "language-g01.1-c3",
+      "expected_context": "work-study",
+      "proposed_context": "home-routines",
+      "prompt_zh": "厨房、书房和阳台的灯全亮着，唯独客厅那一盏坏了半年，至今没人修过。",
+      "reason": "核心是住宅各房间照明及灯具损坏；书房不是工作场景证据。"
+    },
+    {
+      "question_id": "language-g01.7-4",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "学习一门外语需要耐心。",
+      "reason": "明确讨论学习外语的要求，属于学习领域。"
+    },
+    {
+      "question_id": "language-g02.1-3",
+      "expected_context": "supermarkets-shopping",
+      "proposed_context": "travel-accommodation",
+      "prompt_zh": "我们能在登机前买些水吗？",
+      "reason": "明确在登机前购买补给，主要情境是航空出行。"
+    },
+    {
+      "question_id": "language-g02.1-c2",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "请问这批样品在送检之前，是不是已经按照最新版的标准重新抽检过一轮？",
+      "reason": "样品送检、标准抽检和生产检验属于工作流程。"
+    },
+    {
+      "question_id": "language-g02.2-c3",
+      "expected_context": "travel-accommodation",
+      "proposed_context": "work-study",
+      "prompt_zh": "如果供应商四十八小时内不能书面确认这一点，我们该拿什么证据去跟海关交涉？",
+      "reason": "供应商确认与海关交涉属于企业采购及业务合规，不是个人旅行。"
+    },
+    {
+      "question_id": "language-g02.5-c1",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "并不是所有接受过培训的员工都能在实际操作中不出差错，但这不意味着培训本身没有价值。",
+      "reason": "核心是员工培训效果及实际操作能力，train 不表示火车。"
+    },
+    {
+      "question_id": "language-g02.6-3",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "如果没有票，你就不能上车。",
+      "reason": "没有票就不能上车，核心是乘车资格，不是电影或演出。"
+    },
+    {
+      "question_id": "language-g03.1-3",
+      "expected_context": "work-study",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "除非下雨，她每天都走路上班。",
+      "reason": "核心是日常走路上班的交通方式，而不是工作任务。"
+    },
+    {
+      "question_id": "language-g03.1-c3",
+      "expected_context": "home-routines",
+      "proposed_context": "travel-accommodation",
+      "prompt_zh": "过去这些年我们每逢假期都回那个海边小镇，可这几年一次也没回去过。",
+      "reason": "明确回海边小镇度假及过去旅行频率。"
+    },
+    {
+      "question_id": "language-g03.2-c3",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "我现在完全不怀疑这家供应商的专业能力，可他们的交付节奏确实让我们很难安排生产。",
+      "reason": "评价供应商交付节奏对生产安排的影响，属于业务工作。"
+    },
+    {
+      "question_id": "language-g03.3-2",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "home-routines",
+      "prompt_zh": "你打电话时，我正在洗澡。",
+      "reason": "在洗澡时接到电话，属于日常起居；shower 不表示演出。"
+    },
+    {
+      "question_id": "language-g03.4-1",
+      "expected_context": "home-routines",
+      "proposed_context": "appointments-services",
+      "prompt_zh": "我昨天去了一趟银行。",
+      "reason": "明确去银行办理或接触当地金融服务，居家作息不是其主要场景。"
+    },
+    {
+      "question_id": "language-g03.4-2",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "她上周没参加培训。",
+      "reason": "参加培训属于学习或工作培训，不是交通出行。"
+    },
+    {
+      "question_id": "language-g03.4-3",
+      "expected_context": "restaurants-cafes",
+      "proposed_context": "travel-accommodation",
+      "prompt_zh": "我们到达机场后，买了些食物。",
+      "reason": "明确到达机场后的补给活动；没有餐厅点餐或就餐服务证据。"
+    },
+    {
+      "question_id": "language-g03.8-3",
+      "expected_context": "home-routines",
+      "proposed_context": "friends-social",
+      "prompt_zh": "我们周五已约好吃午饭，你要一起吗？",
+      "reason": "邀请对方加入已约好的午餐，核心是社交安排。"
+    },
+    {
+      "question_id": "language-g04.1-2",
+      "expected_context": "home-routines",
+      "proposed_context": "health-pharmacy",
+      "prompt_zh": "去年受伤后，我有三个月不能走路。",
+      "reason": "明确描述受伤后行走能力受限及恢复时段，属于健康经历。"
+    },
+    {
+      "question_id": "language-g04.8-c1",
+      "expected_context": "restaurants-cafes",
+      "proposed_context": "work-study",
+      "prompt_zh": "服务器从凌晨两点起就一直没有响应——要么是硬件出了问题，要么就是有人在未经授权的情况下动了配置。",
+      "reason": "服务器不响应、硬件和配置排障属于技术工作；server 不是服务员。"
+    },
+    {
+      "question_id": "language-g04.8-c10",
+      "expected_context": "friends-social",
+      "proposed_context": "home-routines",
+      "prompt_zh": "门口的伞还在滴水，邻居一定刚刚回来。",
+      "reason": "由门口雨伞推断邻居已回家，核心是居住环境观察，没有社交互动。"
+    },
+    {
+      "question_id": "language-g05.2-4",
+      "expected_context": "home-routines",
+      "proposed_context": "friends-social",
+      "prompt_zh": "如果你明天有空，我们可以一起吃午饭。",
+      "reason": "邀请有空时一起吃午饭，主要功能是社交安排。"
+    },
+    {
+      "question_id": "language-g05.3-2",
+      "expected_context": "work-study",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "如果我住得近一些，就能每天走路上班。",
+      "reason": "比较居住距离与每日步行上班，核心是通勤。"
+    },
+    {
+      "question_id": "language-g05.3-c1",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "假如当初政府及时出台了监管政策，而且企业也积极配合执行，如今的市场环境就不会混乱到几乎无法收拾的地步。",
+      "reason": "政府监管、企业配合及市场秩序属于业务政策领域，不是交通。"
+    },
+    {
+      "question_id": "language-g05.4-c4",
+      "expected_context": "health-pharmacy",
+      "proposed_context": "work-study",
+      "prompt_zh": "如果我昨天没有把咖啡洒在笔记本上，今天就不用借你的电脑开会了。",
+      "reason": "明确为开会借电脑；咖啡洒在电脑上不构成医疗场景。"
+    },
+    {
+      "question_id": "language-g05.4-x1",
+      "expected_context": "work-study",
+      "proposed_context": "home-routines",
+      "prompt_zh": "要不是冰箱坏了，昨晚的剩菜今天还可以带去上班。",
+      "reason": "冰箱故障影响剩菜保存及携带，核心是居家食物保存，不是工作任务。"
+    },
+    {
+      "question_id": "language-g05.5-c1",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "要是十年前我没有辞掉那份稳定的工作去创业，现在就不会既没有积蓄也没有稳定的收入来源，更不用说还得照顾年迈的父母了。",
+      "reason": "核心是辞职、创业与收入稳定性的职业选择，不是通勤。"
+    },
+    {
+      "question_id": "language-g06.3-3",
+      "expected_context": "home-routines",
+      "proposed_context": "supermarkets-shopping",
+      "prompt_zh": "如果包装完好，商品可以在七天内退回。",
+      "reason": "明确讨论商品退货条件，属于购物售后。"
+    },
+    {
+      "question_id": "language-g06.3-c10",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "这份名单可以在培训结束后分享，但个人联系方式不应公开。",
+      "reason": "培训后的名单分享及个人信息保护属于工作培训管理。"
+    },
+    {
+      "question_id": "language-g06.5-2",
+      "expected_context": "home-routines",
+      "proposed_context": "appointments-services",
+      "prompt_zh": "她正在找人安装新的窗户。",
+      "reason": "明确寻找安装窗户的人员，主要任务是安排当地安装服务。"
+    },
+    {
+      "question_id": "language-g06.6-c1",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "经理不会让你在没接受培训的情况下独自操作这台设备，但他可以安排一个有经验的同事带你熟悉流程。",
+      "reason": "经理安排设备操作培训，属于员工指导，不是乘车。"
+    },
+    {
+      "question_id": "language-g07.10-c1",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "work-study",
+      "prompt_zh": "这份数据显示，线上销售额的增长速度比去年同一时期快了将近三倍，但线下的表现却远不如预期。",
+      "reason": "线上销售增长与线下经营表现属于业务数据分析；shows 不表示演出。"
+    },
+    {
+      "question_id": "language-g07.3-1",
+      "expected_context": "health-pharmacy",
+      "proposed_context": "home-routines",
+      "prompt_zh": "我姐姐住在上海，她是一名医生。（补充居住地点）",
+      "reason": "介绍姐姐的居住地及职业，属于家庭人物介绍；没有诊疗交流。"
+    },
+    {
+      "question_id": "language-g07.4-c7",
+      "expected_context": "friends-social",
+      "proposed_context": "work-study",
+      "prompt_zh": "关键在于我们如何解释这份协议，以及对方是否同意同一种解释。",
+      "reason": "核心是双方对协议的解释与共识，属于协商及协议处理，不是社交计划。"
+    },
+    {
+      "question_id": "language-g07.4-c9",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "售票员确认了下一站是否停靠，也告诉我们行李应放在哪里。",
+      "reason": "售票员、下一站停靠及车上行李，明确为公共交通交流。"
+    },
+    {
+      "question_id": "language-g07.7-c1",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "公司之所以推出这个培训计划，不仅是为了提高员工的技能，更是为了让整个团队能够应对下一阶段将要面临的技术挑战。",
+      "reason": "公司员工培训与团队能力建设，属于工作培训。"
+    },
+    {
+      "question_id": "language-g07.9-c7",
+      "expected_context": "friends-social",
+      "proposed_context": "cinema-entertainment",
+      "prompt_zh": "虽然她不喜欢这首歌，还是把它听完了，因为是朋友推荐的。",
+      "reason": "主要活动是听歌及音乐偏好；朋友推荐是选择音乐的原因，不是社交安排。"
+    },
+    {
+      "question_id": "language-g08.1-c2",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "我宁愿把整件事推翻重来，也不愿意在一个没人说得清前提的方案上继续加补丁。",
+      "reason": "方案前提与补丁式修正的取舍，主要是项目或技术方案决策。"
+    },
+    {
+      "question_id": "language-g08.3-4",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "老师提醒学生们带计算器来考试。",
+      "reason": "老师提醒学生为考试带计算器，明确为学习和考试。"
+    },
+    {
+      "question_id": "language-g08.4-2",
+      "expected_context": "appointments-services",
+      "proposed_context": "friends-social",
+      "prompt_zh": "她向我道歉，因为她忘了约会。",
+      "reason": "就忘记约会向对方道歉，题干未说明服务预约，主要是人际约定。"
+    },
+    {
+      "question_id": "language-g08.5-c8",
+      "expected_context": "travel-accommodation",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "车厢里信号很弱，我们没有设法给司机打通电话。",
+      "reason": "在车厢内因信号差联系不到司机，主要是交通联系问题。"
+    },
+    {
+      "question_id": "language-g09.1-2",
+      "expected_context": "health-pharmacy",
+      "proposed_context": "work-study",
+      "prompt_zh": "她是一名工程师，在一家医院工作。",
+      "reason": "介绍工程师及其医院工作地点，核心是职业和工作；医院不自动意味着诊疗。"
+    },
+    {
+      "question_id": "language-g09.4-c3",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "无论是法务还是业务，都不该在没有数据的情况下替对方拍板。",
+      "reason": "法务与业务部门凭数据决策，明确为工作协作。"
+    },
+    {
+      "question_id": "language-g09.5-c3",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "大多数人以为风险在于技术，其实更大的风险在于没有人愿意为结果负责。",
+      "reason": "讨论技术风险和结果责任，主要是技术项目或组织决策。"
+    },
+    {
+      "question_id": "language-g09.7-4",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "work-study",
+      "prompt_zh": "小王把他的报告给我看了，它写得很详细。",
+      "reason": "展示并评价报告的详细程度，属于工作或学习报告；show 不表示娱乐。"
+    },
+    {
+      "question_id": "language-g10.4-c2",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "与其说新版本比旧版本更快，不如说它在长时间运行下稳定得多。",
+      "reason": "比较软件新旧版本长期运行稳定性，属于技术工作。"
+    },
+    {
+      "question_id": "language-g11.1-3",
+      "expected_context": "commuting-transit",
+      "proposed_context": "travel-accommodation",
+      "prompt_zh": "虽然路上堵车，我们还是及时赶上了航班。",
+      "reason": "明确赶航班，主要情境是航空出行，路上堵车是背景。"
+    },
+    {
+      "question_id": "language-g11.1-c2",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "work-study",
+      "prompt_zh": "自上周三系统升级之后，已经有超过三百个工单提到了同一个报错。",
+      "reason": "系统升级后的重复报错工单，属于技术支持；tickets 不是娱乐门票。"
+    },
+    {
+      "question_id": "language-g11.5-1",
+      "expected_context": "work-study",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "我每天骑自行车上学。",
+      "reason": "明确每日骑车上学，核心是通勤交通方式。"
+    },
+    {
+      "question_id": "language-g11.6-c3",
+      "expected_context": "supermarkets-shopping",
+      "proposed_context": "work-study",
+      "prompt_zh": "与其说客户在意价格，不如说他更在意交付时间能不能说准。",
+      "reason": "核心是客户交付承诺与时间准确性，属于业务沟通，不是零售购物。"
+    },
+    {
+      "question_id": "language-g12.3-c1",
+      "expected_context": "supermarkets-shopping",
+      "proposed_context": "work-study",
+      "prompt_zh": "真正让客户感到不满的并不是价格本身，而是我们花了整整两周才给出的答复中竟然没有解决任何一个他们提出的核心问题。",
+      "reason": "客户对核心问题未解决及答复延误不满，主要是业务支持，不是价格购物。"
+    },
+    {
+      "question_id": "language-g12.4-c4",
+      "expected_context": "supermarkets-shopping",
+      "proposed_context": "restaurants-cafes",
+      "prompt_zh": "我喜欢这家店的安静氛围、靠窗的座位，还有他们做的柠檬蛋糕。",
+      "reason": "店内氛围、靠窗座位和现做蛋糕共同指向咖啡馆或餐饮体验，不是零售店。"
+    },
+    {
+      "question_id": "language-g12.6-3",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "已经完成培训的员工可以使用设备。（明确表达完成条件）",
+      "reason": "培训完成与员工设备使用资格，属于工作培训。"
+    },
+    {
+      "question_id": "language-p01-c2",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "如果方便的话，能否请您在下周三之前把签好的合同扫描件发我一份？",
+      "reason": "请求发送已签合同扫描件，属于商务文档往来。"
+    },
+    {
+      "question_id": "language-p07-c2",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "如果您愿意，我可以先把评审纪要整理成结论清单，明早之前发给您过目。",
+      "reason": "评审纪要整理为结论清单并送审，明确为工作沟通。"
+    },
+    {
+      "question_id": "language-v01-c2",
+      "expected_context": "commuting-transit",
+      "proposed_context": "work-study",
+      "prompt_zh": "预算这么一收紧，我们只好把线下培训改成线上，费用也只能压到原来的三分之一。",
+      "reason": "预算压缩与线下培训转线上，核心是组织培训安排；training 不是火车。"
+    },
+    {
+      "question_id": "language-v06-4",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "我觉得学英语口语很难。",
+      "reason": "明确讨论学习英语口语的困难，属于学习领域。"
+    },
+    {
+      "question_id": "language-v06-c1",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "很多人在初学外语时都会碰到这样一个瓶颈：明明已经背了很多单词，但一到实际交流时却总是找不到合适的表达方式。",
+      "reason": "外语词汇学习与实际表达检索瓶颈，明确为语言学习。"
+    },
+    {
+      "question_id": "native-027-indirect-question-06",
+      "expected_context": "cinema-entertainment",
+      "proposed_context": "commuting-transit",
+      "prompt_zh": "您能告诉我在哪里可以领取预订的车票吗？",
+      "reason": "询问领取预订车票的地点，明确为交通票务，不是娱乐。"
+    },
+    {
+      "question_id": "native-027-mixed-conditional-01",
+      "expected_context": "restaurants-cafes",
+      "proposed_context": "home-routines",
+      "prompt_zh": "如果我昨晚没喝那么多咖啡，现在就不会这么累了。",
+      "reason": "回顾咖啡摄入与疲倦的日常生活选择；没有咖啡馆或点餐场景。"
+    },
+    {
+      "question_id": "native-027-not-until-01",
+      "expected_context": "friends-social",
+      "proposed_context": "home-routines",
+      "prompt_zh": "直到邻居敲门，我才发现浴缸里的水溢出来了。",
+      "reason": "核心是发现浴缸溢水，邻居敲门只是触发事件，不是社交计划。"
+    },
+    {
+      "question_id": "native-027-ongoing-01",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "我从三月起一直在学手语。",
+      "reason": "明确持续学习手语，属于语言学习。"
+    },
+    {
+      "question_id": "native-027-preposition-gerund-07",
+      "expected_context": "supermarkets-shopping",
+      "proposed_context": "home-routines",
+      "prompt_zh": "她没有买新的书架，而是修好了旧的。",
+      "reason": "核心是修复已有书架而非购买，属于居家维护。"
+    },
+    {
+      "question_id": "native-027-relative-01",
+      "expected_context": "home-routines",
+      "proposed_context": "work-study",
+      "prompt_zh": "我正在找一本能用简单例子解释经济学的书。",
+      "reason": "寻找以简单例子解释经济学的书，核心是获取学习材料，不是购物交易。"
+    },
+    {
+      "question_id": "native-027-relative-07",
+      "expected_context": "commuting-transit",
+      "proposed_context": "home-routines",
+      "prompt_zh": "她收养了一只在车站附近被发现的小猫。",
+      "reason": "核心是收养宠物；车站只是发现小猫的地点，不构成交通任务。"
+    },
+    {
+      "question_id": "native-027-relative-09",
+      "expected_context": "supermarkets-shopping",
+      "proposed_context": "restaurants-cafes",
+      "prompt_zh": "我想去一家当地人也常去的面馆。",
+      "reason": "明确寻找当地人常去的面馆，主要是就餐选择，shop 不是零售依据。"
+    }
+  ],
+  "note": "Review proposals only. No SQL or apply operation is provided. Refresh actual DB and compare each ID/content before any later transactional repair."
+}

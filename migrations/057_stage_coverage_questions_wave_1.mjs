@@ -1,6 +1,7 @@
 // First small review batch for the underrepresented Practice contexts.
 // These questions remain inactive until a human reviews and approves them.
 import { practiceQuestionId } from "../lib/features/practice/question-ids.mjs";
+import { normalizePracticeContext } from "../lib/features/practice/contexts.mjs";
 
 const QUESTIONS = [
   {
@@ -133,7 +134,7 @@ const QUESTIONS = [
 
 const content = question => ({
   id: practiceQuestionId(question.id), prompt_zh: question.prompt_zh, reference_answer: question.reference_answer,
-  difficulty: question.difficulty, context: question.context,
+  difficulty: question.difficulty, context: normalizePracticeContext(question.context),
   practice_fields_json: JSON.stringify({
     primary_target: [question.primary_target], learning_goal: [question.learning_goal],
     learning_rationale: [question.learning_rationale], register: [question.register],

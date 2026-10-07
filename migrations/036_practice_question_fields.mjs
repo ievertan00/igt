@@ -10,7 +10,7 @@ export function up(db) {
       prompt_zh TEXT NOT NULL UNIQUE,
       reference_answer TEXT NOT NULL,
       difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'standard', 'challenge')),
-      context TEXT NOT NULL CHECK (context IN ('home-routines', 'restaurants-cafes', 'supermarkets-shopping', 'cinema-entertainment', 'friends-social', 'health-pharmacy', 'work-study', 'commuting-transit', 'travel-accommodation', 'appointments-services')),
+      context TEXT NOT NULL CHECK (context IN ('home', 'dining', 'shopping', 'entertainment', 'social', 'health', 'work', 'transit', 'travel', 'services', 'home-routines', 'restaurants-cafes', 'supermarkets-shopping', 'cinema-entertainment', 'friends-social', 'health-pharmacy', 'work-study', 'commuting-transit', 'travel-accommodation', 'appointments-services')),
       practice_fields_json TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(practice_fields_json) AND json_type(practice_fields_json) = 'object'),
       hint_json TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(hint_json) AND json_type(hint_json) = 'object'),
       generated_by TEXT NOT NULL DEFAULT 'unknown',

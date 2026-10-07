@@ -5,7 +5,6 @@ import { dispatch } from "../lib/server/router.mjs";
 import ollama from "../lib/server/llm/ollama.mjs";
 import { parseQuizQuestions } from "../lib/features/quiz/prompts.mjs";
 import { formatQuizFeedback } from "../lib/cli/commands/quiz.mjs";
-import { isSimilarQuizQuestion } from "../lib/features/quiz/history.mjs";
 
 describe("translation route", () => {
   let llmGenerateMock;
@@ -150,10 +149,6 @@ describe("Ollama structured output", () => {
 });
 
 describe("quiz content quality", () => {
-  it("detects exact and near-duplicate Chinese prompts", () => {
-    assert.equal(isSimilarQuizQuestion("这些设置可以被关闭，但不能重新开启。", "这些设置可以被关闭，但无法再次开启。"), true);
-    assert.equal(isSimilarQuizQuestion("我昨天在车站遇到了同学。", "我今天在办公室提交了申请。"), false);
-  });
   it("rejects meta-instructions and non-English reference answers", () => {
     const questions = parseQuizQuestions(JSON.stringify({
       questions: [

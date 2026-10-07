@@ -1,0 +1,642 @@
+{
+  "fill-053-001": {
+    "prompt_zh": "根据合同条款，任何一方如欲提前终止协议，须于三十日前以书面形式通知对方。",
+    "reference_answer": "Under the terms of the contract, either party wishing to terminate the agreement early must give the other party thirty days' written notice.",
+    "difficulty": "challenge",
+    "context": "appointments-services",
+    "register": "formal",
+    "grammar_point": ["Participial clauses", "Modal obligation"],
+    "hint_json": {
+      "simple": "需要表达两个意思：谁要做什么，以及法律上有什么要求。",
+      "intermediate": "\"希望终止\"可以用 wishing to... 来表达；\"必须通知\"要用 must 或 shall。",
+      "complete": "Under the terms of _____, either party _____ to terminate the agreement early must give _____ thirty days' written _____."
+    },
+    "primary_target": "participial-clause-formal-obligation",
+    "learning_goal": "Use participial clauses and modal obligation in formal legal or contractual contexts.",
+    "learning_rationale": "Formal written English uses participial reduction and precise modals to express conditions and obligations concisely."
+  },
+  "fill-053-002": {
+    "prompt_zh": "该片原定于上周五首映，但因技术故障推迟至本周末，已购票观众可凭原票入场。",
+    "reference_answer": "The film was originally scheduled to premiere last Friday, but was postponed to this weekend due to a technical fault; ticket holders may enter with their original tickets.",
+    "difficulty": "challenge",
+    "context": "cinema-entertainment",
+    "register": "formal",
+    "grammar_point": ["Passive voice", "Modal permission"],
+    "hint_json": {
+      "simple": "两个时间点的对比：原定时间和实际时间。还要说明观众仍可入场。",
+      "intermediate": "was scheduled to... / was postponed to... 用被动表达安排变更。最后用 may + 动词原形表达准许。",
+      "complete": "The film was originally _____ to premiere last Friday, but was _____ to this weekend due to _____. Ticket holders may _____ with their original tickets."
+    },
+    "primary_target": "passive-schedule-change-formal",
+    "learning_goal": "Use passive voice to report schedule changes and modal permission in formal announcements.",
+    "learning_rationale": "Formal event announcements use passive constructions to sound objective, and modals to indicate policy."
+  },
+  "fill-053-003": {
+    "prompt_zh": "鉴于早高峰时段三号线运力已达上限，建议通勤乘客改乘BRT或错峰出行。",
+    "reference_answer": "Given that Line 3 has reached capacity during the morning peak, commuters are advised to take the BRT instead or travel outside peak hours.",
+    "difficulty": "challenge",
+    "context": "commuting-transit",
+    "register": "formal",
+    "grammar_point": ["Given that + clause", "Passive reporting"],
+    "hint_json": {
+      "simple": "前半句给出原因（运力满了），后半句给出建议（换乘或改时间）。",
+      "intermediate": "用 Given that... 引导原因从句。are advised to... 是正式的建议表达方式。",
+      "complete": "Given that Line 3 has _____ capacity during the morning peak, commuters are _____ to take the BRT instead or _____ outside peak hours."
+    },
+    "primary_target": "given-that-passive-advice-formal",
+    "learning_goal": "Use 'Given that' to introduce a reason and passive reporting verbs for formal advice.",
+    "learning_rationale": "'Given that' is a formal alternative to 'because', and 'are advised to' is standard in public announcements."
+  },
+  "fill-053-004": {
+    "prompt_zh": "供暖系统已于昨日完成年度检修，但住户若发现室温仍低于十八摄氏度，应立即向物业报修。",
+    "reference_answer": "The heating system completed its annual inspection yesterday; however, if residents find the room temperature still below eighteen degrees Celsius, they should report it to the property management immediately.",
+    "difficulty": "challenge",
+    "context": "home-routines",
+    "register": "formal",
+    "grammar_point": ["Present perfect for recent completion", "Conditional with modal advice"],
+    "hint_json": {
+      "simple": "两个信息：一是已完成的事，二是在某种条件下需要做的事。",
+      "intermediate": "已完成的事用现在完成时(has completed)；如果……则应该……用 if + present, should + base verb。",
+      "complete": "The heating system has _____ its annual inspection yesterday; however, if residents _____ the room temperature still below _____, they should _____ it to the property management."
+    },
+    "primary_target": "present-perfect-with-conditional-advice",
+    "learning_goal": "Combine present perfect for recent completion with a conditional clause giving formal advice.",
+    "learning_rationale": "Formal notices often report completed actions and follow with conditional instructions."
+  },
+  "fill-053-005": {
+    "prompt_zh": "本餐厅菜单中标有星号的菜品需提前四十八小时预订，且至少四人起订。",
+    "reference_answer": "Dishes marked with an asterisk on this restaurant's menu require a forty-eight-hour advance reservation and a minimum order of four servings.",
+    "difficulty": "challenge",
+    "context": "restaurants-cafes",
+    "register": "formal",
+    "grammar_point": ["Past participle as modifier", "Formal requirement expressions"],
+    "hint_json": {
+      "simple": "特定菜品有特殊要求——需要提前订，而且有人数限制。",
+      "intermediate": "\"标有星号的\"用 marked with... 作定语。require 用来表达正式要求。",
+      "complete": "Dishes _____ with an asterisk on this restaurant's menu _____ a forty-eight-hour advance _____ and a minimum order of four _____."
+    },
+    "primary_target": "participle-modifier-formal-requirement",
+    "learning_goal": "Use past participle modifiers and formal requirement verbs in restaurant policy descriptions.",
+    "learning_rationale": "Restaurant policies use concise participle modifiers and precise requirement verbs for clarity."
+  },
+  "fill-053-006": {
+    "prompt_zh": "该药品在临床试验阶段曾出现三例轻微不良反应，但均未达到停药标准。",
+    "reference_answer": "Three cases of mild adverse reactions were observed during the clinical trial phase of this medication, but none met the criteria for discontinuation.",
+    "difficulty": "challenge",
+    "context": "health-pharmacy",
+    "register": "formal",
+    "grammar_point": ["Passive reporting", "Negative quantifier + past simple"],
+    "hint_json": {
+      "simple": "先说出现了什么情况（用了被动），再说没有严重到需要停药。",
+      "intermediate": "试用阶段出现……用 were observed during...。none met the criteria 表达\"均未达到标准\"。",
+      "complete": "Three cases of mild adverse reactions were _____ during the clinical trial phase, but _____ met the criteria for _____."
+    },
+    "primary_target": "passive-reporting-negative-quantifier",
+    "learning_goal": "Use passive reporting for clinical observations and negative quantifiers for zero-count statements.",
+    "learning_rationale": "Clinical and medical English uses passive voice for objectivity, and 'none' is the formal way to state zero."
+  },
+  "fill-053-007": {
+    "prompt_zh": "我跟你说，那种散装的开心果千万别买，上次我买回去一尝全是哈喇味。",
+    "reference_answer": "Honestly, don't buy those loose pistachios — last time I got some, they all tasted rancid.",
+    "difficulty": "challenge",
+    "context": "supermarkets-shopping",
+    "register": "informal",
+    "grammar_point": ["Imperative with emphatic advice", "Informal discourse marker"],
+    "hint_json": {
+      "simple": "强烈建议不要买某样东西，因为自己有过不好的经历。",
+      "intermediate": "用 don't buy... 开头；\"跟你讲\"用 honestly 或 trust me。rancid 是描述油类变质的词。",
+      "complete": "_____, don't buy those _____ pistachios — last time I got some, they all _____ rancid."
+    },
+    "primary_target": "emphatic-informal-advice",
+    "learning_goal": "Use informal discourse markers and emphatic imperatives in casual spoken advice.",
+    "learning_rationale": "Casual warnings use markers like 'honestly' and vivid vocabulary like 'rancid' instead of formal 'spoiled'."
+  },
+  "fill-053-008": {
+    "prompt_zh": "我嗓子疼了好几天了，吃了润喉糖也没见好，你觉得用不用去挂个号？",
+    "reference_answer": "My throat has been hurting for several days now, and the lozenges haven't helped. Do you think I should go see a doctor?",
+    "difficulty": "challenge",
+    "context": "health-pharmacy",
+    "register": "informal",
+    "grammar_point": ["Present perfect continuous", "Embedded question with should"],
+    "hint_json": {
+      "simple": "两个部分：描述持续的不适，然后问对方的意见。",
+      "intermediate": "持续了几天用 has been hurting for...。\"你觉得该不该\"是一个嵌套问句：Do you think I should...？",
+      "complete": "My throat has been _____ for several days now, and the _____ haven't helped. Do you think I should go _____ a doctor?"
+    },
+    "primary_target": "present-perfect-continuous-informal-health",
+    "learning_goal": "Use present perfect continuous for ongoing symptoms and embedded questions for informal advice-seeking.",
+    "learning_rationale": "Present perfect continuous emphasizes the ongoing nature of symptoms, natural in casual health conversations."
+  },
+  "fill-053-009": {
+    "prompt_zh": "本来想点招牌套餐，但服务员说今天的鱼不是早上到的，所以换了意面。",
+    "reference_answer": "I was going to order the signature set meal, but the waiter said the fish hadn't arrived this morning, so I switched to pasta.",
+    "difficulty": "challenge",
+    "context": "restaurants-cafes",
+    "register": "neutral",
+    "grammar_point": ["Was going to for changed plans", "Reported speech in past"],
+    "hint_json": {
+      "simple": "原本的计划被打乱了，因为服务员提供了新信息，所以改了主意。",
+      "intermediate": "Originally planned to... but... so... 用 was going to 表达原本打算。服务员的话用过去时转述(said the fish hadn't...)。",
+      "complete": "I was going to _____ the signature set meal, but the waiter _____ the fish hadn't _____ this morning, so I _____ to pasta."
+    },
+    "primary_target": "changed-plans-reported-speech",
+    "learning_goal": "Use 'was going to' for unfulfilled plans and past-tense reported speech in restaurant narratives.",
+    "learning_rationale": "'Was going to' naturally expresses plans that changed, a common pattern in everyday storytelling."
+  },
+  "fill-053-010": {
+    "prompt_zh": "大夫让我先拍个片子看看，说可能是软组织的问题，不一定是骨头。",
+    "reference_answer": "The doctor asked me to get an X-ray first, saying it might be a soft tissue issue rather than a bone problem.",
+    "difficulty": "challenge",
+    "context": "health-pharmacy",
+    "register": "neutral",
+    "grammar_point": ["Participial clause for reported speech", "Speculative might + rather than"],
+    "hint_json": {
+      "simple": "转述医生的两个嘱咐：做什么检查，以及可能性判断。",
+      "intermediate": "asked me to get... 转述医生的要求。\"说可能是……\"用 saying it might be... 这个分词短语来连接。",
+      "complete": "The doctor asked me to get _____ first, _____ it might be a _____ issue rather than a bone problem."
+    },
+    "primary_target": "participial-reported-speech-speculation",
+    "learning_goal": "Use participial clauses to report speech and 'might be...rather than' for diagnostic speculation.",
+    "learning_rationale": "'Saying...' is a concise way to report speech in medical narratives; 'might be...rather than' expresses diagnostic uncertainty."
+  },
+  "fill-053-011": {
+    "prompt_zh": "请于电影开场前十五分钟检票入场，迟到者须在幕间方可入座。",
+    "reference_answer": "Please have your ticket checked and enter the screening room fifteen minutes before the film begins. Latecomers may only be seated during the interval.",
+    "difficulty": "easy",
+    "context": "cinema-entertainment",
+    "register": "formal",
+    "grammar_point": ["Polite imperatives", "Time expressions"],
+    "hint_json": {
+      "simple": "两个简单的指示：什么时候入场，迟到的人怎么办。",
+      "intermediate": "用 please + 动词原形开头。before 引导时间状语。may only 表达限制条件。",
+      "complete": "Please have your ticket _____ and enter _____ fifteen minutes before _____. Latecomers may only be _____ during the _____."
+    },
+    "primary_target": "polite-instructions-cinema",
+    "learning_goal": "Use polite imperatives and time expressions in formal cinema notices.",
+    "learning_rationale": "Venue instructions use 'please' + base verb for polite directives, common in public-facing notices."
+  },
+  "fill-053-012": {
+    "prompt_zh": "请在本站换乘二号线的乘客由B出口出站，过天桥后左转即可到达。",
+    "reference_answer": "Passengers transferring to Line 2 at this station, please exit via Exit B, cross the footbridge, and turn left.",
+    "difficulty": "easy",
+    "context": "commuting-transit",
+    "register": "formal",
+    "grammar_point": ["Sequence of imperatives", "Prepositional directions"],
+    "hint_json": {
+      "simple": "给换乘乘客的简单路线指示：出站、过桥、转弯。",
+      "intermediate": "passengers + V-ing 放在句首称呼受众。三个连续动作用逗号分隔，都用动词原形。",
+      "complete": "Passengers _____ to Line 2, please exit _____ Exit B, cross the _____, and turn _____."
+    },
+    "primary_target": "sequence-imperatives-directions",
+    "learning_goal": "Use a sequence of imperatives with prepositional phrases for giving transit directions.",
+    "learning_rationale": "Transit announcements use clear imperative sequences for step-by-step navigation."
+  },
+  "fill-053-013": {
+    "prompt_zh": "不要因为便宜就买用不上的东西，那反而是浪费。",
+    "reference_answer": "Don't buy things you don't need just because they're cheap — that's a waste in the end.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "neutral",
+    "grammar_point": ["Don't...just because", "Relative clause without pronoun"],
+    "hint_json": {
+      "simple": "一个生活道理：别因为便宜就乱买。",
+      "intermediate": "用 don't buy... just because... 表达\"不要因为……就……\"。things you don't need（省略关系代词 that/which）。",
+      "complete": "Don't buy things you _____ just because they're _____ — that's a _____ in the end."
+    },
+    "primary_target": "dont-just-because-relative-omission",
+    "learning_goal": "Use 'don't...just because' for cautionary advice and zero-relative clauses.",
+    "learning_rationale": "This pattern is a natural way to warn against impulsive decisions, with conversational relative clause omission."
+  },
+  "fill-053-014": {
+    "prompt_zh": "预约理发的话最好提前三天打电话，尤其是周末，临时去基本排不上。",
+    "reference_answer": "If you want to book a haircut, it's best to call three days in advance — especially on weekends, walk-ins almost never get a slot.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "neutral",
+    "grammar_point": ["It's best to + infinitive", "Em dash for emphasis"],
+    "hint_json": {
+      "simple": "一个实用建议：理发要提前约，不然排不上。",
+      "intermediate": "用 If you want to... 引出条件，it's best to... 给出建议。破折号后面补充例外情况。",
+      "complete": "If you want to book _____, it's best to call _____ days in advance — especially on _____, walk-ins almost never get a _____."
+    },
+    "primary_target": "its-best-to-advice-with-dash",
+    "learning_goal": "Use 'it's best to' for practical advice and an em dash for emphatic afterthoughts.",
+    "learning_rationale": "'It's best to' is softer than 'you should', and em dashes create natural conversational rhythm."
+  },
+  "fill-053-015": {
+    "prompt_zh": "师傅说他没带那种配件，得明天去总店调，让我先把车放着。",
+    "reference_answer": "The mechanic said he didn't have that part with him and would have to pick one up from the main shop tomorrow, so he told me to leave the car there for now.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "informal",
+    "grammar_point": ["Reported speech sequence", "Would have to for future-in-past"],
+    "hint_json": {
+      "simple": "转述师傅的三句话：缺配件、要去取、让你放着。",
+      "intermediate": "转述时把所有时态往过去退一格：didn't have, would have to, told me to leave。",
+      "complete": "The mechanic said he _____ have that part and _____ have to pick one up from the main shop, so he _____ me to leave the car there."
+    },
+    "primary_target": "reported-speech-would-have-to",
+    "learning_goal": "Use reported speech with 'would have to' for future-in-past obligations.",
+    "learning_rationale": "'Would have to' is the past form of 'will have to', essential for reporting future obligations."
+  },
+  "fill-053-016": {
+    "prompt_zh": "这座桥已经修了快两年了，通车的日子一推再推，附近居民意见很大。",
+    "reference_answer": "This bridge has been under repair for nearly two years now, and the opening date keeps being pushed back — local residents are quite unhappy about it.",
+    "difficulty": "standard",
+    "context": "commuting-transit",
+    "register": "neutral",
+    "grammar_point": ["Present perfect with duration", "Keep + being + past participle"],
+    "hint_json": {
+      "simple": "一个问题持续了很久：修桥修了快两年还没通车。",
+      "intermediate": "has been under repair for nearly two years 用现在完成时表达持续至今的状态。keeps being pushed back 表达反复推迟。",
+      "complete": "This bridge has been _____ repair for nearly _____ years, and the opening date keeps _____ pushed back — local residents are quite _____ about it."
+    },
+    "primary_target": "present-perfect-duration-keep-passive",
+    "learning_goal": "Use present perfect with duration and 'keep + being + past participle' for repeated passive actions.",
+    "learning_rationale": "'Keep being + past participle' describes frustrating repeated delays, a common conversational pattern."
+  },
+  "fill-053-017": {
+    "prompt_zh": "客服说这个故障属于保修范围，但要把购买凭证拍照发过去才行。",
+    "reference_answer": "Customer service said this fault is covered by the warranty, but I need to send them a photo of the purchase receipt first.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "neutral",
+    "grammar_point": ["Is covered by (passive)", "Need to + infinitive for requirement"],
+    "hint_json": {
+      "simple": "转述客服的回答：保修覆盖 + 需要做什么。",
+      "intermediate": "is covered by... 用被动表达\"属于……范围\"。but I need to... 表达需要做的动作。",
+      "complete": "Customer service said this fault is _____ by the _____, but I need to send them a _____ of the purchase receipt."
+    },
+    "primary_target": "passive-coverage-requirement",
+    "learning_goal": "Use 'is covered by' for warranty claims and 'need to' for procedural requirements.",
+    "learning_rationale": "Both patterns are essential for handling customer service interactions in English."
+  },
+  "fill-053-018": {
+    "prompt_zh": "这套公寓虽然面积小了点儿，但采光特别好，而且离地铁站走路不到五分钟。",
+    "reference_answer": "This flat might be a bit small, but the natural light is excellent, and it's less than a five-minute walk to the underground station.",
+    "difficulty": "standard",
+    "context": "home-routines",
+    "register": "neutral",
+    "grammar_point": ["Concessive might be", "It's + distance + to + place"],
+    "hint_json": {
+      "simple": "先承认一个缺点，然后给出两个优点。",
+      "intermediate": "用 might be a bit... 软化缺点。but... 给出优点。it's less than a five-minute walk to... 表达距离。",
+      "complete": "This flat might be a bit _____, but the natural light is _____, and it's less than a _____ walk to the _____ station."
+    },
+    "primary_target": "concessive-might-be-distance-expression",
+    "learning_goal": "Use 'might be' for softened criticism and 'it's + distance + to' for location descriptions.",
+    "learning_rationale": "'Might be a bit small' is more polite than 'is small'; distance-from-transit is key in housing conversations."
+  },
+  "fill-053-019": {
+    "prompt_zh": "这个路口早晚高峰都有交警疏导，但据说下个月要装智能信号灯了。",
+    "reference_answer": "There have been traffic police directing traffic at this intersection during both the morning and evening rush hours, but they say smart traffic lights will be installed next month.",
+    "difficulty": "standard",
+    "context": "commuting-transit",
+    "register": "neutral",
+    "grammar_point": ["There have been for ongoing situation", "They say + future passive"],
+    "hint_json": {
+      "simple": "两个信息：当前情况和据说马上有变化。",
+      "intermediate": "当前情况用 there have been... 表达至今存在的安排。据说将……用 they say... will be installed。",
+      "complete": "There have been traffic police _____ traffic at this _____ during rush hours, but they say smart lights will be _____ next month."
+    },
+    "primary_target": "there-have-been-future-passive",
+    "learning_goal": "Use 'there have been' for ongoing arrangements and 'they say' for reported future changes.",
+    "learning_rationale": "'There have been' describes institutional arrangements; 'they say' is a natural way to report unconfirmed plans."
+  },
+  "fill-053-020": {
+    "prompt_zh": "我本来以为这套沙发是实木的，搬的时候才发现里面是密度板。",
+    "reference_answer": "I thought this sofa was solid wood, but when we moved it I realised it's MDF inside.",
+    "difficulty": "standard",
+    "context": "home-routines",
+    "register": "informal",
+    "grammar_point": ["Thought + past simple for mistaken belief", "Realised when + past"],
+    "hint_json": {
+      "simple": "之前的想法是错的，后来才发现真相。",
+      "intermediate": "I thought... but... I realised... 用过去时表达\"以为……后来发现……\"。",
+      "complete": "I thought this sofa _____ solid wood, but when we _____ it I realised it's _____ inside."
+    },
+    "primary_target": "mistaken-belief-realisation-pattern",
+    "learning_goal": "Use 'I thought...but I realised...' for narrating mistaken assumptions.",
+    "learning_rationale": "This pattern is one of the most common storytelling structures in everyday English conversation."
+  },
+  "fill-053-021": {
+    "prompt_zh": "冰箱里还有昨天剩的鸡汤，热一热就能喝，别点外卖了。",
+    "reference_answer": "There's still some chicken soup left over from yesterday in the fridge — just heat it up and you can drink it, no need to order takeaway.",
+    "difficulty": "easy",
+    "context": "home-routines",
+    "register": "informal",
+    "grammar_point": ["There's + noun + past participle modifier", "No need to + infinitive"],
+    "hint_json": {
+      "simple": "家里有吃的，不用花钱买外卖。",
+      "intermediate": "用 there's still... left over from... 表达\"还有……剩的\"。no need to... 表达\"没必要……\"。",
+      "complete": "There's still some chicken soup left _____ from yesterday — just heat it up, _____ to order takeaway."
+    },
+    "primary_target": "theres-left-over-no-need-to",
+    "learning_goal": "Use 'there's...left over from' for leftovers and 'no need to' for discouraging unnecessary actions.",
+    "learning_rationale": "These casual domestic patterns are extremely common in English-speaking households."
+  },
+  "fill-053-022": {
+    "prompt_zh": "好久没见你发朋友圈了，最近在忙什么呢？",
+    "reference_answer": "I haven't seen you post anything on social media for ages — what have you been up to lately?",
+    "difficulty": "easy",
+    "context": "friends-social",
+    "register": "informal",
+    "grammar_point": ["Present perfect negative + for ages", "What have you been up to"],
+    "hint_json": {
+      "simple": "一个老朋友式的问候：好久不见你的动态了。",
+      "intermediate": "haven't seen you... for ages 表达\"好久没见你做……\"。what have you been up to 是朋友间问\"最近在忙什么\"。",
+      "complete": "I haven't _____ you post anything for _____ — what have you been _____ to lately?"
+    },
+    "primary_target": "present-perfect-for-ages-social",
+    "learning_goal": "Use 'haven't seen...for ages' and 'what have you been up to' for informal catch-up greetings.",
+    "learning_rationale": "These two patterns are the most natural way to restart a conversation with a friend in English."
+  },
+  "fill-053-023": {
+    "prompt_zh": "这张优惠券写着满两百减三十，但下面有行小字说特价商品不参加。",
+    "reference_answer": "This coupon says thirty off when you spend two hundred, but there's a line of fine print underneath saying sale items are excluded.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "neutral",
+    "grammar_point": ["Says + clause for written text", "Participial clause with saying"],
+    "hint_json": {
+      "simple": "优惠券有表面上的优惠，但小字写了例外。",
+      "intermediate": "the coupon says... 用来转述券上写的内容。saying sale items are excluded 用分词作定语。",
+      "complete": "This coupon _____ thirty off when you spend two hundred, but there's a line of fine print _____ sale items are _____."
+    },
+    "primary_target": "written-text-says-participial-modifier",
+    "learning_goal": "Use 'says + clause' to report written information and participial clauses for fine-print exceptions.",
+    "learning_rationale": "Reporting fine print is a practical skill for consumer situations."
+  },
+  "fill-053-024": {
+    "prompt_zh": "我们几个同事凑钱买了台咖啡机放在茶水间，谁想喝就自己动手。",
+    "reference_answer": "A few of us at work chipped in and bought a coffee machine for the break room — anyone who wants a cup can help themselves.",
+    "difficulty": "easy",
+    "context": "work-study",
+    "register": "informal",
+    "grammar_point": ["Chip in (phrasal verb)", "Anyone who + can + reflexive"],
+    "hint_json": {
+      "simple": "同事们一起做了件让大家受益的事。",
+      "intermediate": "chipped in and bought 表达\"凑钱买了\"。anyone who wants... can help themselves 表达\"谁想……就自己动手\"。",
+      "complete": "A few of us _____ in and bought a coffee machine for the _____ — anyone who wants a cup can _____ themselves."
+    },
+    "primary_target": "phrasal-verb-chip-in-reflexive",
+    "learning_goal": "Use 'chip in' for shared purchases and 'help oneself' for informal permission.",
+    "learning_rationale": "'Chip in' is idiomatic for group contributions; 'help yourself' is the standard way to invite informal self-service."
+  },
+  "fill-053-025": {
+    "prompt_zh": "第一次去那家店的时候觉得挺普通的，后来多去了几次才发现他家甜品才是隐藏王牌。",
+    "reference_answer": "The first time I went to that place I thought it was pretty ordinary, but after going back a few more times I realised their desserts are the real hidden gem.",
+    "difficulty": "standard",
+    "context": "restaurants-cafes",
+    "register": "neutral",
+    "grammar_point": ["The first time + past", "After + gerund phrase"],
+    "hint_json": {
+      "simple": "前后印象的对比：一开始觉得一般，后来发现了好东西。",
+      "intermediate": "The first time I went... I thought... 表达初次印象。after going back a few times 用 after + -ing。",
+      "complete": "The first time I _____ to that place I thought it was pretty _____, but after _____ back a few times I realised their _____ are the real hidden gem."
+    },
+    "primary_target": "first-time-after-gerund-contrast",
+    "learning_goal": "Use 'the first time + past' and 'after + gerund' for experience contrast narratives.",
+    "learning_rationale": "This story arc (first impression → revised opinion) is a common conversational narrative structure."
+  },
+  "fill-053-026": {
+    "prompt_zh": "这份表格请在周五下班前填完交到前台，如果有涂改请在旁边签名。",
+    "reference_answer": "Please complete this form and hand it in at the front desk by the end of work on Friday. If you make any corrections, please sign next to them.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "formal",
+    "grammar_point": ["Please + imperative sequence", "If + present, please + imperative"],
+    "hint_json": {
+      "simple": "两个办公指令：填表交表，涂改要签名。",
+      "intermediate": "please complete... and hand it in at... 两个连续祈使句。if you make..., please sign... 条件句中的祈使。",
+      "complete": "Please complete this form and _____ it in at the front desk by _____. If you make any _____, please sign _____ them."
+    },
+    "primary_target": "imperative-sequence-if-imperative",
+    "learning_goal": "Use imperative sequences and 'if-present-please-imperative' in office instructions.",
+    "learning_rationale": "Office procedures use clear imperative sequences and conditional qualifiers, standard in workplace English."
+  },
+  "fill-053-027": {
+    "prompt_zh": "去机场的话我建议你坐机场大巴，比打车便宜多了，而且有专用道不会堵。",
+    "reference_answer": "If you're going to the airport, I'd suggest taking the airport bus — it's much cheaper than a taxi and has a dedicated lane so you won't get stuck in traffic.",
+    "difficulty": "standard",
+    "context": "travel-accommodation",
+    "register": "neutral",
+    "grammar_point": ["I'd suggest + gerund", "Comparative much cheaper", "So + clause for result"],
+    "hint_json": {
+      "simple": "给去机场的人一个更好的建议，并给出理由。",
+      "intermediate": "I'd suggest taking... 提出建议。much cheaper than... 比较。so you won't... 给出结果。",
+      "complete": "If you're going to the _____, I'd _____ taking the airport bus — it's much _____ than a taxi and has a dedicated lane so you _____ get stuck."
+    },
+    "primary_target": "suggest-gerund-comparative-result",
+    "learning_goal": "Use 'suggest + gerund', comparatives and 'so + clause' for travel recommendations with reasoning.",
+    "learning_rationale": "Giving travel advice with reasons is one of the most practical and common speaking tasks."
+  },
+  "fill-053-028": {
+    "prompt_zh": "一开始我觉得这个方案没什么问题，越往下看越觉得不对劲，后来果然出了纰漏。",
+    "reference_answer": "At first I didn't see anything wrong with the proposal, but the more I read, the more uneasy I felt — and sure enough, there turned out to be a flaw.",
+    "difficulty": "challenge",
+    "context": "work-study",
+    "register": "neutral",
+    "grammar_point": ["The more...the more", "Turn out to be"],
+    "hint_json": {
+      "simple": "逐步发现问题的过程：开始没觉得，越看越觉得不对，最后证明确实有问题。",
+      "intermediate": "the more I read, the more uneasy I felt 用 the more...the more... 表达递进。turned out to be 表达\"结果发现\"。",
+      "complete": "At first I didn't see anything _____ with the proposal, but the more I _____, the more uneasy I _____ — and sure enough, there turned _____ to be a flaw."
+    },
+    "primary_target": "the-more-the-more-turn-out",
+    "learning_goal": "Use 'the more...the more' for progressive realisation and 'turn out to be' for discovered facts.",
+    "learning_rationale": "'The more...the more' is a powerful pattern for describing gradual change; 'turn out' is essential for retrospective narration."
+  },
+  "fill-053-029": {
+    "prompt_zh": "你别看柜台上摆的那些，直接问店员，仓库里可能还有没拆箱的。",
+    "reference_answer": "Don't just look at what's on the counter — ask the staff directly. There might still be some unopened boxes in the storeroom.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "informal",
+    "grammar_point": ["Don't just look at what's...", "There might still be for hidden stock"],
+    "hint_json": {
+      "simple": "一个购物技巧：摆在明面上的不全，要问店员。",
+      "intermediate": "Don't just look at what's on... 表达\"别光看摆出来的\"。there might still be... 表达\"可能还有\"。",
+      "complete": "Don't just _____ at what's on the counter — ask the staff _____. There might still be some _____ boxes in the storeroom."
+    },
+    "primary_target": "dont-just-look-there-might-be",
+    "learning_goal": "Use 'don't just look at' for shopping advice and 'there might still be' for hidden possibilities.",
+    "learning_rationale": "This combination is natural for giving insider shopping tips in casual conversation."
+  },
+  "fill-053-030": {
+    "prompt_zh": "六点之后这些熟食全部五折，我一般掐着点儿去，能省不少。",
+    "reference_answer": "All these prepared foods are half price after six. I usually time it so I get there right on the dot — saves quite a bit.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "informal",
+    "grammar_point": ["Are half price (stative)", "Time it so + clause", "Right on the dot"],
+    "hint_json": {
+      "simple": "分享一个省钱技巧：晚上去有折扣。",
+      "intermediate": "are half price after... 表达\"……之后打五折\"。I time it so I... 表达\"算好时间去\"。right on the dot 是\"正好准点\"的口语。",
+      "complete": "All these prepared foods are half _____ after six. I usually _____ it so I get there right on the _____ — saves quite a bit."
+    },
+    "primary_target": "half-price-timing-idiom",
+    "learning_goal": "Use 'are half price' for discounts, 'time it so' for planned timing, and 'on the dot' idiomatically.",
+    "learning_rationale": "Discount shopping vocabulary and timing idioms are practical for everyday life in English-speaking countries."
+  },
+  "fill-053-031": {
+    "prompt_zh": "这个药一天三次饭后服用，如果出现皮疹或呼吸困难请立即停药就医。",
+    "reference_answer": "Take this medication three times a day after meals. If you develop a rash or have difficulty breathing, stop taking it and seek medical attention immediately.",
+    "difficulty": "standard",
+    "context": "health-pharmacy",
+    "register": "formal",
+    "grammar_point": ["Imperative for instructions", "If + present, imperative for warnings"],
+    "hint_json": {
+      "simple": "用药说明：怎么吃，什么情况下要停。",
+      "intermediate": "用祈使句开头：take this medication...。if you develop... or have..., stop taking... and seek... 条件警告句。",
+      "complete": "_____ this medication three times a day after _____. If you develop a _____ or have difficulty _____, stop taking it and seek medical attention."
+    },
+    "primary_target": "medical-instructions-if-warning",
+    "learning_goal": "Use imperatives for dosage instructions and 'if + present, stop + gerund' for medical warnings.",
+    "learning_rationale": "Medication labels use concise imperatives and conditional warnings, critical for health literacy."
+  },
+  "fill-053-032": {
+    "prompt_zh": "我把旅行枕落在飞机上了，下飞机后才发现，打了好几通电话都没找回来。",
+    "reference_answer": "I left my travel pillow on the plane and only realised after I got off. I made several phone calls but never got it back.",
+    "difficulty": "standard",
+    "context": "travel-accommodation",
+    "register": "informal",
+    "grammar_point": ["Left + object + place", "Only realised after + clause", "Never got it back"],
+    "hint_json": {
+      "simple": "讲一个旅行中的倒霉事：落了东西然后找不回来。",
+      "intermediate": "left my... on the... 表达\"把……落在……\"。only realised after... 强调\"过后才发现\"。never got it back 表达\"最终没找回来\"。",
+      "complete": "I left my _____ on the plane and only _____ after I got off. I made several phone calls but never got it _____."
+    },
+    "primary_target": "leave-object-place-narrative",
+    "learning_goal": "Use 'left + object + place', 'only realised after' and 'never got it back' for lost-item stories.",
+    "learning_rationale": "Losing items while travelling is a universal experience; these patterns form a natural narrative arc."
+  },
+  "fill-053-033": {
+    "prompt_zh": "C口出去往右拐有个便利店，那里可以给公交卡充值，不用跑到总站去。",
+    "reference_answer": "There's a convenience store just to the right when you exit through Exit C — you can top up your transit card there, so you don't have to go all the way to the main terminal.",
+    "difficulty": "easy",
+    "context": "commuting-transit",
+    "register": "informal",
+    "grammar_point": ["There's + place + when clause", "So you don't have to + verb"],
+    "hint_json": {
+      "simple": "给指路：出站拐弯就能找到方便的地方。",
+      "intermediate": "There's a... just to the right when you... 表达\"……出去往右就有个……\"。so you don't have to... 表达\"这样就不用……\"。",
+      "complete": "There's a convenience store just to the _____ when you exit through Exit C — you can top up your _____ there, so you don't have to go all the way to the main _____."
+    },
+    "primary_target": "theres-place-when-clause-direction",
+    "learning_goal": "Use 'there's + place' with 'when + clause' and 'so you don't have to' for helpful directions.",
+    "learning_rationale": "Combining location description with the benefit of using it is a natural helpful-direction pattern."
+  },
+  "fill-053-034": {
+    "prompt_zh": "健身房年卡看起来划算，但很多人办了之后就去两三次，还不如按次付费。",
+    "reference_answer": "An annual gym membership might look like a good deal, but a lot of people only go two or three times after signing up — you're better off paying per visit.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "neutral",
+    "grammar_point": ["Might look like + noun", "You're better off + gerund"],
+    "hint_json": {
+      "simple": "分析年卡和次卡的利弊。",
+      "intermediate": "might look like a good deal 表达\"看起来划算\"。you're better off paying... 表达\"不如按……付\"。",
+      "complete": "An annual gym membership might _____ like a good deal, but a lot of people only go a few times — you're better _____ paying per visit."
+    },
+    "primary_target": "might-look-like-better-off",
+    "learning_goal": "Use 'might look like' for sceptical assessment and 'you're better off + gerund' for alternative suggestions.",
+    "learning_rationale": "'Better off + gerund' is a high-frequency pattern for giving practical financial or lifestyle advice."
+  },
+  "fill-053-035": {
+    "prompt_zh": "房东说下个月要涨房租，涨得不多但我还是觉得不太舒服。",
+    "reference_answer": "The landlord said the rent is going up next month. It's not a big increase, but I still feel a bit uncomfortable about it.",
+    "difficulty": "standard",
+    "context": "home-routines",
+    "register": "informal",
+    "grammar_point": ["Is going up for future change", "Feel + adjective + about it"],
+    "hint_json": {
+      "simple": "表达对涨租的感受：不多，但心里不舒服。",
+      "intermediate": "is going up next month 用进行时表达即将发生的变化。feel a bit uncomfortable about it 表达微妙的不满。",
+      "complete": "The landlord said the rent is _____ up next month. It's not a big _____, but I still feel a bit _____ about it."
+    },
+    "primary_target": "going-up-future-feel-about-it",
+    "learning_goal": "Use 'is going up' for announced changes and 'feel + adjective + about it' for reactions.",
+    "learning_rationale": "'Feel uncomfortable about it' is a natural way to express mild displeasure without confrontation."
+  },
+  "fill-053-036": {
+    "prompt_zh": "会议室空调坏了，行政说下午才能来人修，上午的汇报改到线上吧。",
+    "reference_answer": "The air conditioning in the meeting room is broken. Admin says someone can't come to fix it until this afternoon, so let's move the morning presentation online.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "neutral",
+    "grammar_point": ["Is broken (stative)", "Can't...until", "Let's move... online"],
+    "hint_json": {
+      "simple": "设备坏了导致计划变更。",
+      "intermediate": "is broken 用状态表达\"坏了\"。can't... until... 表达\"直到……才能……\"。let's move... online 提议线上。",
+      "complete": "The air conditioning is _____ — admin says someone can't come to fix it _____ this afternoon, so let's _____ the morning presentation online."
+    },
+    "primary_target": "broken-cant-until-lets-move",
+    "learning_goal": "Use 'is broken' for equipment failure, 'can't...until' for delayed repairs, and 'let's move' for plan changes.",
+    "learning_rationale": "These three patterns handle a common workplace scenario: equipment failure → delayed fix → plan adjustment."
+  },
+  "fill-053-037": {
+    "prompt_zh": "昨天地铁半路停了快二十分钟，广播说是信号故障，后来才慢慢开起来。",
+    "reference_answer": "Yesterday the underground stopped for nearly twenty minutes halfway through the journey. The announcement said it was a signal fault, then it slowly started moving again.",
+    "difficulty": "easy",
+    "context": "commuting-transit",
+    "register": "informal",
+    "grammar_point": ["Past simple narrative sequence", "Said it was + noun"],
+    "hint_json": {
+      "simple": "讲昨天的通勤经历：地铁停了，有广播，然后又动了。",
+      "intermediate": "用三个过去时句子按时间顺序叙述。said it was a signal fault 表达\"广播说是……\"。",
+      "complete": "Yesterday the underground _____ for nearly twenty minutes. The announcement said it was a _____, then it slowly _____ moving again."
+    },
+    "primary_target": "past-event-narrative-sequence",
+    "learning_goal": "Use a past simple narrative sequence to recount a commuting incident with reported announcement.",
+    "learning_rationale": "Past simple narrative chains are the foundation of everyday storytelling in English."
+  },
+  "fill-053-038": {
+    "prompt_zh": "菜端上来的时候我已经觉得不太对——颜色比平时深，尝了一口果然是回锅的。",
+    "reference_answer": "The moment the dish was served I had a feeling something was off — the colour was darker than usual, and sure enough, one bite told me it had been reheated.",
+    "difficulty": "challenge",
+    "context": "restaurants-cafes",
+    "register": "neutral",
+    "grammar_point": ["The moment + past", "Sure enough for confirmed suspicion", "It had been + past participle"],
+    "hint_json": {
+      "simple": "讲一个在餐馆发现问题的经历：视觉异常→确认怀疑。",
+      "intermediate": "The moment... was served I had a feeling... 表达\"一端上来就觉得……\"。sure enough 表达\"果然\"。had been reheated 用过去完成时被动。",
+      "complete": "The _____ the dish was served I had a feeling something was off — the colour was darker than _____, and sure _____, one bite told me it had been _____."
+    },
+    "primary_target": "the-moment-sure-enough-past-perfect",
+    "learning_goal": "Use 'the moment + past', 'sure enough' and past perfect passive for suspicion-confirmation narratives.",
+    "learning_rationale": "'The moment' and 'sure enough' create dramatic narrative tension, very natural in conversational storytelling."
+  },
+  "fill-053-039": {
+    "prompt_zh": "同事说新来的主管很难搞，我接触了几次倒觉得只是比较直接，没什么恶意。",
+    "reference_answer": "My colleagues said the new supervisor was difficult to deal with, but after interacting with them a few times, I actually think they're just quite direct — nothing malicious about it.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "neutral",
+    "grammar_point": ["Adjective + to-infinitive", "After + gerund", "Nothing + adjective + about it"],
+    "hint_json": {
+      "simple": "对比别人的评价和自己的感受。",
+      "intermediate": "difficult to deal with 表达\"难搞\"。after interacting with... 用 after + -ing。nothing malicious about it 表达\"没有恶意\"。",
+      "complete": "My colleagues said the supervisor was difficult to _____ with, but after _____ with them a few times, I think they're just quite _____ — nothing malicious about it."
+    },
+    "primary_target": "adjective-to-infinitive-nothing-about-it",
+    "learning_goal": "Use 'adjective + to-infinitive' for character descriptions and 'nothing + adjective + about it' for dismissals.",
+    "learning_rationale": "Both patterns are common when giving nuanced personal assessments in workplace conversations."
+  },
+  "fill-053-040": {
+    "prompt_zh": "面试官问了好几个情景题，问我如果客户不满意方案会怎么处理，还让我现场模拟了一段。",
+    "reference_answer": "The interviewer asked me several situational questions — what I would do if a client wasn't happy with the proposal, and they even had me role-play a scenario on the spot.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "neutral",
+    "grammar_point": ["Would for hypothetical", "Had someone do something (causative)", "On the spot"],
+    "hint_json": {
+      "simple": "描述面试中遇到的情景题和即兴模拟。",
+      "intermediate": "what I would do if... 用 would 表达假设。had me role-play 用 had + someone + do 表达\"让我做……\"。on the spot 是\"当场\"。",
+      "complete": "The interviewer asked me what I _____ do if a client wasn't happy — and they even had me _____ a scenario on the _____."
+    },
+    "primary_target": "would-hypothetical-causative-on-the-spot",
+    "learning_goal": "Use 'would' for hypotheticals, causative 'had someone do', and 'on the spot' in interview narratives.",
+    "learning_rationale": "Interview stories require hypothetical language and causative patterns to describe what the interviewer made you do."
+  }
+}

@@ -993,8 +993,53 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
     </div>
   );
 }
+function PracticeFilter({
+  label,
+  value,
+  setValue,
+  options,
+  names,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
+  options: string[];
+  names: Record<string, string>;
+  disabled: boolean;
+}) {
+  return (
+    <fieldset className="practice-filter" disabled={disabled}>
+      <legend>{label}</legend>
+      <details className="practice-picker">
+        <summary aria-label={`${label}: ${names[value]}`}>
+          <Icon name="practice" />
+          <span>{names[value]}</span>
+          <Icon name="chevron" className="picker-chevron" />
+        </summary>
+        <div className="practice-picker-menu" role="group" aria-label={`${label} options`}>
+          {options.map((option) => (
+            <button
+              type="button"
+              aria-pressed={value === option}
+              className={value === option ? "selected" : ""}
+              key={option}
+              onClick={(event) => {
+                setValue(option);
+                event.currentTarget.closest("details")?.removeAttribute("open");
+              }}
+            >
+              <span>{names[option]}</span>
+              {value === option && <Icon name="check" />}
+            </button>
+          ))}
+        </div>
+      </details>
+    </fieldset>
+  );
+}
+
 function Practice() {
-  const [style, setStyle] = useState("all");
   const [context, setContext] = useState("all");
   const [count, setCount] = useState(3);
   const [difficulty, setDifficulty] = useState("standard");
@@ -1007,14 +1052,16 @@ function Practice() {
   const [answer, setAnswer] = useState("");
   const [evaluation, setEvaluation] = useState<any>();
   const [busy, setBusy] = useState(false);
+  const evaluationRequestId = useRef(0);
   async function generate() {
     if (busy) return;
+    evaluationRequestId.current += 1;
     setBusy(true);
     setGenerationError("");
     setSessionNotice("");
     setSaveWarning("");
     try {
-      const result = await webApi.generatePractice("sentence", count, difficulty, style, context);
+      const result = await webApi.generatePractice("sentence", count, difficulty, "all", context);
       const generated = result.data?.questions || [];
       if (!generated.length)
         throw new Error("No questions match these categories. Try a different style or context.");
@@ -1041,35 +1088,40 @@ function Practice() {
   async function evaluate() {
     const question = questions[index];
     if (!question || !answer.trim() || busy) return;
+    const requestId = ++evaluationRequestId.current;
+    setEvaluation(undefined);
+    setSaveWarning("");
     setBusy(true);
     try {
       const result = await webApi.evaluatePractice(question, answer, hintsUsed);
+      if (requestId !== evaluationRequestId.current) return;
       setEvaluation(result.data);
       setSaveWarning(result.persistence?.saved === false ? result.persistence.warning : "");
     } catch (e: any) {
+      if (requestId !== evaluationRequestId.current) return;
       setEvaluation({ error: e.message });
     } finally {
-      setBusy(false);
+      if (requestId === evaluationRequestId.current) setBusy(false);
     }
   }
 
   const question = questions[index];
   const prompt = question?.prompt_zh;
   const categoryName: Record<string, string> = {
-    all: "All",
+    all: "All contexts",
     casual: "Casual",
     neutral: "Neutral",
     formal: "Formal",
-    "home-routines": "Home routines",
-    "restaurants-cafes": "Restaurants & cafés",
-    "supermarkets-shopping": "Supermarkets & shopping",
-    "cinema-entertainment": "Cinema & entertainment",
-    "friends-social": "Friends & social plans",
-    "health-pharmacy": "Health & pharmacy",
-    "work-study": "Work & study",
-    "commuting-transit": "Commuting & public transport",
-    "travel-accommodation": "Travel & accommodation",
-    "appointments-services": "Appointments & local services",
+    home: "Home",
+    dining: "Dining",
+    shopping: "Shopping",
+    entertainment: "Entertainment",
+    social: "Social",
+    health: "Health",
+    work: "Work",
+    transit: "Transit",
+    travel: "Travel",
+    services: "Services",
   };
   const difficultyName: Record<string, string> = {
     easy: "Easy",
@@ -1091,11 +1143,12 @@ function Practice() {
       {!question && (
         <Panel title="Set up your practice" icon="practice" className="practice-setup">
           <p className="practice-mode-hint">
-            Sentence translation · Choose your difficulty, style, and context.
+            Sentence translation
+            <span>Choose the number of questions, difficulty, and context for this session.</span>
           </p>
           <fieldset className="question-count" disabled={busy}>
             <legend>Number of questions</legend>
-            <div className="count-options">
+            <div className="count-options count-segments">
               {[3, 5, 10].map((value) => (
                 <label className={count === value ? "selected" : ""} key={value}>
                   <input
@@ -1105,15 +1158,14 @@ function Practice() {
                     checked={count === value}
                     onChange={() => setCount(value)}
                   />
-                  <span>{value}</span>
-                  <span>questions</span>
+                  <span>{value} questions</span>
                 </label>
               ))}
             </div>
           </fieldset>
           <fieldset className="practice-difficulty" disabled={busy}>
             <legend>Difficulty</legend>
-            <div className="count-options">
+            <div className="count-options difficulty-segments">
               {(["easy", "standard", "challenge"] as const).map((value) => (
                 <label className={difficulty === value ? "selected" : ""} key={value}>
                   <input
@@ -1132,77 +1184,37 @@ function Practice() {
               precise, connected English.
             </p>
           </fieldset>
-          {[
-            {
-              label: "Style",
-              value: style,
-              set: setStyle,
-              options: ["all", "casual", "neutral", "formal"],
-            },
-            {
-              label: "Context",
-              value: context,
-              set: setContext,
-              options: ["all", "home-routines", "restaurants-cafes", "supermarkets-shopping", "cinema-entertainment", "friends-social", "health-pharmacy", "work-study", "commuting-transit", "travel-accommodation", "appointments-services"],
-            },
-          ].map((filter) => (
-            <fieldset className="practice-difficulty" disabled={busy} key={filter.label}>
-              <legend>{filter.label}</legend>
-              <div className="count-options">
-                {filter.options.map((value) => (
-                  <label className={filter.value === value ? "selected" : ""} key={value}>
-                    <input
-                      type="radio"
-                      name={"practice-" + filter.label.toLowerCase()}
-                      value={value}
-                      checked={filter.value === value}
-                      onChange={() => filter.set(value)}
-                    />
-                    <span>{categoryName[value]}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          ))}
+          <div className="practice-config-lower">
+            <div className="practice-filter-stack">
+              <PracticeFilter
+                label="Context"
+                value={context}
+                setValue={setContext}
+                options={["all", "home", "dining", "shopping", "entertainment", "social", "health", "work", "transit", "travel", "services"]}
+                names={categoryName}
+                disabled={busy}
+              />
+            </div>
+            <aside className="practice-session" aria-label="Your session">
+              <p className="practice-session-label">Your session</p>
+              <ul>
+                <li><Icon name="document" /><span>{count} questions</span></li>
+                <li><Icon name="dashboard" /><span>{difficultyName[difficulty]}</span></li>
+                <li><Icon name="practice" /><span>{categoryName[context]}</span></li>
+              </ul>
+              <button className="primary practice-generate" onClick={generate} disabled={busy} aria-busy={busy}>
+                {busy ? <><span className="loading-spinner" aria-hidden="true" />Preparing…</> : <>Start practice<Icon name="arrow" /></>}
+              </button>
+            </aside>
+          </div>
           <div className="practice-instructions">
             <h3>How to practise</h3>
             <ol>
-              <li>
-                Choose your categories and session size. Questions come from a ready-to-use bank;
-                less-used questions appear first.
-              </li>
-              <li>
-                Translate the Chinese sentence into English. Optional hints reveal a cue, a construction, then an open pattern.
-              </li>
-              <li>
-                Check your translation for AI feedback and a reference answer, then continue. Your
-                attempts are recorded.
-              </li>
+              <li>Questions come from a ready-to-use bank; less-used questions appear first.</li>
+              <li>Translate the Chinese sentence into English. Optional hints reveal a cue, a construction, then an open pattern.</li>
+              <li>Check your translation for AI feedback and a reference answer, then continue. Your attempts are recorded.</li>
             </ol>
           </div>
-          <State
-            title={
-              count + " questions · " + difficultyName[difficulty] + " · " + "sentence translation"
-            }
-          />
-          <button
-            className="primary practice-generate"
-            onClick={generate}
-            disabled={busy}
-            aria-busy={busy}
-          >
-            {busy ? (
-              <>
-                <span className="loading-spinner" aria-hidden="true" />
-                Preparing…
-              </>
-            ) : (
-              <>
-                Start practice
-                <Icon name="arrow" />
-              </>
-            )}
-          </button>
         </Panel>
       )}
       {!question && generationError && (
@@ -1302,6 +1314,8 @@ function Practice() {
               question={{ ...question, reference_answer: evaluation.reference_answer }}
               nextLabel={index + 1 < questions.length ? "Next question" : "Finish session"}
               onNext={() => {
+                evaluationRequestId.current += 1;
+                setBusy(false);
                 setIndex((n) => n + 1);
                 setHintsUsed(0);
                 setAnswer("");

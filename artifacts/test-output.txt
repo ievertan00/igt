@@ -1,0 +1,69 @@
+✔ schema refactor converts teaching dimensions without compatibility payload and preserves state (24.3782ms)
+✔ invalid legacy JSON rolls back the entire table replacement (6.9547ms)
+✔ sparse and extensible multi-target questions work without legacy columns (21.4819ms)
+✖ fresh migration chain produces the new schema and reruns without changes (48.985ms)
+✔ 100 native seeds provide sparse learning targets, progressive hints and both difficulty levels (1.2675ms)
+✔ native seed migration adds exactly 100 rows and preserves old rows and serving state on replay (21.8594ms)
+✔ native selection respects the authoritative coverage without inventing missing combinations (25.8091ms)
+✔ original-question removal preserves the new bank, custom questions and usage, and is idempotent (6.8932ms)
+✔ seed covers every focus, three variants and protected progressive hints (1.1407ms)
+✔ legacy payload removal preserves all other content and state and is idempotent (22.9351ms)
+✔ restoration upgrades databases with pre-cleanup JSON before comparing the clean export (19.1804ms)
+✔ semantic context migration changes only reviewed labels and preserves usage on replay (23.2931ms)
+✔ semantic context migration refuses newer labels or changed text without partial updates (63.3078ms)
+✔ migration is complete and idempotent without resetting legacy or new usage (28.9875ms)
+✔ enrichment pilot adds only inactive rows and safely recognizes canonical restoration (21.317ms)
+✔ second review updates staged pilot revisions atomically and idempotently (0.889ms)
+✔ second enrichment batch stages unique drafts and applies guarded refinements (0.7903ms)
+✔ approved social and restaurant batch publishes atomically and idempotently (0.6118ms)
+✔ third enrichment batch inserts unique inactive drafts idempotently (0.7042ms)
+✔ delegated review refinements are guarded and the third batch publishes idempotently (1.387ms)
+✔ questions remain unique within sessions and repeat only after less-used questions (29.0764ms)
+✔ authoritative restoration preserves existing content, activation and serving state (23.2697ms)
+✔ authoritative restoration rejects conflicting content without partial insertions (19.9791ms)
+✔ historical import commands refuse to replace edited live provenance (20.2149ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 23
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 472.0776
+
+✖ failing tests:
+
+test at tests\practice-question-bank.test.mjs:105:1
+✖ fresh migration chain produces the new schema and reruns without changes (48.985ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      grammar_point: [
+  +     'Statement word order in indirect questions (object)'
+  -     'Statement word order in indirect questions'
+      ],
+  +   learning_goal: [
+  +     'Use statement word order when the embedded WH-word is the object of an indirect question.'
+  +   ],
+  +   learning_rationale: [
+  +     "The WH-word 'who' is now the object of 'delegate to', creating an observable word order contrast between direct ('Who will they delegate...?') and indirect ('...who they will delegate...')."
+  +   ],
+  +   primary_target: [
+  +     'indirect-question-object-word-order'
+  +   ],
+      register: [
+        'formal'
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///C:/Users/Evertan/.igt/tests/practice-question-bank.test.mjs:135:14)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: [Object],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

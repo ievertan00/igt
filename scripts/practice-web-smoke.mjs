@@ -65,13 +65,13 @@ try {
     assert.equal(await page.$('.switches'), null);
     await page.click('input[name="practice-count"][value="10"]');
     await page.click('input[name="practice-style"][value="formal"]');
-    await page.click('input[name="practice-context"][value="work-study"]');
+    await page.click('input[name="practice-context"][value="work"]');
     await page.screenshot({ path: path.join(captures, `${name}-setup.png`), fullPage: true });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.click('button.practice-generate');
     await page.waitForSelector('#practice-input');
     assert.equal(selection.mode, "sentence"); assert.equal(selection.count, 10);
-    assert.equal(selection.style, "formal"); assert.equal(selection.context, "work-study");
+    assert.equal(selection.style, "formal"); assert.equal(selection.context, "work");
     assert.equal(selectedQuestions.length, 10);
     assert.equal(await page.$('#practice-hint-list li'), null);
     assert.equal(await page.$eval('.practice-question button.primary', node => node.disabled), true);

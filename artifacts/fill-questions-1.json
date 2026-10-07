@@ -1,0 +1,642 @@
+{
+  "fill-053-041": {
+    "prompt_zh": "我们打算周六下午去公园野餐，你要是方便的话也一起来吧。",
+    "reference_answer": "We're planning a picnic in the park on Saturday afternoon — come along if you're free.",
+    "difficulty": "easy",
+    "context": "friends-social",
+    "register": "formal",
+    "grammar_point": ["Present continuous for future arrangements", "Extending an invitation"],
+    "hint_json": {
+      "simple": "前半句是在说一个已经计划好的周末活动，后半句是邀请对方加入。",
+      "intermediate": "计划用 be + V-ing 表达将来安排；邀请用祈使句，后面跟一个简单的条件。",
+      "complete": "We're _____ a picnic in the park on Saturday afternoon — _____ if you're free."
+    },
+    "primary_target": "extend-casual-invitation",
+    "learning_goal": "Extend a casual invitation using present continuous for plans and a conditional invitation.",
+    "learning_rationale": "Natural English invitations combine planned-activity framing with an open-ended 'if you're free' that respects the listener's time."
+  },
+  "fill-053-042": {
+    "prompt_zh": "这家餐厅的招牌菜需要提前一天预定，您可以打电话或者通过网站下单。",
+    "reference_answer": "This restaurant's signature dish requires booking one day in advance; you may reserve it by phone or through the website.",
+    "difficulty": "easy",
+    "context": "restaurants-cafes",
+    "register": "formal",
+    "grammar_point": ["Semi-modal for obligation", "Alternatives with or"],
+    "hint_json": {
+      "simple": "在说一道菜需要提前安排，并告诉客人两种预定方式。",
+      "intermediate": "前半句用 require + V-ing 表达必要性；后半句给出两个选择，用 by 引出方式。",
+      "complete": "This restaurant's signature dish requires _____ one day _____; you may reserve it _____ phone or _____ the website."
+    },
+    "primary_target": "describe-booking-requirement",
+    "learning_goal": "Describe a reservation requirement and provide alternative booking methods.",
+    "learning_rationale": "Stating requirements politely and offering options is essential for customer-facing communication."
+  },
+  "fill-053-043": {
+    "prompt_zh": "我们正在促销，买两件这件商品可以享受七折优惠。",
+    "reference_answer": "We're running a promotion — buy two of this item and get thirty percent off.",
+    "difficulty": "easy",
+    "context": "supermarkets-shopping",
+    "register": "formal",
+    "grammar_point": ["Present continuous for ongoing temporary event", "Imperative for offers"],
+    "hint_json": {
+      "simple": "商店在告诉顾客一个优惠活动：买够一定数量就能打折。",
+      "intermediate": "前半句用 be + V-ing 说明正在进行的活动；后半句用祈使句 + and 连接奖励。",
+      "complete": "We're _____ a promotion — buy two _____ this item and get _____ off."
+    },
+    "primary_target": "state-promotion-offer",
+    "learning_goal": "Announce a current promotion and state the discount conditions.",
+    "learning_rationale": "Promotional language in retail uses present continuous for 'live' offers and clear conditional rewards."
+  },
+  "fill-053-044": {
+    "prompt_zh": "这个药膏每天涂两次，一周后如果红肿没有消退，请再来复诊。",
+    "reference_answer": "Apply this ointment twice a day, and come back for a follow-up in a week if the redness hasn't gone down.",
+    "difficulty": "easy",
+    "context": "health-pharmacy",
+    "register": "formal",
+    "grammar_point": ["Imperative for instructions", "First conditional for medical advice"],
+    "hint_json": {
+      "simple": "医生在给出用药指导和复查条件——先怎么做，什么情况下需要再回来。",
+      "intermediate": "第一句用祈使句直接给指令。第二句用 if + 现在完成时表示「到那时还没消退」，主句用祈使句。",
+      "complete": "_____ this ointment twice a day, and come back for _____ in a week if the redness hasn't _____."
+    },
+    "primary_target": "give-medication-instructions",
+    "learning_goal": "Give medication instructions with a conditional follow-up plan.",
+    "learning_rationale": "Medical instructions often pair a direct command with a conditional trigger for further action."
+  },
+  "fill-053-045": {
+    "prompt_zh": "师傅，我家的热水器打不着火了，能不能麻烦您下午过来看看？",
+    "reference_answer": "Excuse me, our water heater won't light — could you come by this afternoon to take a look?",
+    "difficulty": "easy",
+    "context": "appointments-services",
+    "register": "informal",
+    "grammar_point": ["Polite request with could", "Won't for refusal"],
+    "hint_json": {
+      "simple": "住户在描述一个设备故障，然后礼貌地请维修师傅上门。",
+      "intermediate": "前半句用 ____ 说明机器不工作；后半句用 ____ + 动词原形做礼貌请求。",
+      "complete": "Excuse me, our water heater _____ light — could you come by _____ to _____ a look?"
+    },
+    "primary_target": "request-repair-service-politely",
+    "learning_goal": "Describe a household fault and make a polite service request.",
+    "learning_rationale": "'Won't' for inanimate refusal and 'could you + V' for polite requests are core to everyday service interactions."
+  },
+  "fill-053-046": {
+    "prompt_zh": "上周那部动画片还挺好看的，结尾彩蛋千万别错过！",
+    "reference_answer": "That animated film last week was pretty good — don't miss the post-credits scene!",
+    "difficulty": "easy",
+    "context": "cinema-entertainment",
+    "register": "informal",
+    "grammar_point": ["Past simple for completed experience", "Negative imperative for strong advice"],
+    "hint_json": {
+      "simple": "在聊一部看过的电影，说还不错，然后强烈提醒不要错过结尾的额外内容。",
+      "intermediate": "前半句用过去式描述观影体验；后半句用 ____ + 动词原形给强烈建议。",
+      "complete": "That animated film last week was _____ good — don't _____ the post-credits scene!"
+    },
+    "primary_target": "recommend-film-experience",
+    "learning_goal": "Share a film impression and give a strong recommendation about a specific detail.",
+    "learning_rationale": "Movie-talk often mixes past-tense experience sharing with imperative-style recommendations."
+  },
+  "fill-053-047": {
+    "prompt_zh": "酒水包含在套餐里，但甜点是单独收费的。",
+    "reference_answer": "Drinks are included in the set meal, but desserts are charged separately.",
+    "difficulty": "standard",
+    "context": "restaurants-cafes",
+    "register": "formal",
+    "grammar_point": ["Passive for services", "Contrast with but"],
+    "hint_json": {
+      "simple": "在介绍套餐的包含范围和额外收费项目——什么包了，什么不包。",
+      "intermediate": "前半句用 be + 过去分词表达「包含在内」；后半句用 but 对比，同样用被动表达「单独收费」。",
+      "complete": "Drinks are _____ in the set meal, but desserts are _____ separately."
+    },
+    "primary_target": "explain-inclusions-exclusions",
+    "learning_goal": "Use passive voice to explain what is and isn't included in a service package.",
+    "learning_rationale": "Passive voice shifts focus to the item/service rather than the agent, ideal for explaining policies."
+  },
+  "fill-053-048": {
+    "prompt_zh": "医生说这个检查需要空腹做，所以您从今晚十点以后就不要吃东西了。",
+    "reference_answer": "The doctor said this test requires fasting, so please don't eat anything after ten tonight.",
+    "difficulty": "standard",
+    "context": "health-pharmacy",
+    "register": "formal",
+    "grammar_point": ["Reported speech", "Imperative with please"],
+    "hint_json": {
+      "simple": "在转述医生的要求，然后给出具体的禁食时间。",
+      "intermediate": "前半句用 said + (that) 转述医生的说明；后半句用 please + 否定祈使句告诉对方不要做什么。",
+      "complete": "The doctor _____ this test requires _____, so please don't _____ after ten tonight."
+    },
+    "primary_target": "convey-medical-preparation-instruction",
+    "learning_goal": "Use reported speech to convey medical instructions and add a polite directive.",
+    "learning_rationale": "Medical instructions often need to be relayed from doctor to patient through a third party using reported speech."
+  },
+  "fill-053-049": {
+    "prompt_zh": "老板让我下午去趟银行，顺便把这个月的对账单带回来。",
+    "reference_answer": "The boss asked me to go to the bank this afternoon and bring back this month's statement.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "informal",
+    "grammar_point": ["Verb + object + to-infinitive", "Sequential actions with and"],
+    "hint_json": {
+      "simple": "在说老板吩咐的一件事——去哪里、做什么、顺便带什么回来。",
+      "intermediate": "用 ____ + 人 + to + 动词原形的结构来表达「让某人做某事」。两个动作用 and 串联。",
+      "complete": "The boss _____ me to go to the bank _____ and _____ back this month's statement."
+    },
+    "primary_target": "report-errand-instruction",
+    "learning_goal": "Report an errand instruction using 'ask + person + to-infinitive' with sequential actions.",
+    "learning_rationale": "The 'ask + person + to-V' pattern is the most common way to report delegated tasks in workplace English."
+  },
+  "fill-053-050": {
+    "prompt_zh": "地铁站门口那个便利店关了，你得往前走两个路口才有。",
+    "reference_answer": "The convenience store by the subway entrance has closed — you'll need to walk two more blocks to find one.",
+    "difficulty": "standard",
+    "context": "commuting-transit",
+    "register": "informal",
+    "grammar_point": ["Present perfect for recent change", "Will for necessity"],
+    "hint_json": {
+      "simple": "在告知一个店关门了，然后说需要走多远才能找到下一家。",
+      "intermediate": "前半句用现在完成时表达「已经关了」这个最近发生的变化；后半句用 ____ + need to 表达必须做的事。",
+      "complete": "The convenience store by the subway entrance has _____ — you'll need to _____ two more blocks to find one."
+    },
+    "primary_target": "report-change-and-give-alternative",
+    "learning_goal": "Use present perfect to report a recent change and give an alternative with future necessity.",
+    "learning_rationale": "Present perfect for recent changes plus future necessity expressions are common when giving impromptu directions."
+  },
+  "fill-053-051": {
+    "prompt_zh": "这个牌子的洗衣液比旁边那个贵一点，但洗完衣服闻着确实更香。",
+    "reference_answer": "This brand of laundry detergent costs a bit more than the one next to it, but the clothes do smell nicer after washing.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "informal",
+    "grammar_point": ["Comparative adjectives", "Emphatic do"],
+    "hint_json": {
+      "simple": "在比较两个产品——一个贵一点，但效果确实更好。",
+      "intermediate": "前半句用 more + 比较级对比价格；后半句用 ____ + 动词原形来强调「确实」的效果。",
+      "complete": "This brand of laundry detergent costs a bit _____ than the one next to it, but the clothes _____ smell nicer after washing."
+    },
+    "primary_target": "compare-products-with-emphasis",
+    "learning_goal": "Compare two products and use emphatic 'do' to strengthen a claim.",
+    "learning_rationale": "Emphatic 'do' adds conviction to comparative statements, common in informal recommendation contexts."
+  },
+  "fill-053-052": {
+    "prompt_zh": "你上次拿的药还剩几粒？大夫说如果吃了没效果得换一种。",
+    "reference_answer": "How many pills do you have left from last time? The doctor said we'd need to switch to a different one if these don't work.",
+    "difficulty": "standard",
+    "context": "health-pharmacy",
+    "register": "informal",
+    "grammar_point": ["Wh-questions", "First conditional"],
+    "hint_json": {
+      "simple": "在问还剩多少药，然后转述医生的换药条件。",
+      "intermediate": "前半句用 how many + 可数名词提问剩余数量；后半句用 if + 一般现在时 + would need to 表达条件性的换药。",
+      "complete": "How many _____ do you have left from last time? The doctor said we'd need to _____ a different one if these don't _____."
+    },
+    "primary_target": "ask-about-remaining-medication",
+    "learning_goal": "Ask about remaining medication quantity and relay conditional treatment instructions.",
+    "learning_rationale": "Medication management conversations require precise quantity questions and conditional treatment plans."
+  },
+  "fill-053-053": {
+    "prompt_zh": "如果两位不介意的话，我可以帮你们在靠窗的位置拼一张桌子。",
+    "reference_answer": "If you don't mind, I could put together a table for you by the window.",
+    "difficulty": "standard",
+    "context": "restaurants-cafes",
+    "register": "formal",
+    "grammar_point": ["Polite offering with if you don't mind", "Could for polite offers"],
+    "hint_json": {
+      "simple": "服务员在主动提出一个安排——但要先征得客人同意。",
+      "intermediate": "先用 ____ 引导一个礼貌的前提条件；主句用 could + 动词原形给出提议。",
+      "complete": "If you don't _____, I could _____ a table for you by the window."
+    },
+    "primary_target": "offer-accommodation-politely",
+    "learning_goal": "Offer an accommodation politely using 'if you don't mind' and 'could'.",
+    "learning_rationale": "Polite offers in service contexts soften the imposition by framing it as conditional on the customer's comfort."
+  },
+  "fill-053-054": {
+    "prompt_zh": "供应商说最快也要下周三才能发货，我们这边的排期得往后推了。",
+    "reference_answer": "The supplier says the earliest they can ship is next Wednesday, so our schedule will have to be pushed back.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "informal",
+    "grammar_point": ["Reported speech with present tense", "Will have to for future obligation"],
+    "hint_json": {
+      "simple": "在转述供应商的回复，然后说因此计划要推迟。",
+      "intermediate": "前半句转述用 says + 陈述语序；后半句用 ____ 表达由此产生的时间安排变化。",
+      "complete": "The supplier _____ the earliest they can ship is next Wednesday, so our schedule will _____ be pushed back."
+    },
+    "primary_target": "report-and-announce-schedule-change",
+    "learning_goal": "Relay a third party's statement and announce a resulting schedule impact.",
+    "learning_rationale": "Workplace updates often chain reported information with consequence announcements using 'so'."
+  },
+  "fill-053-055": {
+    "prompt_zh": "公交卡里应该还有二十多块，你先刷着，不够再说。",
+    "reference_answer": "There should be over twenty yuan on the transit card — just use it first, and we'll figure it out if it's not enough.",
+    "difficulty": "standard",
+    "context": "commuting-transit",
+    "register": "informal",
+    "grammar_point": ["Should for logical deduction", "Casual sequencing with just"],
+    "hint_json": {
+      "simple": "在估计卡里还有多少钱，让对方先用着，万一不够到时候再想办法。",
+      "intermediate": "前半句用 ____ 表达基于经验的推测；后半句用祈使句 + 先……, 不够再…… 的口语结构。",
+      "complete": "There _____ be over twenty yuan on the transit card — just use it first, and we'll _____ it out if it's not enough."
+    },
+    "primary_target": "make-estimate-and-contingency-plan",
+    "learning_goal": "Make a logical estimate and propose a contingent backup plan informally.",
+    "learning_rationale": "Everyday money discussions often blend 'should' for reasonable guesses with casual contingency language."
+  },
+  "fill-053-056": {
+    "prompt_zh": "收银台那边那种小包装的坚果其实比大包的划算，按克算的话。",
+    "reference_answer": "Those small packs of nuts by the checkout are actually a better deal than the big bag — if you go by the gram.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "informal",
+    "grammar_point": ["Comparative + intensifier (actually)", "If-clause for method"],
+    "hint_json": {
+      "simple": "在说小包装其实比大包装便宜——给出了计算方式。",
+      "intermediate": "用 ____ + 比较级来纠正一个常见印象；后半句用 if 从句说明按什么方式算的。",
+      "complete": "Those small packs of nuts by the checkout are _____ a better deal than the big bag — if you go by _____."
+    },
+    "primary_target": "correct-assumption-with-comparison",
+    "learning_goal": "Use comparative structures with intensifiers to correct a common assumption.",
+    "learning_rationale": "'Actually' before a comparative signals a correction of expectations, common in informal consumer advice."
+  },
+  "fill-053-057": {
+    "prompt_zh": "这个药开了以后要放冰箱，常温下三天就失效了。",
+    "reference_answer": "This medication needs to be refrigerated once opened — it loses effectiveness after three days at room temperature.",
+    "difficulty": "standard",
+    "context": "health-pharmacy",
+    "register": "informal",
+    "grammar_point": ["Needs to be + past participle", "Once + past participle"],
+    "hint_json": {
+      "simple": "在交代药品的保存条件——开了以后怎么放，不按条件会怎样。",
+      "intermediate": "前半句用 needs to be + 过去分词表达「需要被……」。后半句用 ____ + 过去分词表达「一旦……」。",
+      "complete": "This medication needs to be _____ once opened — it loses effectiveness after three days at _____."
+    },
+    "primary_target": "explain-storage-requirement",
+    "learning_goal": "Explain a product storage requirement using passive structures.",
+    "learning_rationale": "Medicine instructions often use passive 'needs to be + PP' and 'once + PP' for concise conditional warnings."
+  },
+  "fill-053-058": {
+    "prompt_zh": "会议室投影仪的遥控器好像没电了，麻烦IT帮忙换一下电池。",
+    "reference_answer": "The remote for the conference room projector seems to be out of batteries — could IT help replace them?",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "formal",
+    "grammar_point": ["Seem to be for tentative observation", "Could for polite request"],
+    "hint_json": {
+      "simple": "在报告一个设备问题（没有断定），然后请求 IT 帮忙。",
+      "intermediate": "前半句用 seems to be 表达「看起来好像……」的不确定判断；后半句用 ____ + 动词原形做请求。",
+      "complete": "The remote for the conference room projector _____ to be out of batteries — could IT help _____ them?"
+    },
+    "primary_target": "report-issue-with-hedging",
+    "learning_goal": "Report a suspected equipment issue with tentative language and make a polite request.",
+    "learning_rationale": "Workplace problem-reporting benefits from hedging ('seems to be') to avoid sounding accusatory."
+  },
+  "fill-053-059": {
+    "prompt_zh": "演出七点半开始，但最好提前二十分钟到，门口要排队检票。",
+    "reference_answer": "The show starts at seven thirty, but it's best to arrive twenty minutes early — there'll be a queue for ticket checks at the entrance.",
+    "difficulty": "standard",
+    "context": "cinema-entertainment",
+    "register": "informal",
+    "grammar_point": ["Present simple for scheduled events", "It is + adjective + to-infinitive"],
+    "hint_json": {
+      "simple": "在说演出开始时间和提前到的建议——因为门口有排队。",
+      "intermediate": "前半句用一般现在时描述安排好的时间；后半句用 ____ 表达建议做某事。",
+      "complete": "The show _____ at seven thirty, but it's best to _____ twenty minutes early — there'll be a queue for ticket checks."
+    },
+    "primary_target": "advise-timing-with-reason",
+    "learning_goal": "State a scheduled start time and give a timing recommendation with justification.",
+    "learning_rationale": "'It's best to + V' is a common informal way to give advice without sounding bossy."
+  },
+  "fill-053-060": {
+    "prompt_zh": "这份合同需要法务审过才能签，最快也要到下周一。",
+    "reference_answer": "This contract needs to be reviewed by legal before it can be signed — the earliest would be next Monday.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "formal",
+    "grammar_point": ["Needs to be + past participle", "Before + passive", "Would for estimation"],
+    "hint_json": {
+      "simple": "合同要经过法务审查才能签，给了最早的预计时间。",
+      "intermediate": "前半句用 needs to be + ____ 表达「需要被……」。后半句用 ____ 给一个不绝对的估计。",
+      "complete": "This contract needs to be _____ by legal before it can be _____, and the earliest would be _____."
+    },
+    "primary_target": "state-approval-requirement-with-deadline",
+    "learning_goal": "Use passive to describe a mandatory review process and provide a tentative timeline.",
+    "learning_rationale": "Formal workflow descriptions chain 'need to be + PP', 'before + passive', and 'would' for tentative timelines."
+  },
+  "fill-053-061": {
+    "prompt_zh": "我本来打算坐高铁去的，但票卖完了，只好改坐大巴。",
+    "reference_answer": "I was going to take the high-speed train, but the tickets were sold out, so I had to take the bus instead.",
+    "difficulty": "standard",
+    "context": "travel-accommodation",
+    "register": "informal",
+    "grammar_point": ["Was going to for changed plans", "Had to for past obligation"],
+    "hint_json": {
+      "simple": "在说一个被打乱的出行计划——原来的想法行不通，只能换一种方式。",
+      "intermediate": "前半句用 ____ 表达原本的计划（后来没做成）。后半句用 ____ + 动词原形表达无奈的选择。",
+      "complete": "I was _____ to take the high-speed train, but the tickets were sold out, so I _____ take the bus instead."
+    },
+    "primary_target": "explain-changed-travel-plan",
+    "learning_goal": "Use 'was going to' to describe a changed plan and 'had to' for the alternative.",
+    "learning_rationale": "'Was going to' is the most natural way to talk about plans that didn't happen in informal English."
+  },
+  "fill-053-062": {
+    "prompt_zh": "你能不能顺路帮我把这封信投进邮筒？就在你下车的那个站台旁边。",
+    "reference_answer": "Could you drop this letter in the postbox on your way? It's right by the platform where you get off.",
+    "difficulty": "standard",
+    "context": "friends-social",
+    "register": "informal",
+    "grammar_point": ["Could for polite request", "Defining relative clause with where"],
+    "hint_json": {
+      "simple": "在请朋友顺路帮忙做一件事，并描述了具体位置。",
+      "intermediate": "前半句用 could you + 动词原形做请求。后半句用 ____ 引导的定语从句描述位置。",
+      "complete": "Could you _____ this letter in the postbox on your way? It's right by the platform _____ you get off."
+    },
+    "primary_target": "request-favor-with-location",
+    "learning_goal": "Make a casual request and provide a location using a defining relative clause.",
+    "learning_rationale": "Combining polite requests with relative clauses for location is a common everyday communication pattern."
+  },
+  "fill-053-063": {
+    "prompt_zh": "冰箱里的剩菜放了两天了，闻着不太对，还是扔了吧。",
+    "reference_answer": "The leftovers in the fridge have been there for two days — they smell off, so we'd better throw them out.",
+    "difficulty": "standard",
+    "context": "home-routines",
+    "register": "informal",
+    "grammar_point": ["Present perfect for duration", "Had better for strong advice"],
+    "hint_json": {
+      "simple": "在判断食物还能不能吃——放了多久、闻着怎么样，然后说应该扔掉。",
+      "intermediate": "前半句用 ____ 表达持续了两天的状态；后半句用 ____ + 动词原形表达「最好还是……」。",
+      "complete": "The leftovers in the fridge have been there _____ two days — they smell off, so we'd _____ throw them out."
+    },
+    "primary_target": "assess-food-safety",
+    "learning_goal": "Use present perfect for duration and 'had better' to give a strong household recommendation.",
+    "learning_rationale": "Food-safety discussions combine duration ('have been here for X') with decisive recommendations."
+  },
+  "fill-053-064": {
+    "prompt_zh": "这部纪录片讲的是气候变化对沿海城市的影响，看完让人挺震撼的。",
+    "reference_answer": "This documentary is about the impact of climate change on coastal cities — it's quite striking when you finish watching it.",
+    "difficulty": "standard",
+    "context": "cinema-entertainment",
+    "register": "neutral",
+    "grammar_point": ["Be about + topic", "It + be + adjective for impression"],
+    "hint_json": {
+      "simple": "在介绍一部纪录片的内容和观看感受。",
+      "intermediate": "前半句用 is about + 名词短语介绍主题。后半句用 it's + 形容词表达观后感。",
+      "complete": "This documentary is _____ the impact of climate change on coastal cities — it's _____ when you finish watching it."
+    },
+    "primary_target": "summarise-documentary-content",
+    "learning_goal": "Summarise a documentary's topic and share a personal impression.",
+    "learning_rationale": "'It is about + topic' and 'it is + adjective' are the building blocks of film and media discussion."
+  },
+  "fill-053-065": {
+    "prompt_zh": "下次开会之前请把这份数据核对一遍，尤其是第三页的数字。",
+    "reference_answer": "Please double-check this data before the next meeting, especially the figures on page three.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "formal",
+    "grammar_point": ["Please + imperative for polite instruction", "Especially for emphasis"],
+    "hint_json": {
+      "simple": "在给出一个具体的工作任务和完成期限，并特别强调了重点。",
+      "intermediate": "用 ____ + 祈使句 + before 表达礼貌的截止要求。后半句用 ____ 来突出特别注意的点。",
+      "complete": "Please _____ this data before the next meeting, _____ the figures on page three."
+    },
+    "primary_target": "assign-task-with-priority",
+    "learning_goal": "Assign a task with a deadline and highlight a priority area using 'especially'.",
+    "learning_rationale": "Polite task delegation often uses 'please + V' with 'especially' to focus attention on critical details."
+  },
+  "fill-053-066": {
+    "prompt_zh": "地铁突然停了，广播说前方信号故障，可能要等十分钟。",
+    "reference_answer": "The subway suddenly stopped — the announcement said there's a signal fault ahead, and we may have to wait about ten minutes.",
+    "difficulty": "standard",
+    "context": "commuting-transit",
+    "register": "neutral",
+    "grammar_point": ["Reported speech with past tense framing", "May have to for uncertain obligation"],
+    "hint_json": {
+      "simple": "在说地铁突然停了、广播怎么解释的、可能要等多久。",
+      "intermediate": "前半句用过去时描述发生的事。中间用 ____ 转述广播的内容。后半句用 ____ 表达不确定的等待。",
+      "complete": "The subway suddenly stopped — the announcement _____ there's a signal fault ahead, and we may _____ wait about ten minutes."
+    },
+    "primary_target": "report-transit-disruption",
+    "learning_goal": "Report a transit disruption by narrating what happened and relaying official information.",
+    "learning_rationale": "Transit disruption reports blend past narration with reported speech and uncertain obligation — a real-world pattern."
+  },
+  "fill-053-067": {
+    "prompt_zh": "要是你下周来北京出差，提前跟我说一声，我带你去尝尝那家新开的川菜馆。",
+    "reference_answer": "If you're coming to Beijing on business next week, let me know ahead of time — I'll take you to try that new Sichuan restaurant.",
+    "difficulty": "standard",
+    "context": "friends-social",
+    "register": "informal",
+    "grammar_point": ["First conditional with present continuous", "Will for spontaneous offer"],
+    "hint_json": {
+      "simple": "在提供有条件的邀请——如果你来出差，我就带你去吃好吃的。",
+      "intermediate": "前半句用 if + be + V-ing 表达将来可能的情况。后半句用祈使句 + I'll + 动词原形做自发的承诺。",
+      "complete": "If you're _____ to Beijing on business next week, let me know ahead of time — I'll _____ you to try that new Sichuan restaurant."
+    },
+    "primary_target": "extend-conditional-invitation",
+    "learning_goal": "Use a first conditional with present continuous to set up a future invitation.",
+    "learning_rationale": "Conditional invitations ('if you're coming...I'll take you...') are the most natural way to extend flexible social offers."
+  },
+  "fill-053-068": {
+    "prompt_zh": "你最好在午饭前去银行，下午他们就关门整理内务了。",
+    "reference_answer": "You'd better go to the bank before lunch — they close in the afternoon to sort out internal matters.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "informal",
+    "grammar_point": ["Had better for strong advice", "To-infinitive for purpose"],
+    "hint_json": {
+      "simple": "在给一个时间建议——最好什么时候去，因为下午他们有事。",
+      "intermediate": "前半句用 ____ + 动词原形表达强烈建议；后半句用 ____ 说明下午关门的目的。",
+      "complete": "You'd _____ go to the bank before lunch — they close in the afternoon to _____ internal matters."
+    },
+    "primary_target": "give-time-sensitive-advice",
+    "learning_goal": "Give time-sensitive advice using 'had better' with a purpose clause.",
+    "learning_rationale": "'Had better' carries urgency that 'should' lacks — useful when the window of opportunity is closing."
+  },
+  "fill-053-069": {
+    "prompt_zh": "健身房年卡续费的话可以打八折，但只限这个月。",
+    "reference_answer": "You can get twenty percent off if you renew your annual gym membership, but only this month.",
+    "difficulty": "standard",
+    "context": "appointments-services",
+    "register": "neutral",
+    "grammar_point": ["Can for eligibility", "If + present tense for real condition", "Only for time limitation"],
+    "hint_json": {
+      "simple": "在说一个优惠条件——续费能打折，但有时限。",
+      "intermediate": "前半句用 can + 动词原形 + if 从句表达符合条件的优惠。后半句用 ____ 强调时间限制。",
+      "complete": "You can get _____ off if you renew your annual gym membership, but _____ this month."
+    },
+    "primary_target": "state-limited-time-discount",
+    "learning_goal": "Describe an eligibility-based discount with a time limitation.",
+    "learning_rationale": "Membership renewal language pairs 'can get + discount + if' with time boundaries — practical for navigating service offers."
+  },
+  "fill-053-070": {
+    "prompt_zh": "这件风衣的料子摸着挺舒服的，不过浅色不太耐脏。",
+    "reference_answer": "The fabric of this trench coat feels quite nice, but the light colour won't stay clean for long.",
+    "difficulty": "standard",
+    "context": "supermarkets-shopping",
+    "register": "informal",
+    "grammar_point": ["Feel + adjective for sensory impression", "Won't for prediction"],
+    "hint_json": {
+      "simple": "在评价一件衣服的面料触感和颜色实用性。",
+      "intermediate": "前半句用 feel + 形容词表达手感。后半句用 ____ 表达对颜色耐脏程度的预测。",
+      "complete": "The fabric of this trench coat _____ quite nice, but the light colour _____ stay clean for long."
+    },
+    "primary_target": "evaluate-product-quality",
+    "learning_goal": "Use sensory verbs and predictive 'won't' to evaluate a product's strengths and weaknesses.",
+    "learning_rationale": "Shopping evaluations combine sensory impressions ('feels/looks/smells + adj') with practical predictions."
+  },
+  "fill-053-071": {
+    "prompt_zh": "去机场的地铁最早一班是五点半，你赶七点的飞机应该来得及。",
+    "reference_answer": "The first subway to the airport is at five thirty — you should be able to make your seven o'clock flight.",
+    "difficulty": "standard",
+    "context": "commuting-transit",
+    "register": "neutral",
+    "grammar_point": ["Should be able to for reasonable expectation", "Prepositional phrase for purpose"],
+    "hint_json": {
+      "simple": "在告诉别人最早一班地铁的时间，并评估能否赶上飞机。",
+      "intermediate": "前半句用 be + at + 时间说班次时间。后半句用 ____ 表达合理的可能性。",
+      "complete": "The first subway to the airport is at ____ — you should be able to _____ your seven o'clock flight."
+    },
+    "primary_target": "assess-transit-feasibility",
+    "learning_goal": "Give transit schedule information and assess whether a connection is feasible.",
+    "learning_rationale": "'Should be able to' is the standard expression for reasonable travel feasibility assessments."
+  },
+  "fill-053-072": {
+    "prompt_zh": "你刚做完手术，半年内最好不要搬重东西。",
+    "reference_answer": "You just had surgery — you'd better not lift anything heavy for six months.",
+    "difficulty": "standard",
+    "context": "health-pharmacy",
+    "register": "informal",
+    "grammar_point": ["Had better not for strong negative advice", "For + duration"],
+    "hint_json": {
+      "simple": "在给术后恢复的建议——不能做什么、持续多久。",
+      "intermediate": "前半句用过去时交代背景。后半句用 ____ + 动词原形给强硬的禁忌建议。",
+      "complete": "You just had surgery — you'd better not _____ anything heavy for _____."
+    },
+    "primary_target": "give-post-surgery-restriction",
+    "learning_goal": "Give a strong post-procedure restriction using 'had better not' with a time boundary.",
+    "learning_rationale": "'Had better not' is stronger and more personal than 'shouldn't', appropriate for medical aftercare."
+  },
+  "fill-053-073": {
+    "prompt_zh": "这个充电宝在飞机上不能用，过安检的时候要单独拿出来。",
+    "reference_answer": "This power bank can't be used on the plane — you need to take it out separately at security.",
+    "difficulty": "standard",
+    "context": "travel-accommodation",
+    "register": "neutral",
+    "grammar_point": ["Can't be + past participle for prohibition", "Need to for requirement"],
+    "hint_json": {
+      "simple": "在说一个物品在飞机上禁止使用、安检时的处理方式。",
+      "intermediate": "前半句用 can't be + 过去分词表达禁令。后半句用 ____ + 动词原形说安检时的要求。",
+      "complete": "This power bank can't be _____ on the plane — you need to take it _____ at security."
+    },
+    "primary_target": "state-travel-prohibition",
+    "learning_goal": "State a flight-related prohibition and describe the security procedure.",
+    "learning_rationale": "Travel regulations are naturally expressed with 'can't be + PP' for rules and 'need to' for procedures."
+  },
+  "fill-053-074": {
+    "prompt_zh": "我在等一个很重要的快递，你能帮我留意一下门铃吗？",
+    "reference_answer": "I'm waiting for a very important delivery — could you keep an ear out for the doorbell?",
+    "difficulty": "standard",
+    "context": "home-routines",
+    "register": "informal",
+    "grammar_point": ["Present continuous for ongoing wait", "Could for polite request"],
+    "hint_json": {
+      "simple": "在等快递，请别人帮忙留意门铃。",
+      "intermediate": "前半句用 be + V-ing 表达正在等。后半句用 ____ 做礼貌请求。",
+      "complete": "I'm waiting for a _____ delivery — could you keep an _____ out for the doorbell?"
+    },
+    "primary_target": "request-household-help",
+    "learning_goal": "Use present continuous to describe an ongoing situation and make a household request.",
+    "learning_rationale": "'Keep an ear out for' is a natural phrasal alternative to 'listen for', common in household English."
+  },
+  "fill-053-075": {
+    "prompt_zh": "如果项目下周五之前不能交付，客户有权要求赔偿。",
+    "reference_answer": "If the project cannot be delivered by next Friday, the client is entitled to claim compensation.",
+    "difficulty": "challenge",
+    "context": "work-study",
+    "register": "formal",
+    "grammar_point": ["First conditional with passive", "Be entitled to for legal right"],
+    "hint_json": {
+      "simple": "在说一个合同条款——逾期交付的后果。",
+      "intermediate": "前半句用 if + 被动表达条件。后半句用 be entitled to 表达对方的法定权利。",
+      "complete": "If the project cannot be _____ by next Friday, the client is _____ to claim compensation."
+    },
+    "primary_target": "state-contractual-consequence",
+    "learning_goal": "Use a conditional with passive voice and 'be entitled to' to express a contractual obligation.",
+    "learning_rationale": "'Be entitled to' is the standard English phrasing for legal and contractual rights — more precise than 'can' or 'may'."
+  },
+  "fill-053-076": {
+    "prompt_zh": "虽然这部电影的评分不高，但我觉得剧情还是挺有意思的，至少不无聊。",
+    "reference_answer": "Although this film's rating isn't high, I thought the plot was quite interesting — at least it wasn't boring.",
+    "difficulty": "challenge",
+    "context": "cinema-entertainment",
+    "register": "informal",
+    "grammar_point": ["Concessive although", "Past tense for opinion about experience", "At least for hedging"],
+    "hint_json": {
+      "simple": "在表达和评分不一致的个人看法——虽然分低，但内容不错。",
+      "intermediate": "前半句用 although 引导让步。后半句用过去时 I thought 表达主观感受，然后用 ____ 缓和评价。",
+      "complete": "_____ this film's rating isn't high, I thought the plot was quite interesting — at _____ it wasn't boring."
+    },
+    "primary_target": "express-counter-consensus-opinion",
+    "learning_goal": "Express a personal opinion that goes against a general consensus using concessive structures and hedging.",
+    "learning_rationale": "Going against the consensus requires both concessive grammar and social hedging — a sophisticated communication skill."
+  },
+  "fill-053-077": {
+    "prompt_zh": "如果你对这份报价有任何疑问，请随时联系我们，我们会尽快回复。",
+    "reference_answer": "If you have any questions about this quotation, please do not hesitate to contact us — we will respond as soon as possible.",
+    "difficulty": "standard",
+    "context": "work-study",
+    "register": "formal",
+    "grammar_point": ["If-clause for polite invitation", "Please do not hesitate to for formal invitation"],
+    "hint_json": {
+      "simple": "在礼貌地邀请对方有疑问就联系，并承诺快速回复。",
+      "intermediate": "前半句用 if 从句做条件。后半句用 ____ 做非常客气的邀请。",
+      "complete": "If you have any questions about this _____, please do not _____ to contact us — we will respond as soon as possible."
+    },
+    "primary_target": "invite-follow-up-formally",
+    "learning_goal": "Use 'please do not hesitate to' to formally invite follow-up communication.",
+    "learning_rationale": "'Please do not hesitate to' is a fixed formal expression that signals genuine openness to questions."
+  },
+  "fill-053-078": {
+    "prompt_zh": "这座山看着不高，但爬到山顶至少要两个小时。",
+    "reference_answer": "This mountain doesn't look tall, but it takes at least two hours to reach the top.",
+    "difficulty": "easy",
+    "context": "travel-accommodation",
+    "register": "neutral",
+    "grammar_point": ["Don't + base form for negative appearance", "It takes + duration + to-infinitive"],
+    "hint_json": {
+      "simple": "在对比山的外观和实际攀登难度——看着矮，爬着远。",
+      "intermediate": "前半句用 doesn't + 动词原形表达「不……」。后半句用 ____ 表达需要多长时间做什么。",
+      "complete": "This mountain doesn't _____ tall, but it takes _____ two hours to reach the top."
+    },
+    "primary_target": "contrast-appearance-with-reality",
+    "learning_goal": "Use 'doesn't look' to contrast appearance with fact and 'it takes + duration' for time needed.",
+    "learning_rationale": "Appearance-vs-reality contrasts are a common conversational move in travel and outdoor contexts."
+  },
+  "fill-053-079": {
+    "prompt_zh": "别忘了明天一早把垃圾桶推出去，这周收垃圾提前了一天。",
+    "reference_answer": "Don't forget to put the bin out first thing tomorrow — rubbish collection has been moved a day earlier this week.",
+    "difficulty": "standard",
+    "context": "home-routines",
+    "register": "informal",
+    "grammar_point": ["Negative imperative with forget to", "Present perfect passive for schedule change"],
+    "hint_json": {
+      "simple": "在提醒别忘了倒垃圾，因为时间改了。",
+      "intermediate": "前半句用 ____ 提醒别忘了做某事。后半句用现在完成时被动表达「已经调整了」的时间。",
+      "complete": "Don't forget to _____ the bin out first thing tomorrow — rubbish collection has been _____ a day earlier this week."
+    },
+    "primary_target": "remind-about-household-task",
+    "learning_goal": "Use 'don't forget to' for reminders and present perfect passive for a changed schedule.",
+    "learning_rationale": "Household reminders blend imperatives with present perfect passive for service-change notifications."
+  },
+  "fill-053-080": {
+    "prompt_zh": "关于年假申请，人事部说需要提前两周提交，紧急情况可以走特批。",
+    "reference_answer": "Regarding annual leave applications, HR says they need to be submitted two weeks in advance — exceptions can be approved for emergencies.",
+    "difficulty": "challenge",
+    "context": "work-study",
+    "register": "formal",
+    "grammar_point": ["Regarding for topic introduction", "Need to be + past participle", "Can be + past participle for exception"],
+    "hint_json": {
+      "simple": "在说请假的规定——正常流程和特殊情况怎么处理。",
+      "intermediate": "用 Regarding 开头引入话题。正常流程用 need to be + 过去分词。例外情况用 can be + 过去分词。",
+      "complete": "_____ annual leave applications, HR says they need to be _____ two weeks in advance — exceptions can be _____ for emergencies."
+    },
+    "primary_target": "explain-policy-with-exceptions",
+    "learning_goal": "Use formal topic introduction and passive constructions to explain a policy with exception handling.",
+    "learning_rationale": "Policy explanations in formal English chain 'Regarding', passive obligation, and passive exception — a workplace writing staple."
+  }
+}
