@@ -1,6 +1,15 @@
-type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy";
+type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
 
 const paths: Record<IconName, string> = {
+  home: "M3 11l9-8 9 8 M5 10v11h14V10 M9 21v-7h6v7",
+  dining: "M4 3v6a3 3 0 0 0 6 0V3 M7 3v18 M16 21V3c4 2 4 9 0 10h4",
+  shopping: "M5 7h14l2 14H3L5 7z M9 7V5a3 3 0 0 1 6 0v2",
+  entertainment: "M9 18V5l11-2v13 M9 9l11-2 M9 18a3 3 0 1 1-3-3h3 M20 16a3 3 0 1 1-3-3h3",
+  health: "M12 21 3.5 12.5a5.3 5.3 0 0 1 7.5-7.5l1 1 1-1a5.3 5.3 0 0 1 7.5 7.5L12 21z",
+  work: "M8 7V4h8v3 M3 7h18v13H3V7z M3 12c6 4 12 4 18 0 M10 13h4v3h-4z",
+  transit: "M5 16V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z M5 11h14 M8 15h.01 M16 15h.01 M8 18l-3 4 M16 18l3 4 M7 21h10",
+  travel: "M22 3 9 16 M22 3l-7 19-6-6-7-6 20-7z",
+  services: "M3 18h18 M5 18v-4a7 7 0 0 1 14 0v4 M12 7V4 M10 4h4 M2 21h20",
   dashboard: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
   grammar: "M13 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8 M16 3l5 5 M10 14l2-5 6-6 3 3-6 6-5 2 M7 17h6",
   translation: "M3 5h12 M9 3v2 M5 5c1 5 4 8 9 10 M13 5c-1 5-4 8-9 10 M14 21l4-10 4 10 M16 17h4",

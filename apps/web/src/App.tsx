@@ -993,6 +993,12 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
     </div>
   );
 }
+const practiceContextIcons: Record<string, React.ComponentProps<typeof Icon>["name"]> = {
+  all: "dashboard", home: "home", dining: "dining", shopping: "shopping",
+  entertainment: "entertainment", social: "ask", health: "health", work: "work",
+  transit: "transit", travel: "travel", services: "services",
+};
+
 function PracticeFilter({
   label,
   value,
@@ -1008,12 +1014,61 @@ function PracticeFilter({
   names: Record<string, string>;
   disabled: boolean;
 }) {
+  const pickerRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const picker = pickerRef.current;
+    if (!picker) return;
+    const positionMenu = () => {
+      if (!picker.open) return;
+      const trigger = picker.querySelector("summary")!;
+      const menu = picker.querySelector<HTMLElement>(".practice-picker-menu")!;
+      const rect = trigger.getBoundingClientRect();
+      const viewport = window.visualViewport;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+      // Leave room for the gap and a small viewport gutter on either side.
+      const below = Math.max(0, viewportBottom - rect.bottom - 14);
+      const above = Math.max(0, rect.top - viewportTop - 14);
+      const opensAbove = below < Math.min(300, menu.scrollHeight) && above > below;
+      picker.dataset.side = opensAbove ? "above" : "below";
+      menu.style.maxHeight = Math.min(300, opensAbove ? above : below) + "px";
+    };
+    const dismiss = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && picker.open) {
+        picker.open = false;
+        picker.querySelector("summary")?.focus();
+      }
+    };
+    const dismissOutside = (event: PointerEvent) => {
+      if (picker.open && event.target instanceof Node && !picker.contains(event.target)) {
+        picker.open = false;
+      }
+    };
+    document.addEventListener("pointerdown", dismissOutside, true);
+    picker.addEventListener("toggle", positionMenu);
+    picker.addEventListener("keydown", dismiss);
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    window.visualViewport?.addEventListener("resize", positionMenu);
+    window.visualViewport?.addEventListener("scroll", positionMenu);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside, true);
+      picker.removeEventListener("toggle", positionMenu);
+      picker.removeEventListener("keydown", dismiss);
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+      window.visualViewport?.removeEventListener("resize", positionMenu);
+      window.visualViewport?.removeEventListener("scroll", positionMenu);
+    };
+  }, []);
+
   return (
     <fieldset className="practice-filter" disabled={disabled}>
-      <legend>{label}</legend>
-      <details className="practice-picker">
-        <summary aria-label={`${label}: ${names[value]}`}>
-          <Icon name="practice" />
+      <legend><span className="practice-step" aria-hidden="true">3</span>{label}</legend>
+      <p className="practice-section-hint">Choose a context or keep all contexts.</p>
+      <details className="practice-picker" ref={pickerRef}>
+        <summary aria-label={`${label}: ${names[value]}`} aria-disabled={disabled} onClick={(event) => { if (disabled) event.preventDefault(); }}>
+          <Icon name={practiceContextIcons[value]} />
           <span>{names[value]}</span>
           <Icon name="chevron" className="picker-chevron" />
         </summary>
@@ -1026,9 +1081,12 @@ function PracticeFilter({
               key={option}
               onClick={(event) => {
                 setValue(option);
-                event.currentTarget.closest("details")?.removeAttribute("open");
+                const picker = event.currentTarget.closest("details");
+                picker?.removeAttribute("open");
+                picker?.querySelector("summary")?.focus();
               }}
             >
+              <Icon name={practiceContextIcons[option]} />
               <span>{names[option]}</span>
               {value === option && <Icon name="check" />}
             </button>
@@ -1141,81 +1199,96 @@ function Practice() {
         detail="Translate a Chinese sentence into English, then get feedback on meaning, grammar, and tone."
       />
       {!question && (
-        <Panel title="Set up your practice" icon="practice" className="practice-setup">
-          <p className="practice-mode-hint">
-            Sentence translation
-            <span>Choose the number of questions, difficulty, and context for this session.</span>
-          </p>
-          <fieldset className="question-count" disabled={busy}>
-            <legend>Number of questions</legend>
-            <div className="count-options count-segments">
-              {[3, 5, 10].map((value) => (
-                <label className={count === value ? "selected" : ""} key={value}>
-                  <input
-                    type="radio"
-                    name="practice-count"
-                    value={value}
-                    checked={count === value}
-                    onChange={() => setCount(value)}
-                  />
-                  <span>{value} questions</span>
-                </label>
-              ))}
+        <div className="practice-config">
+          <section className="practice-setup" aria-label="Set up your practice">
+            <fieldset className="question-count" disabled={busy}>
+              <legend><span className="practice-step" aria-hidden="true">1</span>Number of questions</legend>
+              <p className="practice-section-hint">Choose how many questions for this session.</p>
+              <div className="count-options count-segments">
+                {[3, 5, 10].map((value) => (
+                  <label className={count === value ? "selected" : ""} key={value}>
+                    <input
+                      type="radio"
+                      name="practice-count"
+                      value={value}
+                      checked={count === value}
+                      onChange={() => setCount(value)}
+                    />
+                    <Icon name="document" />
+                    <span className="practice-choice-copy"><strong>{value} questions</strong><small>{value === 3 ? "A quick practice" : value === 5 ? "A balanced session" : "A deeper practice"}</small></span>
+                    <Icon name="check" className="practice-choice-check" />
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="practice-difficulty-section">
+              <fieldset className="practice-difficulty" disabled={busy}>
+                <legend><span className="practice-step" aria-hidden="true">2</span>Difficulty</legend>
+                <p className="practice-section-hint">Match the level to your current ability and goal.</p>
+                <div className="count-options difficulty-segments">
+                  {(["easy", "standard", "challenge"] as const).map((value) => (
+                    <label className={difficulty === value ? "selected" : ""} key={value}>
+                      <input
+                        type="radio"
+                        name="practice-difficulty"
+                        value={value}
+                        checked={difficulty === value}
+                        onChange={() => setDifficulty(value)}
+                      />
+                      <Icon name={value === "easy" ? "idea" : value === "standard" ? "dashboard" : "coach"} />
+                      <span className="practice-choice-copy"><strong>{difficultyName[value]}</strong><small>{value === "easy" ? "One familiar idea" : value === "standard" ? "A realistic choice" : "Precise, connected English"}</small></span>
+                      <Icon name="check" className="practice-choice-check" />
+                    </label>
+                  ))}
+                </div>
+                <p className="practice-mode-hint">
+                  <Icon name="info" />
+                  <span>Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks for more
+                  precise, connected English.</span>
+                </p>
+              </fieldset>
             </div>
-          </fieldset>
-          <fieldset className="practice-difficulty" disabled={busy}>
-            <legend>Difficulty</legend>
-            <div className="count-options difficulty-segments">
-              {(["easy", "standard", "challenge"] as const).map((value) => (
-                <label className={difficulty === value ? "selected" : ""} key={value}>
-                  <input
-                    type="radio"
-                    name="practice-difficulty"
-                    value={value}
-                    checked={difficulty === value}
-                    onChange={() => setDifficulty(value)}
-                  />
-                  <span>{difficultyName[value]}</span>
-                </label>
-              ))}
+            <div className="practice-config-lower">
+              <div className="practice-filter-stack">
+                <PracticeFilter
+                  label="Context"
+                  value={context}
+                  setValue={setContext}
+                  options={["all", "home", "dining", "shopping", "entertainment", "social", "health", "work", "transit", "travel", "services"]}
+                  names={categoryName}
+                  disabled={busy}
+                />
+              </div>
             </div>
-            <p className="practice-mode-hint">
-              Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks for more
-              precise, connected English.
-            </p>
-          </fieldset>
-          <div className="practice-config-lower">
-            <div className="practice-filter-stack">
-              <PracticeFilter
-                label="Context"
-                value={context}
-                setValue={setContext}
-                options={["all", "home", "dining", "shopping", "entertainment", "social", "health", "work", "transit", "travel", "services"]}
-                names={categoryName}
-                disabled={busy}
-              />
+          </section>
+          <aside className="practice-guide" aria-labelledby="practice-guide-title">
+            <h2 id="practice-guide-title"><Icon name="handbook" />How to practise</h2>
+            <div className="practice-guide-item">
+              <Icon name="document" />
+              <div><h3>Start with a sentence</h3><p>Questions come from a ready-to-use bank; less-used questions appear first.</p></div>
             </div>
-            <aside className="practice-session" aria-label="Your session">
-              <p className="practice-session-label">Your session</p>
-              <ul>
-                <li><Icon name="document" /><span>{count} questions</span></li>
-                <li><Icon name="dashboard" /><span>{difficultyName[difficulty]}</span></li>
-                <li><Icon name="practice" /><span>{categoryName[context]}</span></li>
-              </ul>
-              <button className="primary practice-generate" onClick={generate} disabled={busy} aria-busy={busy}>
-                {busy ? <><span className="loading-spinner" aria-hidden="true" />Preparing…</> : <>Start practice<Icon name="arrow" /></>}
-              </button>
-            </aside>
-          </div>
-          <div className="practice-instructions">
-            <h3>How to practise</h3>
-            <ol>
-              <li>Questions come from a ready-to-use bank; less-used questions appear first.</li>
-              <li>Translate the Chinese sentence into English. Optional hints reveal a cue, a construction, then an open pattern.</li>
-              <li>Check your translation for AI feedback and a reference answer, then continue. Your attempts are recorded.</li>
-            </ol>
-          </div>
-        </Panel>
+            <div className="practice-guide-item">
+              <Icon name="translation" />
+              <div><h3>Make it your English</h3><p>Translate the Chinese sentence into English. Optional hints reveal a cue, a construction, then an open pattern.</p></div>
+            </div>
+            <div className="practice-guide-item">
+              <Icon name="ask" />
+              <div><h3>Learn from feedback</h3><p>Check your translation for AI feedback and a reference answer, then continue.</p></div>
+            </div>
+            <p className="practice-guide-note"><Icon name="bookmark" />Your attempts are recorded.</p>
+          </aside>
+          <aside className="practice-session" aria-label="Your session">
+            <p className="practice-session-label">Your session</p>
+            <ul>
+              <li><Icon name="document" /><span>{count} questions</span></li>
+              <li><Icon name="dashboard" /><span>{difficultyName[difficulty]}</span></li>
+              <li><Icon name={practiceContextIcons[context]} /><span>{categoryName[context]}</span></li>
+            </ul>
+            <button className="primary practice-generate" onClick={generate} disabled={busy} aria-busy={busy}>
+              {busy ? <><span className="loading-spinner" aria-hidden="true" />Preparing…</> : <>Start practice<Icon name="arrow" /></>}
+            </button>
+          </aside>
+        </div>
       )}
       {!question && generationError && (
         <State title="Could not prepare practice. Please try again." detail={generationError} />

@@ -61,17 +61,48 @@ try {
   for (const [name, width, height] of [["desktop", 1440, 1000], ["mobile", 390, 844]]) {
     await page.setViewport({ width, height });
     await page.goto(`http://127.0.0.1:${port}/#practice`, { waitUntil: "networkidle0" });
-    await page.waitForSelector('input[name="practice-style"]');
+    await page.waitForSelector('input[name="practice-count"]');
     assert.equal(await page.$('.switches'), null);
-    await page.click('input[name="practice-count"][value="10"]');
-    await page.click('input[name="practice-style"][value="formal"]');
-    await page.click('input[name="practice-context"][value="work"]');
+    await page.click('label:has(input[name="practice-count"][value="10"])');
+    await page.click('label:has(input[name="practice-difficulty"][value="challenge"])');
+    // Put the trigger near the viewport edge, as it is after configuring difficulty.
+    await page.$eval('.practice-picker > summary', node => {
+      window.scrollBy(0, node.getBoundingClientRect().bottom - (innerHeight - 24));
+    });
+    const scrollBeforeContext = await page.evaluate(() => scrollY);
+    await page.click('.practice-picker > summary');
+    await page.waitForFunction(() => {
+      const menu = document.querySelector('.practice-picker-menu').getBoundingClientRect();
+      return menu.top >= 8 && menu.bottom <= innerHeight - 8;
+    }, { timeout: 1500 });
+    assert.equal(await page.evaluate(() => scrollY), scrollBeforeContext, 'Opening Context must not scroll the page');
+    assert.equal(await page.$$eval('.practice-picker-menu button', nodes => nodes.every(node => node.querySelector('svg[aria-hidden="true"]'))), true);
+    // Padding inside the popup must not dismiss it; a click outside must.
+    const menuBox = await page.$eval('.practice-picker-menu', node => {
+      const rect = node.getBoundingClientRect(); return { x: rect.left + 3, y: rect.top + 3 };
+    });
+    await page.mouse.click(menuBox.x, menuBox.y);
+    assert.equal(await page.$eval('.practice-picker', node => node.open), true);
+    await page.mouse.click(8, 200);
+    assert.equal(await page.$eval('.practice-picker', node => node.open), false);
+    await page.click('.practice-picker > summary');
+    await page.waitForFunction(() => document.querySelector('.practice-picker').open);
+    await page.screenshot({ path: path.join(captures, name + '-context.png') });
+    const contextOptions = await page.$$('.practice-picker-menu button');
+    for (const option of contextOptions) {
+      if (await option.evaluate(node => node.textContent.trim() === 'Work')) { await option.click(); break; }
+    }
+    assert.equal(await page.$eval('.practice-picker > summary', node => node.textContent.trim()), 'Work');
+    assert.equal(await page.$eval('.practice-picker', node => node.open), false);
+    assert.equal(await page.$eval('.practice-picker > summary', node => node === document.activeElement), true);
+    assert.match(await page.$eval('.practice-session', node => node.textContent), /10 questions.*Challenge.*Work/);
+    await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
     await page.screenshot({ path: path.join(captures, `${name}-setup.png`), fullPage: true });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.click('button.practice-generate');
     await page.waitForSelector('#practice-input');
     assert.equal(selection.mode, "sentence"); assert.equal(selection.count, 10);
-    assert.equal(selection.style, "formal"); assert.equal(selection.context, "work");
+    assert.equal(selection.style, "all"); assert.equal(selection.difficulty, "challenge"); assert.equal(selection.context, "work");
     assert.equal(selectedQuestions.length, 10);
     assert.equal(await page.$('#practice-hint-list li'), null);
     assert.equal(await page.$eval('.practice-question button.primary', node => node.disabled), true);
@@ -108,7 +139,7 @@ try {
       await page.evaluate(() => [...document.querySelectorAll('button')].find(button => /^(Next question|Finish session)$/.test(button.textContent.trim()))?.click());
       if (index < selectedQuestions.length - 1) await page.waitForFunction(() => document.querySelector('#practice-input')?.value === '');
     }
-    await page.waitForSelector('input[name="practice-style"]');
+    await page.waitForSelector('input[name="practice-count"]');
   }
   assert.deepEqual(errors, []);
   console.log("Practice desktop/mobile smoke ok; screenshots in .cache/practice-browser");

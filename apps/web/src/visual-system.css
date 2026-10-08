@@ -239,13 +239,6 @@ p { overflow-wrap: anywhere; }
 .practice-difficulty { border: 0; padding: 0; margin: 0 0 28px; min-width: 0; }
 .practice-difficulty legend { padding: 0; }
 .practice-difficulty .practice-mode-hint { margin: 14px 0 0; max-width: 68ch; font-size: 13px; color: var(--muted); }
-.practice-instructions { padding: 24px 0 0; margin-top: 8px; border-top: 1px solid var(--line); }
-.practice-instructions h3 { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
-.practice-instructions ol { margin: 0; padding-left: 22px; max-width: 75ch; color: var(--muted); font-size: 14px; line-height: 1.7; }
-.practice-instructions li + li { margin-top: 12px; }
-.practice-setup .state { padding: 0 0 28px; font-size: 13px; }
-.practice-setup .state strong { font-size: 14px; }
-.practice-setup .panel-heading { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 .practice-generate { width: 100%; margin-top: 4px; }
 .practice-question .panel-heading { margin-bottom: 8px; }
 .practice-question textarea { margin-bottom: 16px; }
@@ -434,52 +427,30 @@ p { overflow-wrap: anywhere; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
-/* Practice setup inspired by the reference: segmented choices, context picker, session summary. */
-.practice-setup {
-  display: block;
-  width: min(100%, 960px);
-  max-width: 960px;
-  margin: 0 auto 24px;
-  padding: clamp(20px, 4vw, 32px);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--paper);
-}
-.practice-setup > .panel-heading { align-items: center; gap: 12px; margin: 0 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-.practice-setup > .panel-heading .icon { color: var(--ink); }
-.practice-setup > .practice-mode-hint { display: block; margin: 0 0 24px; color: var(--muted); font-weight: 500; }
-.practice-setup > .practice-mode-hint span { display: block; font-weight: 400; }
-.practice-setup .question-count,
-.practice-setup .practice-difficulty { margin: 0 0 24px; padding: 0; border: 0; }
-.practice-setup .question-count legend,
-.practice-setup .practice-difficulty legend,
-.practice-filter legend { margin: 0 0 8px; padding: 0; font-size: 14px; font-weight: 600; }
-.practice-setup .count-options { display: flex; flex-wrap: nowrap; gap: 0; margin: 0; }
-.practice-setup .count-options label {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  min-height: 48px;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  color: var(--muted);
-  background: var(--paper);
-}
-.practice-setup .count-options label + label { border-left: 0; }
-.practice-setup .count-options label:first-child { border-radius: 12px 0 0 12px; }
-.practice-setup .count-options label:last-child { border-radius: 0 12px 12px 0; }
+/* Practice configuration: choices, guidance, and a single session action. */
+.practice-config { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1.5rem; align-items: stretch; }
+.practice-setup { min-width: 0; padding: 1.75rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.practice-setup .question-count, .practice-setup .practice-difficulty, .practice-filter { min-width: 0; margin: 0; padding: 0; border: 0; }
+.practice-difficulty-section, .practice-config-lower { margin-top: 1.75rem; padding-top: 1.75rem; border-top: 1px solid var(--line); }
+.practice-setup legend { display: flex; align-items: center; gap: .75rem; width: 100%; margin: 0 0 .5rem; padding: 0; font-size: 1.125rem; font-weight: 650; }
+.practice-step { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 2rem; height: 2rem; border-radius: .625rem; background: var(--wash); color: var(--ink); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.practice-section-hint { margin: 0 0 1.25rem 2.75rem; color: var(--muted); font-size: .875rem; }
+.practice-setup .count-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 0; }
+.practice-setup .count-options label { position: relative; display: flex; align-items: flex-start; gap: .625rem; min-width: 0; min-height: 5.75rem; padding: 1rem .75rem; border: 1px solid var(--control); border-radius: .75rem; background: var(--paper); color: var(--ink); cursor: pointer; transition: background 160ms ease, border-color 160ms ease; }
+.practice-setup .count-options label > .icon:first-of-type { margin-top: .125rem; width: 1.125rem; height: 1.125rem; }
+.practice-choice-copy { display: grid; gap: .375rem; min-width: 0; padding-right: .375rem; }
+.practice-choice-copy strong { font-size: .9375rem; font-weight: 650; line-height: 1.4; }
+.practice-choice-copy small { color: var(--muted); font-size: .875rem; line-height: 1.5; }
+.practice-choice-check { position: absolute; right: .5rem; bottom: .5rem; width: 1rem; height: 1rem; visibility: hidden; }
+.practice-setup .count-options label.selected { background: var(--accent-soft); border-color: var(--success); color: var(--ink); }
+.practice-setup .selected .practice-choice-check { visibility: visible; color: var(--success); }
+.practice-setup .count-options label:hover { background: var(--wash); }
+.practice-setup .count-options label.selected:hover { background: var(--accent-soft); }
 .practice-setup .count-options input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.practice-setup .count-options label:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
-.practice-setup .count-options label.selected { z-index: 1; background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); color: var(--ink); font-weight: 600; }
-.practice-setup .difficulty-segments label { min-height: 46px; }
-.practice-setup .practice-difficulty .practice-mode-hint { margin: 10px 0 0; font-size: 14px; }
-.practice-config-lower { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 24px; }
-.practice-filter-stack { display: grid; align-content: start; gap: 16px; min-width: 0; }
-.practice-filter { min-width: 0; margin: 0; padding: 0; border: 0; }
+.practice-setup .count-options label:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
+.practice-setup fieldset:disabled label { cursor: wait; background: var(--wash); }
+.practice-setup .practice-difficulty .practice-mode-hint { display: flex; align-items: flex-start; gap: .625rem; max-width: none; margin: 1rem 0 0; padding: .875rem 1rem; border-radius: .625rem; background: var(--wash); font-size: .875rem; }
+.practice-filter-stack { min-width: 0; }
 .practice-picker { position: relative; }
 .practice-picker > summary { display: flex; min-height: 48px; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--control); border-radius: 12px; color: var(--ink); cursor: pointer; list-style: none; }
 .practice-picker > summary::-webkit-details-marker { display: none; }
@@ -488,23 +459,43 @@ p { overflow-wrap: anywhere; }
 .practice-picker > summary .picker-chevron { width: 18px; height: 18px; transition: transform 160ms ease; }
 .practice-picker[open] > summary .picker-chevron { transform: rotate(180deg); }
 .practice-picker[open] > summary { border-color: var(--accent); }
-.practice-picker-menu { position: absolute; z-index: 5; top: calc(100% + 6px); right: 0; left: 0; max-height: 300px; overflow-y: auto; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 8px 24px rgb(23 23 23 / 12%); }
-.practice-picker-menu button { display: flex; width: 100%; min-height: 40px; align-items: center; justify-content: space-between; padding: 8px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--ink); text-align: left; }
+.practice-picker-menu { position: absolute; z-index: 5; top: calc(100% + 6px); right: 0; left: 0; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 8px 24px rgb(23 23 23 / 12%); }
+.practice-picker[data-side="above"] .practice-picker-menu { top: auto; bottom: calc(100% + 6px); }
+.practice-picker-menu button { display: flex; gap: 12px; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; padding: 8px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--ink); text-align: left; }
 .practice-picker-menu button:hover, .practice-picker-menu button.selected { background: var(--accent-soft); }
 .practice-picker-menu button.selected { font-weight: 600; }
+.practice-picker-menu button > span { flex: 1; }
 .practice-picker-menu button .icon { width: 18px; height: 18px; }
-.practice-session { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 20px; width: 100%; padding: 16px 0 0; border-top: 1px solid var(--line); }
-.practice-session-label { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
-.practice-session ul { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin: 0; padding: 0; list-style: none; }
-.practice-session li { display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 500; }
-.practice-session li .icon { width: 20px; height: 20px; flex: 0 0 20px; }
-.practice-session .practice-generate { display: flex; grid-column: 1 / -1; width: 100%; min-height: 52px; justify-content: center; margin-top: 4px; }
-.practice-instructions { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
-.practice-instructions h3 { margin: 0 0 12px; color: var(--ink); font-size: 15px; font-weight: 600; }
-.practice-instructions ol { margin-top: 12px; }
+.practice-guide { padding: 1.75rem 1.5rem; border-radius: var(--radius); background: var(--wash); }
+.practice-guide h2 { display: flex; gap: .75rem; align-items: center; margin: 0 0 1.75rem; font-size: 1.125rem; }
+.practice-guide-item { display: flex; align-items: flex-start; gap: .875rem; }
+.practice-guide-item + .practice-guide-item { margin-top: 1.75rem; }
+.practice-guide-item > .icon { margin-top: .125rem; color: var(--success); }
+.practice-guide-item h3 { margin: 0 0 .5rem; font-size: .9375rem; font-weight: 650; }
+.practice-guide-item p { margin: 0; color: var(--muted); font-size: .875rem; line-height: 1.7; }
+.practice-guide-note { display: flex; gap: .75rem; align-items: center; margin: 1.75rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .875rem; color: var(--muted); }
+.practice-session { display: flex; grid-column: 1 / -1; flex-wrap: wrap; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--wash); }
+.practice-session-label { margin: 0; color: var(--muted); font-size: .75rem; font-weight: 600; text-transform: uppercase; }
+.practice-session ul { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; margin: 0; padding: 0; list-style: none; }
+.practice-session li { display: flex; align-items: center; gap: .625rem; font-size: .9375rem; }
+.practice-session li .icon { color: var(--muted); }
+.practice-session .practice-generate { display: flex; width: auto; min-width: 13rem; min-height: 3.25rem; justify-content: center; margin: 0; }
+@media (max-width: 1024px) {
+  .practice-config { grid-template-columns: minmax(0, 1fr); }
+  .practice-guide { grid-row: 3; }
+  .practice-guide-item + .practice-guide-item { margin-top: 1.25rem; }
+}
+@media (max-width: 760px) {
+  .practice-session { gap: 1rem; }
+  .practice-session ul { flex-basis: 100%; }
+  .practice-session .practice-generate { width: 100%; }
+}
 @media (max-width: 480px) {
-  .practice-session { grid-template-columns: minmax(0, 1fr); }
-  .practice-session ul { gap: 10px 18px; }
-  .practice-setup { padding: 16px; }
-  .practice-setup .count-options label { padding-inline: 4px; font-size: 12px; }
+  .practice-config { gap: 1rem; }
+  .practice-setup, .practice-guide, .practice-session { padding: 1.25rem; }
+  .practice-setup .count-options { grid-template-columns: minmax(0, 1fr); gap: .625rem; }
+  .practice-setup .count-options label { align-items: center; min-height: 4.5rem; padding: .75rem 1rem; gap: .875rem; }
+  .practice-choice-copy { padding-right: 1rem; gap: .125rem; }
+  .practice-choice-check { top: 50%; right: .875rem; bottom: auto; transform: translateY(-50%); }
+  .practice-section-hint { margin-left: 0; }
 }
