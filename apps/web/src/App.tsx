@@ -3,6 +3,7 @@ import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import { useDailyReviewSession } from "./review-session";
+import clearWriteWordmark from "./assets/clearwrite-wordmark.svg";
 
 type Route =
   | "dashboard"
@@ -264,13 +265,13 @@ function Grammar() {
     <div className={`grammar-page${result ? " has-result" : ""}`}>
       <div className="grammar-intro">
         <h1>
-          Your English,
+          Write with
           <br />
           <span>
-            clearer<span className="accent-dot">.</span>
+            clarity<span className="accent-dot">.</span>
           </span>
         </h1>
-        <p>A thought. A sentence. A little better every day.</p>
+        <p>Grow your English every day.</p>
       </div>
       <form
         className="grammar-composer"
@@ -2170,7 +2171,7 @@ export function App() {
   const title =
     route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
   useEffect(() => {
-    document.title = title + " · IGT";
+    document.title = title + " · ClearWrite";
   }, [title]);
   const pages: Record<Route, React.ReactNode> = {
     grammar: <Grammar />,
@@ -2204,11 +2205,15 @@ export function App() {
           }
         }}
       >
-        <a className="brand" href="#grammar" aria-label="IGT home">
+        <a className="brand" href="#grammar" aria-label="ClearWrite home">
           <span className="brand-mark">
-            <Icon name="grammar" />
+            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
+              <path d="M5 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-7l-5 4v-4H8a3 3 0 0 1-3-3V9Z" />
+              <path d="M10 11h8M10 15h6M10 19h4" />
+              <path d="m26 4 .9 2.6 2.6.9-2.6.9L26 11l-.9-2.6-2.6-.9 2.6-.9L26 4Z" fill="currentColor" stroke="none" />
+            </svg>
           </span>
-          igt<span className="brand-period">.</span>
+          <img className="brand-wordmark" src={clearWriteWordmark} alt="" aria-hidden="true" width="190" height="33" />
         </a>
         <button
           ref={menuRef}
@@ -2296,7 +2301,7 @@ export function App() {
         {pages[route]}
       </main>
       <footer className="site-footer">
-        <span className="site-footer-motto">Small steps. Better English.</span>
+        <span className="site-footer-motto">Write with clarity. Grow your English every day.</span>
         {statusMsg && (
           <span className="site-footer-status" role="status">
             {statusMsg}
