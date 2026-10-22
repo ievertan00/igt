@@ -9,15 +9,23 @@ import { buildReport } from "../lib/features/handbook/report.mjs";
 import { resolveModel } from "../lib/server/llm/model-resolver.mjs";
 import { buildLearningDiagnosis } from "../lib/features/learning-diagnosis/index.mjs";
 import { beijingDate } from "../lib/shared/timezone.mjs";
+import { saveHandbookReport } from "../lib/application/handbook-reports.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 
 const args = process.argv.slice(2);
+if (args.includes("--help")) {
+  console.log("Usage: /handbook [--days=0..3650] [--incremental] [--format=markdown|html]\nMarkdown and a structured snapshot are always saved. HTML adds an offline reading and print version.\nOther options: --cache-stats, --clear-cache. Historical reports are available in Web Handbook → Past reports.");
+  process.exit(0);
+}
+const format = args.find((value) => value.startsWith("--format="))?.slice(9) || "markdown";
+if (!["markdown", "html"].includes(format)) { console.error("Choose --format=markdown or --format=html."); process.exit(1); }
 const days = (() => {
   const a = args.find((s) => s.startsWith("--days="));
-  return a ? parseInt(a.split("=")[1]) : 30;
+  return a ? Number(a.split("=")[1]) : 30;
 })();
+if (!Number.isInteger(days) || days < 0 || days > 3650) { console.error("Days must be an integer between 0 and 3650."); process.exit(1); }
 const incremental = args.includes("--incremental") || args.includes("-i");
 
 if (args.includes("--clear-cache") || args.includes("-c")) {
@@ -77,7 +85,7 @@ const learningProfile = await buildLearningDiagnosis({
 
 const examplesByType = new Map();
 for (const err of errorFrequency) {
-  examplesByType.set(err.error_type, await getExamples(err.error_type, 5));
+  examplesByType.set(err.error_type, await getExamples(err.error_type, 5, days));
 }
 
 console.log(`🤖 Generating overall summary with ${provider.toUpperCase()}...`);
@@ -99,14 +107,11 @@ for (const r of ruleResults) {
 const dateStr = beijingDate();
 const md = buildReport({ provider, handbookModel, date: dateStr, days, stats, errorFrequency, trendData, examplesByType, rules, overallSummary, learningProfile });
 
-const reportDir = config.ReportPath
-  ? (path.isAbsolute(config.ReportPath) ? config.ReportPath : path.join(projectRoot, config.ReportPath))
-  : projectRoot;
-const outputPath = path.join(reportDir, `handbook_${dateStr}_${provider}.md`);
-if (!fs.existsSync(path.dirname(outputPath))) fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-fs.writeFileSync(outputPath, md, "utf8");
+const saved = saveHandbookReport({ markdown: md, provider, date: dateStr, days, stats, errorFrequency, format }, config);
+const outputPath = saved.markdownPath;
 
 console.log(`\n✅ Personal Error Handbook generated: ${outputPath}`);
+if (saved.htmlPath) console.log(`Offline HTML: ${saved.htmlPath}`);
 console.log(`📊 Analyzed ${stats.total_inputs} inputs with ${stats.total_diagnoses} diagnoses`);
 console.log(`🎯 Found ${errorFrequency.length} unique error types`);
 if (incremental) {

@@ -23,6 +23,8 @@
     "test:web-dev": "node scripts/web-dev-smoke.mjs",
     "test:practice-log": "node scripts/practice-log-smoke.mjs",
     "test:practice-web": "node scripts/practice-web-smoke.mjs",
+    "test:handbook": "node --test --test-isolation=none tests/handbook-profile.test.mjs tests/handbook-report.test.mjs tests/handbook-browser-data.test.mjs tests/handbook-rules.test.mjs tests/handbook-practice.test.mjs tests/handbook-reports.test.mjs tests/handbook-evidence.test.mjs",
+    "test:handbook-web": "node scripts/handbook-web-smoke.mjs",
     "test:migration-backup": "node scripts/migration-backup-smoke.mjs",
     "init-db": "node scripts/init-db.mjs",
     "index-books": "node scripts/index-books.mjs",

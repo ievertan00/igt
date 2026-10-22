@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-21T10:00:00Z",
+  "days": 90,
+  "stats": {
+    "total_inputs": 3,
+    "total_diagnoses": 1
+  },
+  "categories": [
+    {
+      "errorType": "Articles",
+      "count": 1
+    }
+  ],
+  "markdownHash": "06386420fe1f9c62d31bc56178c6880e9d50229558ca7dec5da9bf3a4a9b5884"
+}

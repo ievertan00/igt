@@ -21,6 +21,10 @@ tests/*
 !tests/practice-question-bank.test.mjs
 !tests/practice-route.test.mjs
 !tests/practice-client-timeout.test.mjs
+!tests/handbook-browser-data.test.mjs
+!tests/handbook-rules.test.mjs
+!tests/handbook-practice.test.mjs
+!tests/handbook-reports.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md

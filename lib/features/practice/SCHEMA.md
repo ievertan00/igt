@@ -105,6 +105,16 @@ Style filtering uses the first `register` entry (`informal` maps to `casual`;
 `neutral` and `formal` map directly). Without register, a row appears only when
 style is `all`.
 
+Handbook can request a `targetErrorType` using the explicit mappings in
+`handbook-targets.mjs`. Selection intersects this metadata target with the existing
+difficulty, style and context filters; it never falls back to unrelated questions.
+Evaluation checks the target against the authoritative question metadata before
+recording it. Linked attempts store `feedback.source = "handbook"`, the requested
+category and hints used. Their score is an overall translation score, not a
+target-specific mastery judgment, so they do not automatically advance Coach plans.
+Availability counts are read-only; selecting a session retains normal `served_count`
+updates. This adds no question content or schema migration.
+
 Historical migrations retain their old schema and compatibility seed format;
 036 converts existing rows, 037 restores the 100 native questions, and 038 fills
 the previously missing exported rows. Conversion no longer creates the retired
