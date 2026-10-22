@@ -59,6 +59,8 @@ export const webApi = {
   translate: (text: string, direction: string) => requestJson<any>("/translation", { method: "POST", body: JSON.stringify({ text, direction }) }),
   ask: (question: string, messages: unknown[]) => requestJson<any>("/ask", { method: "POST", body: JSON.stringify({ question, messages }) }),
   saveAsk: (messages: unknown[]) => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages }) }),
+  listAskNotes: () => requestJson<{ directory: string; notes: Array<{ id: string; modifiedAt: string; bytes: number; content?: string }> }>("/ask/notes"),
+  readAskNote: (id: string) => requestJson<{ id: string; content: string; bytes: number }>(`/ask/notes/read?${new URLSearchParams({ id })}`),
   getReviewDue: () => requestJson<any>("/review/due?limit=20&type=vocab"),
   gradeReview: (cardId: number, rating: string) => requestJson<any>("/review/grade", { method: "POST", body: JSON.stringify({ card_id: cardId, rating }) }),
   getCoach: () => requestJson<any>("/coach?windowDays=30"),

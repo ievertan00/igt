@@ -140,6 +140,18 @@ p { overflow-wrap: anywhere; }
 .ask-turn { border-bottom: 1px solid var(--line); margin-bottom: 24px; padding-bottom: 12px; }
 .ask-turn > strong { display: block; font-size: 18px; margin-bottom: 16px; }
 .ask-turn p { white-space: pre-wrap; max-width: 75ch; }
+.ask-library-panel { margin-top: 32px; }
+.ask-library-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.ask-library-toolbar input { flex: 1; min-width: 0; }
+.ask-library-toolbar > span { flex: 0 0 auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.ask-library-directory { margin: 0 0 20px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.ask-note-card { padding: 22px 0; border-top: 1px solid var(--line); }
+.ask-note-card:first-child { padding-top: 16px; }
+.ask-note-card header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.ask-note-card h3 { margin: 0; font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
+.ask-note-card time { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+.ask-note-card .md { max-width: 75ch; }
+.ask-note-card .md p:last-child { margin-bottom: 0; }
 /* Ask answers are markdown; mirror the CLI subset in lib/features/ask/render.mjs. */
 .md > :first-child { margin-top: 0; }
 .md > :last-child { margin-bottom: 0; }

@@ -504,6 +504,11 @@ function Express() {
 function Ask() {
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<any[]>([]);
+  const [askNotes, setAskNotes] = useState<Array<{ id: string; modifiedAt: string; bytes: number; content: string }>>([]);
+  const [askNotesDirectory, setAskNotesDirectory] = useState("");
+  const [notesQuery, setNotesQuery] = useState("");
+  const [notesBusy, setNotesBusy] = useState(false);
+  const [notesError, setNotesError] = useState("");
   const [busy, setBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [saved, setSaved] = useState("");
@@ -530,12 +535,35 @@ function Ask() {
     try {
       const result = await webApi.saveAsk(turns);
       setSaved(result.saved ? "Conversation saved" : "There is no conversation to save yet.");
+      if (result.saved) await refreshAskNotes();
     } catch (e: any) {
       setSaved(`Could not save: ${e.message}`);
     } finally {
       setSaveBusy(false);
     }
   }
+  async function refreshAskNotes() {
+    setNotesError("");
+    setNotesBusy(true);
+    try {
+      const result = await webApi.listAskNotes();
+      const notes = await Promise.all(result.notes.map(async (note) => {
+        const content = typeof note.content === "string" ? note.content : (await webApi.readAskNote(note.id)).content;
+        return { ...note, content };
+      }));
+      setAskNotes(notes);
+      setAskNotesDirectory(result.directory);
+    } catch (e: any) {
+      setNotesError(e.message || "Could not load saved Ask notes.");
+    } finally {
+      setNotesBusy(false);
+    }
+  }
+  useEffect(() => { void refreshAskNotes(); }, []);
+  const matchingNotes = askNotes.filter((note) => {
+    const query = notesQuery.trim().toLocaleLowerCase();
+    return !query || note.id.toLocaleLowerCase().includes(query) || note.content.toLocaleLowerCase().includes(query);
+  });
   return (
     <>
       <Heading
@@ -572,6 +600,29 @@ function Ask() {
           {saveBusy ? "Saving…" : "Save conversation"}
         </button>
         {saved && <p className="status">{saved}</p>}
+      </Panel>
+      <Panel title="Saved Ask notes" icon="document" className="ask-library-panel">
+        {!notesBusy && !notesError && askNotes.length > 0 && <div className="ask-library-toolbar">
+          <label className="sr-only" htmlFor="ask-notes-search">Search saved notes</label>
+          <input id="ask-notes-search" type="search" value={notesQuery} onChange={(event) => setNotesQuery(event.target.value)} placeholder="Search notes by title or content…" />
+          <span>{matchingNotes.length} of {askNotes.length}</span>
+        </div>}
+        {askNotesDirectory && <p className="ask-library-directory">Automatically loaded from {askNotesDirectory}</p>}
+        {notesBusy ? <State title="Loading saved Ask notes…" /> : notesError ? <State title="Saved Ask notes could not be loaded" detail={notesError} /> : !askNotes.length ? (
+          <State title="No Markdown notes found" detail="Save a conversation from the CLI and it will appear here automatically." />
+        ) : matchingNotes.length ? (
+          <div className="ask-note-list">
+            {matchingNotes.map((note) => (
+              <article className="ask-note-card" key={note.id}>
+                <header>
+                  <h3>{note.id.replace(/\.md$/i, "")}</h3>
+                  <time dateTime={note.modifiedAt}>{new Date(note.modifiedAt).toLocaleDateString()}</time>
+                </header>
+                <Markdown source={note.content} />
+              </article>
+            ))}
+          </div>
+        ) : <State title="No notes match this search" detail="Try another title or phrase." />}
       </Panel>
     </>
   );
