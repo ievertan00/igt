@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
+import { HandbookKnowledge } from "./HandbookKnowledge";
+import { HandbookReports } from "./HandbookReports";
 import { webApi } from "./api/client";
 import { useDailyReviewSession } from "./review-session";
 import clearWriteWordmark from "./assets/clearwrite-wordmark.svg";
@@ -53,12 +55,12 @@ function Dashboard() {
         eyebrow="OVERVIEW"
         title={
           <>
-            Make a little progress.
+            Support for your English.
             <br />
-            <em>Make it yours.</em>
+            <em>Practice beyond the page.</em>
           </>
         }
-        detail="Look back at your recent work, then choose what to practise next."
+        detail="ClearWrite helps you check your writing, explore words, and practise expressing ideas. Use it alongside regular reading, listening, and real conversations—learning English takes more than a tool."
       />
       <section className="focus">
         <div>
@@ -70,7 +72,7 @@ function Dashboard() {
           <p>
             {focus
               ? `Seen ${focus.hits} times recently. Try revisiting it after a break.`
-              : "Start with a sentence to build a picture of your learning."}
+              : "Write about something from your day, then review the suggested changes."}
           </p>
           <a className="primary" href="#grammar">
             Write a sentence
@@ -128,9 +130,9 @@ function Dashboard() {
               </article>
             );
           })}
-          {!data.recentActivity?.length && <State title="No review entries yet" />}
+          {!data.recentActivity?.length && <State title="No saved writing yet" detail="Check a sentence in Grammar, then save the feedback you want to revisit." />}
         </Panel>
-        <Panel title="Your learning rhythm" icon="word-review">
+        <Panel title="Your activity here" icon="word-review">
           <div className="stat">
             {data.stats?.totalInputs || 0}
             <small> review entries</small>
@@ -271,7 +273,7 @@ function Grammar() {
             clarity<span className="accent-dot">.</span>
           </span>
         </h1>
-        <p>Grow your English every day.</p>
+        <p>Check your writing. Understand the suggested changes.</p>
       </div>
       <form
         className="grammar-composer"
@@ -305,7 +307,7 @@ function Grammar() {
         />
         <div className="composer-actions">
           <span id="grammar-hint">
-            {busy ? "Finding a clearer way to say it…" : "A sentence or a short paragraph"}
+            {busy ? "Checking grammar and wording…" : "A sentence or a short paragraph"}
           </span>
           <button className="primary" type="submit" disabled={busy || saving || !text.trim()}>
             {busy ? (
@@ -339,7 +341,7 @@ function Grammar() {
         </div>
       )}
       <p className="grammar-note">
-        Understand the changes. Keep what you learn. Save only when you choose.
+        Try writing it yourself first. Use AI feedback as a guide, then practise the expression in your own context. Save only when you choose.
       </p>
       {result?.error && (
         <State title="Could not check your English. Try again." detail={result.error} />
@@ -432,7 +434,7 @@ function Express() {
       <Heading
         eyebrow="EXPRESS"
         title="Find the right words."
-        detail="Learn how to express your ideas in natural English, or understand what an English expression means in Chinese."
+        detail="Explore an English version of your Chinese text, or check what an English passage means in Chinese. Compare the wording, then try expressing the idea yourself."
       />
       <Panel title="Your text" icon="translation">
         <div className="switches">
@@ -468,16 +470,29 @@ function Express() {
         />
         <button className="primary" onClick={submit} disabled={busy || !text.trim()}>
           {busy
-            ? toEnglish ? "Finding the right words…" : "Explaining the meaning…"
-            : toEnglish ? "Say it in English →" : "Explain in Chinese →"}
+            ? toEnglish
+              ? "Finding the right words…"
+              : "Explaining the meaning…"
+            : toEnglish
+              ? "Say it in English →"
+              : "Explain in Chinese →"}
         </button>
       </Panel>
-      {result?.error && <State title="Couldn’t find an expression. Try again." detail={result.error} />}
+      {result?.error && (
+        <State title="Couldn’t find an expression. Try again." detail={result.error} />
+      )}
       {translation && (
-        <Panel title={toEnglish ? "A natural way to say it" : "Meaning in Chinese"} icon="translation">
+        <Panel
+          title={toEnglish ? "A natural way to say it" : "Meaning in Chinese"}
+          icon="translation"
+        >
           <p className="translation-result">{translation}</p>
           {result.data?.notes && (
-            <DetailSection variant="remember" icon="idea" title={toEnglish ? "Why this works" : "Expression notes"}>
+            <DetailSection
+              variant="remember"
+              icon="idea"
+              title={toEnglish ? "Why this works" : "Expression notes"}
+            >
               <p>{result.data.notes}</p>
             </DetailSection>
           )}
@@ -525,8 +540,8 @@ function Ask() {
     <>
       <Heading
         eyebrow="ASK"
-        title="Stay curious."
-        detail="Explore usage, tone, and the subtle differences. Ask a follow-up whenever you need."
+        title="Ask about your English."
+        detail="Ask about grammar, word choice, or tone. Include a sentence for context, and ask for examples you can try using yourself. AI explanations may need checking."
       />
       <Panel title="Your conversation" icon="ask">
         {turns.map((turn, index) => (
@@ -598,7 +613,7 @@ function WordReview() {
     <div className="word-review-page">
       <div className="review-header">
         <Heading
-          eyebrow="VOCABULARY · SRS ONLY"
+          eyebrow="VOCABULARY · REVIEW"
           title="Bring words back."
           detail="Recall the English word from the Chinese clue. Reveal it, then rate your recall."
         />
@@ -632,10 +647,10 @@ function WordReview() {
             <span className="review-completion-mark" aria-hidden="true">
               <Icon name="check" />
             </span>
-            <h3>{cards.length ? "All done for today." : "You are all caught up."}</h3>
+            <h3>{cards.length ? "Review session complete." : "No vocabulary cards due."}</h3>
             <p>
               {cards.length
-                ? `You reviewed ${cards.length} vocabulary cards.`
+                ? `You reviewed ${cards.length} vocabulary cards. Try using a few of these words in a sentence or conversation.`
                 : "Come back later, or look up a word and save it to your vocabulary."}
             </p>
           </div>
@@ -728,9 +743,9 @@ function Coach() {
     <div className="coach-page">
       <div className="coach-header">
         <Heading
-          eyebrow="COACH · EVIDENCE"
+          eyebrow="COACH · SUGGESTIONS"
           title="Find your next step."
-          detail="Use your learning history to choose a useful practice focus."
+          detail="Find possible practice priorities in your saved writing. These suggestions reflect your activity here, not a full assessment of your English."
         />
         <button className="secondary" onClick={() => load(true)} disabled={busy}>
           {busy ? "Analysing…" : "Refresh analysis"}
@@ -806,7 +821,7 @@ function Coach() {
                 ))}
               </ul>
             ) : (
-              <p>No additional limitations were provided for this analysis.</p>
+              <p>These suggestions are based on the records available here. They do not show everything you know or how you use English elsewhere.</p>
             )}
           </Panel>
         </>
@@ -851,8 +866,8 @@ function WordLookup() {
     <div className="word-page">
       <Heading
         eyebrow="WORD LOOKUP"
-        title="Meet your next word."
-        detail="Explore a word, hear it in context, and save it for your next review."
+        title="Get to know a word."
+        detail="Look up meanings, examples, and common word combinations. Save useful words for review, then look for them in what you read and hear."
       />
       <Panel title="Word or phrase" icon="word-lookup" className="lookup-form">
         <label className="form-label" htmlFor="word-lookup-input">
@@ -995,9 +1010,17 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
   );
 }
 const practiceContextIcons: Record<string, React.ComponentProps<typeof Icon>["name"]> = {
-  all: "dashboard", home: "home", dining: "dining", shopping: "shopping",
-  entertainment: "entertainment", social: "ask", health: "health", work: "work",
-  transit: "transit", travel: "travel", services: "services",
+  all: "dashboard",
+  home: "home",
+  dining: "dining",
+  shopping: "shopping",
+  entertainment: "entertainment",
+  social: "ask",
+  health: "health",
+  work: "work",
+  transit: "transit",
+  travel: "travel",
+  services: "services",
 };
 
 function PracticeFilter({
@@ -1065,10 +1088,21 @@ function PracticeFilter({
 
   return (
     <fieldset className="practice-filter" disabled={disabled}>
-      <legend><span className="practice-step" aria-hidden="true">3</span>{label}</legend>
+      <legend>
+        <span className="practice-step" aria-hidden="true">
+          3
+        </span>
+        {label}
+      </legend>
       <p className="practice-section-hint">Choose a context or keep all contexts.</p>
       <details className="practice-picker" ref={pickerRef}>
-        <summary aria-label={`${label}: ${names[value]}`} aria-disabled={disabled} onClick={(event) => { if (disabled) event.preventDefault(); }}>
+        <summary
+          aria-label={`${label}: ${names[value]}`}
+          aria-disabled={disabled}
+          onClick={(event) => {
+            if (disabled) event.preventDefault();
+          }}
+        >
           <Icon name={practiceContextIcons[value]} />
           <span>{names[value]}</span>
           <Icon name="chevron" className="picker-chevron" />
@@ -1099,9 +1133,13 @@ function PracticeFilter({
 }
 
 function Practice() {
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const targetErrorType = params.get("targetErrorType") || "";
+  const returnDays = ["0", "30", "90"].includes(params.get("returnDays") || "") ? params.get("returnDays")! : "90";
+  const handbookHref = `#handbook?${new URLSearchParams({ errorType: targetErrorType, days: returnDays })}`;
   const [context, setContext] = useState("all");
   const [count, setCount] = useState(3);
-  const [difficulty, setDifficulty] = useState("standard");
+  const [difficulty, setDifficulty] = useState(() => ["easy", "standard", "challenge"].includes(params.get("difficulty") || "") ? params.get("difficulty")! : "standard");
   const [hintsUsed, setHintsUsed] = useState(0);
   const [generationError, setGenerationError] = useState("");
   const [sessionNotice, setSessionNotice] = useState("");
@@ -1120,10 +1158,10 @@ function Practice() {
     setSessionNotice("");
     setSaveWarning("");
     try {
-      const result = await webApi.generatePractice("sentence", count, difficulty, "all", context);
+      const result = await webApi.generatePractice("sentence", count, difficulty, "all", context, targetErrorType);
       const generated = result.data?.questions || [];
       if (!generated.length)
-        throw new Error("No questions match these categories. Try a different style or context.");
+        throw new Error(targetErrorType ? "No questions match this target at the selected difficulty and context. Try another difficulty, choose all contexts or return to Handbook." : "No questions match these categories. Try a different style or context.");
       if (generated.length < count)
         setSessionNotice(
           `Prepared ${generated.length} of ${count} questions available for these categories.`,
@@ -1188,7 +1226,9 @@ function Practice() {
     challenge: "Challenge",
   };
   const hints = question
-    ? [question.hints?.simple, question.hints?.intermediate, question.hints?.complete].filter(Boolean)
+    ? [question.hints?.simple, question.hints?.intermediate, question.hints?.complete].filter(
+        Boolean,
+      )
     : [];
   const hintLabels = ["Simple hint", "Intermediate hint", "Complete pattern"];
 
@@ -1197,13 +1237,24 @@ function Practice() {
       <Heading
         eyebrow="PRACTICE"
         title="Put your English to work."
-        detail="Translate a Chinese sentence into English, then get feedback on meaning, grammar, and tone."
+        detail="Try translating a Chinese sentence into English before checking the AI feedback. Use the suggestions to revise your answer and try a new sentence of your own."
       />
+      {targetErrorType && <section className="practice-target" aria-label="Handbook learning target">
+        <h2>{targetErrorType}</h2>
+        <p>Related sentence practice from your Handbook. Your overall translation score and hints used will be recorded separately from mastery of this pattern.</p>
+        <a href={handbookHref}>Return to this Handbook category</a>
+        {!question && <a href="#practice">Practise without this target</a>}
+      </section>}
       {!question && (
         <div className="practice-config">
           <section className="practice-setup" aria-label="Set up your practice">
             <fieldset className="question-count" disabled={busy}>
-              <legend><span className="practice-step" aria-hidden="true">1</span>Number of questions</legend>
+              <legend>
+                <span className="practice-step" aria-hidden="true">
+                  1
+                </span>
+                Number of questions
+              </legend>
               <p className="practice-section-hint">Choose how many questions for this session.</p>
               <div className="count-options count-segments">
                 {[3, 5, 10].map((value) => (
@@ -1216,7 +1267,16 @@ function Practice() {
                       onChange={() => setCount(value)}
                     />
                     <Icon name="document" />
-                    <span className="practice-choice-copy"><strong>{value} questions</strong><small>{value === 3 ? "A quick practice" : value === 5 ? "A balanced session" : "A deeper practice"}</small></span>
+                    <span className="practice-choice-copy">
+                      <strong>{value} questions</strong>
+                      <small>
+                        {value === 3
+                          ? "A quick practice"
+                          : value === 5
+                            ? "A balanced session"
+                            : "A deeper practice"}
+                      </small>
+                    </span>
                     <Icon name="check" className="practice-choice-check" />
                   </label>
                 ))}
@@ -1224,8 +1284,15 @@ function Practice() {
             </fieldset>
             <div className="practice-difficulty-section">
               <fieldset className="practice-difficulty" disabled={busy}>
-                <legend><span className="practice-step" aria-hidden="true">2</span>Difficulty</legend>
-                <p className="practice-section-hint">Match the level to your current ability and goal.</p>
+                <legend>
+                  <span className="practice-step" aria-hidden="true">
+                    2
+                  </span>
+                  Difficulty
+                </legend>
+                <p className="practice-section-hint">
+                  Match the level to your current ability and goal.
+                </p>
                 <div className="count-options difficulty-segments">
                   {(["easy", "standard", "challenge"] as const).map((value) => (
                     <label className={difficulty === value ? "selected" : ""} key={value}>
@@ -1236,16 +1303,31 @@ function Practice() {
                         checked={difficulty === value}
                         onChange={() => setDifficulty(value)}
                       />
-                      <Icon name={value === "easy" ? "idea" : value === "standard" ? "dashboard" : "coach"} />
-                      <span className="practice-choice-copy"><strong>{difficultyName[value]}</strong><small>{value === "easy" ? "One familiar idea" : value === "standard" ? "A realistic choice" : "Precise, connected English"}</small></span>
+                      <Icon
+                        name={
+                          value === "easy" ? "idea" : value === "standard" ? "dashboard" : "coach"
+                        }
+                      />
+                      <span className="practice-choice-copy">
+                        <strong>{difficultyName[value]}</strong>
+                        <small>
+                          {value === "easy"
+                            ? "One familiar idea"
+                            : value === "standard"
+                              ? "A realistic choice"
+                              : "Precise, connected English"}
+                        </small>
+                      </span>
                       <Icon name="check" className="practice-choice-check" />
                     </label>
                   ))}
                 </div>
                 <p className="practice-mode-hint">
                   <Icon name="info" />
-                  <span>Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks for more
-                  precise, connected English.</span>
+                  <span>
+                    Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks
+                    for more precise, connected English.
+                  </span>
                 </p>
               </fieldset>
             </div>
@@ -1255,7 +1337,19 @@ function Practice() {
                   label="Context"
                   value={context}
                   setValue={setContext}
-                  options={["all", "home", "dining", "shopping", "entertainment", "social", "health", "work", "transit", "travel", "services"]}
+                  options={[
+                    "all",
+                    "home",
+                    "dining",
+                    "shopping",
+                    "entertainment",
+                    "social",
+                    "health",
+                    "work",
+                    "transit",
+                    "travel",
+                    "services",
+                  ]}
                   names={categoryName}
                   disabled={busy}
                 />
@@ -1263,30 +1357,71 @@ function Practice() {
             </div>
           </section>
           <aside className="practice-guide" aria-labelledby="practice-guide-title">
-            <h2 id="practice-guide-title"><Icon name="handbook" />How to practise</h2>
+            <h2 id="practice-guide-title">
+              <Icon name="handbook" />
+              How to practise
+            </h2>
             <div className="practice-guide-item">
               <Icon name="document" />
-              <div><h3>Start with a sentence</h3><p>Questions come from a ready-to-use bank; less-used questions appear first.</p></div>
+              <div>
+                <h3>Start with a sentence</h3>
+                <p>Choose a level and context for a short session from the question bank.</p>
+              </div>
             </div>
             <div className="practice-guide-item">
               <Icon name="translation" />
-              <div><h3>Make it your English</h3><p>Translate the Chinese sentence into English. Optional hints reveal a cue, a construction, then an open pattern.</p></div>
+              <div>
+                <h3>Try it yourself</h3>
+                <p>
+                  Write your own translation first. If you get stuck, reveal a hint one step at a time.
+                </p>
+              </div>
             </div>
             <div className="practice-guide-item">
               <Icon name="ask" />
-              <div><h3>Learn from feedback</h3><p>Check your translation for AI feedback and a reference answer, then continue.</p></div>
+              <div>
+                <h3>Learn from feedback</h3>
+                <p>Compare the suggestions with your answer. The reference is one possible expression; other answers may also work.</p>
+              </div>
             </div>
-            <p className="practice-guide-note"><Icon name="bookmark" />Your attempts are recorded.</p>
+            <p className="practice-guide-note">
+              <Icon name="bookmark" />
+              Your attempts are recorded. One good answer is a useful step; try using the expression again later.
+            </p>
           </aside>
           <aside className="practice-session" aria-label="Your session">
             <p className="practice-session-label">Your session</p>
             <ul>
-              <li><Icon name="document" /><span>{count} questions</span></li>
-              <li><Icon name="dashboard" /><span>{difficultyName[difficulty]}</span></li>
-              <li><Icon name={practiceContextIcons[context]} /><span>{categoryName[context]}</span></li>
+              <li>
+                <Icon name="document" />
+                <span>{count} questions</span>
+              </li>
+              <li>
+                <Icon name="dashboard" />
+                <span>{difficultyName[difficulty]}</span>
+              </li>
+              <li>
+                <Icon name={practiceContextIcons[context]} />
+                <span>{categoryName[context]}</span>
+              </li>
             </ul>
-            <button className="primary practice-generate" onClick={generate} disabled={busy} aria-busy={busy}>
-              {busy ? <><span className="loading-spinner" aria-hidden="true" />Preparing…</> : <>Start practice<Icon name="arrow" /></>}
+            <button
+              className="primary practice-generate"
+              onClick={generate}
+              disabled={busy}
+              aria-busy={busy}
+            >
+              {busy ? (
+                <>
+                  <span className="loading-spinner" aria-hidden="true" />
+                  Preparing…
+                </>
+              ) : (
+                <>
+                  Start practice
+                  <Icon name="arrow" />
+                </>
+              )}
             </button>
           </aside>
         </div>
@@ -1313,7 +1448,8 @@ function Practice() {
           </div>
           <div className="practice-prompt">
             <span className="review-kicker">
-              {difficultyName[question.difficulty]} · {categoryName[question.style]} · {categoryName[question.context]}
+              {difficultyName[question.difficulty]} · {categoryName[question.style]} ·{" "}
+              {categoryName[question.context]}
             </span>
             <h2>{prompt}</h2>
             <p>Translate this sentence into English.</p>
@@ -1511,55 +1647,86 @@ function PracticeEvaluation({
   );
 }
 
+function HandbookSentence({ original, correction, corrected = false }: { original: string; correction: string; corrected?: boolean }) {
+  const before = original.split(/(\s+)/);
+  const after = correction.split(/(\s+)/);
+  let start = 0;
+  while (start < before.length && start < after.length && before[start] === after[start]) start++;
+  let end = 0;
+  while (end < before.length - start && end < after.length - start && before[before.length - 1 - end] === after[after.length - 1 - end]) end++;
+  const tokens = corrected ? after : before;
+  const middle = tokens.slice(start, end ? -end : undefined).join("");
+  return <p lang="en">{tokens.slice(0, start).join("")}{middle && (corrected ? <ins>{middle}</ins> : <del>{middle}</del>)}{end ? tokens.slice(-end).join("") : ""}</p>;
+}
+
 function Handbook() {
   const [data, setData] = useState<any>();
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(() => new URLSearchParams(location.hash.split("?")[1] || "").get("errorType") || "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loadingSelection, setLoadingSelection] = useState(false);
-  async function load() {
+  const [days, setDays] = useState(() => {
+    const value = new URLSearchParams(location.hash.split("?")[1] || "").get("days");
+    return value !== null && [0, 30, 90].includes(Number(value)) ? Number(value) : 90;
+  });
+  const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const requestId = useRef(0);
+  async function load(value = selected, windowDays = days, query = appliedSearch, offset = 0) {
+    const id = ++requestId.current;
     setBusy(true);
     setError("");
     try {
-      const value = await webApi.getHandbook();
-      setData(value);
-      setSelected(value.selected || "");
+      const result = await webApi.getHandbook(value, { days: windowDays, search: query, offset });
+      if (id !== requestId.current) return;
+      setData(result);
+      setSelected(result.selected || "");
+      setDays(windowDays);
+      setAppliedSearch(query);
     } catch {
+      if (id !== requestId.current) return;
       setError("Your handbook could not be loaded. Please try again.");
     } finally {
-      setBusy(false);
+      if (id === requestId.current) setBusy(false);
     }
   }
   useEffect(() => {
     load();
+    return () => { requestId.current++; };
   }, []);
   async function choose(value: string) {
     if (value === selected || loadingSelection) return;
-    setError("");
     setLoadingSelection(true);
     try {
-      const nextData = await webApi.getHandbook(value);
-      setData(nextData);
-      setSelected(nextData.selected || "");
-    } catch {
-      setError("This category could not be loaded. Please try again.");
+      await load(value);
     } finally {
       setLoadingSelection(false);
     }
   }
   const hasFrequencies = Boolean(data?.frequencies?.length);
+  const preferredDifficulty = ["standard", "easy", "challenge"].find((value) => data?.practice?.byDifficulty?.[value] > 0) || "standard";
+  const practiceHref = data?.practice?.status === "available" ? `#practice?${new URLSearchParams({ targetErrorType: selected, difficulty: preferredDifficulty, returnDays: String(data.days) })}` : undefined;
   return (
     <div className="handbook-page">
       <div className="coach-header">
         <Heading
           eyebrow="HANDBOOK · REFERENCE"
           title="Learn from your own words."
-          detail="Revisit patterns in your writing, with corrections and reminders worth keeping."
+          detail="Revisit corrections and notes from your writing. Try a fresh example without looking, then compare it with your notes."
         />
-        <button className="secondary" onClick={load} disabled={busy || loadingSelection}>
+        <button className="secondary" onClick={() => load()} disabled={busy || loadingSelection}>
           {busy ? "Loading…" : "Refresh"}
         </button>
       </div>
+      <form className="handbook-filters" onSubmit={(event) => { event.preventDefault(); load("", days, search.trim()); }}>
+        <label>Time window<select value={days} disabled={busy} onChange={(event) => load("", Number(event.target.value), appliedSearch)}>
+          <option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All history</option>
+        </select></label>
+        <label>Search your examples<input type="search" value={search} maxLength={200} onChange={(event) => setSearch(event.target.value)} placeholder="Search sentences, corrections or notes" /></label>
+        <button className="primary" type="submit" disabled={busy}>Search</button>
+        {appliedSearch && <button type="button" disabled={busy} onClick={() => { setSearch(""); load("", days, ""); }}>Clear search</button>}
+      </form>
+      <HandbookReports />
       {!data &&
         (busy ? (
           <State title="Loading your handbook…" />
@@ -1567,7 +1734,7 @@ function Handbook() {
           <Panel title="Unable to load">
             <div className="handbook-empty">
               <State title="Your learning notes could not be loaded." detail={error} />
-              <button className="primary" onClick={load}>
+              <button className="primary" onClick={() => load()}>
                 Try again
               </button>
             </div>
@@ -1575,6 +1742,7 @@ function Handbook() {
         ) : null)}
       {data && (
         <>
+          {error && <State title="Could not update handbook" detail={error} />}
           <Panel title="Your writing history" className="coach-sample">
             <dl className="coach-sample-grid">
               <div>
@@ -1594,8 +1762,8 @@ function Handbook() {
               <div>
                 <dt>Time window</dt>
                 <dd>
-                  {data.days ?? "—"}
-                  <span> days</span>
+                  {data.days === 0 ? "All history" : data.days ?? "—"}
+                  {data.days !== 0 && <span> days</span>}
                 </dd>
               </div>
             </dl>
@@ -1609,37 +1777,36 @@ function Handbook() {
                     key={item.error_type}
                     onClick={() => choose(item.error_type)}
                     aria-pressed={selected === item.error_type}
-                    disabled={loadingSelection}
+                    disabled={busy || loadingSelection}
                   >
                     {item.error_type}
                     <span>{item.count}</span>
                   </button>
                 ))}
               </div>
-              {error && <State title="Could not change category" detail={error} />}
+              <div aria-busy={busy}>
+              {busy && <p role="status">Updating examples…</p>}
               <Panel title={selected}>
-                {loadingSelection ? (
-                  <State title="Loading examples…" />
-                ) : data.examples?.length ? (
+                {data.evidence && <HandbookKnowledge key={`${selected}:${data.days}:${data.ruleVersion}`} errorType={selected} days={data.days} version={data.ruleVersion} evidence={data.evidence} disabled={busy} practice={data.practice} practiceHref={practiceHref} />}
+                {data.examples?.length ? (
                   data.examples.map((item: any, index: number) => (
                     <article
                       className="activity handbook-example"
-                      key={`${item.original_text}-${index}`}
+                      key={item.id || `${item.original_text}-${index}`}
                     >
+                      <header className="handbook-source">
+                        <span>From your Review log</span>
+                        {item.timestamp && <time dateTime={item.timestamp}>{Number.isFinite(Date.parse(item.timestamp)) ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.timestamp)) : "Date unavailable"}</time>}
+                        {item.entryId && <details><summary>Source details</summary><p>Review log entry: <code>{item.entryId}</code></p><p>Find this entry in your saved Review log using its entry ID.</p></details>}
+                      </header>
                       <div>
                         <span>Original</span>
-                        <p>{item.original_text}</p>
+                        {item.correction ? <HandbookSentence original={item.original_text} correction={item.correction} /> : <p lang="en">{item.original_text}</p>}
                       </div>
                       <div>
                         <span>Correction</span>
-                        <p>{item.correction}</p>
+                        <HandbookSentence original={item.original_text} correction={item.correction || ""} corrected />
                       </div>
-                      {item.refine && (
-                        <div>
-                          <span>More natural</span>
-                          <p>{item.refine}</p>
-                        </div>
-                      )}
                       {item.explanation && (
                         <div>
                           <span>Why</span>
@@ -1649,9 +1816,11 @@ function Handbook() {
                       {item.remember && (
                         <div>
                           <span>Remember</span>
-                          <p>{item.remember}</p>
+                          <ul>{String(item.remember).split(/\r?\n/).filter(Boolean).map((note, i) => <li key={i}>{note}</li>)}</ul>
                         </div>
                       )}
+                      {item.refine && <details className="handbook-refine"><summary>More natural</summary><p lang="en">{item.refine}</p></details>}
+                      {practiceHref && <footer className="handbook-example-action"><a href={practiceHref}>Practice this pattern</a></footer>}
                     </article>
                   ))
                 ) : (
@@ -1663,14 +1832,17 @@ function Handbook() {
                   </div>
                 )}
               </Panel>
+              {data.pagination?.total > 0 && <nav className="handbook-pagination" aria-label="Example pages">
+                <span role="status">{data.pagination.offset + 1}–{Math.min(data.pagination.offset + data.pagination.limit, data.pagination.total)} of {data.pagination.total} examples{data.search ? ` matching “${data.search}”` : ""}</span>
+                <button disabled={busy || data.pagination.offset === 0} onClick={() => load(selected, days, appliedSearch, Math.max(0, data.pagination.offset - data.pagination.limit))}>Previous</button>
+                <button disabled={busy || !data.pagination.hasMore} onClick={() => load(selected, days, appliedSearch, data.pagination.offset + data.pagination.limit)}>Next</button>
+              </nav>}
+              </div>
             </>
           ) : (
-            <Panel title="A little more practice first." className="coach-empty-priorities">
+            <Panel title={data.search ? "No matching examples." : "A little more practice first."} className="coach-empty-priorities">
               <div className="handbook-empty">
-                <p>
-                  No grammar observations in the last {data.days} days. Check and save a sentence to
-                  start collecting corrections and explanations here.
-                </p>
+                {data.search ? <p>No examples match “{data.search}” in this time window. Try another phrase, clear your search or choose a longer time window.</p> : <p>No grammar observations {data.days === 0 ? "in your saved history" : `in the last ${data.days} days`}. Check and save a sentence to start collecting corrections and explanations here.</p>}
                 <a className="primary" href="#grammar">
                   Check a sentence
                   <Icon name="arrow" />
@@ -1684,14 +1856,14 @@ function Handbook() {
   );
 }
 const providerNames: Record<string, string> = {
-  gemini: "Google Gemini",
-  qwen: "Qwen",
-  deepseek: "DeepSeek",
+  custom: "OpenAI-compatible",
   ollama: "Ollama (local)",
 };
 
 function LlmSettings() {
+  const [settingsTab, setSettingsTab] = useState<"models" | "markdown">("models");
   const [data, setData] = useState<any>();
+  const [savedData, setSavedData] = useState<any>();
   const [activeProvider, setActiveProvider] = useState("gemini");
   const [editProvider, setEditProvider] = useState("gemini");
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
@@ -1699,6 +1871,9 @@ function LlmSettings() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testStatus, setTestStatus] = useState("");
 
   useEffect(() => {
     webApi
@@ -1708,6 +1883,7 @@ function LlmSettings() {
           throw new Error("Settings are unavailable. Restart IGT and try again.");
         }
         setData(settings);
+        setSavedData(settings);
         setActiveProvider(settings.provider);
         setEditProvider(settings.provider);
       })
@@ -1754,12 +1930,14 @@ function LlmSettings() {
           ]),
         ),
         baseUrls: {
-          OllamaBaseUrl: data.providers.ollama.baseUrl,
-          QwenApiBase: data.providers.qwen.baseUrl,
-          DeepseekApiBase: data.providers.deepseek.baseUrl,
+          OllamaBaseUrl: data.providers.ollama?.baseUrl,
+          QwenApiBase: data.providers.qwen?.baseUrl,
+          DeepseekApiBase: data.providers.deepseek?.baseUrl,
+          CustomApiBase: data.providers.custom?.baseUrl,
         },
       });
       setData((old: any) => ({ ...old, provider: saved.provider, providers: saved.providers }));
+      setSavedData(saved);
       setApiKeys({});
       setClearApiKeys({});
       setStatus(
@@ -1772,130 +1950,231 @@ function LlmSettings() {
     }
   }
 
+  async function testConnection() {
+    setTesting(true);
+    setTestStatus("");
+    setError("");
+    try {
+      const result = await webApi.testLlmConnection({
+        baseUrl: providerSettings?.baseUrl,
+        model: providerSettings?.models?.flash,
+        apiKey: apiKeys[editProvider] || "",
+      });
+      setTestStatus(result.message || "Connection successful");
+    } catch (e: any) {
+      setTestStatus(e.message || "Connection test failed");
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  function reset() {
+    setData(savedData);
+    setActiveProvider(savedData?.provider || "gemini");
+    setEditProvider(savedData?.provider || "gemini");
+    setApiKeys({});
+    setClearApiKeys({});
+    setError("");
+    setStatus("");
+    setTestStatus("");
+    setShowApiKey(false);
+  }
+
   if (error && !data) return <State title="Model settings are unavailable" detail={error} />;
   if (!data) return <State title="Loading model settings…" />;
 
   return (
     <div className="llm-settings">
       <div className="heading">
-        <h1>Model settings</h1>
-        <p>Choose your AI provider and the models used for everyday and complex tasks.</p>
+        <h1>{settingsTab === "models" ? "Model settings" : "Markdown file settings"}</h1>
+        <p>{settingsTab === "models"
+          ? "Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services."
+          : "Choose where IGT reads and saves your Markdown learning records."}</p>
       </div>
-      <Panel title="AI provider" icon="settings">
-        <div className="settings-grid">
-          <div className="settings-field">
-            <label className="form-label" htmlFor="llm-active-provider">
-              Active provider
-            </label>
-            <select
-              id="llm-active-provider"
-              value={activeProvider}
-              onChange={(e) => setActiveProvider(e.target.value)}
-            >
-              {Object.entries(providerNames).map(([key, label]) => (
-                <option value={key} key={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <small>This provider will handle your requests after you save.</small>
-          </div>
-          <div className="settings-field">
-            <label className="form-label" htmlFor="llm-edit-provider">
-              Configure a provider
-            </label>
-            <select
-              id="llm-edit-provider"
-              value={editProvider}
-              onChange={(e) => setEditProvider(e.target.value)}
-            >
-              {Object.entries(providerNames).map(([key, label]) => (
-                <option value={key} key={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <small>Configure each provider separately, then save your changes.</small>
-          </div>
-        </div>
-        {editProvider !== "ollama" && (
-          <div className="settings-field settings-key-field">
-            <label className="form-label" htmlFor="llm-api-key">
-              {providerNames[editProvider]} API key
-            </label>
-            <input
-              id="llm-api-key"
-              type="password"
-              autoComplete="new-password"
-              disabled={Boolean(clearApiKeys[editProvider])}
-              value={apiKeys[editProvider] || ""}
-              onChange={(e) => setApiKeys((old) => ({ ...old, [editProvider]: e.target.value }))}
-              placeholder={
-                providerSettings?.keyConfigured
-                  ? `Configured ${providerSettings.keyMasked} · Enter a key to replace`
-                  : "Paste your API key"
-              }
-            />
-            <small>
-              Your key is stored on this device and will not be shown again. Leave blank to keep it.
-            </small>
-            {providerSettings?.keyConfigured && (
-              <label className="settings-check">
-                <input
-                  type="checkbox"
-                  checked={Boolean(clearApiKeys[editProvider])}
-                  onChange={(e) =>
-                    setClearApiKeys((old) => ({ ...old, [editProvider]: e.target.checked }))
-                  }
-                />{" "}
-                Remove this provider’s key when saving
+      <div className="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button
+          id="settings-tab-models"
+          type="button"
+          role="tab"
+          aria-selected={settingsTab === "models"}
+          aria-controls="settings-panel-models"
+          className={settingsTab === "models" ? "is-active" : ""}
+          onClick={() => setSettingsTab("models")}
+        >
+          Model settings
+        </button>
+        <button
+          id="settings-tab-markdown"
+          type="button"
+          role="tab"
+          aria-selected={settingsTab === "markdown"}
+          aria-controls="settings-panel-markdown"
+          className={settingsTab === "markdown" ? "is-active" : ""}
+          onClick={() => setSettingsTab("markdown")}
+        >
+          Markdown files
+        </button>
+      </div>
+      <div id="settings-panel-models" role="tabpanel" aria-labelledby="settings-tab-models" hidden={settingsTab !== "models"}>
+      <Panel title="AI Provider" className="llm-provider-panel">
+        <label className="sr-only" htmlFor="llm-active-provider">
+          AI Provider
+        </label>
+        <select
+          id="llm-active-provider"
+          className="llm-provider-select"
+          value={activeProvider}
+          onChange={(e) => {
+            setActiveProvider(e.target.value);
+            setEditProvider(e.target.value);
+            setTestStatus("");
+          }}
+        >
+          {Object.entries(providerNames).map(([key, label]) => (
+            <option value={key} key={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <small>Used for requests after you save.</small>
+      </Panel>
+      <Panel title={`Configure: ${providerNames[editProvider]}`} className="llm-config-panel">
+        <div className="llm-settings-section">
+          <h3>Connection</h3>
+          {editProvider !== "ollama" && (
+            <div className="settings-field settings-endpoint">
+              <label className="form-label" htmlFor="llm-endpoint">
+                {editProvider === "custom"
+                  ? "Base URL"
+                  : `${providerNames[editProvider]} API endpoint`}
               </label>
-            )}
-          </div>
-        )}
-        <div className="settings-field settings-models">
-          <span className="form-label">Models</span>
-          <div className="settings-grid">
-            <label className="settings-field" htmlFor="llm-flash-model">
-              <span className="form-label">Flash · Everyday tasks</span>
               <input
-                id="llm-flash-model"
-                value={providerSettings?.models?.flash || ""}
-                onChange={(e) => updateModel("flash", e.target.value)}
+                id="llm-endpoint"
+                type="url"
+                value={providerSettings?.baseUrl || ""}
+                placeholder="https://api.example.com/v1"
+                onChange={(e) => updateBaseUrl(e.target.value)}
               />
-              <small>Grammar, Express, and Ask</small>
-            </label>
-            <label className="settings-field" htmlFor="llm-pro-model">
-              <span className="form-label">Pro · Complex tasks</span>
+              <small>
+                {editProvider === "custom"
+                  ? "ⓘ API base URL, usually ending in /v1"
+                  : "API base URL, usually ending in /v1"}
+              </small>
+            </div>
+          )}
+          {editProvider !== "ollama" && (
+            <div className="settings-field settings-key-field">
+              <label className="form-label" htmlFor="llm-api-key">
+                API Key
+              </label>
               <input
-                id="llm-pro-model"
-                value={providerSettings?.models?.pro || ""}
-                onChange={(e) => updateModel("pro", e.target.value)}
+                id="llm-api-key"
+                type={showApiKey ? "text" : "password"}
+                autoComplete="new-password"
+                disabled={Boolean(clearApiKeys[editProvider])}
+                value={apiKeys[editProvider] || ""}
+                onChange={(e) =>
+                  setApiKeys((old) => ({ ...old, [editProvider]: e.target.value }))
+                }
+                placeholder={
+                  providerSettings?.keyConfigured
+                    ? `Saved key ${providerSettings.keyMasked} · enter a replacement`
+                    : "Enter API key"
+                }
               />
-              <small>Handbook, Coach, and text analysis</small>
-            </label>
+              <small>
+                {editProvider === "custom"
+                  ? "ⓘ Optional for local services. Stored on this device."
+                  : "Stored on this device; leave blank to keep the saved key."}
+              </small>
+              <div className="llm-key-actions">
+                <button
+                  type="button"
+                  className="secondary llm-show-key"
+                  onClick={() => setShowApiKey((value) => !value)}
+                >
+                  {showApiKey ? "Hide" : "Show"}
+                </button>
+                {editProvider === "custom" && (
+                  <>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={testing}
+                      onClick={testConnection}
+                    >
+                      {testing ? "Testing…" : "Test connection"}
+                    </button>
+                    {testStatus && (
+                      <span
+                        role="status"
+                        className={
+                          testStatus === "Connection successful"
+                            ? "llm-test-success"
+                            : "llm-test-error"
+                        }
+                      >
+                        {testStatus}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              {providerSettings?.keyConfigured && (
+                <label className="settings-check">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(clearApiKeys[editProvider])}
+                    onChange={(e) =>
+                      setClearApiKeys((old) => ({ ...old, [editProvider]: e.target.checked }))
+                    }
+                  />{" "}
+                  Remove this provider’s key when saving
+                </label>
+              )}
+            </div>
+          )}
+          {editProvider === "ollama" && (
+            <div className="settings-field settings-endpoint">
+              <label className="form-label" htmlFor="llm-endpoint">
+                Ollama endpoint
+              </label>
+              <input
+                id="llm-endpoint"
+                type="url"
+                value={providerSettings?.baseUrl || ""}
+                placeholder="http://localhost:11434"
+                onChange={(e) => updateBaseUrl(e.target.value)}
+              />
+              <small>Ollama local server address</small>
+            </div>
+          )}
+        </div>
+        <div className="llm-settings-section llm-model-section">
+          <h3>Model mapping</h3>
+          <div className="settings-field settings-models">
+            <div className="settings-grid">
+              <label className="settings-field" htmlFor="llm-flash-model">
+                <span className="form-label">Flash · Everyday tasks</span>
+                <input
+                  id="llm-flash-model"
+                  value={providerSettings?.models?.flash || ""}
+                  onChange={(e) => updateModel("flash", e.target.value)}
+                />
+                <small>Grammar, Express, and Ask</small>
+              </label>
+              <label className="settings-field" htmlFor="llm-pro-model">
+                <span className="form-label">Pro · Complex tasks</span>
+                <input
+                  id="llm-pro-model"
+                  value={providerSettings?.models?.pro || ""}
+                  onChange={(e) => updateModel("pro", e.target.value)}
+                />
+                <small>Handbook, Coach, and text analysis</small>
+              </label>
+            </div>
           </div>
         </div>
-        {editProvider !== "gemini" && (
-          <div className="settings-field settings-endpoint">
-            <label className="form-label" htmlFor="llm-endpoint">
-              {editProvider === "ollama"
-                ? "Ollama endpoint"
-                : `${providerNames[editProvider]} API endpoint`}
-            </label>
-            <input
-              id="llm-endpoint"
-              type="url"
-              value={providerSettings?.baseUrl || ""}
-              onChange={(e) => updateBaseUrl(e.target.value)}
-            />
-            <small>
-              {editProvider === "ollama"
-                ? "Your local Ollama OpenAI-compatible endpoint"
-                : "OpenAI-compatible API endpoint"}
-            </small>
-          </div>
-        )}
       </Panel>
       {error && <State title="Could not save" detail={error} />}
       {status && (
@@ -1903,10 +2182,164 @@ function LlmSettings() {
           {status}
         </p>
       )}
-      <button className="primary" disabled={busy} onClick={save}>
-        {busy ? "Saving…" : "Save settings"}
-      </button>
+      <div className="llm-form-actions">
+        <button className="primary" disabled={busy} onClick={save}>
+          {busy ? "Saving…" : "Save changes"}
+        </button>
+        <button className="secondary" disabled={busy} onClick={reset}>
+          Reset
+        </button>
+      </div>
+      </div>
+      <div id="settings-panel-markdown" role="tabpanel" aria-labelledby="settings-tab-markdown" hidden={settingsTab !== "markdown"}>
+        <MarkdownFileSettings />
+      </div>
     </div>
+  );
+}
+
+type MarkdownPaths = {
+  vaultDir: string;
+  reviewLog: string;
+  vocabularyFile: string;
+  practiceLog: string;
+  askNotesDir: string;
+  handbookReports: string;
+};
+
+function MarkdownFileSettings() {
+  const [paths, setPaths] = useState<MarkdownPaths>();
+  const [savedPaths, setSavedPaths] = useState<MarkdownPaths>();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [errorTitle, setErrorTitle] = useState("Could not save file locations");
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    webApi.getFileSettings()
+      .then((settings) => {
+        if (!settings?.paths) throw new Error("Markdown file settings are unavailable.");
+        setPaths(settings.paths);
+        setSavedPaths(settings.paths);
+      })
+      .catch((e: any) => setError(e.message || "Could not load Markdown file settings"));
+  }, []);
+
+  function updatePath(field: keyof MarkdownPaths, value: string) {
+    setPaths((current) => current ? { ...current, [field]: value } : current);
+  }
+
+  async function choosePath(field: keyof MarkdownPaths, kind: "file" | "folder") {
+    setError("");
+    setStatus("");
+    setBusy(true);
+    try {
+      const result = await webApi.pickFileSetting(kind);
+      if (result.path) updatePath(field, result.path);
+    } catch (e: any) {
+      if (e.message === "Not found") {
+        setErrorTitle("Path picker unavailable");
+        setError("Restart IGT so the running server can load the path picker, then try again.");
+      } else {
+        setErrorTitle("Could not choose a path");
+        setError(e.message || "Could not open the path picker");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function savePaths() {
+    if (!paths || !savedPaths) return;
+    const changed = Object.fromEntries(
+      Object.entries(paths).filter(([field, value]) => value !== savedPaths[field as keyof MarkdownPaths]),
+    );
+    if (Object.keys(changed).length === 0) {
+      setStatus("File locations are up to date.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setErrorTitle("Could not save file locations");
+    setStatus("");
+    try {
+      const result = await webApi.saveFileSettings({ paths: changed });
+      setPaths(result.paths);
+      setSavedPaths(result.paths);
+      setStatus("Markdown file locations saved.");
+    } catch (e: any) {
+      setError(e.message || "Could not save Markdown file locations");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const folderFields: Array<{ key: keyof MarkdownPaths; label: string; help: string }> = [
+    { key: "vaultDir", label: "Obsidian vault folder", help: "Default location for learning notes." },
+    { key: "askNotesDir", label: "Ask notes folder", help: "Each saved Ask consultation is written as a Markdown note." },
+    { key: "handbookReports", label: "Handbook reports folder", help: "Generated handbook Markdown files." },
+  ];
+  const fileFields: Array<{ key: keyof MarkdownPaths; label: string; help: string }> = [
+    { key: "reviewLog", label: "Review log file", help: "Markdown corrections and writing feedback." },
+    { key: "vocabularyFile", label: "Vocabulary file", help: "The Markdown source for vocabulary entries." },
+    { key: "practiceLog", label: "Practice log file", help: "Saved independent practice records." },
+  ];
+
+  if (!paths) {
+    return error
+      ? <State title="Markdown file settings are unavailable" detail={error} />
+      : <State title="Loading Markdown file settings…" />;
+  }
+
+  return (
+    <>
+      <Panel title="Markdown file locations" className="llm-config-panel markdown-settings-panel">
+        <p className="markdown-settings-intro">
+          Choose where IGT reads and saves its Markdown learning records. Paths are stored locally.
+        </p>
+        {[{ title: "Folders", kind: "folder" as const, fields: folderFields }, { title: "Files", kind: "file" as const, fields: fileFields }].map(({ title, kind, fields }) => (
+          <section className="markdown-path-group" key={kind} aria-label={title}>
+            <h3>{title}</h3>
+            <div className="settings-grid markdown-path-grid">
+              {fields.map(({ key, label, help }) => (
+                <div className="settings-field" key={key}>
+                  <label className="form-label" htmlFor={`markdown-path-${key}`}>{label}</label>
+                  <div className="markdown-path-control">
+                    <input
+                      id={`markdown-path-${key}`}
+                      type="text"
+                      value={paths[key]}
+                      title={paths[key]}
+                      onChange={(event) => updatePath(key, event.target.value)}
+                    />
+                    <button type="button" className="secondary" disabled={busy} onClick={() => choosePath(key, kind)}>
+                      Choose…
+                    </button>
+                  </div>
+                  <small>{help}</small>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </Panel>
+      {error && <State title={errorTitle} detail={error} />}
+      {status && <p className="settings-status" role="status">{status}</p>}
+      <div className="llm-form-actions">
+        <button className="primary" disabled={busy} onClick={savePaths}>
+          {busy ? "Saving…" : "Save file locations"}
+        </button>
+        <button className="secondary" disabled={busy} onClick={() => {
+          setPaths(savedPaths);
+          setError("");
+          setErrorTitle("Could not save file locations");
+          setStatus("");
+        }}>
+          Reset
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -2130,23 +2563,28 @@ const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }>
   },
 ];
 function currentRoute(): Route {
-  const hash = location.hash.slice(1);
+  const hash = location.hash.slice(1).split("?")[0];
   return hash === "dashboard" || items.some(([key]) => key === hash) ? (hash as Route) : "grammar";
 }
 export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [route, setRoute] = useState<Route>(currentRoute);
+  const [routeHash, setRouteHash] = useState(location.hash);
   const [statusMsg, setStatusMsg] = useState("");
   const navRef = useRef<HTMLElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    webApi.getStatusMessage().then((m) => setStatusMsg(m.content)).catch(() => {});
+    webApi
+      .getStatusMessage()
+      .then((m) => setStatusMsg(m.content))
+      .catch(() => {});
   }, []);
   useEffect(() => {
     const onHash = () => {
       if (location.hash === "#main-content") return;
       setRoute(currentRoute());
+      setRouteHash(location.hash);
       setMenuOpen(false);
       navRef.current?.querySelectorAll("details").forEach((menu) => {
         menu.open = false;
@@ -2181,8 +2619,8 @@ export function App() {
     "word-review": <WordReview />,
     "word-lookup": <WordLookup />,
     coach: <Coach />,
-    practice: <Practice />,
-    handbook: <Handbook />,
+    practice: <Practice key={routeHash} />,
+    handbook: <Handbook key={routeHash} />,
     settings: <LlmSettings />,
   };
   return (
@@ -2210,10 +2648,21 @@ export function App() {
             <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
               <path d="M5 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-7l-5 4v-4H8a3 3 0 0 1-3-3V9Z" />
               <path d="M10 11h8M10 15h6M10 19h4" />
-              <path d="m26 4 .9 2.6 2.6.9-2.6.9L26 11l-.9-2.6-2.6-.9 2.6-.9L26 4Z" fill="currentColor" stroke="none" />
+              <path
+                d="m26 4 .9 2.6 2.6.9-2.6.9L26 11l-.9-2.6-2.6-.9 2.6-.9L26 4Z"
+                fill="currentColor"
+                stroke="none"
+              />
             </svg>
           </span>
-          <img className="brand-wordmark" src={clearWriteWordmark} alt="" aria-hidden="true" width="190" height="33" />
+          <img
+            className="brand-wordmark"
+            src={clearWriteWordmark}
+            alt=""
+            aria-hidden="true"
+            width="190"
+            height="33"
+          />
         </a>
         <button
           ref={menuRef}
@@ -2301,7 +2750,7 @@ export function App() {
         {pages[route]}
       </main>
       <footer className="site-footer">
-        <span className="site-footer-motto">Write with clarity. Grow your English every day.</span>
+        <span className="site-footer-motto">A tool for practice. Keep reading, listening, and using English beyond it.</span>
         {statusMsg && (
           <span className="site-footer-status" role="status">
             {statusMsg}

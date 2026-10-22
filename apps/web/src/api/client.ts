@@ -49,6 +49,10 @@ export const webApi = {
   getRuntime: () => requestJson<any>("/runtime"),
   getLlmSettings: () => requestJson<any>("/settings/llm"),
   saveLlmSettings: (settings: unknown) => requestJson<any>("/settings/llm", { method: "POST", body: JSON.stringify(settings) }),
+  testLlmConnection: (settings: unknown) => requestJson<any>("/settings/llm/test", { method: "POST", body: JSON.stringify(settings), timeoutMs: 20_000 }),
+  getFileSettings: () => requestJson<any>("/settings/files"),
+  saveFileSettings: (settings: unknown) => requestJson<any>("/settings/files", { method: "POST", body: JSON.stringify(settings) }),
+  pickFileSetting: (kind: "file" | "folder") => requestJson<{ path: string }>("/settings/files/pick", { method: "POST", body: JSON.stringify({ kind }), timeoutMs: 0 }),
   getDashboard: () => requestJson<any>("/dashboard"),
   checkGrammar: (text: string) => requestJson<any>("/grammar", { method: "POST", body: JSON.stringify({ text }) }),
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
@@ -61,7 +65,7 @@ export const webApi = {
   analyzeCoach: () => requestJson<any>("/coach/analyze", { method: "POST", body: "{}" }),
   lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`),
   addWord: (entry: unknown) => requestJson<any>("/word/add", { method: "POST", body: JSON.stringify({ entry }) }),
-  generatePractice: (mode = "sentence", count = 3, difficulty = "standard", style = "all", context = "all") => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count, difficulty, style, context }) }),
+  generatePractice: (mode = "sentence", count = 3, difficulty = "standard", style = "all", context = "all", targetErrorType = "") => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count, difficulty, style, context, ...(targetErrorType ? { targetErrorType } : {}) }) }),
   evaluatePractice: (question: unknown, answer: string, hintsUsed = 0) => requestJson<any>("/practice/evaluate", {
     method: "POST",
     body: JSON.stringify({ question, answer, hints_used: hintsUsed }),
@@ -70,7 +74,14 @@ export const webApi = {
     timeoutMs: (question as { kind?: string } | undefined)?.kind === "choice" ? 120_000 : 30_000,
   }),
   getStatusMessage: () => requestJson<any>("/status-message"),
-  getHandbook: (errorType = "") => requestJson<any>(`/handbook?days=90${errorType ? `&errorType=${encodeURIComponent(errorType)}` : ""}`),
+  getHandbook: (errorType = "", options: { days?: number; search?: string; limit?: number; offset?: number } = {}) => {
+    const params = new URLSearchParams({ days: String(options.days ?? 90), errorType, search: options.search ?? "", limit: String(options.limit ?? 5), offset: String(options.offset ?? 0) });
+    return requestJson<any>(`/handbook?${params}`);
+  },
+  explainHandbookRule: (errorType: string, days: number, version: string) => requestJson<{ exampleCount: number; rule: { title: string; content: string; generatedAt?: string; cached?: boolean } }>("/handbook/rule", { method: "POST", body: JSON.stringify({ errorType, days, version }), timeoutMs: 180_000 }),
+  listHandbookReports: () => requestJson<{ reports: Array<{ id: string; date: string; provider: string }>; truncated?: boolean }>("/handbook/reports"),
+  readHandbookReport: (id: string) => requestJson<{ id: string; html: string; snapshot: { days: number } | null }>(`/handbook/reports/read?${new URLSearchParams({ id })}`),
+  compareHandbookReports: (older: string, newer: string) => requestJson<{ available: boolean; reason?: string; note?: string; changes?: Array<{ errorType: string; before: number; after: number; delta: number }> }>(`/handbook/reports/compare?${new URLSearchParams({ older, newer })}`),
   speakWord: async (text: string): Promise<HTMLAudioElement> => {
     const res = await fetch("/tts/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
     if (!res.ok) {
