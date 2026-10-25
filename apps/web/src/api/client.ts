@@ -58,7 +58,7 @@ export const webApi = {
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
   translate: (text: string, direction: string) => requestJson<any>("/translation", { method: "POST", body: JSON.stringify({ text, direction }) }),
   ask: (question: string, messages: unknown[]) => requestJson<any>("/ask", { method: "POST", body: JSON.stringify({ question, messages }) }),
-  saveAsk: (messages: unknown[]) => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages }) }),
+  saveAsk: (messages: unknown[]) => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages }), timeoutMs: 180_000 }),
   listAskNotes: () => requestJson<{ directory: string; notes: Array<{ id: string; modifiedAt: string; bytes: number; content?: string }> }>("/ask/notes"),
   readAskNote: (id: string) => requestJson<{ id: string; content: string; bytes: number }>(`/ask/notes/read?${new URLSearchParams({ id })}`),
   getReviewDue: async (limit = 20) => {

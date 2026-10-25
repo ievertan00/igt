@@ -183,7 +183,7 @@ try {
     return answer.contains(document.querySelector('.ask-response-actions')) && send.bottom <= box.bottom && send.right <= box.right && cards.every((card) => card.top === cards[0].top);
   }), true, 'Answer actions stay inside the result frame, Send stays inside the composer, and related cards share a row on desktop');
   await page.evaluate(() => [...document.querySelectorAll('.ask-save-menu summary')].at(-1).click());
-  await click('Save full conversation');
+  await click('Summarize & save conversation');
   assert.equal(saved.length, 2, 'The consolidated save menu retains full-conversation saving');
   await page.evaluate(() => document.querySelectorAll('.ask-save-menu').forEach((menu) => { menu.open = false; }));
   await click('Back to question');

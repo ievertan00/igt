@@ -27,6 +27,7 @@ tests/*
 !tests/handbook-rules.test.mjs
 !tests/handbook-practice.test.mjs
 !tests/handbook-reports.test.mjs
+!tests/review-ask-parity.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md

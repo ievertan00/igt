@@ -4,7 +4,7 @@ import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import "./Ask.css";
 
-type Turn = { question: string; answer: string; related?: string[] };
+type Turn = { question: string; answer: string; title?: string; related?: string[] };
 type Note = { id: string; modifiedAt: string; bytes: number; content: string };
 type Discussion = { turns: Turn[]; question: string; context?: Note };
 type SaveState = { status: "saving" | "saved" | "error" | "uncertain"; message: string };
@@ -102,7 +102,7 @@ export function Ask({ active }: { active: boolean }) {
       if (typeof answer !== "string" || !answer.trim()) throw new Error("The response was empty. Please try again.");
       const relatedQuestions = Array.isArray(data?.related) ? data.related.filter((item: unknown): item is string => typeof item === "string" && Boolean(item.trim())) : [];
       setDiscussion((old) => ({ ...old, question: old.question === (related ? submitted : value) ? "" : old.question,
-        turns: [...old.turns, { question: submitted, answer, related: relatedQuestions }] }));
+        turns: [...old.turns, { question: submitted, answer, title: data?.title, related: relatedQuestions }] }));
     } catch (error: any) {
       setRequestError(`Could not get an answer. Your question is still here. ${error.message}`);
     } finally {
@@ -114,9 +114,9 @@ export function Ask({ active }: { active: boolean }) {
 
   async function save(messages: Turn[]) {
     const key = snapshot(messages);
-    if (saving.current.has(key) || saves[key]?.status === "saved" || saves[key]?.status === "uncertain") return;
+    if (saving.current.has(key) || saves[key]?.status === "saved") return;
     saving.current.add(key);
-    setSaves((old) => ({ ...old, [key]: { status: "saving", message: "Saving to notes…" } }));
+    setSaves((old) => ({ ...old, [key]: { status: "saving", message: messages.length > 1 ? "Summarizing and saving your conversation…" : "Saving to notes…" } }));
     try {
       const result = await webApi.saveAsk(messages);
       if (!result.saved) throw new Error("There is no answer to save.");
@@ -125,15 +125,15 @@ export function Ask({ active }: { active: boolean }) {
     } catch (error: any) {
       const uncertain = ["NETWORK_ERROR", "REQUEST_TIMEOUT", "REQUEST_ABORTED"].includes(error.code);
       setSaves((old) => ({ ...old, [key]: { status: uncertain ? "uncertain" : "error", message: uncertain
-        ? "Save not confirmed. Check Saved notes before trying again." : `Could not save. ${error.message}` } }));
+        ? "Save not confirmed. Retry safely; an already saved conversation will be reused." : `Could not save. ${error.message}` } }));
     } finally { saving.current.delete(key); }
   }
 
   function saveAction(messages: Turn[], label: string) {
     const state = saves[snapshot(messages)];
     return <div className="ask-save-action">
-      <button className="secondary" disabled={state?.status === "saving" || state?.status === "saved" || state?.status === "uncertain"} onClick={() => void save(messages)}>
-        <Icon name="bookmark" />{state?.status === "saved" ? "Saved to notes" : state?.status === "saving" ? "Saving…" : label}
+      <button className="secondary" disabled={state?.status === "saving" || state?.status === "saved"} onClick={() => void save(messages)}>
+        <Icon name="bookmark" />{state?.status === "saved" ? "Saved to notes" : state?.status === "saving" ? "Saving…" : state?.status === "uncertain" ? "Retry save" : label}
       </button>
       {state && <span className={state.status === "error" || state.status === "uncertain" ? "ask-error" : "ask-action-status"} role="status">{state.message}</span>}
     </div>;
@@ -185,7 +185,7 @@ export function Ask({ active }: { active: boolean }) {
             <div className="ask-response-actions" role="group" aria-label="Response actions">
               <details className="ask-save-menu" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }}>
                 <summary><Icon name={saves[snapshot([turn])]?.status === "saved" ? "check" : "bookmark"} />{saves[snapshot([turn])]?.status === "saved" ? "Saved to notes" : "Save"}<Icon name="chevron" /></summary>
-                <div className="ask-save-options">{saveAction([turn], "Save this answer")}{turns.length > 1 && saveAction(turns, "Save full conversation")}</div>
+                <div className="ask-save-options">{saveAction([turn], "Save this answer")}{turns.length > 1 && saveAction(turns, "Summarize & save conversation")}</div>
               </details>
               <button className="secondary" onClick={() => void copy(turn.answer)}><Icon name="copy" />Copy response</button>
             </div>

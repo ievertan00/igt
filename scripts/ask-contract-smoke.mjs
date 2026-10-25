@@ -35,7 +35,7 @@ try {
   assert.equal(result.response.data.answer, "Use it for past actions connected to the present.");
   assert.equal(result.response.perf.model, "smoke-model");
 
-  const saved = saveAsk({
+  const saved = await saveAsk({
     messages: [{ question: "How do I use present perfect?", answer: result.response.data.answer }],
     config
   });
@@ -43,20 +43,22 @@ try {
   assert.equal(saved.vaultFile, "How do I use present perfect.md");
   assert.equal(fs.existsSync(path.join(tempRoot, saved.vaultFile)), true);
   const original = fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8");
-  const duplicate = saveAsk({ messages: [{ question: "How do I use present perfect?", answer: result.response.data.answer }], config });
+  const duplicate = await saveAsk({ messages: [{ question: "How do I use present perfect?", answer: result.response.data.answer }], config });
   assert.equal(duplicate.vaultFile, saved.vaultFile, "Identical snapshots reuse the existing note");
   assert.equal(fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8"), original, "Duplicate saving preserves metadata too");
-  const expanded = saveAsk({ messages: [
+  const summaryLlm = { generateWithFallback: async () => JSON.stringify({ title: "Present perfect", question: "How do I use present perfect?", answer: "I have lived here for years.", related: [] }) };
+  config.Prompts.AskCompactPrompt = "Summarize the whole consultation.";
+  const expanded = await saveAsk({ messages: [
     { question: "How do I use present perfect?", answer: result.response.data.answer },
     { question: "Another example?", answer: "I have lived here for years." },
-  ], config });
+  ], config, llm: summaryLlm });
   assert.notEqual(expanded.vaultFile, saved.vaultFile, "Different snapshots with the same title get separate notes");
   assert.equal(fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8"), original, "Historical content remains intact");
   assert.match(fs.readFileSync(path.join(tempRoot, expanded.vaultFile), "utf8"), /I have lived here for years/);
-  const repeatedExpanded = saveAsk({ messages: [
+  const repeatedExpanded = await saveAsk({ messages: [
     { question: "How do I use present perfect?", answer: result.response.data.answer },
     { question: "Another example?", answer: "I have lived here for years." },
-  ], config });
+  ], config, llm: summaryLlm });
   assert.equal(repeatedExpanded.vaultFile, expanded.vaultFile);
   console.log("ask contract smoke ok");
 } finally {
