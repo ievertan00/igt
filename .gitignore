@@ -21,6 +21,8 @@ tests/*
 !tests/practice-question-bank.test.mjs
 !tests/practice-route.test.mjs
 !tests/practice-client-timeout.test.mjs
+!tests/word-client-timeout.test.mjs
+!tests/word-lookup.test.mjs
 !tests/handbook-browser-data.test.mjs
 !tests/handbook-rules.test.mjs
 !tests/handbook-practice.test.mjs

@@ -65,7 +65,9 @@ export const webApi = {
   gradeReview: (cardId: number, rating: string) => requestJson<any>("/review/grade", { method: "POST", body: JSON.stringify({ card_id: cardId, rating }) }),
   getCoach: () => requestJson<any>("/coach?windowDays=30"),
   analyzeCoach: () => requestJson<any>("/coach/analyze", { method: "POST", body: "{}" }),
-  lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`),
+  // Dictionary generation can outlast the generic 30-second deadline,
+  // especially when the provider retries or a local model is loading.
+  lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`, { timeoutMs: 180_000 }),
   addWord: (entry: unknown) => requestJson<any>("/word/add", { method: "POST", body: JSON.stringify({ entry }) }),
   generatePractice: (mode = "sentence", count = 3, difficulty = "standard", style = "all", context = "all", targetErrorType = "") => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count, difficulty, style, context, ...(targetErrorType ? { targetErrorType } : {}) }) }),
   evaluatePractice: (question: unknown, answer: string, hintsUsed = 0) => requestJson<any>("/practice/evaluate", {
