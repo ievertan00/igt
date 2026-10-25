@@ -42,6 +42,22 @@ try {
   assert.equal(saved.saved, true);
   assert.equal(saved.vaultFile, "How do I use present perfect.md");
   assert.equal(fs.existsSync(path.join(tempRoot, saved.vaultFile)), true);
+  const original = fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8");
+  const duplicate = saveAsk({ messages: [{ question: "How do I use present perfect?", answer: result.response.data.answer }], config });
+  assert.equal(duplicate.vaultFile, saved.vaultFile, "Identical snapshots reuse the existing note");
+  assert.equal(fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8"), original, "Duplicate saving preserves metadata too");
+  const expanded = saveAsk({ messages: [
+    { question: "How do I use present perfect?", answer: result.response.data.answer },
+    { question: "Another example?", answer: "I have lived here for years." },
+  ], config });
+  assert.notEqual(expanded.vaultFile, saved.vaultFile, "Different snapshots with the same title get separate notes");
+  assert.equal(fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8"), original, "Historical content remains intact");
+  assert.match(fs.readFileSync(path.join(tempRoot, expanded.vaultFile), "utf8"), /I have lived here for years/);
+  const repeatedExpanded = saveAsk({ messages: [
+    { question: "How do I use present perfect?", answer: result.response.data.answer },
+    { question: "Another example?", answer: "I have lived here for years." },
+  ], config });
+  assert.equal(repeatedExpanded.vaultFile, expanded.vaultFile);
   console.log("ask contract smoke ok");
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
