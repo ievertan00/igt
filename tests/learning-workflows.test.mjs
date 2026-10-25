@@ -261,7 +261,7 @@ test("vocabulary review hides English and grades blank recall as incorrect", asy
     meaning: "to do something after an earlier action",
     example: "I will follow up tomorrow.",
   }] }));
-  t.mock.method(api, "gradeCard", async (_id, correct) => { grade = correct; return { next: { intervalDays: 1 } }; });
+  t.mock.method(api, "submitVocabularyRecall", async (_id, answer) => { grade = answer.length > 0; return { correct: grade, next: { intervalDays: 1 } }; });
   t.mock.method(api, "deleteCard", async (id) => { deleted = id; return {}; });
   const answers = ["", "d"];
   await runReview(async () => answers.shift(), null, 1, { Tts: { Enabled: false } });

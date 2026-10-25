@@ -61,8 +61,12 @@ export const webApi = {
   saveAsk: (messages: unknown[]) => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages }) }),
   listAskNotes: () => requestJson<{ directory: string; notes: Array<{ id: string; modifiedAt: string; bytes: number; content?: string }> }>("/ask/notes"),
   readAskNote: (id: string) => requestJson<{ id: string; content: string; bytes: number }>(`/ask/notes/read?${new URLSearchParams({ id })}`),
-  getReviewDue: () => requestJson<any>("/review/due?limit=20&type=vocab"),
-  gradeReview: (cardId: number, rating: string) => requestJson<any>("/review/grade", { method: "POST", body: JSON.stringify({ card_id: cardId, rating }) }),
+  getReviewDue: async (limit = 20) => {
+    await requestJson<any>("/vocab/seed", { method: "POST", body: "{}" });
+    return requestJson<any>(`/review/due?limit=${limit}&type=vocab`);
+  },
+  gradeReview: (cardId: number, answer: string, requestId: string, audioPlayed: boolean) => requestJson<any>("/review/grade", { method: "POST", body: JSON.stringify({ card_id: cardId, answer, request_id: requestId, audio_played: audioPlayed }) }),
+  deleteReview: (cardId: number) => requestJson<any>("/review/delete", { method: "POST", body: JSON.stringify({ card_id: cardId }) }),
   getCoach: () => requestJson<any>("/coach?windowDays=30"),
   analyzeCoach: () => requestJson<any>("/coach/analyze", { method: "POST", body: "{}" }),
   // Dictionary generation can outlast the generic 30-second deadline,

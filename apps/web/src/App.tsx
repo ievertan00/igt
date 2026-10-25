@@ -512,17 +512,38 @@ function WordReview() {
     startError,
     error,
     notice,
-    reveal,
-    grade,
+    answer: submittedAnswer,
+    result,
+    correct,
+    wrong,
+    limit,
+    setLimit,
+    submit,
+    next,
+    remove,
+    markAudio,
     retry,
     startNew,
   } = useDailyReviewSession();
+  const [answer, setAnswer] = useState("");
+  useEffect(() => { setAnswer(""); }, [index, cards]);
   const card = cards[index];
+  const answerRef = useRef<HTMLInputElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (revealed) nextRef.current?.focus({ preventScroll: true });
+    else answerRef.current?.focus({ preventScroll: true });
+  }, [card?.id, revealed]);
   const details = card?.vocab_details;
   const examples = details?.examples?.length ? details.examples : [card?.example].filter(Boolean);
   const complete = !loading && !error && !card;
   const sessionAction = (
-    <div className="review-session-actions">
+    <details className="review-session-options" open={complete || undefined}>
+      <summary><Icon name="settings" /><span>Session options</span><Icon name="chevron" /></summary>
+      <div className="review-session-actions">
+      <div className="review-limit-field"><label htmlFor="review-limit">Cards in the next batch</label>
+      <input id="review-limit" type="number" min="1" max="100" value={limit} disabled={loading || grading || starting}
+        onChange={(event) => setLimit(Number(event.target.value))} /></div>
       <button
         className={complete ? "primary" : "secondary"}
         onClick={startNew}
@@ -532,15 +553,16 @@ function WordReview() {
         {starting ? "Starting…" : "Start a new session"}
         <Icon name="arrow" />
       </button>
-    </div>
+      </div>
+    </details>
   );
   return (
     <div className="word-review-page">
       <div className="review-header">
         <Heading
           eyebrow="VOCABULARY · REVIEW"
-          title="Bring words back."
-          detail="Recall the English word from the Chinese clue. Reveal it, then rate your recall."
+          title="Vocabulary review"
+          detail="Recall the expression. Make it easier to use next time."
         />
         {!complete && sessionAction}
       </div>
@@ -558,7 +580,7 @@ function WordReview() {
           <State
             title={
               card
-                ? "Could not save your rating. Try again."
+                ? "Could not save your review. Try again."
                 : "Could not load your review. Try again."
             }
             detail={error}
@@ -575,7 +597,7 @@ function WordReview() {
             <h3>{cards.length ? "Review session complete." : "No vocabulary cards due."}</h3>
             <p>
               {cards.length
-                ? `You reviewed ${cards.length} vocabulary cards. Try using a few of these words in a sentence or conversation.`
+                ? `You reviewed ${cards.length} vocabulary cards: ${correct} correct, ${wrong} incorrect. Try using a few in your own sentences.`
                 : "Come back later, or look up a word and save it to your vocabulary."}
             </p>
           </div>
@@ -583,65 +605,77 @@ function WordReview() {
         </Panel>
       )}
       {card && (
-        <Panel
-          title={`Card ${index + 1} of ${cards.length}`}
-          icon="word-review"
-          className="review-card"
-        >
-          <div className="review-progress" aria-label={`Card ${index + 1} of ${cards.length}`}>
-            <span style={{ width: `${((index + 1) / cards.length) * 100}%` }} />
+        <section className="panel review-card" key={card.id} aria-label="Vocabulary recall">
+          <div className="review-card-meta">
+            <span>Card <strong>{index + 1}</strong> of {cards.length}</span>
+            <span className="review-session-score">{correct} correct<span aria-hidden="true"> · </span>{wrong} incorrect</span>
+          </div>
+          <div className="review-progress" role="progressbar" aria-label="Cards reviewed" aria-valuemin={0} aria-valuemax={cards.length}
+            aria-valuenow={correct + wrong}>
+            <span style={{ width: `${((correct + wrong) / cards.length) * 100}%` }} />
           </div>
           {!revealed ? (
             <div className="review-prompt">
-              <span className="review-kicker">Recall before you reveal</span>
-              <h2>{card.zh || "Recall this English expression"}</h2>
-              <p>{card.meaning || "Use the Chinese clue, then reveal the word."}</p>
-              <div className="review-prompt-actions">
-                <AudioButton text={card.word || card.answer} reviewPrompt />
-                <button className="primary" onClick={reveal} disabled={starting}>
-                  Reveal word
-                  <span className="review-cta-icon" aria-hidden="true">
-                    <Icon name="arrow" />
-                  </span>
-                </button>
+              <div className="review-clue">
+                <h2>{card.zh || "Recall this English expression"}</h2>
+                <p>{card.meaning || "Write the English expression that matches this clue."}</p>
+                {card.masked_example && <p className="review-clue-example">{card.masked_example}</p>}
               </div>
+              <form className="review-recall-form" onSubmit={(event) => { event.preventDefault(); void submit(answer); }}>
+                <label className="form-label" htmlFor="review-answer">Your answer</label>
+                <input ref={answerRef} id="review-answer" value={submittedAnswer ?? answer} maxLength={1000} autoComplete="off" autoCapitalize="off" spellCheck={false}
+                  placeholder="Type the English word or phrase…"
+                  readOnly={submittedAnswer !== null && submittedAnswer !== undefined} disabled={grading || starting}
+                  onChange={(event) => setAnswer(event.target.value)} aria-describedby="review-recall-hint" />
+                <p id="review-recall-hint">Case, spaces and hyphens do not affect spelling.</p>
+                <div className="review-prompt-actions" onClick={(event) => {
+                  if ((event.target as HTMLElement).closest("button[type='button']")) markAudio();
+                }}>
+                  <span className="review-audio-hint"><AudioButton text={card.example ? `${card.word}. ${card.example}` : card.word || card.answer} reviewPrompt /><span>Audio hint</span></span>
+                  <button type="submit" className="primary" disabled={grading || starting}>
+                    {grading ? "Checking…" : submittedAnswer != null ? "Retry check" : "Check answer"}<Icon name="arrow" />
+                  </button>
+                </div>
+                <p className="review-recall-note">Cannot recall it? Leave your answer blank and check.</p>
+              </form>
             </div>
           ) : (
-            <>
-              <WordDetails
-                entry={{
-                  word: card.word || card.answer,
-                  pos: card.pos || details?.pos,
-                  phonetic: details?.phonetic || details?.phonetics,
-                  meaning: card.meaning,
-                  zh: card.zh,
-                  synonyms: details?.synonyms,
-                  collocations: details?.collocations,
-                  note: details?.note || card.note,
-                }}
-                examples={examples}
-              />
-              <div className="review-actions" aria-busy={grading}>
-                <button disabled={grading || starting} onClick={() => grade("again")}>
-                  <span>Again</span>
-                  <small>Could not recall</small>
-                </button>
-                <button disabled={grading || starting} onClick={() => grade("hard")}>
-                  <span>Hard</span>
-                  <small>With difficulty</small>
-                </button>
-                <button disabled={grading || starting} onClick={() => grade("good")}>
-                  <span>Good</span>
-                  <small>Remembered</small>
-                </button>
-                <button disabled={grading || starting} onClick={() => grade("easy")}>
-                  <span>Easy</span>
-                  <small>Effortless</small>
-                </button>
+            <div className="review-result">
+              <div className={`review-verdict ${result?.correct ? "is-correct" : "is-incorrect"}`} role="status">
+                <strong><Icon name={result?.correct ? "check" : "close"} />{result?.correct ? "Correct" : "Incorrect"}</strong>
+                <span>Next review in {result?.correct ? result.next.intervalDays : 1} {result?.next.intervalDays === 1 || !result?.correct ? "day" : "days"}</span>
               </div>
-            </>
+              <p className="review-your-answer">Your answer: <span>{submittedAnswer || "(blank)"}</span></p>
+              <div className="review-expression">
+                <div><h2>{card.word || card.answer}</h2>
+                  {(card.pos || details?.pos || details?.phonetic || details?.phonetics) && <p>{[card.pos || details?.pos, details?.phonetic || details?.phonetics].filter(Boolean).join(" · ")}</p>}
+                </div>
+                <AudioButton text={card.word || card.answer} />
+              </div>
+              <div className="review-definition">
+                {card.zh && <p lang="zh">{card.zh}</p>}
+                {card.meaning && <p>{card.meaning}</p>}
+              </div>
+              {examples[0] && <div className="review-result-example"><p>{examples[0]}</p><span className="example-controls"><AudioButton text={examples[0]} small /><CopyButton value={examples[0]} label="Copy example" small /></span></div>}
+              <div className="review-actions" aria-busy={grading}>
+                <p>Try using this expression in your own sentence.</p>
+                <button ref={nextRef} className="primary" disabled={grading || starting} onClick={next}>{index + 1 === cards.length ? "Finish review" : "Next word"}<Icon name="arrow" /></button>
+              </div>
+              <div className="review-secondary-actions">
+                {(examples.length > 1 || details?.synonyms || details?.collocations || details?.note || card.note) && <details className="review-more-details">
+                  <summary>More word details<Icon name="chevron" /></summary>
+                  <div>{examples.slice(1).map((example: string, i: number) => <div className="review-result-example" key={i}><p>{example}</p><span className="example-controls"><AudioButton text={example} small /><CopyButton value={example} label="Copy example" small /></span></div>)}
+                    <dl>{[["Synonyms", details?.synonyms], ["Collocations", details?.collocations], ["Usage note", details?.note || card.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+                  </div>
+                </details>}
+                <details className="review-manage-card"><summary>Manage card<Icon name="chevron" /></summary>
+                  <p className="review-removal-note">Removing the SRS card keeps the saved word. It may be imported again and is not marked as mastered.</p>
+                  <button disabled={grading || starting} onClick={() => void remove()}>Remove SRS card</button>
+                </details>
+              </div>
+            </div>
           )}
-        </Panel>
+        </section>
       )}
     </div>
   );
