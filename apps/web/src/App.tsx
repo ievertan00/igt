@@ -501,21 +501,34 @@ function Express() {
     </>
   );
 }
+const ASK_SUGGESTIONS = [
+  "What's the difference between 'affect' and 'effect'?",
+  "Is 'I have been working' correct here?",
+  "How do I use 'would' to sound more polite?",
+  "Can you explain when to use the present perfect?",
+  "What's a more natural way to say this?",
+];
+
 function Ask() {
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<any[]>([]);
   const [askNotes, setAskNotes] = useState<Array<{ id: string; modifiedAt: string; bytes: number; content: string }>>([]);
   const [askNotesDirectory, setAskNotesDirectory] = useState("");
   const [notesQuery, setNotesQuery] = useState("");
+  const [selectedNoteId, setSelectedNoteId] = useState("");
+  const [requestError, setRequestError] = useState("");
   const [notesBusy, setNotesBusy] = useState(false);
   const [notesError, setNotesError] = useState("");
   const [busy, setBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [saved, setSaved] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   async function send() {
-    if (!question.trim()) return;
+    if (busy || !question.trim()) return;
     const current = question.trim();
-    setQuestion("");
+    setRequestError("");
+    setSaved("");
     setBusy(true);
     try {
       const result = await webApi.ask(current, turns);
@@ -523,13 +536,24 @@ function Ask() {
         ...old,
         { question: current, answer: result.data?.answer || result.data },
       ]);
+      setQuestion("");
     } catch (e: any) {
-      setTurns((old) => [...old, { question: current, answer: `Request failed: ${e.message}` }]);
+      setRequestError(`Could not get an answer. Your question is still here. ${e.message}`);
     } finally {
       setBusy(false);
+      textareaRef.current?.focus();
     }
   }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !busy && question.trim() && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      send();
+    }
+  }
+
   async function save() {
+    if (saveBusy || busy || !turns.length) return;
     setSaved("Saving your conversation…");
     setSaveBusy(true);
     try {
@@ -564,67 +588,113 @@ function Ask() {
     const query = notesQuery.trim().toLocaleLowerCase();
     return !query || note.id.toLocaleLowerCase().includes(query) || note.content.toLocaleLowerCase().includes(query);
   });
+  const selectedNote = matchingNotes.find((note) => note.id === selectedNoteId) || matchingNotes[0];
   return (
-    <>
+    <div className={`ask-page${turns.length ? " has-conversation" : ""}`}>
       <Heading
         eyebrow="ASK"
         title="Ask about your English."
-        detail="Ask about grammar, word choice, or tone. Include a sentence for context, and ask for examples you can try using yourself. AI explanations may need checking."
+        detail="Make sense of grammar, word choice, and tone. Bring a sentence. Leave with a clearer understanding."
       />
-      <Panel title="Your conversation" icon="ask">
+      <section className="panel ask-conversation" aria-labelledby="ask-conversation-title">
+        <div className="ask-section-heading">
+          <h2 id="ask-conversation-title"><span className="ask-section-icon"><Icon name="ask" /></span>Your conversation</h2>
+          {(turns.length > 0 || requestError) && <div className="ask-conversation-tools">
+            {turns.length > 0 && <button className="secondary" onClick={save} disabled={busy || saveBusy}><Icon name="bookmark" />{saveBusy ? "Saving…" : "Save conversation"}</button>}
+            <button className="text-button" disabled={busy || saveBusy} onClick={() => { setTurns([]); setSaved(""); setRequestError(""); textareaRef.current?.focus(); }}><Icon name="close" />Clear chat</button>
+          </div>}
+        </div>
         {turns.map((turn, index) => (
           <div className="ask-turn" key={`${turn.question}-${index}`}>
-            <strong>{turn.question}</strong>
-            <Markdown source={String(turn.answer ?? "")} />
+            <span className="ask-speaker">You asked</span>
+            <span className="ask-question">{turn.question}</span>
+            <div className="ask-answer">
+              <span className="ask-speaker">Explanation</span>
+              <Markdown source={String(turn.answer ?? "")} />
+            </div>
           </div>
         ))}
+        <div className="ask-writing-area">
         {!turns.length && (
-          <State
-            title="What would you like to understand?"
-            detail="Start with a question about English."
-          />
+          <div className="ask-welcome">
+            <h3>A little inspiration</h3>
+            <p>Choose a question and make it yours.</p>
+            <div className="ask-suggestions">
+              {ASK_SUGGESTIONS.map((suggestion, index) => (
+                <button
+                  className="ask-suggestion"
+                  key={suggestion}
+                  type="button"
+                  onClick={() => { setQuestion(suggestion); textareaRef.current?.focus(); }}
+                >
+                  <span><strong>{["Word choice", "Grammar in context", "Tone & politeness", "Tenses", "Natural expression"][index]}</strong><span>{suggestion}</span></span><Icon name="arrow" />
+                </button>
+              ))}
+            </div>
+          </div>
         )}
-        <label className="form-label" htmlFor="ask-input">
-          Your question
-        </label>
-        <textarea
-          id="ask-input"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask about a phrase, a rule, or a difference…"
-        />
-        <button className="primary" onClick={send} disabled={busy}>
-          {busy ? "Thinking…" : "Ask →"}
-        </button>
-        <button className="secondary" onClick={save} disabled={saveBusy}>
-          {saveBusy ? "Saving…" : "Save conversation"}
-        </button>
-        {saved && <p className="status">{saved}</p>}
-      </Panel>
-      <Panel title="Saved Ask notes" icon="document" className="ask-library-panel">
+        <div className="ask-composer">
+          <label className="form-label" htmlFor="ask-input">
+            {turns.length ? "Keep the conversation going" : "What would you like to understand?"}
+          </label>
+          <textarea
+            ref={textareaRef}
+            id="ask-input"
+            value={question}
+            readOnly={busy}
+            aria-describedby="ask-shortcut"
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your question here. Add a sentence or an example for context…"
+          />
+          <div className="ask-composer-actions">
+            <span id="ask-shortcut">Ctrl / ⌘ + Enter to send</span>
+            <div>
+              <button className="primary" onClick={send} disabled={busy || !question.trim()}>
+                {busy ? "Thinking…" : "Ask"}<Icon name="arrow" />
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+        <p className="ask-guidance">Ask follow-up questions to explore an explanation. AI explanations may need checking.</p>
+        {busy && <p className="ask-pending" role="status">Thinking about your question…</p>}
+        {requestError && <p className="ask-error" role="alert">{requestError}</p>}
+        {saved && (
+          <div className="ask-save-status">
+            <p className="status" role="status">{saved}</p>
+          </div>
+        )}
+      </section>
+      <section className="panel ask-library-panel" aria-labelledby="ask-library-title">
+        <div className="ask-section-heading">
+          <div><h2 id="ask-library-title"><Icon name="bookmark" />Saved Ask notes</h2><p className="ask-library-description">Good questions are worth coming back to.</p></div>
         {!notesBusy && !notesError && askNotes.length > 0 && <div className="ask-library-toolbar">
           <label className="sr-only" htmlFor="ask-notes-search">Search saved notes</label>
           <input id="ask-notes-search" type="search" value={notesQuery} onChange={(event) => setNotesQuery(event.target.value)} placeholder="Search notes by title or content…" />
-          <span>{matchingNotes.length} of {askNotes.length}</span>
+          <span aria-live="polite">{matchingNotes.length} of {askNotes.length}</span>
         </div>}
-        {askNotesDirectory && <p className="ask-library-directory">Automatically loaded from {askNotesDirectory}</p>}
-        {notesBusy ? <State title="Loading saved Ask notes…" /> : notesError ? <State title="Saved Ask notes could not be loaded" detail={notesError} /> : !askNotes.length ? (
-          <State title="No Markdown notes found" detail="Save a conversation from the CLI and it will appear here automatically." />
+        </div>
+        {notesBusy ? <State title="Loading saved Ask notes…" /> : notesError ? <><State title="Saved Ask notes could not be loaded" detail={notesError} /><button className="secondary" onClick={refreshAskNotes}>Retry loading notes</button></> : !askNotes.length ? (
+          <State title="No saved conversations yet" detail="Ask a question, then save your conversation to keep it here as a Markdown note. Notes saved from the CLI appear here too." />
         ) : matchingNotes.length ? (
-          <div className="ask-note-list">
+          <div className="ask-library-layout">
+          <nav className="ask-note-list" aria-label="Saved Ask notes">
             {matchingNotes.map((note) => (
-              <article className="ask-note-card" key={note.id}>
-                <header>
-                  <h3>{note.id.replace(/\.md$/i, "")}</h3>
-                  <time dateTime={note.modifiedAt}>{new Date(note.modifiedAt).toLocaleDateString()}</time>
-                </header>
-                <Markdown source={note.content} />
-              </article>
+              <button type="button" className="ask-note-link" aria-current={note.id === selectedNote.id ? "true" : undefined} aria-controls="ask-note-reader" key={note.id} onClick={() => setSelectedNoteId(note.id)}>
+                <Icon name="document" /><span><strong>{note.id.replace(/\.md$/i, "")}</strong><time dateTime={note.modifiedAt}>{formatActivityTimestamp(note.modifiedAt)}</time></span>
+              </button>
             ))}
+          </nav>
+          <article className="ask-note-card" id="ask-note-reader" aria-label={selectedNote.id.replace(/\.md$/i, "")}>
+            <header><h3>{selectedNote.id.replace(/\.md$/i, "")}</h3><time dateTime={selectedNote.modifiedAt}>{formatActivityTimestamp(selectedNote.modifiedAt)}</time></header>
+            <Markdown source={selectedNote.content} />
+          </article>
           </div>
-        ) : <State title="No notes match this search" detail="Try another title or phrase." />}
-      </Panel>
-    </>
+        ) : <><State title="No notes match this search" detail="Try another title or phrase." /><button className="text-button" onClick={() => setNotesQuery("")}>Clear search</button></>}
+        {askNotesDirectory && <details className="ask-library-directory"><summary>Markdown storage location</summary><p>{askNotesDirectory}</p></details>}
+      </section>
+    </div>
   );
 }
 function WordReview() {
@@ -886,9 +956,10 @@ function WordLookup() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   async function lookup() {
-    if (!query.trim()) return;
+    if (busy || !query.trim()) return;
     setBusy(true);
     setStatus("");
+    setEntry(undefined);
     try {
       const result = await webApi.lookupWord(query.trim());
       setEntry(result.data);
