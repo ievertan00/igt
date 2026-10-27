@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import fs from "node:fs";
+import path from "node:path";
 import { registerWordRoutes } from "../lib/server/routes/word.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 
 const entry = { status: "found", word: "scrutiny", pos: "noun", phonetic: "/ˈskruːtəni/", meaning: "Careful examination.", zh: "仔细审查", synonyms: "inspection", collocations: "under scrutiny", example: "The plan is under scrutiny.", example2: "Her work faced scrutiny.", example3: "The report deserves scrutiny.", note: "Usually uncountable.", suggestions: "" };
 let outputs = [];
 let calls = [];
-registerWordRoutes({ getLLMManager: async () => ({ generateWithFallback: async (...args) => {
+const parent = path.join(process.cwd(), ".cache");
+fs.mkdirSync(parent, { recursive: true });
+const fixture = fs.mkdtempSync(path.join(parent, "word-lookup-"));
+const vocabularyFile = path.join(fixture, "words.md");
+test.after(() => { assert.equal(path.dirname(fixture), parent); fs.rmSync(fixture, { recursive: true, force: true }); });
+registerWordRoutes({ getConfig: () => ({ VocabularyPath: vocabularyFile }), getLLMManager: async () => ({ generateWithFallback: async (...args) => {
   calls.push(args);
   const output = outputs.shift();
   if (output instanceof Error) throw output;
@@ -75,4 +82,55 @@ test("provider failures are not retried as JSON repair", async () => {
   assert.equal(result.status, 502);
   assert.equal(result.body.error.message, "Provider request timed out (60s)");
   assert.equal(calls.length, 1);
+});
+
+test("Chinese lookup uses CLI translation routing before dictionary generation", async () => {
+  const result = await lookup(['English counterpart: "scrutiny"', JSON.stringify(entry)], "仔细审查");
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.requested, "仔细审查");
+  assert.equal(result.body.data.lookup, "scrutiny");
+  assert.equal(result.body.data.translated, true);
+  assert.equal(result.body.data.existing, false);
+  assert.deepEqual(calls.map(([query, , options]) => [query, options.taskType]), [["仔细审查", "translation"], ["scrutiny", "grammar"]]);
+  assert.equal(result.body.persistence.saved, false);
+  assert.equal(fs.existsSync(vocabularyFile), false, "lookup never saves a new entry");
+});
+
+test("an invalid Chinese counterpart stops before dictionary lookup", async () => {
+  for (const output of ["", "还是中文", "12345"]) {
+    const result = await lookup([output], "仔细审查");
+    assert.equal(result.status, 502);
+    assert.equal(result.body.error.code, "INVALID_ENGLISH_COUNTERPART");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][2].taskType, "translation");
+  }
+});
+
+test("Chinese translation failures preserve provider errors and do not generate a dictionary entry", async () => {
+  const result = await lookup([new Error("Translation service unavailable")], "仔细审查");
+  assert.equal(result.status, 502);
+  assert.equal(result.body.error.message, "Translation service unavailable");
+  assert.equal(calls.length, 1);
+});
+
+test("saved vocabulary wins before lookup and after canonicalization", async () => {
+  const content = "# Vocabulary\n\n### scrutiny\n**PoS:** noun · /saved/\n**Meaning:** My saved meaning.\n**中文:** 仔细审查\n**Example:** Saved example.\n**Note:**\n**Memory:** my memory hook\n";
+  fs.writeFileSync(vocabularyFile, content);
+  try {
+    const direct = await lookup([], "SCRUTINY");
+    assert.equal(direct.body.data.meaning, "My saved meaning.");
+    assert.equal(direct.body.data.phonetic, "/saved/");
+    assert.equal(direct.body.data.note, "", "an empty field must not consume the next Markdown line");
+    assert.equal(direct.body.data.existing, true);
+    assert.equal(calls.length, 0);
+    const chinese = await lookup(["scrutiny"], "仔细审查");
+    assert.equal(chinese.body.data.example, "Saved example.");
+    assert.equal(chinese.body.data.existing, true);
+    assert.equal(calls.length, 1, "translation is followed by a saved-entry check");
+    const canonical = await lookup([JSON.stringify(entry)], "scrutinies");
+    assert.equal(canonical.body.data.meaning, "My saved meaning.");
+    assert.equal(canonical.body.data.existing, true);
+    assert.equal(calls.length, 1);
+    assert.equal(fs.readFileSync(vocabularyFile, "utf8"), content);
+  } finally { fs.unlinkSync(vocabularyFile); }
 });

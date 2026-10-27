@@ -349,7 +349,11 @@ Ask multi-turn questions about English grammar. IGT queries its local reference 
 
 ![/ask screenshot](assets/08_ask.png)
 
-When you exit the session, IGT prompts you to save. Choosing yes compacts the full thread into a single polished response and appends it as a dated entry to `03_Consultations.md` in your vault — readable in Obsidian, Typora, or any Markdown editor.
+When you finish a CLI thread, IGT prompts you to save. A single answer is preserved; a multi-turn thread is summarized into one standalone Markdown note in the configured Ask directory. The Web Ask page can save an individual answer or summarize and save the conversation.
+
+AI generates a descriptive **Simplified Chinese title**, topic tags, and a category in the existing answer or conversation-summary request, regardless of the question's language. Both CLI and Web save new notes as `<中文标题>.md`, retaining English terms when they identify the topic and omitting English subtitle translations. Titles are limited to 50 characters and cleaned for filesystem and Markdown-link compatibility; different notes with the same title receive a numeric suffix instead of overwriting each other. If an older response has no Chinese title, saving makes one title-only AI request to generate it. If that fails, the conversation remains available for retry and no English-named fallback note is written.
+
+Saving writes metadata as YAML frontmatter, readable in Obsidian and other Markdown tools. The CLI shows the saved metadata; Web **Saved notes** displays titles and supports text search, category and tag filters, and clickable topics. Categories cover Grammar, Vocabulary, Pronunciation, Writing, Reading, Listening, Conversation, and Other. Older notes remain readable as Uncategorized; incomplete tags or categories do not block saving and are reported in the save confirmation. Retrying the same conversation reuses the existing note and its metadata.
 
 ![Ask log screenshot](assets/09_ask_log.png)
 
@@ -384,11 +388,24 @@ Press """ on a new line to submit.
 
 ### Vocabulary SRS Review (`/word review`)
 
-Every error you make generates a flashcard. The SM-2 algorithm schedules each card: answer correctly and the interval grows (1 day → 4 days → 10 days…); miss it and it resets to tomorrow. The answer is revealed with **diff highlighting** — changed words shown in green so you see exactly what was wrong. Over time you stop seeing cards for errors you've mastered.
+On the Web, **Vocabulary → Saved words** opens the complete Markdown vocabulary library, including entries that are not due or have been removed from SRS review. Search words, Chinese/English meanings, examples and notes; sort alphabetically or by saved date; open any word in a separate detail dialog for pronunciation, all saved examples, collocations and notes. Browsing this page does not change review schedules.
+
+For an API/UI-only restart that must preserve a reduced SRS deck, use `node scripts/web-dev.mjs --skip-vocabulary-sync` (or `node apps/local/server.mjs --skip-vocabulary-sync`). Normal startup and starting a new Web review session still import saved vocabulary into SRS.
+
+CLI `/word review` and Web **Vocabulary review** use the same vocabulary queue and four-rating SRS scheduler. Type the English expression, check the answer, then choose **Again / Hard / Good / Easy**. Checking only reveals feedback; selecting a rating saves one review and its next date. In the CLI, use `1–4` or the rating name to save and continue. On the Web, select a rating, then use **Next word** (Enter also advances after saving).
+
+| Rating | 本次回忆感受 | New card / after Again | Established card |
+|---|---|---|---|
+| Again | 没有记住，需要尽快复习。 | Today; repeat at the end of this session | Today; reset the learning interval |
+| Hard | 回忆困难。 | 1 day | At least previous interval + 1 day, or 1.2× previous interval |
+| Good | 正常回忆成功。 | 3 days | Previous interval × ease, at least Hard + 1 day |
+| Easy | 轻松掌握。 | 7 days | Previous interval × ease × 1.3, at least Good + 1 day |
+
+Intervals are rounded to whole days. Ease starts at 2.5, has a 1.3 floor, and changes by −0.20 / −0.15 / 0 / +0.15 for Again / Hard / Good / Easy. Again resets the successful-rating streak; the next successful rating returns to the learning intervals. Due dates follow Asia/Shanghai. Existing cards keep their current schedules until reviewed; there is no bulk reset or vocabulary-file rewrite.
+
+Spelling checks ignore case, spaces, and hyphens; blank submissions are incorrect. Typed correctness and the selected recall rating are recorded separately: Easy describes this attempt, not durable mastery. Audio use is retained with the review evidence. Saves are atomic and retryable with the same answer, rating, and request ID so a lost response does not double-count a review.
 
 ![vocabulary review screenshot](assets/04_review.png)
-
-Grading is exact-match first. If your answer differs in phrasing but is semantically correct, a quick AI call decides whether to accept it.
 
 ### Daily Plan (`/today`)
 

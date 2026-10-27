@@ -4,7 +4,8 @@ import { fileURLToPath } from "url";
 import readline from "readline";
 import Database from "better-sqlite3";
 import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
-import { cleanEnglishCounterpart, isMainlyChinese } from "../lib/shared/add-input.mjs";
+import { resolveVocabularyQuery, isMainlyChinese } from "../lib/shared/add-input.mjs";
+import { resolveVocabularyPath, findVocabularyBlock } from "../lib/shared/vocabulary-source.mjs";
 import { ui, paint, colors, Spinner, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 import { beijingDate } from "../lib/shared/timezone.mjs";
 
@@ -16,12 +17,7 @@ const config = configLoader.load();
 applyTheme(config.Theme || "auto");
 const c = colors;
 
-const baseDir = config.VaultDir 
-  ? (path.isAbsolute(config.VaultDir) ? config.VaultDir : path.join(projectRoot, config.VaultDir))
-  : path.join(projectRoot, "docs");
-
-const VOCAB_FILE = config.VocabFile || "IGT Vocabulary.md";
-const NOTE_FILE = path.isAbsolute(VOCAB_FILE) ? VOCAB_FILE : path.join(baseDir, VOCAB_FILE);
+const NOTE_FILE = resolveVocabularyPath(config);
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
 let currentSpinner = null;
@@ -59,22 +55,7 @@ function ask(prompt) {
 
 // ── Duplicate check ───────────────────────────────────────────────────────────
 function findExistingEntry(word) {
-  if (!fs.existsSync(NOTE_FILE)) return null;
-  const content = fs.readFileSync(NOTE_FILE, "utf8");
-  const lines = content.split("\n");
-  const target = word.toLowerCase();
-  let startIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/^###?\s+(.+)/);
-    if (m && m[1].trim().toLowerCase() === target) { startIdx = i; break; }
-  }
-  if (startIdx === -1) return null;
-  const block = [];
-  for (let i = startIdx; i < lines.length; i++) {
-    if (i > startIdx && /^###?\s+/.test(lines[i])) break;
-    block.push(lines[i]);
-  }
-  return block.join("\n");
+  return findVocabularyBlock(word, config);
 }
 
 // ── Parse LLM output ─────────────────────────────────────────────────────────
@@ -228,11 +209,9 @@ const llmManager = initializeLLMProviders();
 let word = requestedWord;
 
 if (isMainlyChinese(requestedWord)) {
-  const translationPrompt = `You translate vocabulary lookup terms for an English learner. Return only the single most relevant natural English dictionary headword or phrase for the user's Chinese word or phrase. Do not explain, add alternatives, punctuation, or markdown. Use the canonical/base form when appropriate.`;
   startSpinner("Finding the English counterpart…");
   try {
-    const translated = await llmManager.generateWithFallback(requestedWord, translationPrompt, { taskType: "translation" });
-    word = cleanEnglishCounterpart(translated);
+    word = (await resolveVocabularyQuery(requestedWord, llmManager)).lookup;
   } catch (err) {
     stopSpinner();
     console.error(`\n  ${paint(c.yellow, "English lookup failed:")} ${err.message}\n`);
@@ -324,6 +303,7 @@ if (hook) mdBlock += `**Memory:** ${hook}\n`;
 mdBlock += `*Added: ${today}*\n`;
 
 if (!fs.existsSync(NOTE_FILE)) {
+  fs.mkdirSync(path.dirname(NOTE_FILE), { recursive: true });
   fs.writeFileSync(NOTE_FILE, "# IGT Vocabulary\n", "utf8");
 }
 fs.appendFileSync(NOTE_FILE, mdBlock, "utf8");

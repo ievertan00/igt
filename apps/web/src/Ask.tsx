@@ -4,8 +4,8 @@ import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import "./Ask.css";
 
-type Turn = { question: string; answer: string; title?: string; related?: string[] };
-type Note = { id: string; modifiedAt: string; bytes: number; content: string };
+type Turn = { question: string; answer: string; title?: string; related?: string[]; tags?: string[]; category?: string };
+type Note = { id: string; modifiedAt: string; bytes: number; content: string; title?: string; tags?: string[]; category?: string };
 type Discussion = { turns: Turn[]; question: string; context?: Note };
 type SaveState = { status: "saving" | "saved" | "error" | "uncertain"; message: string };
 const suggestions = [
@@ -15,7 +15,8 @@ const suggestions = [
   ["Tenses", "Can you explain when to use the present perfect?"],
   ["Natural expression", "What's a more natural way to say this?"],
 ];
-const noteTitle = (note: Note) => note.id.replace(/\.md$/i, "");
+const noteTitle = (note: Note) => note.title || note.id.replace(/\.md$/i, "");
+const noteBody = (note: Note) => note.content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "").replace(/<!-- igt-ask-save:[a-f0-9]+ -->\s*/g, "").trim();
 const snapshot = (turns: Turn[]) => JSON.stringify(turns.map(({ question, answer }) => ({ question, answer })));
 function dateLabel(value: string) {
   const date = new Date(value);
@@ -31,6 +32,8 @@ export function Ask({ active }: { active: boolean }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [directory, setDirectory] = useState("");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [tag, setTag] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [mobileDetail, setMobileDetail] = useState(false);
   const [notesBusy, setNotesBusy] = useState(false);
@@ -102,7 +105,8 @@ export function Ask({ active }: { active: boolean }) {
       if (typeof answer !== "string" || !answer.trim()) throw new Error("The response was empty. Please try again.");
       const relatedQuestions = Array.isArray(data?.related) ? data.related.filter((item: unknown): item is string => typeof item === "string" && Boolean(item.trim())) : [];
       setDiscussion((old) => ({ ...old, question: old.question === (related ? submitted : value) ? "" : old.question,
-        turns: [...old.turns, { question: submitted, answer, title: data?.title, related: relatedQuestions }] }));
+        turns: [...old.turns, { question: submitted, answer, title: data?.title, related: relatedQuestions,
+          tags: Array.isArray(data?.tags) ? data.tags.filter((item: unknown): item is string => typeof item === "string") : [], category: data?.category }] }));
     } catch (error: any) {
       setRequestError(`Could not get an answer. Your question is still here. ${error.message}`);
     } finally {
@@ -120,7 +124,9 @@ export function Ask({ active }: { active: boolean }) {
     try {
       const result = await webApi.saveAsk(messages);
       if (!result.saved) throw new Error("There is no answer to save.");
-      setSaves((old) => ({ ...old, [key]: { status: "saved", message: "Saved to Markdown notes" } }));
+      const metadata = result.metadata;
+      const details = metadata ? ` · ${metadata.category}${metadata.tags?.length ? ` · ${metadata.tags.map((item: string) => `#${item}`).join(" ")}` : ""}` : "";
+      setSaves((old) => ({ ...old, [key]: { status: "saved", message: `Saved${metadata?.title ? ` as “${metadata.title}”` : " to Markdown notes"}${details}${metadata?.metadataSource === "fallback" ? " · AI metadata incomplete; saved with available metadata." : ""}` } }));
       await refreshNotes();
     } catch (error: any) {
       const uncertain = ["NETWORK_ERROR", "REQUEST_TIMEOUT", "REQUEST_ABORTED"].includes(error.code);
@@ -151,7 +157,11 @@ export function Ask({ active }: { active: boolean }) {
     setView("ask");
     requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   }
-  const matching = notes.filter((note) => !query.trim() || `${note.id}\n${note.content}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  const categories = [...new Set(notes.map((note) => note.category || "Uncategorized"))].sort();
+  const tags = [...new Set(notes.flatMap((note) => note.tags || []))].sort();
+  const matching = notes.filter((note) => (!category || (note.category || "Uncategorized") === category)
+    && (!tag || note.tags?.includes(tag))
+    && (!query.trim() || `${noteTitle(note)}\n${note.category || ""}\n${(note.tags || []).join(" ")}\n${note.content}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
   // Searching filters the list, not the open document.
   const selected = notes.find((note) => note.id === selectedId);
   const hasConversation = Boolean(turns.length || context);
@@ -223,20 +233,24 @@ export function Ask({ active }: { active: boolean }) {
       <div className={`ask-library-layout${mobileDetail ? " is-detail" : ""}`}>
         <aside className="ask-notes-index">
           <div className="ask-section-heading"><h2>Saved notes <span className="ask-note-count">({notes.length})</span></h2><button className="text-button" disabled={notesBusy} onClick={() => void refreshNotes()}>{notesBusy ? "Loading…" : "Refresh"}</button></div>
-          <label className="sr-only" htmlFor="ask-notes-search">Search saved notes</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search titles or content…" />
-          {query && <p className="ask-action-status" role="status">{matching.length} of {notes.length} notes</p>}
+          <label className="sr-only" htmlFor="ask-notes-search">Search saved notes</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search titles, tags or content…" />
+          <div className="ask-note-filters">
+            <label htmlFor="ask-category">Category<select id="ask-category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label htmlFor="ask-tag">Tag<select id="ask-tag" value={tag} onChange={(event) => setTag(event.target.value)}><option value="">All tags</option>{tags.map((item) => <option key={item}>{item}</option>)}</select></label>
+          </div>
+          {(query || category || tag) && <p className="ask-action-status" role="status">{matching.length} of {notes.length} notes <button className="text-button" onClick={() => { setQuery(""); setCategory(""); setTag(""); }}>Clear filters</button></p>}
           {notesBusy && <p role="status" className="ask-pending">Loading saved notes…</p>}
           {notesError && <div role="alert" className="ask-error"><p>Saved notes could not be loaded. {notesError}</p><button className="secondary" disabled={notesBusy} onClick={() => void refreshNotes()}>Retry loading notes</button></div>}
           {!notesBusy && !notesError && !notes.length && <p className="ask-empty">No saved conversations yet. Save an answer to keep it here as a Markdown note. CLI notes appear here too.</p>}
-          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty"><p>No notes match this search. Try another title or phrase.</p><button className="text-button" onClick={() => setQuery("")}>Clear search</button></div>}
+          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty"><p>No notes match these filters. Try another topic or clear the filters above.</p></div>}
           <nav ref={listRef} className="ask-note-list" aria-label="Saved Ask notes">{matching.map((note) => <button key={note.id} className="ask-note-link" aria-current={note.id === selectedId ? "true" : undefined} aria-controls="ask-note-reader" onClick={() => {
             setSelectedId(note.id); setMobileDetail(true);
             requestAnimationFrame(() => { if (readerRef.current) { readerRef.current.scrollTop = 0; readerRef.current.focus({ preventScroll: true }); } });
-          }}><Icon name="document" /><span><strong>{noteTitle(note)}</strong><time dateTime={note.modifiedAt}>{dateLabel(note.modifiedAt)}</time></span></button>)}</nav>
+          }}><Icon name="document" /><span><strong>{noteTitle(note)}</strong><span className="ask-note-topics">{[note.category || "Uncategorized", ...(note.tags || []).map((item) => `#${item}`)].join(" · ")}</span><time dateTime={note.modifiedAt}>{dateLabel(note.modifiedAt)}</time></span></button>)}</nav>
         </aside>
         <article ref={readerRef} className="ask-note-card" id="ask-note-reader" tabIndex={0} aria-label={selected ? noteTitle(selected) : "Note reader"}>
           <button className="text-button ask-back" onClick={() => { setMobileDetail(false); requestAnimationFrame(() => listRef.current?.querySelector<HTMLButtonElement>('[aria-current="true"]')?.focus({ preventScroll: true })); }}>Back to notes</button>
-          {selected ? <><header><h2>{noteTitle(selected)}</h2><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><button className="secondary" disabled={busy} onClick={() => start({ turns: [], question: "", context: selected })}>Continue discussing<Icon name="arrow" /></button>{busy && <p className="ask-action-status">Wait for your current answer before starting another discussion.</p>}</header><Markdown source={selected.content} /></>
+          {selected ? <><header><h2>{noteTitle(selected)}</h2><div className="ask-note-metadata" aria-label="Note topics"><button className="secondary" onClick={() => { setCategory(selected.category || "Uncategorized"); setMobileDetail(false); }}>{selected.category || "Uncategorized"}</button>{(selected.tags || []).map((item) => <button className="text-button" key={item} onClick={() => { setTag(item); setMobileDetail(false); }}>#{item}</button>)}</div><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><button className="secondary" disabled={busy} onClick={() => start({ turns: [], question: "", context: selected })}>Continue discussing<Icon name="arrow" /></button>{busy && <p className="ask-action-status">Wait for your current answer before starting another discussion.</p>}</header><Markdown source={noteBody(selected)} /></>
             : <div className="ask-empty"><h2>Choose a note to read</h2><p>Select a saved question to see the complete explanation here.</p></div>}
         </article>
       </div>

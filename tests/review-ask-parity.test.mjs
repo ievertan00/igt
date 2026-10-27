@@ -28,7 +28,7 @@ function notes(t) {
   t.after(() => { assert.equal(path.dirname(dir), parent); fs.rmSync(dir, { recursive: true, force: true }); });
   return dir;
 }
-const turn = (answer = "Use the past simple.") => ({ question: "Tense question?", title: "Tense", answer, related: ["Why?"] });
+const turn = (answer = "Use the past simple.") => ({ question: "Tense question?", title: "时态用法", answer, related: ["Why?"] });
 
 test("typed recall shares CLI spelling policy, atomic evidence and retry identity", (t) => {
   const db = reviewDb(t);
@@ -62,6 +62,7 @@ test("single-answer saves match CLI and Web, share location and survive retries"
   history.append("parity", { ...message, response: message });
   const cli = await saveAsk({ sessionId: "parity", config });
   assert.equal(cli.vaultFile, web.vaultFile);
+  assert.equal(web.vaultFile, "时态用法.md");
   assert.equal(history.get("parity").length, 0);
   const library = listAskNotes(config);
   assert.equal(library.notes.length, 1);
@@ -73,12 +74,13 @@ test("both clients summarize all turns once and preserve different notes with th
   let calls = 0;
   const llm = { generateWithFallback: async (input, prompt, options) => {
     calls++; assert.match(input, /Second question/); assert.equal(options.taskType, "ask");
-    return JSON.stringify({ title: "Tense", question: "Tense question?", answer: "Combined learning note.", related: [] });
+    return JSON.stringify({ title: "时态用法", question: "Tense question?", answer: "Combined learning note.", related: [] });
   } };
   await saveAsk({ messages: [turn()], config });
   const messages = [turn(), { question: "Second question", answer: "Second explanation" }];
   const [a, b] = await Promise.all([saveAsk({ messages, llm, config }), saveAsk({ messages, llm, config })]);
   assert.equal(a.vaultFile, b.vaultFile);
+  assert.equal(a.vaultFile, "时态用法 (2).md");
   assert.equal(calls, 1);
   assert.equal(listAskNotes(config).notes.length, 2);
   for (const message of messages) history.append("summary", { ...message, response: message });

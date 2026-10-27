@@ -13,7 +13,7 @@ const llm = {
     assert.equal(options.jsonSchema.type, "object");
     return JSON.stringify({
       question,
-      title: "Present perfect",
+      title: "现在完成时用法",
       answer: "Use it for past actions connected to the present.",
       related: ["When should I use past simple?"]
     });
@@ -36,17 +36,17 @@ try {
   assert.equal(result.response.perf.model, "smoke-model");
 
   const saved = await saveAsk({
-    messages: [{ question: "How do I use present perfect?", answer: result.response.data.answer }],
+    messages: [{ ...result.response.data, question: "How do I use present perfect?" }],
     config
   });
   assert.equal(saved.saved, true);
-  assert.equal(saved.vaultFile, "How do I use present perfect.md");
+  assert.equal(saved.vaultFile, "现在完成时用法.md");
   assert.equal(fs.existsSync(path.join(tempRoot, saved.vaultFile)), true);
   const original = fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8");
   const duplicate = await saveAsk({ messages: [{ question: "How do I use present perfect?", answer: result.response.data.answer }], config });
   assert.equal(duplicate.vaultFile, saved.vaultFile, "Identical snapshots reuse the existing note");
   assert.equal(fs.readFileSync(path.join(tempRoot, saved.vaultFile), "utf8"), original, "Duplicate saving preserves metadata too");
-  const summaryLlm = { generateWithFallback: async () => JSON.stringify({ title: "Present perfect", question: "How do I use present perfect?", answer: "I have lived here for years.", related: [] }) };
+  const summaryLlm = { generateWithFallback: async () => JSON.stringify({ title: "现在完成时用法", question: "How do I use present perfect?", answer: "I have lived here for years.", related: [] }) };
   config.Prompts.AskCompactPrompt = "Summarize the whole consultation.";
   const expanded = await saveAsk({ messages: [
     { question: "How do I use present perfect?", answer: result.response.data.answer },

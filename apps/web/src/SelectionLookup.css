@@ -1,0 +1,36 @@
+.selection-lookup-trigger {
+  position: fixed;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  font-size: .875rem;
+  font-weight: 600;
+  background: var(--accent);
+  border-color: var(--control);
+}
+.selection-lookup-dialog {
+  width: min(44rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 1.5rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--control);
+  border-radius: var(--radius);
+}
+.selection-lookup-dialog::backdrop { background: color-mix(in srgb, var(--ink) 40%, transparent); }
+.selection-lookup-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.selection-lookup-header h2 { margin-bottom: .5rem; }
+.selection-lookup-header p { color: var(--muted); font-size: .875rem; margin: 0; }
+.selection-lookup-dialog .word-page { min-width: 0; }
+.selection-lookup-dialog .lookup-row { flex-wrap: wrap; }
+.selection-lookup-dialog .lookup-row input { min-width: 0; flex-basis: 12rem; }
+@media (max-width: 480px) {
+  .selection-lookup-dialog { padding: 1rem; }
+  .selection-lookup-dialog .lookup-row { flex-direction: column; align-items: stretch; }
+  .selection-lookup-dialog .lookup-row input { flex-basis: auto; }
+  .selection-lookup-dialog .word-detail-pair { grid-template-columns: minmax(0, 1fr); }
+}

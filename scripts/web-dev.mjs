@@ -26,7 +26,8 @@ function stop() {
 }
 
 function startApi(port) {
-  const child = spawn(process.execPath, [path.join(root, "apps", "local", "server.mjs")], {
+  const child = spawn(process.execPath, [path.join(root, "apps", "local", "server.mjs"),
+    ...(process.argv.includes("--skip-vocabulary-sync") ? ["--skip-vocabulary-sync"] : [])], {
     cwd: root,
     env: { ...process.env, IGT_SERVER_HOST: "127.0.0.1", IGT_SERVER_PORT: port },
     stdio: ["ignore", "pipe", "pipe"],

@@ -1,0 +1,328 @@
+{
+  "directory": "D:\\Library\\-06ObsidianVault\\02_Knowledge\\IGT_Data_Warehouse\\Asks",
+  "createdAt": "2026-10-26T01:41:52.412Z",
+  "entries": [
+    {
+      "id": "How do I use 'would' to sound more polite.md",
+      "title": "礼貌请求与邀请：would 和 could / Polite requests and offers",
+      "tags": [
+        "politeness",
+        "would",
+        "could",
+        "requests",
+        "offers"
+      ],
+      "category": "Conversation",
+      "metadataSource": "ai",
+      "beforeHash": "3481e8e6a1f6171ae42a2c8c9a8478f27192114187503c932a0325e5f3edc975",
+      "afterHash": "e65b3adfccd88c913ecc84415d5905a80e583c50fe37d4684ff31d3f94c788db",
+      "headerBytes": 190
+    },
+    {
+      "id": "What's the difference between 'affect' and 'effect.md",
+      "title": "affect 与 effect：影响和结果 / Verb and noun usage",
+      "tags": [
+        "word-choice",
+        "affect",
+        "effect",
+        "parts-of-speech"
+      ],
+      "category": "Vocabulary",
+      "metadataSource": "ai",
+      "beforeHash": "44716f087c0eaba0c3908f6d05afa2375c29298320dbfccfd148a6b1ac74b650",
+      "afterHash": "fff549a9b7689cd8cb5ce700f4154aa8e94936fba332e7a5cf2f8f12b39753bf",
+      "headerBytes": 178
+    },
+    {
+      "id": "在and前面什么情况需要加,，什么情况不需要加？.md",
+      "title": "and 前的逗号：并列句与牛津逗号 / Commas before and",
+      "tags": [
+        "punctuation",
+        "commas",
+        "oxford-comma",
+        "independent-clauses",
+        "conjunctions"
+      ],
+      "category": "Writing",
+      "metadataSource": "ai",
+      "beforeHash": "b0f010ccb13c483095454ff52dad3347adf13f001ea7c2d005e524fe78a50576",
+      "afterHash": "10c31d4b61c68ea0f9ab1a5061697b4b2db3124715bffd72448e2344ce94f9f1",
+      "headerBytes": 206
+    },
+    {
+      "id": "Distinguishing Conjunctions and Prepositions.md",
+      "title": "连词与介词：后接从句还是名词 / Conjunctions vs prepositions",
+      "tags": [
+        "conjunctions",
+        "prepositions",
+        "clauses",
+        "fanboys"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "c9ad6e2042db1d0b5fbcaf7c9dbaae44ee9f39e9dd47272e5a94a5488057225a",
+      "afterHash": "1830dd8b85576e34941a0aa6fd20abee6cc59b371ceb6919ef89f49867a4e04e",
+      "headerBytes": 191
+    },
+    {
+      "id": "Restrictive vs. Non-Restrictive Clauses.md",
+      "title": "定语从句：限制性、非限制性与关系代词省略 / Relative clauses",
+      "tags": [
+        "relative-clauses",
+        "relative-pronouns",
+        "commas",
+        "that-which",
+        "who-whom"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "646a520f119cabbd4dd9bb01e307671f8aa7253ef2e744feb09d53ac7f278c1f",
+      "afterHash": "13b5ceef17da164457d7de12d72bcef943c4cda749e3b0b0c92e70d42f6038a8",
+      "headerBytes": 219
+    },
+    {
+      "id": "Distinguishing Countable vs. Uncountable Nouns.md",
+      "title": "可数与不可数名词：判断、量词和计量单位 / Countability",
+      "tags": [
+        "nouns",
+        "countable-nouns",
+        "uncountable-nouns",
+        "quantifiers",
+        "units"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "c3d08d97b566b2634c2e9bc49d0d29ec87059bc88091b89215a1f1509b33d599",
+      "afterHash": "defc506b4da903944004afdeab30f67eb9de1654ffa65905002d3d6b1c0483cc",
+      "headerBytes": 208
+    },
+    {
+      "id": "Joining Independent Clauses.md",
+      "title": "连接独立分句：分号、并列连词与逗号拼接 / Joining clauses",
+      "tags": [
+        "independent-clauses",
+        "punctuation",
+        "semicolons",
+        "conjunctions",
+        "comma-splices",
+        "run-on-sentences"
+      ],
+      "category": "Writing",
+      "metadataSource": "ai",
+      "beforeHash": "82516b0025eb7cfd8413ed624759fdd586f092d4156a1ed898b2536f0f448315",
+      "afterHash": "b6ddf25c7bedae0fcbfd8450d3eed76fb2323975c3e507c05d81ec3c4879e2f5",
+      "headerBytes": 242
+    },
+    {
+      "id": "Prepositional Nuances To, For, and Of.md",
+      "title": "to、for、of：功能集成、用途与所属 / Prepositions in technical contexts",
+      "tags": [
+        "prepositions",
+        "to-for-of",
+        "technical-writing",
+        "purpose",
+        "possession"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "3c7abb0a1055deac6c5cb18c8011706a1a57f4c181f2daec69cf9f0fe847cb22",
+      "afterHash": "fe785ed28049729aca886d42315a41bd55614e6fc4506d42f3c22e427a59bade",
+      "headerBytes": 221
+    },
+    {
+      "id": "Distinguishing Prepositions of Space and Time.md",
+      "title": "in、within、inside、during：位置、范围与时限 / Space and time",
+      "tags": [
+        "prepositions",
+        "in-within-inside",
+        "during-within",
+        "space",
+        "time",
+        "boundaries"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "0063da8b6d3efb34978fbfa0aa1b0881db71f5b1dd37f17c2771514b5b874e3c",
+      "afterHash": "24536616829f5fee6a7806c47f42e14919be6b6cddda0d13c13e061a7c0d2d8c",
+      "headerBytes": 219
+    },
+    {
+      "id": "Comparing Other, Another, Different.md",
+      "title": "other、another、different：其余、再一个与不同 / Word choice",
+      "tags": [
+        "word-choice",
+        "other-another-different",
+        "determiners",
+        "quantity"
+      ],
+      "category": "Vocabulary",
+      "metadataSource": "ai",
+      "beforeHash": "f05dfccc62378a0963909333a490662d2e6c4bc7040a1430a6cd9599d24859a2",
+      "afterHash": "420e27171be99803c36084db3b024efe54731e0ea3eb1d573bf72bd6e6d44f27",
+      "headerBytes": 207
+    },
+    {
+      "id": "Comparing English Conditional Structures.md",
+      "title": "条件句：零、一、二、三类与混合条件句 / English conditionals",
+      "tags": [
+        "conditionals",
+        "if-clauses",
+        "mixed-conditionals",
+        "hypotheticals",
+        "tenses"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "bb84b50073a33dd1b9f6d3bbacfc46f1189e5bc50ba4d4e781edc48b00455c73",
+      "afterHash": "11bd3257018ac576c68934cbfb61c70e93fd07b117887f6f65441b819feaafef",
+      "headerBytes": 219
+    },
+    {
+      "id": "Articles and Parallel Structure in Lists.md",
+      "title": "并列名词的冠词与平行结构 / Articles and parallel structure",
+      "tags": [
+        "articles",
+        "parallel-structure",
+        "noun-phrases",
+        "lists",
+        "definite-article"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "df451f9951639d5ee866185d8ae180898cf0d5333fd2009e1c8d93195fbce085",
+      "afterHash": "d12e31e66ecc4ce002329fc691f305e778d4f0e7b16412a4d9ab5724ed3213dd",
+      "headerBytes": 212
+    },
+    {
+      "id": "Articles with Noun Phrases.md",
+      "title": "并列名词短语中是否重复 a 或 the / Repeating articles",
+      "tags": [
+        "articles",
+        "noun-phrases",
+        "parallel-structure",
+        "indefinite-article"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "dfc1381f38b4e803224ac85b736968afc9576dbb731d130bf44f370391f990fc",
+      "afterHash": "8644fad7fde36211dc987f09c9b7d7dddfe4dc8dcc738bdabe2b80fd843a4d8a",
+      "headerBytes": 200
+    },
+    {
+      "id": "Certainty Modifiers and Adverb Placement.md",
+      "title": "确定性表达与副词位置：likely、probably、definitely、bound to",
+      "tags": [
+        "adverbs",
+        "certainty",
+        "adverb-placement",
+        "likely-unlikely",
+        "probably-definitely",
+        "bound-to"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "df58be9e2e3770f788b7748c2e3a3f7b2a0427b921e1f9016a843c91e4f66fdb",
+      "afterHash": "94bab595396d7809c22c999cf4a08c3cd384419f11b3e84f8da915ad6c8163cc",
+      "headerBytes": 234
+    },
+    {
+      "id": "Choosing Prepositions Purpose, Topic, and Directio.md",
+      "title": "of、for、on、to、by：所属、用途、主题、方向与期限 / Prepositions",
+      "tags": [
+        "prepositions",
+        "of-for-on-to-by",
+        "purpose",
+        "topic",
+        "direction",
+        "deadlines"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "65b3395b78029a317b1c6d289028b2a1cbfd3a717de80d72a212ef701299438e",
+      "afterHash": "caf0d6c3fef6d497ba4ca3e546e3a75e2689b312f1441d01f515cc36764b2b20",
+      "headerBytes": 226
+    },
+    {
+      "id": "Differentiating 'Of' vs. 'For' Prepositions.md",
+      "title": "of 与 for：所属和构成，还是用途和受益者 / Belonging vs purpose",
+      "tags": [
+        "prepositions",
+        "of-for",
+        "possession",
+        "composition",
+        "purpose",
+        "duration"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "276ed4ee7a1fbdc366cd8891c167a8a3209107acb48e8eb62b2946f6939be318",
+      "afterHash": "f198d1f1530c094f899bb76de297b07f8d3d7b6e00682c7edc6c8045394ed81a",
+      "headerBytes": 218
+    },
+    {
+      "id": "Past Habits and Adaptation Grammar.md",
+      "title": "used to、would、be used to、get used to：过去习惯与适应",
+      "tags": [
+        "past-habits",
+        "used-to",
+        "would",
+        "be-used-to",
+        "get-used-to",
+        "gerunds"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "eff1c0f65af328949cb8da8ebc5b0d7f2b3512d6b7b75cebe9f2f7c826a2f960",
+      "afterHash": "f3ecec578b1e9350771584db13c85aa20a039b4509d7a1e35a13b59073123e70",
+      "headerBytes": 203
+    },
+    {
+      "id": "Simple Past vs Perfect Tenses.md",
+      "title": "一般过去时、现在完成时与过去完成时 / Past and perfect tenses",
+      "tags": [
+        "tenses",
+        "simple-past",
+        "present-perfect",
+        "past-perfect",
+        "time-markers"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "61ecb5d447c73148c51ac3e7953238ae40c00cebbf5b731e67aec9c066a00f01",
+      "afterHash": "01c47e2bcd4a61fc31e54f70fcc1155c0e5baf6a00e5be829c8f108287a95de8",
+      "headerBytes": 216
+    },
+    {
+      "id": "Gerund vs Infinitive Verb Patterns.md",
+      "title": "动名词与不定式：动词搭配和词义变化 / Gerunds vs infinitives",
+      "tags": [
+        "gerunds",
+        "infinitives",
+        "verb-patterns",
+        "stop-remember-try",
+        "meaning-changes"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "38f19f915f8c761eeb65a9f0125b36a5d47919b66f1e8c644bde7c6b2918ba32",
+      "afterHash": "9ca787ec49463a0af61c9580bfe3ab47dcd438c02487218726431b3ec74c5dae",
+      "headerBytes": 222
+    },
+    {
+      "id": "Prepositions Of, For, and To.md",
+      "title": "of、for、to：本质、目的与方向 / Essence, purpose and direction",
+      "tags": [
+        "prepositions",
+        "to-for-of",
+        "composition",
+        "purpose",
+        "direction"
+      ],
+      "category": "Grammar",
+      "metadataSource": "ai",
+      "beforeHash": "b8621cd8b0116adc235f4e47b5f4949a174fca1d3bcec0d5c97d97b47e397bd2",
+      "afterHash": "d243dce0dc5dca53ac2635e3d80314397033439a1b1d109db615ed2a04258f20",
+      "headerBytes": 204
+    }
+  ]
+}

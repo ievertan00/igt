@@ -2,11 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { webApi } from "./api/client";
 
 export const REVIEW_SESSION_KEY = "igt.review.daily-session.v2";
-type ReviewResult = { correct: boolean; next: { intervalDays: number }; persistence?: { saved: boolean } };
+export type ReviewRating = "again" | "hard" | "good" | "easy";
+type ReviewResult = {
+  correct: boolean;
+  judgement?: string;
+  rating?: ReviewRating | null;
+  ratings?: Record<ReviewRating, { intervalDays: number; dueDate: string }>;
+  next?: { intervalDays: number; dueDate?: string; ease?: number };
+  persistence?: { saved: boolean };
+};
 type ReviewSession = {
   version: 2; day: string; id: string; limit: number; cards: any[]; index: number;
   answer: string | null; result: ReviewResult | null; audioPlayed: boolean;
   correct: number; wrong: number;
+  pendingRating?: ReviewRating | null;
 };
 export function reviewDay(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
@@ -20,6 +29,7 @@ function readSession(day: string): ReviewSession | null {
       || value.index < 0 || value.index > value.cards.length || !Number.isInteger(value.limit) || value.limit < 1 || value.limit > 100
       || !(value.answer === null || typeof value.answer === "string")
       || !(value.result === null || typeof value.result?.correct === "boolean")
+      || !(value.pendingRating == null || ["again", "hard", "good", "easy"].includes(value.pendingRating))
       || !Number.isInteger(value.correct) || !Number.isInteger(value.wrong)) return null;
     return value;
   } catch { return null; }
@@ -101,16 +111,37 @@ export function useDailyReviewSession() {
     const submitted = { ...value, answer: value.answer ?? answer.trim() };
     update(submitted); // Freeze the answer and id before issuing a retryable request.
     try {
-      const result = await webApi.gradeReview(card.id, submitted.answer!, `${value.id}-${value.index}`, value.audioPlayed);
-      if (reviewDay() === value.day) update({ ...submitted, result,
-        correct: value.correct + (result.correct ? 1 : 0), wrong: value.wrong + (result.correct ? 0 : 1) });
+      const result = await webApi.checkReview(card.id, submitted.answer!);
+      if (reviewDay() === value.day) update({ ...submitted, result });
+    } catch (e: any) { if (mounted.current) setError(e.message); }
+    finally { locked.current = false; if (mounted.current) { setGrading(false); refresh.current(); } }
+  }
+  async function rate(rating: ReviewRating) {
+    const value = current.current;
+    if (value?.day !== reviewDay()) { refresh.current(); return; }
+    if (!value?.result || value.result.persistence?.saved || locked.current
+      || (value.pendingRating && value.pendingRating !== rating)) return;
+    const card = value.cards[value.index];
+    if (!card) return;
+    locked.current = true; setGrading(true); setError("");
+    const submitted = { ...value, pendingRating: rating };
+    update(submitted);
+    try {
+      const result = await webApi.gradeReview(card.id, value.answer!, `${value.id}-${value.index}`, value.audioPlayed, rating);
+      if (result.persistence?.saved !== true) throw new Error("The review was not confirmed saved. Retry the same rating.");
+      if (reviewDay() === value.day) update({ ...submitted, pendingRating: null,
+        result: { ...value.result, ...result },
+        cards: rating === "again" ? [...value.cards, card] : value.cards,
+        correct: value.correct + Number(result.correct),
+        wrong: value.wrong + Number(!result.correct),
+      });
     } catch (e: any) { if (mounted.current) setError(e.message); }
     finally { locked.current = false; if (mounted.current) { setGrading(false); refresh.current(); } }
   }
   function next() {
     const value = current.current;
     if (value?.day !== reviewDay()) { refresh.current(); return; }
-    if (value?.result && !locked.current) update({ ...value, index: value.index + 1, answer: null, result: null, audioPlayed: false });
+    if (value?.result?.persistence?.saved && !locked.current) update({ ...value, index: value.index + 1, answer: null, result: null, audioPlayed: false, pendingRating: null });
   }
   async function remove() {
     const value = current.current;
@@ -118,7 +149,11 @@ export function useDailyReviewSession() {
     if (!value?.result || locked.current) return;
     locked.current = true; setGrading(true); setError("");
     try { await webApi.deleteReview(value.cards[value.index].id);
-      update({ ...value, index: value.index + 1, answer: null, result: null, audioPlayed: false });
+      // Keep saved attempts in the summary; an unrated deletion is not a review.
+      const saved = Boolean(value.result.persistence?.saved);
+      update({ ...value, cards: value.cards.filter((card, index) => index < value.index
+        || (saved && index === value.index) || card.id !== value.cards[value.index].id),
+        index: value.index + (saved ? 1 : 0), answer: null, result: null, audioPlayed: false, pendingRating: null });
     } catch (e: any) { if (mounted.current) setError(e.message); }
     finally { locked.current = false; if (mounted.current) setGrading(false); }
   }
@@ -128,6 +163,7 @@ export function useDailyReviewSession() {
   }
   return { cards: session?.cards || [], index: session?.index || 0, revealed: Boolean(session?.result),
     answer: session?.answer, result: session?.result, correct: session?.correct || 0, wrong: session?.wrong || 0,
-    loading, grading, starting, error, startError, notice, limit, setLimit, submit, next, remove, markAudio,
+    loading, grading, starting, error, startError, notice, limit, setLimit, submit, rate, next, remove, markAudio,
+    pendingRating: session?.pendingRating,
     retry: () => refresh.current(), startNew: () => refresh.current(true) };
 }

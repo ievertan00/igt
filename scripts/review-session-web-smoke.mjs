@@ -1,1 +1,1 @@
-import "./review-ask-web-smoke.mjs";
+import "./vocabulary-ratings-web-smoke.mjs";

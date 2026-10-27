@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import readline from "readline";
 import Database from "better-sqlite3";
 import configLoader from "../lib/shared/config-loader.mjs";
+import { resolveVocabularyPath } from "../lib/shared/vocabulary-source.mjs";
 import { ui, paint, colors, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,7 @@ const projectRoot = path.join(__dirname, "..");
 const config = configLoader.load();
 applyTheme(config.Theme || "auto");
 
-const baseDir = config.VaultDir 
-  ? (path.isAbsolute(config.VaultDir) ? config.VaultDir : path.join(projectRoot, config.VaultDir))
-  : path.join(projectRoot, "docs");
-
-const VOCAB_FILE = config.VocabFile || "IGT Vocabulary.md";
-const NOTE_FILE = path.isAbsolute(VOCAB_FILE) ? VOCAB_FILE : path.join(baseDir, VOCAB_FILE);
+const NOTE_FILE = resolveVocabularyPath(config);
 const DB_PATH = config.DbPath || "igt_data.db";
 const DATABASE_FILE = path.isAbsolute(DB_PATH) ? DB_PATH : path.join(projectRoot, DB_PATH);
 
