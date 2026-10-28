@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
+import { IconButton } from "./IconButton";
 import { Ask } from "./Ask";
 import { SelectionLookup } from "./SelectionLookup";
 import { HandbookKnowledge } from "./HandbookKnowledge";
@@ -314,7 +315,7 @@ function Grammar() {
           <span id="grammar-hint">
             {busy ? "Checking grammar and wording…" : "A sentence or a short paragraph"}
           </span>
-          <button className="primary" type="submit" disabled={busy || saving || !text.trim()}>
+          <button className={data && !didSave && text.trim() === checkedText ? "secondary" : "primary"} type="submit" aria-busy={busy} disabled={busy || saving || !text.trim()}>
             {busy ? (
               <>
                 <span className="loading-spinner" />
@@ -394,6 +395,7 @@ function Grammar() {
           <div className="correction-actions">
             <button
               className="primary save-review"
+              aria-busy={saving}
               onClick={save}
               disabled={busy || saving || didSave}
             >
@@ -473,7 +475,7 @@ function Express() {
               : "Paste an English sentence or passage. Include the context if it helps explain the meaning."
           }
         />
-        <button className="primary" onClick={submit} disabled={busy || !text.trim()}>
+        <button className="primary" onClick={submit} aria-busy={busy} disabled={busy || !text.trim()}>
           {busy
             ? toEnglish
               ? "Finding the right words…"
@@ -826,7 +828,7 @@ function WordReview() {
                   <p>Cannot recall it? Leave your answer blank and check.</p>
                 </div>
                 <div className="review-recall-actions">
-                  <button type="submit" className="primary review-check" disabled={grading || starting}>
+                  <button type="submit" className="primary review-check" aria-busy={grading} disabled={grading || starting}>
                     {grading ? "Checking…" : submittedAnswer != null ? "Retry check" : "Check answer"}
                     <Icon name="arrow" />
                   </button>
@@ -979,7 +981,7 @@ function WordReview() {
                               )}</p>
                               <span className="example-controls">
                                 <AudioButton text={example} small />
-                                <CopyButton value={example} label="Copy example" small />
+                                <CopyButton value={example} label="Example" small />
                               </span>
                             </li>
                           ))}
@@ -1036,7 +1038,7 @@ function Coach() {
           title="Find your next step."
           detail="Find possible practice priorities in your saved writing. These suggestions reflect your activity here, not a full assessment of your English."
         />
-        <button className="secondary" onClick={() => load(true)} disabled={busy}>
+        <button className="secondary" onClick={() => load(true)} aria-busy={busy} disabled={busy}>
           {busy ? "Analysing…" : "Refresh analysis"}
         </button>
       </div>
@@ -1185,7 +1187,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
             onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) void lookup(); }}
             placeholder="Try “follow up” or “跟进”"
           />
-          <button className="primary" onClick={lookup} disabled={busy || saving}>
+          <button className={entry && !entry.existing ? "secondary" : "primary"} onClick={lookup} aria-busy={busy} disabled={busy || saving}>
             {busy ? (
               "Looking it up…"
             ) : (
@@ -1201,7 +1203,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
         <Panel title={entry.word} icon="word-lookup" className="lookup-result">
           {entry.translated && <p className="status" role="status">English expression for “{entry.requested}”: <strong>{entry.lookup}</strong></p>}
           <WordDetails entry={entry} examples={examples} />
-          <button className="primary" onClick={add} disabled={saving || entry.existing}>
+          <button className="primary" onClick={add} aria-busy={saving} disabled={saving || entry.existing}>
             <Icon name="handbook" />
             {saving ? "Saving…" : entry.existing ? "Already in your vocabulary" : "Save to vocabulary"}
             <Icon name="arrow" />
@@ -1804,7 +1806,7 @@ function Practice() {
             }}
             placeholder="Write your translation in English…"
           />
-          <button className="primary" onClick={evaluate} disabled={busy || !answer.trim()}>
+          <button className="primary" onClick={evaluate} aria-busy={busy} disabled={busy || !answer.trim()}>
             {busy ? (
               "Reviewing…"
             ) : (
@@ -2296,12 +2298,19 @@ function LlmSettings() {
           ? "Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services."
           : "Choose where IGT reads and saves your Markdown learning records."}</p>
       </div>
-      <div className="settings-tabs" role="tablist" aria-label="Settings sections">
+      <div className="settings-tabs" role="tablist" aria-label="Settings sections" onKeyDown={(event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const next = event.key === "Home" ? "models" : event.key === "End" ? "markdown" : settingsTab === "models" ? "markdown" : "models";
+        setSettingsTab(next);
+        event.currentTarget.querySelector<HTMLButtonElement>(`#settings-tab-${next}`)?.focus();
+      }}>
         <button
           id="settings-tab-models"
           type="button"
           role="tab"
           aria-selected={settingsTab === "models"}
+          tabIndex={settingsTab === "models" ? 0 : -1}
           aria-controls="settings-panel-models"
           className={settingsTab === "models" ? "is-active" : ""}
           onClick={() => setSettingsTab("models")}
@@ -2313,6 +2322,7 @@ function LlmSettings() {
           type="button"
           role="tab"
           aria-selected={settingsTab === "markdown"}
+          tabIndex={settingsTab === "markdown" ? 0 : -1}
           aria-controls="settings-panel-markdown"
           className={settingsTab === "markdown" ? "is-active" : ""}
           onClick={() => setSettingsTab("markdown")}
@@ -2488,7 +2498,7 @@ function LlmSettings() {
         </p>
       )}
       <div className="llm-form-actions">
-        <button className="primary" disabled={busy} onClick={save}>
+        <button className="primary" aria-busy={busy} disabled={busy} onClick={save}>
           {busy ? "Saving…" : "Save changes"}
         </button>
         <button className="secondary" disabled={busy} onClick={reset}>
@@ -2632,7 +2642,7 @@ function MarkdownFileSettings() {
       {error && <State title={errorTitle} detail={error} />}
       {status && <p className="settings-status" role="status">{status}</p>}
       <div className="llm-form-actions">
-        <button className="primary" disabled={busy} onClick={savePaths}>
+        <button className="primary" aria-busy={busy} disabled={busy} onClick={savePaths}>
           {busy ? "Saving…" : "Save file locations"}
         </button>
         <button className="secondary" disabled={busy} onClick={() => {
@@ -2760,20 +2770,18 @@ function AudioButton({
   if (!text) return null;
   return (
     <span className="audio-control">
-      <button
-        type="button"
+      <IconButton
+        icon="volume"
+        quiet={small}
+        pending={busy}
+        caption={reviewPrompt ? (busy ? "Playing…" : "Audio hint") : undefined}
         className={`audio-btn${small ? " audio-btn-sm" : ""}${error ? " audio-err" : ""}`}
         onClick={play}
-        disabled={busy}
-        aria-busy={busy}
-        aria-label={
+        label={
           busy ? "Playing…" : reviewPrompt ? "Listen to the English word" : `Read aloud: ${text}`
         }
         title={busy ? "Playing…" : error || "Read aloud"}
-      >
-        <Icon name="volume" />
-        {reviewPrompt && <span>{busy ? "Playing…" : "Audio hint"}</span>}
-      </button>
+      />
       {error && (
         <span className="audio-error" role="status" aria-live="polite">
           Playback failed: {error}
@@ -2821,21 +2829,20 @@ function CopyButton({ value, label, small }: { value: string; label: string; sma
   if (!value) return null;
   return (
     <span className="copy-control">
-      <button
-        type="button"
+      <IconButton
+        icon={state === "copied" ? "check" : "copy"}
+        quiet={small}
         className={`copy-btn${small ? " copy-btn-sm" : ""}${state === "copied" ? " is-copied" : ""}${state === "failed" ? " is-failed" : ""}`}
         onClick={() => void copy()}
-        aria-label={state === "copied" ? `Copied ${label}` : `Copy ${label}`}
+        label={state === "copied" ? `Copied ${label}` : `Copy ${label}`}
         title={
           state === "copied"
             ? "Copied"
             : state === "failed"
               ? "Copying failed — your browser blocked clipboard access"
-              : "Copy"
+              : `Copy ${label}`
         }
-      >
-        <Icon name={state === "copied" ? "check" : "copy"} />
-      </button>
+      />
       <span className="sr-only" role="status" aria-live="polite">
         {state === "copied"
           ? `${label} copied to clipboard`
@@ -2847,7 +2854,7 @@ function CopyButton({ value, label, small }: { value: string; label: string; sma
   );
 }
 
-const primaryRoutes: Route[] = ["practice", "ask"];
+const primaryRoutes: Route[] = ["practice"];
 const learningRoutes: Array<[Route, string]> = [
   ["dashboard", "Overview"],
   ["handbook", "Handbook"],
@@ -2914,8 +2921,9 @@ export function App() {
       removeEventListener("pointerdown", dismiss);
     };
   }, []);
+  const askView = new URLSearchParams(routeHash.split("?")[1]).get("view") === "notes" ? "notes" : "ask";
   const title =
-    route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
+    route === "ask" && askView === "notes" ? "Saved notes" : route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
   useEffect(() => {
     document.title = title + " · ClearWrite";
   }, [title]);
@@ -3029,6 +3037,13 @@ export function App() {
               </a>
             ))}
           <details className="learning-menu" name="workspace-navigation">
+            <summary className={route === "ask" ? "active" : ""}>Ask<Icon name="chevron" /></summary>
+            <div className="learning-links">
+              <a href="#ask" aria-current={route === "ask" && askView === "ask" ? "page" : undefined}><Icon name="ask" />Ask</a>
+              <a href="#ask?view=notes" aria-current={route === "ask" && askView === "notes" ? "page" : undefined}><Icon name="document" />Saved notes</a>
+            </div>
+          </details>
+          <details className="learning-menu" name="workspace-navigation">
             <summary className={learningRoutes.some(([key]) => key === route) ? "active" : ""}>
               My learning
               <Icon name="chevron" />
@@ -3059,7 +3074,7 @@ export function App() {
         className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}
       >
         {pages[route]}
-        <div hidden={route !== "ask"}>{askVisited.current && <Ask active={route === "ask"} />}</div>
+        <div hidden={route !== "ask"}>{askVisited.current && <Ask active={route === "ask"} view={askView} />}</div>
       </main>
       <SelectionLookup key={routeHash} renderLookup={(text) => <WordLookup initialQuery={text} compact />} />
       <footer className="site-footer">

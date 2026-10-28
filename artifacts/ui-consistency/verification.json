@@ -1,0 +1,560 @@
+{
+  "checks": [
+    {
+      "name": "grammar",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "translation",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "translation",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "translation",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "translation",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-lookup",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-lookup",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-lookup",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-lookup",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-review",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-review",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-review",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-review",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-library",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-library",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-library",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-library",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "practice",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "practice",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "practice",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "practice",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "dashboard",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "dashboard",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "dashboard",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "dashboard",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "handbook",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "handbook",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "handbook",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "handbook",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "coach",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "coach",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "coach",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "coach",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings-markdown",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings-markdown",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings-markdown",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings-markdown",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-result",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-result",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-result",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-result",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "selection-dialog",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "selection-dialog",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "selection-dialog",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "selection-dialog",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "review-result",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "review-result",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "review-result",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "review-result",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar-result",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar-result",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar-result",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar-result",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-result",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-result",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-result",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-result",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    }
+  ],
+  "utilityStyles": [
+    {
+      "width": 44,
+      "height": 44,
+      "radius": "50%",
+      "icon": "18px"
+    },
+    {
+      "width": 44,
+      "height": 44,
+      "radius": "50%",
+      "icon": "18px"
+    },
+    {
+      "width": 44,
+      "height": 44,
+      "radius": "50%",
+      "icon": "18px"
+    },
+    {
+      "width": 44,
+      "height": 44,
+      "radius": "50%",
+      "icon": "18px"
+    },
+    {
+      "width": 44,
+      "height": 44,
+      "radius": "50%",
+      "icon": "18px"
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "GET /status-message",
+    "GET /status-message",
+    "GET /favicon.ico",
+    "GET /favicon.ico",
+    "GET /favicon.ico",
+    "POST /vocab/seed",
+    "POST /vocab/seed",
+    "GET /favicon.ico",
+    "GET /review/due",
+    "GET /review/due",
+    "GET /favicon.ico",
+    "GET /vocab/words",
+    "GET /favicon.ico",
+    "GET /ask/notes",
+    "GET /ask/notes",
+    "GET /favicon.ico",
+    "GET /dashboard",
+    "GET /dashboard",
+    "GET /favicon.ico",
+    "GET /images/study-desk.webp",
+    "GET /handbook",
+    "GET /handbook",
+    "GET /favicon.ico",
+    "GET /coach",
+    "GET /coach",
+    "GET /favicon.ico",
+    "GET /settings/llm",
+    "GET /settings/llm",
+    "GET /favicon.ico",
+    "GET /settings/files",
+    "GET /settings/files",
+    "GET /favicon.ico",
+    "GET /word/lookup",
+    "POST /tts/speak",
+    "POST /tts/speak",
+    "GET /word/lookup",
+    "GET /favicon.ico",
+    "POST /review/check",
+    "GET /favicon.ico",
+    "POST /grammar",
+    "GET /favicon.ico",
+    "POST /ask",
+    "POST /ask/save",
+    "GET /ask/notes"
+  ],
+  "boundary": "All business APIs intercepted; playback simulated; no live provider or persistence verification."
+}

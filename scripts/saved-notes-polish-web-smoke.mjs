@@ -1,0 +1,185 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import puppeteer from 'puppeteer';
+import { createServer } from 'vite';
+
+// All API responses are isolated fixtures. No provider requests or note writes.
+const output = path.join(process.cwd(), 'artifacts', 'saved-notes-polish');
+fs.mkdirSync(output, { recursive: true });
+const server = await createServer({ configFile: 'apps/web/vite.config.ts', server: { host: '127.0.0.1', port: 0 } });
+await server.listen();
+let browser;
+try {
+  browser = await puppeteer.launch({ headless: true, ...(process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {}), args: ['--no-sandbox'] });
+  const page = await browser.newPage();
+  page.on('dialog', dialog => dialog.accept());
+  const errors = [], checks = [];
+  page.on('pageerror', e => errors.push(e.message));
+  const notes = Array.from({ length: 7 }, (_, i) => ({ id: `note-${i}.md`, title: ['Present perfect in everyday English', 'Choosing between affect and effect', 'A more polite way to ask', 'Joining independent clauses', '冠词在真实语境中的使用', 'Prepositions of time and place', 'Long-word-'.repeat(20)][i], category: i % 2 ? 'Word choice' : 'Grammar', tags: i % 2 ? ['meaning', 'examples'] : ['tenses', 'everyday English'], modifiedAt: '2026-10-28T08:30:00Z', bytes: 1000, content: `---\ntitle: Internal metadata\n---\n<!-- igt-ask-save:abcdef -->\n# Explanation\n\nConnect a past event with the present. 笔记摘要支持中英文，帮助你快速找到需要复习的内容。\n\n${'A complete explanation with examples and context.\n\n'.repeat(25)}\n| Rule | Example |\n| --- | --- |\n| Present perfect | I have finished. |\n\nEND OF COMPLETE NOTE` }));
+  let mode = 'loaded', history;
+  await page.setRequestInterception(true);
+  page.on('request', req => {
+    const url = new URL(req.url());
+    if (req.isNavigationRequest() || !['fetch', 'xhr'].includes(req.resourceType())) return void req.continue();
+    let body = {};
+    let status = 200;
+    if (url.pathname === '/ask/notes') { status = mode === 'error' ? 503 : 200; body = mode === 'error' ? { error: 'Fixture unavailable' } : { directory: 'Isolated Markdown fixtures', notes: mode === 'empty' ? [] : notes }; }
+    if (url.pathname === '/status-message') body = { content: '' };
+    if (url.pathname === '/ask') { history = JSON.parse(req.postData()).messages; body = { data: { answer: 'A clear answer.', related: [] } }; }
+    void req.respond({ status, contentType: 'application/json', body: JSON.stringify(body) });
+  });
+  const base = `http://127.0.0.1:${server.httpServer.address().port}`;
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.goto(`${base}/#ask`, { waitUntil: 'networkidle0' });
+  await page.type('#ask-input', 'Keep my draft');
+  const openNav = async () => { await page.evaluate(() => { const nav = [...document.querySelectorAll('.learning-menu')].find(el => el.querySelector('summary').textContent === 'Ask'); nav.open = true; }); };
+  await openNav();
+  await page.click('a[href="#ask?view=notes"]');
+  await page.waitForSelector('.ask-note-link');
+  assert.equal(await page.title(), "Saved notes · ClearWrite");
+  assert.equal(await page.$$('[role="tablist"]').then(x => x.length), 0);
+  assert.equal(await page.$$('.ask-note-link').then(x => x.length), 7);
+  for (const width of [1440, 768, 390, 375, 320]) {
+    await page.setViewport({ width, height: 1000 });
+    const layout = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll('.ask-note-link')].map(el => el.getBoundingClientRect());
+      return { overflow: document.documentElement.scrollWidth > innerWidth, columns: cards.filter(c => Math.abs(c.top - cards[0].top) < 1).length, widths: cards.map(c => c.width) };
+    });
+    assert.equal(layout.overflow, false);
+    assert.equal(layout.columns, width === 1440 ? 3 : width === 768 ? 2 : 1);
+    assert.ok(Math.max(...layout.widths) - Math.min(...layout.widths) < 1);
+    await page.screenshot({ path: path.join(output, `grid-${width}.png`), fullPage: true });
+    await page.click('.ask-note-link');
+    await page.waitForSelector('.ask-note-dialog[open]');
+    if (width === 1440) {
+      const bounds = () => page.$eval('dialog', el => { const box = el.getBoundingClientRect(); return { width: box.width, height: box.height, left: box.left, top: box.top, right: box.right, bottom: box.bottom }; });
+      const before = await bounds();
+      const grip = await page.$('.ask-reader-resize');
+      const box = await grip.boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width / 2 + 100, box.y + box.height / 2 + 60, { steps: 12 });
+      await page.mouse.up();
+      const grown = await bounds();
+      assert.ok(grown.width > before.width + 150 && grown.height > before.height + 90, 'Corner drag resizes both dimensions');
+      await page.screenshot({ path: path.join(output, 'reader-resized-1440.png') });
+      await page.keyboard.press('ArrowLeft');
+      assert.ok((await bounds()).width < grown.width, 'Keyboard resizing works');
+      await page.keyboard.press('Home');
+      assert.ok(Math.abs((await bounds()).width - before.width) < 2, 'Home restores the default size');
+      const resetGrip = await grip.boundingBox();
+      await page.mouse.move(resetGrip.x + 22, resetGrip.y + 22);
+      await page.mouse.down();
+      await page.mouse.move(2000, 1500, { steps: 10 });
+      await page.mouse.up();
+      const limited = await bounds();
+      assert.ok(limited.left >= 0 && limited.top >= 0 && limited.right <= 1440 && limited.bottom <= 1000, 'Resize stays within viewport');
+      await page.click('.ask-reader-reset');
+      const shrinkGrip = await grip.boundingBox();
+      await page.mouse.move(shrinkGrip.x + 22, shrinkGrip.y + 22);
+      await page.mouse.down();
+      await page.mouse.move(100, 100, { steps: 10 });
+      await page.mouse.up();
+      const small = await bounds();
+      assert.ok(small.width >= 448 && small.height >= 352, 'Minimum size remains usable');
+      assert.equal(await page.$eval('dialog', el => el.scrollWidth > el.clientWidth), false);
+      await page.click('.ask-reader-reset');
+    }
+    assert.match(await page.$eval('.ask-note-card', el => el.textContent), /END OF COMPLETE NOTE/);
+    assert.equal(await page.$$('.ask-note-card table').then(x => x.length), 1);
+    assert.equal(await page.$eval('.ask-notes-index', el => !!el.getClientRects().length), true);
+    assert.equal(await page.evaluate(() => document.body.style.overflow), 'hidden');
+    for (let i = 0; i < 7; i++) { await page.keyboard.press('Tab'); assert.equal(await page.evaluate(() => document.querySelector('dialog').contains(document.activeElement)), true); }
+    await page.screenshot({ path: path.join(output, `note-${width}.png`) });
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('dialog').open);
+    assert.equal(await page.evaluate(() => document.activeElement.matches('.ask-note-link[aria-current="true"]')), true);
+    assert.equal(await page.evaluate(() => document.body.style.overflow), '');
+    checks.push({ width, columns: layout.columns, modal: true, focusReturned: true });
+  }
+  await page.type('#ask-notes-search', 'affect');
+  assert.equal(await page.$$('.ask-note-link').then(x => x.length), 1);
+  await page.click('.ask-note-link');
+  await page.click('[aria-label="Close note"]');
+  assert.equal(await page.$eval('#ask-notes-search', el => el.value), 'affect');
+  await page.click('#ask-notes-search');
+  await page.keyboard.down('Control');
+  await page.keyboard.press('A');
+  await page.keyboard.up('Control');
+  await page.keyboard.press('Backspace');
+  await page.select('#ask-category', 'Grammar');
+  assert.equal(await page.$$('.ask-note-link').then(x => x.length), 4);
+  await page.select('#ask-tag', 'meaning');
+  await page.waitForSelector('.ask-library-empty');
+  await page.click('.ask-library-empty button');
+  assert.equal(await page.$$('.ask-note-link').then(x => x.length), 7);
+  // Restore the searched note for the complete-context assertion below.
+  await page.type('#ask-notes-search', 'affect');
+  await page.evaluate(() => { location.hash = 'ask'; });
+  await page.waitForFunction(() => !document.querySelector('#ask-panel-ask').hidden);
+  assert.equal(await page.$eval('#ask-input', el => el.value), 'Keep my draft');
+  await page.evaluate(() => { location.hash = 'ask?view=notes'; });
+  await page.waitForFunction(() => !document.querySelector('#ask-panel-notes').hidden);
+  await page.click('.ask-note-link');
+  await page.click('.ask-note-dialog-footer button');
+  await page.waitForSelector('.ask-context');
+  assert.equal(await page.$eval('dialog', el => el.open), false);
+  await page.type('#ask-input', 'Explain the example');
+  await page.click('.ask-composer .primary');
+  await page.waitForSelector('.ask-turn');
+  assert.equal(history[0].answer, notes[1].content);
+  await page.evaluate(() => { location.hash = 'ask?view=notes'; });
+  await page.waitForFunction(() => !document.querySelector('#ask-panel-notes').hidden);
+  mode = 'error';
+  await page.click('[aria-label="Refresh saved notes"]');
+  await page.waitForSelector('#ask-panel-notes [role="alert"]');
+  mode = 'empty';
+  await page.click('#ask-panel-notes [role="alert"] button');
+  await page.waitForFunction(() => document.querySelector('.ask-empty')?.textContent.includes('No saved conversations'));
+  await page.screenshot({ path: path.join(output, 'empty-320.png'), fullPage: true });
+  mode = 'loaded';
+  await page.click('[aria-label="Refresh saved notes"]');
+  await page.waitForSelector('.ask-note-link');
+  await page.type('#ask-notes-search', 'zzzz-no-result');
+  await page.waitForFunction(() => document.querySelector('.ask-empty')?.textContent.includes('No notes match'));
+  await page.click('.ask-library-empty button');
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  for (const viewport of [{ width: 812, height: 375 }, { width: 375, height: 812 }]) {
+    await page.setViewport(viewport);
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    const targets = await page.$$eval('#ask-panel-notes input, #ask-panel-notes select, #ask-panel-notes button, .ask-library-heading a', els => els.filter(el => el.getClientRects().length).map(el => el.getBoundingClientRect().height));
+    assert.ok(targets.every(height => height >= 44));
+    await page.click('.ask-note-link');
+    assert.equal(await page.evaluate(() => document.querySelector('dialog').scrollWidth > document.querySelector('dialog').clientWidth), false);
+    await page.$eval('.ask-note-dialog-footer button', el => el.scrollIntoView({ block: 'center' }));
+    assert.equal(await page.$eval('.ask-note-dialog-footer button', el => { const box = el.getBoundingClientRect(); return box.top >= 0 && box.bottom <= innerHeight; }), true, 'Discussion action stays reachable with enlarged text');
+    await page.screenshot({ path: path.join(output, `large-text-${viewport.width}.png`) });
+    await page.keyboard.press('Escape');
+  }
+  await page.addStyleTag({ content: 'html { font-size: 100% !important; }' });
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => [...document.querySelectorAll('.learning-menu summary')].find(el => el.textContent === 'Ask').click());
+  assert.equal(await page.$eval('a[href="#ask?view=notes"]', el => el.getAttribute('aria-current')), 'page');
+  await page.screenshot({ path: path.join(output, 'navigation-1440.png') });
+  await page.keyboard.press('Escape');
+  for (const label of ['Writing', 'Vocabulary', 'My learning']) {
+    await page.evaluate(label => [...document.querySelectorAll('.learning-menu summary')].find(el => el.textContent.trim() === label).click(), label);
+    assert.equal(await page.evaluate(label => [...document.querySelectorAll('.learning-menu')].find(el => el.querySelector('summary').textContent.trim() === label).open, label), true);
+    await page.keyboard.press('Escape');
+  }
+  await page.setViewport({ width: 390, height: 850 });
+  await page.click('.menu-toggle');
+  await page.evaluate(() => [...document.querySelectorAll('.learning-menu summary')].find(el => el.textContent === 'Ask').click());
+  await page.screenshot({ path: path.join(output, 'navigation-390.png') });
+  await page.click('a[href="#ask"]');
+  await page.waitForFunction(() => !document.querySelector('#ask-panel-ask').hidden);
+  assert.equal(await page.$eval('.menu-toggle', el => el.getAttribute('aria-expanded')), 'false');
+  await page.goBack();
+  await page.waitForFunction(() => !document.querySelector('#ask-panel-notes').hidden);
+  assert.deepEqual(errors, []);
+  fs.writeFileSync(path.join(output, 'checks.json'), JSON.stringify({ checks, errors, resize: ['pointer', 'keyboard', 'reset', 'viewport bounds', 'minimum size'], draftPreserved: true, completeContext: true, combinedFilters: true, reducedMotion: true, enlargedText: '200%', landscape: true, states: ['error', 'empty', 'no matches'] }, null, 2));
+  console.log('Saved notes: responsive grid, search, combined filters, reset, dialog, keyboard focus, draft, full context, empty/error states, reduced motion, landscape and 200% text checks passed.');
+} finally { await browser?.close(); await server.close(); }

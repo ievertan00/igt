@@ -49,7 +49,7 @@ export function HandbookReports() {
   return <details className="handbook-reports" onToggle={(event) => { if (event.currentTarget.open && !loaded && !busy) loadList(); }}>
     <summary>Past reports</summary>
     <p>Read a saved snapshot of your learning history. A past report may differ from your current Handbook.</p>
-    <button className="secondary" disabled={busy} onClick={loadList}>{busy ? "Loading reports…" : "Refresh reports"}</button>
+    <button className="secondary" aria-busy={busy} disabled={busy} onClick={loadList}>{busy ? "Loading reports…" : "Refresh reports"}</button>
     {error && <p role="alert">{error}</p>}
     {loaded && !reports.length && <p>No saved reports yet. Reports you generate with /handbook will appear here.</p>}
     {truncated && <p>Showing the 500 most recent reports.</p>}

@@ -100,7 +100,7 @@ export function SelectionLookup({ renderLookup }: { renderLookup: (text: string)
       }}>
       <header className="selection-lookup-header">
         <div><h2 id="selection-lookup-title">Selection lookup</h2><p>Chinese or English · keep your place on the page</p></div>
-        <button type="button" onClick={() => dialog.current?.close()} aria-label="Close selection lookup" autoFocus>Close</button>
+        <button type="button" className="secondary" onClick={() => dialog.current?.close()} aria-label="Close selection lookup" autoFocus><Icon name="close" />Close</button>
       </header>
       {query && renderLookup(query)}
     </dialog>

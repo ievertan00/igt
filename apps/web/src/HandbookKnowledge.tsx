@@ -51,7 +51,7 @@ export function HandbookKnowledge({ errorType, days, version, evidence, disabled
       <Markdown source={result.rule.content} />
     </div> : <>
       <p>Get a rule explanation based on up to {evidence.ruleExamples} recent examples from this category. Matching saved explanations are reused.</p>
-      <button className="secondary" onClick={explain} disabled={disabled || busy}>{busy ? "Preparing explanation…" : error ? "Try explanation again" : "Explain this pattern"}</button>
+      <button className="secondary" aria-busy={busy} onClick={explain} disabled={disabled || busy}>{busy ? "Preparing explanation…" : error ? "Try explanation again" : "Explain this pattern"}</button>
       {busy && <p role="status">Your examples are ready to read while the explanation is prepared. You can switch categories.</p>}
       {error && <p role="alert">{error}</p>}
     </>}

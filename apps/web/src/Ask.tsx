@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { IconButton } from "./IconButton";
 import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
@@ -17,14 +18,19 @@ const suggestions = [
 ];
 const noteTitle = (note: Note) => note.title || note.id.replace(/\.md$/i, "");
 const noteBody = (note: Note) => note.content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "").replace(/<!-- igt-ask-save:[a-f0-9]+ -->\s*/g, "").trim();
+const noteExcerpt = (note: Note) => noteBody(note)
+  .replace(/<[^>]*>/g, " ").replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+  .replace(/^#{1,6}\s+.*$/gm, "").replace(/^\*{0,2}Date:.*$/gm, "")
+  .replace(/[*_`#>|~]/g, "").replace(/\s+/g, " ").trim().slice(0, 320);
 const snapshot = (turns: Turn[]) => JSON.stringify(turns.map(({ question, answer }) => ({ question, answer })));
-function dateLabel(value: string) {
+function dateLabel(value: string, short = false) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Unknown date" : date.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  if (Number.isNaN(date.getTime())) return "Unknown date";
+  return short ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : date.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-export function Ask({ active }: { active: boolean }) {
-  const [view, setView] = useState<"ask" | "notes">("ask");
+export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }) {
   const [discussion, setDiscussion] = useState<Discussion>({ turns: [], question: "" });
   const [previous, setPrevious] = useState<Discussion[]>([]);
   const [inspirationExpanded, setInspirationExpanded] = useState(false);
@@ -35,7 +41,9 @@ export function Ask({ active }: { active: boolean }) {
   const [category, setCategory] = useState("");
   const [tag, setTag] = useState("");
   const [selectedId, setSelectedId] = useState("");
-  const [mobileDetail, setMobileDetail] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [readerSize, setReaderSize] = useState<{ width: number; height: number }>();
+  const resizeStart = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const [notesBusy, setNotesBusy] = useState(false);
   const [notesError, setNotesError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,14 +51,37 @@ export function Ask({ active }: { active: boolean }) {
   const [saves, setSaves] = useState<Record<string, SaveState>>({});
   const [copyStatus, setCopyStatus] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const readerRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const listRef = useRef<HTMLElement>(null);
-  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const sending = useRef(false);
   const saving = useRef(new Set<string>());
   const notesRequestId = useRef(0);
   const visible = useRef(false);
   visible.current = active && view === "ask";
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (active && view === "notes" && noteOpen) {
+      if (!dialog.open) dialog.showModal();
+      const overflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { dialog.close(); document.body.style.overflow = overflow; };
+    }
+    if (dialog.open) dialog.close();
+  }, [active, view, noteOpen]);
+  useEffect(() => { if (!active || view !== "notes") setNoteOpen(false); }, [active, view]);
+  function closeNote() {
+    resizeStart.current = null;
+    setNoteOpen(false);
+    requestAnimationFrame(() => listRef.current?.querySelector<HTMLButtonElement>('[aria-current="true"]')?.focus({ preventScroll: true }));
+  }
+  function resizeReader(width: number, height: number) {
+    // The reader stays centered; keep every edge inside the viewport.
+    const maxWidth = window.innerWidth - 48, maxHeight = window.innerHeight - 48;
+    setReaderSize({ width: Math.min(maxWidth, Math.max(Math.min(448, maxWidth), width)),
+      height: Math.min(maxHeight, Math.max(Math.min(352, maxHeight), height)) });
+  }
 
   async function refreshNotes() {
     const requestId = ++notesRequestId.current;
@@ -138,7 +169,7 @@ export function Ask({ active }: { active: boolean }) {
   function saveAction(messages: Turn[], label: string) {
     const state = saves[snapshot(messages)];
     return <div className="ask-save-action">
-      <button className="secondary" disabled={state?.status === "saving" || state?.status === "saved"} onClick={() => void save(messages)}>
+      <button className="secondary" aria-busy={state?.status === "saving"} data-saved={state?.status === "saved"} disabled={state?.status === "saving" || state?.status === "saved"} onClick={() => void save(messages)}>
         <Icon name="bookmark" />{state?.status === "saved" ? "Saved to notes" : state?.status === "saving" ? "Saving…" : state?.status === "uncertain" ? "Retry save" : label}
       </button>
       {state && <span className={state.status === "error" || state.status === "uncertain" ? "ask-error" : "ask-action-status"} role="status">{state.message}</span>}
@@ -154,7 +185,8 @@ export function Ask({ active }: { active: boolean }) {
     setDiscussion(next);
     setRequestError("");
     setCopyStatus("");
-    setView("ask");
+    setNoteOpen(false);
+    location.hash = "ask";
     requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   }
   const categories = [...new Set(notes.map((note) => note.category || "Uncategorized"))].sort();
@@ -165,22 +197,13 @@ export function Ask({ active }: { active: boolean }) {
   // Searching filters the list, not the open document.
   const selected = notes.find((note) => note.id === selectedId);
   const hasConversation = Boolean(turns.length || context);
+  const hasFilters = Boolean(query.trim() || category || tag);
+  function clearFilters() { setQuery(""); setCategory(""); setTag(""); }
 
   return <div className={`ask-page${view === "ask" ? " is-asking" : ""}${hasConversation ? " has-conversation" : ""}`}>
-    <div className="heading"><h1>Ask about your English.</h1><p>Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question.</p></div>
-    <div className="ask-view-bar">
-      <div className="ask-tabs" role="tablist" aria-label="Ask views">
-        {(["ask", "notes"] as const).map((tab, index) => <button key={tab} ref={(node) => { tabRefs.current[index] = node; }} id={`ask-tab-${tab}`} role="tab" aria-selected={view === tab} aria-controls={`ask-panel-${tab}`} tabIndex={view === tab ? 0 : -1}
-          onClick={() => setView(tab)} onKeyDown={(event) => {
-            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-            event.preventDefault();
-            const target = event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
-            setView(target === 0 ? "ask" : "notes"); tabRefs.current[target]?.focus();
-          }}>{tab === "ask" ? "Ask a question" : "Saved notes"}</button>)}
-      </div>
-      {view === "ask" && hasConversation && <button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>New question</button>}
-    </div>
-    <section id="ask-panel-ask" role="tabpanel" aria-labelledby="ask-tab-ask" hidden={view !== "ask"}>
+    <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p>{view === "notes" ? "Useful explanations, kept for later. Find a note and pick up where you left off." : "Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question."}</p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" />Ask a question<Icon name="arrow" /></a>}</div>
+    {view === "ask" && hasConversation && <div className="ask-view-bar"><button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><Icon name="ask" />New question</button></div>}
+    <section id="ask-panel-ask" aria-label="Ask a question" hidden={view !== "ask"}>
       <div className="ask-reading-column">
         {previous.length > 0 && <div className="ask-history-row"><details className="ask-previous"><summary>Previous questions in this session ({previous.length})</summary>
           {previous.map((item, index) => <button key={index} className="text-button" disabled={busy} onClick={() => {
@@ -210,7 +233,7 @@ export function Ask({ active }: { active: boolean }) {
             placeholder={hasConversation ? "Ask a follow-up. Add an example or tell us what is still unclear…" : "Type your question here. Add a sentence or an example for context…"} />
           <div className="ask-composer-actions">
             {turns.length > 0 && <button type="button" className="text-button" disabled={busy} onClick={() => start({ turns: turns.slice(0, -1), question: turns[turns.length - 1].question, context })}>Back to question</button>}
-            <span id="ask-shortcut">Ctrl / ⌘ + Enter to send</span><button className="primary" disabled={busy || !question.trim()} onClick={() => void send()}>{busy ? "Thinking…" : hasConversation ? "Send" : "Ask"}<Icon name="arrow" /></button>
+            <span id="ask-shortcut">Ctrl / ⌘ + Enter to send</span><button className="primary" aria-busy={busy} disabled={busy || !question.trim()} onClick={() => void send()}>{busy ? "Thinking…" : hasConversation ? "Send" : "Ask"}<Icon name="arrow" /></button>
           </div>
         </div>
         {busy && <p className="ask-pending" role="status">Thinking about your question…</p>}
@@ -229,31 +252,68 @@ export function Ask({ active }: { active: boolean }) {
         <p className="ask-guidance">AI explanations may need checking. Save useful answers to revisit them.</p>
       </div>
     </section>
-    <section id="ask-panel-notes" role="tabpanel" aria-labelledby="ask-tab-notes" hidden={view !== "notes"}>
-      <div className={`ask-library-layout${mobileDetail ? " is-detail" : ""}`}>
+    <section id="ask-panel-notes" aria-label="Saved notes" hidden={view !== "notes"}>
+      <div className="ask-library-layout">
         <aside className="ask-notes-index">
-          <div className="ask-section-heading"><h2>Saved notes <span className="ask-note-count">({notes.length})</span></h2><button className="text-button" disabled={notesBusy} onClick={() => void refreshNotes()}>{notesBusy ? "Loading…" : "Refresh"}</button></div>
-          <label className="sr-only" htmlFor="ask-notes-search">Search saved notes</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search titles, tags or content…" />
+          <div className="ask-library-tools"><div className="ask-library-search"><label className="form-label" htmlFor="ask-notes-search">Search saved notes</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search titles, tags or content…" /></div>
           <div className="ask-note-filters">
             <label htmlFor="ask-category">Category<select id="ask-category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
             <label htmlFor="ask-tag">Tag<select id="ask-tag" value={tag} onChange={(event) => setTag(event.target.value)}><option value="">All tags</option>{tags.map((item) => <option key={item}>{item}</option>)}</select></label>
           </div>
-          {(query || category || tag) && <p className="ask-action-status" role="status">{matching.length} of {notes.length} notes <button className="text-button" onClick={() => { setQuery(""); setCategory(""); setTag(""); }}>Clear filters</button></p>}
-          {notesBusy && <p role="status" className="ask-pending">Loading saved notes…</p>}
+          </div>
+          <div className="ask-section-heading ask-library-results"><div className="ask-results-label"><h2>{hasFilters ? "Matching notes" : "All notes"} <span className="ask-note-count">{hasFilters ? `${matching.length} / ${notes.length}` : notes.length}</span></h2>{hasFilters && <button className="text-button" onClick={clearFilters}>Clear filters</button>}</div><button className="text-button" aria-label="Refresh saved notes" disabled={notesBusy} onClick={() => void refreshNotes()}>{notesBusy ? "Loading…" : "Refresh"}</button></div>
+          <span className="sr-only" role="status">{!notesBusy && !notesError ? `${matching.length} ${matching.length === 1 ? "note" : "notes"}${hasFilters ? ` matching your filters out of ${notes.length}` : " saved"}` : ""}</span>
+          {notesBusy && <p role="status" className="ask-pending">{notes.length ? "Refreshing your notes…" : "Loading saved notes…"}</p>}
           {notesError && <div role="alert" className="ask-error"><p>Saved notes could not be loaded. {notesError}</p><button className="secondary" disabled={notesBusy} onClick={() => void refreshNotes()}>Retry loading notes</button></div>}
-          {!notesBusy && !notesError && !notes.length && <p className="ask-empty">No saved conversations yet. Save an answer to keep it here as a Markdown note. CLI notes appear here too.</p>}
-          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty"><p>No notes match these filters. Try another topic or clear the filters above.</p></div>}
-          <nav ref={listRef} className="ask-note-list" aria-label="Saved Ask notes">{matching.map((note) => <button key={note.id} className="ask-note-link" aria-current={note.id === selectedId ? "true" : undefined} aria-controls="ask-note-reader" onClick={() => {
-            setSelectedId(note.id); setMobileDetail(true);
-            requestAnimationFrame(() => { if (readerRef.current) { readerRef.current.scrollTop = 0; readerRef.current.focus({ preventScroll: true }); } });
-          }}><Icon name="document" /><span><strong>{noteTitle(note)}</strong><span className="ask-note-topics">{[note.category || "Uncategorized", ...(note.tags || []).map((item) => `#${item}`)].join(" · ")}</span><time dateTime={note.modifiedAt}>{dateLabel(note.modifiedAt)}</time></span></button>)}</nav>
+          {!notesBusy && !notesError && !notes.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="bookmark" /></span><h2>No saved conversations yet</h2><p>Save a useful answer in Ask to revisit it here.<br />Your saved CLI notes appear here too.</p><a className="secondary" href="#ask">Ask your first question<Icon name="arrow" /></a></div>}
+          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="word-lookup" /></span><h2>No notes match these filters</h2><p>Try a different word, category or tag.</p><button className="secondary" onClick={clearFilters}>Clear filters</button></div>}
+          <nav ref={listRef} className="ask-note-list" aria-label="Saved Ask notes" aria-busy={notesBusy}>{matching.map((note) => <button key={note.id} className="ask-note-link" aria-current={note.id === selectedId ? "true" : undefined} aria-haspopup="dialog" aria-controls="ask-note-reader" onClick={() => {
+            setSelectedId(note.id); setNoteOpen(true);
+          }}>
+            <span className="ask-note-card-top"><span className="ask-note-category">{note.category || "Uncategorized"}</span><Icon name="document" /></span>
+            <span className="ask-note-title"><strong title={noteTitle(note)}>{noteTitle(note)}</strong>{note.id === selectedId && <Icon name="check" />}</span>
+            <span className="ask-note-excerpt">{noteExcerpt(note) || "Open this note to read the full explanation."}</span>
+            {Boolean(note.tags?.length) && <span className="ask-note-topics">{note.tags!.map((item) => <span key={item}>#{item}</span>)}</span>}
+            <span className="ask-note-card-footer"><time dateTime={note.modifiedAt} title={`Updated ${dateLabel(note.modifiedAt)}`}>{dateLabel(note.modifiedAt, true)}</time><span>Read note<Icon name="arrow" /></span></span>
+          </button>)}</nav>
         </aside>
-        <article ref={readerRef} className="ask-note-card" id="ask-note-reader" tabIndex={0} aria-label={selected ? noteTitle(selected) : "Note reader"}>
-          <button className="text-button ask-back" onClick={() => { setMobileDetail(false); requestAnimationFrame(() => listRef.current?.querySelector<HTMLButtonElement>('[aria-current="true"]')?.focus({ preventScroll: true })); }}>Back to notes</button>
-          {selected ? <><header><h2>{noteTitle(selected)}</h2><div className="ask-note-metadata" aria-label="Note topics"><button className="secondary" onClick={() => { setCategory(selected.category || "Uncategorized"); setMobileDetail(false); }}>{selected.category || "Uncategorized"}</button>{(selected.tags || []).map((item) => <button className="text-button" key={item} onClick={() => { setTag(item); setMobileDetail(false); }}>#{item}</button>)}</div><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><button className="secondary" disabled={busy} onClick={() => start({ turns: [], question: "", context: selected })}>Continue discussing<Icon name="arrow" /></button>{busy && <p className="ask-action-status">Wait for your current answer before starting another discussion.</p>}</header><Markdown source={noteBody(selected)} /></>
-            : <div className="ask-empty"><h2>Choose a note to read</h2><p>Select a saved question to see the complete explanation here.</p></div>}
-        </article>
       </div>
+      <dialog ref={dialogRef} className="ask-note-dialog" id="ask-note-reader" style={readerSize ? { "--reader-width": `${readerSize.width}px`, "--reader-height": `${readerSize.height}px` } as CSSProperties : undefined} aria-labelledby="ask-note-title" onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const controls = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]')].filter((node) => node.getClientRects().length);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }} onCancel={(event) => { event.preventDefault(); closeNote(); }} onClick={(event) => { if (event.target === event.currentTarget) { const box = event.currentTarget.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) closeNote(); } }}>
+        <div className="ask-note-dialog-bar"><span className="ask-reader-label"><Icon name="document" />Saved note</span><div className="ask-reader-controls">{readerSize && <button className="text-button ask-reader-reset" onClick={() => setReaderSize(undefined)}>Reset size</button>}<IconButton icon="close" label="Close note" onClick={closeNote} /></div></div>
+        <article className="ask-note-card">
+          {selected && <><header><h2 id="ask-note-title">{noteTitle(selected)}</h2><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><div className="ask-note-metadata" aria-label="Note topics"><button className="secondary" onClick={() => { setCategory(selected.category || "Uncategorized"); closeNote(); }}>{selected.category || "Uncategorized"}</button>{(selected.tags || []).map((item) => <button className="text-button" key={item} onClick={() => { setTag(item); closeNote(); }}>#{item}</button>)}</div></header><Markdown source={noteBody(selected)} /></>}
+        </article>
+        <div className="ask-note-dialog-footer"><span className="sr-only" id="ask-note-discussion-hint">Use this note as context for a new question.</span><button className="text-button" aria-describedby="ask-note-discussion-hint" disabled={busy || !selected} onClick={() => selected && start({ turns: [], question: "", context: selected })}>Continue discussion<Icon name="arrow" /></button>{busy && <p className="ask-action-status">Wait for your current answer before starting another discussion.</p>}</div>
+        <div className="ask-reader-size-bar"><span id="ask-reader-resize-hint">Drag the corner to resize · Arrow keys when focused</span><button className="ask-reader-resize" type="button" aria-label="Resize note window" aria-describedby="ask-reader-resize-hint" title="Drag to resize. Use arrow keys when focused; Home resets size."
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            const box = dialogRef.current!.getBoundingClientRect();
+            resizeStart.current = { x: event.clientX, y: event.clientY, width: box.width, height: box.height };
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.preventDefault();
+            event.currentTarget.focus({ preventScroll: true });
+          }} onPointerMove={(event) => {
+            const start = resizeStart.current;
+            if (start) resizeReader(start.width + (event.clientX - start.x) * 2, start.height + (event.clientY - start.y) * 2);
+          }} onPointerUp={(event) => {
+            resizeStart.current = null;
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          }} onPointerCancel={() => { resizeStart.current = null; }} onLostPointerCapture={() => { resizeStart.current = null; }}
+          onKeyDown={(event) => {
+            if (event.key === "Home") { event.preventDefault(); setReaderSize(undefined); return; }
+            if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+            event.preventDefault();
+            const box = dialogRef.current!.getBoundingClientRect(), step = event.shiftKey ? 48 : 24;
+            resizeReader(box.width + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0),
+              box.height + (event.key === "ArrowDown" ? step : event.key === "ArrowUp" ? -step : 0));
+          }}><svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" aria-hidden="true"><path d="M7 19 19 7 M13 19l6-6 M19 19h.01" /></svg></button></div>
+      </dialog>
       {directory && <details className="ask-library-directory"><summary>Markdown storage location</summary><p>{directory}</p></details>}
     </section>
   </div>;
