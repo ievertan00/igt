@@ -2765,10 +2765,11 @@ function AudioButton({
         className={`audio-btn${small ? " audio-btn-sm" : ""}${error ? " audio-err" : ""}`}
         onClick={play}
         disabled={busy}
+        aria-busy={busy}
         aria-label={
           busy ? "Playing…" : reviewPrompt ? "Listen to the English word" : `Read aloud: ${text}`
         }
-        title={error || "Read aloud"}
+        title={busy ? "Playing…" : error || "Read aloud"}
       >
         <Icon name="volume" />
         {reviewPrompt && <span>{busy ? "Playing…" : "Audio hint"}</span>}
