@@ -7,15 +7,78 @@ export type SavedVocabularyEntry = {
   id: string; word: string; pos: string; phonetic: string; meaning: string; zh: string;
   synonyms: string; collocations: string; example: string; example2: string; example3: string;
   note: string; memory: string; added: string | null;
+  srs?: { id: number; due_date: string | null; total_reviews: number; last_reviewed: string | null; interval_days: number } | null;
+  learningStatus?: string; recordedReviews?: number;
 };
 export type VocabularyLibraryResult = {
   words: SavedVocabularyEntry[]; total: number; totalSaved: number; sourceAvailable: boolean;
   limit: number; offset: number; hasMore: boolean;
+  overview?: { due: number; overdue: number; dueToday: number; retained: number; wellRetained: number; distribution: Record<string, number> } | null; today?: string;
 };
 
+const learningStatuses = ["new", "learning", "needs-reinforcement", "retained", "well-retained", "insufficient-history"];
+const statusLabels: Record<string, string> = { new: "New", learning: "Learning", "needs-reinforcement": "Needs reinforcement", retained: "Retained",
+  "well-retained": "Well retained", "insufficient-history": "Insufficient history", unavailable: "Status unavailable" };
+const statusDescriptions: Record<string, string> = { new: "Not yet reviewed", learning: "Building recall", "needs-reinforcement": "Requires more practice",
+  retained: "Consecutive successful recall", "well-retained": "Recall after a longer interval", "insufficient-history": "More evidence needed" };
+const statusHelp: Record<string, string> = {
+  new: "No reviews have been recorded for this review card.", learning: "Recall evidence is accumulating, or the latest correct recall used audio assistance.",
+  "needs-reinforcement": "The latest recorded typed recall was incorrect, regardless of the selected rating.",
+  retained: "Consecutive correct recalls without audio assistance on at least two separate days.",
+  "well-retained": "Consecutive correct recalls without audio assistance, with at least 7 actual days between the latest two reviews.",
+  "insufficient-history": "Detailed recall evidence is missing, incomplete, older than the latest review, or cannot be uniquely linked to this entry.",
+  unavailable: "Review information could not be loaded. Your saved content is available.",
+};
+function scheduleLabel(due: string | null | undefined, today?: string) {
+  if (!due) return "Not scheduled";
+  const now = today || new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const days = Math.round((Date.parse(`${due}T00:00:00Z`) - Date.parse(`${now}T00:00:00Z`)) / 86400000);
+  return days < 0 ? `Overdue by ${-days} day${days === -1 ? "" : "s"}` : days === 0 ? "Due today" : `Review in ${days} day${days === 1 ? "" : "s"}`;
+}
+export type VocabularyHistoryResult = {
+  records: { id: number; created_at: string; learner_answer: string; reference_answer: string; feedback: string }[];
+  total: number; offset: number; hasMore: boolean;
+};
+function StatusGuide() {
+  const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousScrollY = window.scrollY;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.showModal();
+    closeRef.current?.focus({ preventScroll: true });
+    return () => { document.body.style.overflow = previousOverflow; window.scrollTo({ top: previousScrollY, behavior: "instant" }); };
+  }, [open]);
+  return <>
+    <button ref={triggerRef} type="button" className="vocabulary-status-guide-trigger" aria-haspopup="dialog" aria-controls="vocabulary-status-guide" onClick={() => setOpen(true)}><Icon name="info" />About statuses</button>
+    <dialog ref={dialogRef} id="vocabulary-status-guide" className="saved-word-dialog vocabulary-status-guide-dialog" aria-labelledby="vocabulary-status-guide-title"
+      onKeyDown={event => { if (event.key === "Tab") { event.preventDefault(); closeRef.current?.focus(); } }}
+      onClose={() => { setOpen(false); triggerRef.current?.focus({ preventScroll: true }); }}
+      onClick={event => {
+        if (event.target !== event.currentTarget) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.currentTarget.close();
+      }}>
+      <header className="saved-word-dialog-header">
+        <h2 id="vocabulary-status-guide-title">About statuses</h2>
+        <button ref={closeRef} type="button" className="secondary" onClick={() => dialogRef.current?.close()}><Icon name="close" />Close</button>
+      </header>
+      <div className="vocabulary-status-guide-body">
+        <p>Learning statuses describe recorded recall evidence, not complete mastery. Review schedules are tracked separately.</p>
+        <dl>{learningStatuses.map(key => <div key={key} data-learning-status={key}><dt className="word-learning-label"><i aria-hidden="true" />{statusLabels[key]}</dt><dd>{statusHelp[key]}</dd></div>)}</dl>
+        <p>Classification depends on available history. Ratings and scheduled intervals alone do not establish retention.</p>
+      </div>
+    </dialog>
+  </>;
+}
 export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: SavedVocabularyEntry) => ReactNode }) {
-  const [search, setSearch] = useState("");
   const [sort, setSort] = useState("az");
+  const [schedule, setSchedule] = useState("all");
+  const [status, setStatus] = useState("all");
   const [offset, setOffset] = useState(0);
   const [reload, setReload] = useState(0);
   const [data, setData] = useState<VocabularyLibraryResult>();
@@ -29,26 +92,30 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
   useEffect(() => {
     if (!selected) return;
     const previousOverflow = document.body.style.overflow;
+    const previousScrollY = window.scrollY;
     document.body.style.overflow = "hidden";
     if (!dialogRef.current?.open) dialogRef.current?.showModal();
     closeRef.current?.focus({ preventScroll: true });
-    return () => { document.body.style.overflow = previousOverflow; };
+    return () => { document.body.style.overflow = previousOverflow; window.scrollTo({ top: previousScrollY, behavior: "instant" }); };
   }, [selected]);
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
     setLoading(true); setError("");
     const timer = window.setTimeout(() => {
-      webApi.listVocabularyWords({ search, sort, offset, limit }, controller.signal)
+      webApi.listVocabularyWords({ search: "", sort, schedule, status, offset, limit }, controller.signal)
         .then(result => { if (active) setData(result); })
         .catch((error: Error) => { if (active) setError(error.message); })
         .finally(() => { if (active) setLoading(false); });
-    }, search ? 200 : 0);
+    }, 0);
     return () => { active = false; window.clearTimeout(timer); controller.abort(); };
-  }, [search, sort, offset, reload]);
+  }, [sort, schedule, status, offset, reload]);
 
   const page = data ? Math.floor(data.offset / limit) + 1 : 1;
   const pages = data ? Math.max(1, Math.ceil(data.total / limit)) : 1;
+  const filtered = schedule !== "all" || status !== "all";
+  const clearFilters = () => { setSchedule("all"); setStatus("all"); setOffset(0); };
+  const filterStatus = (value: string) => { setStatus(value); setOffset(0); };
   return (
     <div className="vocabulary-library">
       <header className="vocabulary-library-header">
@@ -58,25 +125,55 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         </div>
         <a className="primary" href="#word-review">Review due words<Icon name="arrow" /></a>
       </header>
-      <div className="vocabulary-library-toolbar">
-        <div className="vocabulary-library-search">
-          <label htmlFor="saved-word-search">Find a saved word</label>
-          <div className="vocabulary-search-field">
-            <Icon name="word-lookup" />
-            <input id="saved-word-search" type="search" maxLength={200} value={search}
-              placeholder="Search words, meanings, or examples…"
-              onChange={event => { setSearch(event.target.value); setOffset(0); }} />
-          </div>
+      <section className="vocabulary-overview" aria-labelledby="vocabulary-overview-title" aria-busy={loading}>
+        <div className="vocabulary-overview-heading">
+          <div><h2 id="vocabulary-overview-title">Vocabulary overview</h2><p>Your vocabulary learning at a glance.</p></div>
+          <StatusGuide />
         </div>
-        <div className="vocabulary-library-sort">
-          <label htmlFor="saved-word-sort">Sort by</label>
+        <div className="vocabulary-overview-totals">
+        {[
+          { label: "Saved words", value: data?.sourceAvailable ? data.totalSaved : undefined, help: "Total in library", active: schedule === "all" && status === "all", onClick: clearFilters },
+          { label: "Due for review", value: data?.overview?.due, help: data?.overview ? `${data.overview.overdue} overdue · ${data.overview.dueToday} today` : "Today and overdue", active: schedule === "due" && status === "all", onClick: () => { setSchedule("due"); setStatus("all"); setOffset(0); } },
+        ].map(metric => <button key={metric.label} type="button" className="vocabulary-overview-metric" aria-pressed={metric.active} disabled={loading || !!error || metric.value === undefined} onClick={metric.onClick}>
+          <span>{metric.label}</span><strong>{error || metric.value === undefined ? "—" : metric.value}</strong><small>{metric.help}</small>
+        </button>)}
+        </div>
+        <div className="vocabulary-distribution">
+          <div className="vocabulary-distribution-heading"><h3>Learning distribution</h3><span>{data?.sourceAvailable ? `${data.totalSaved} words` : "—"}</span></div>
+          {data?.overview?.distribution && !error ? <>
+            <div className="vocabulary-distribution-bar" role="img" aria-label={learningStatuses.map(key => `${statusLabels[key]}: ${data.overview?.distribution[key] || 0}`).join(", ")}>
+              {learningStatuses.map(key => { const count = data.overview?.distribution[key] || 0; return count > 0 && <span key={key} data-learning-status={key} style={{ flexGrow: count }} />; })}
+            </div>
+            <div className="vocabulary-distribution-grid">
+              {learningStatuses.map(key => {
+                const count = data.overview?.distribution[key] || 0;
+                return <button type="button" key={key} data-learning-status={key} className="vocabulary-distribution-item" aria-pressed={status === key} disabled={loading} onClick={() => filterStatus(status === key ? "all" : key)}>
+                  <span className="word-learning-label"><i aria-hidden="true" />{statusLabels[key]}</span>
+                  <span className="vocabulary-distribution-value"><strong>{count}</strong><small>{data.totalSaved ? Math.round(count / data.totalSaved * 100) : 0}%</small></span>
+                  <small>{statusDescriptions[key]}</small>
+                </button>;
+              })}
+            </div>
+          </> : <p className="vocabulary-evidence-note" role="status">{loading ? "Loading learning history…" : "Learning history is unavailable. Saved words remain available below."}</p>}
+        </div>
+      </section>
+      <div className="vocabulary-library-browse-heading"><div><h2>Saved words</h2><p>{status === "all" ? "All learning statuses" : statusLabels[status]}</p></div></div>
+      <div className="vocabulary-library-filters">
+        <label className="vocabulary-library-sort" htmlFor="saved-word-sort">Sort by
           <select id="saved-word-sort" value={sort} onChange={event => { setSort(event.target.value); setOffset(0); }}>
-            <option value="az">Word: A–Z</option><option value="newest">Recently saved</option>
+            <option value="az">Word: A–Z</option><option value="newest">Recently saved</option><option value="next-review" disabled={!data?.overview}>Next review</option>
           </select>
-        </div>
+        </label>
+        <label htmlFor="saved-word-schedule">Review schedule<select id="saved-word-schedule" value={schedule} disabled={!data?.overview} onChange={event => { setSchedule(event.target.value); setOffset(0); }}>
+          <option value="all">Any schedule</option><option value="due">Due for review</option><option value="upcoming">Upcoming</option><option value="unscheduled">Not scheduled</option>
+        </select></label>
+        <label htmlFor="saved-word-status">Learning status<select id="saved-word-status" value={status} disabled={!data?.overview} onChange={event => { setStatus(event.target.value); setOffset(0); }}>
+          <option value="all">All learning statuses</option>{learningStatuses.map(key => <option key={key} value={key}>{statusLabels[key]}</option>)}
+        </select></label>
+        {filtered && <button type="button" className="text-button" onClick={clearFilters}>Clear filters</button>}
       </div>
       <div className="vocabulary-library-status" role="status" aria-live="polite">
-        {loading ? "Loading saved words…" : error ? "Could not load saved words." : data && (search.trim()
+        {loading ? "Loading saved words…" : error ? "Could not load saved words." : data && (filtered
           ? `${data.total} match${data.total === 1 ? "" : "es"} · ${data.totalSaved} saved words`
           : `${data.totalSaved} saved word${data.totalSaved === 1 ? "" : "s"}`)}
       </div>
@@ -88,7 +185,6 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
       ) : !loading && data && (data.words.length ? (
         <>
           <section className="vocabulary-library-list" aria-label="Saved vocabulary">
-            <div className="vocabulary-list-head" aria-hidden="true"><span>Word / phrase</span><span>Meaning</span></div>
             {data.words.map(entry => (
               <article className="saved-word" key={entry.id}>
                 <button type="button" className="saved-word-row" aria-haspopup="dialog" aria-controls="saved-word-dialog"
@@ -97,6 +193,7 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
                   <span className="saved-word-preview">
                     {entry.zh && <span lang="zh-CN">{entry.zh}</span>}
                     {entry.meaning && <span lang="en">{entry.meaning}</span>}
+                    <small className="saved-word-learning" data-learning-status={entry.learningStatus}><span className="word-learning-label"><i aria-hidden="true" />{statusLabels[entry.learningStatus || "unavailable"]}</span>{entry.srs?.due_date && <> · {scheduleLabel(entry.srs.due_date, data.today)}</>}</small>
                   </span>
                   <Icon name="arrow" />
                 </button>
@@ -114,11 +211,11 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         </>
       ) : (
         <section className="vocabulary-library-empty">
-          <Icon name={search.trim() ? "word-lookup" : "handbook"} />
-          <h2>{!data.sourceAvailable ? "Vocabulary file not found" : search.trim() ? "No matching words" : "Your vocabulary starts here"}</h2>
-          <p>{!data.sourceAvailable ? "Choose your vocabulary file in Settings to browse your saved words." : search.trim() ? "Try another word, a Chinese meaning, or a phrase from an example." : "Look up an expression and save it to find it here."}</p>
-          {!data.sourceAvailable ? <a className="secondary" href="#settings">Open Settings</a> : search.trim()
-            ? <button className="secondary" onClick={() => { setSearch(""); setOffset(0); }}>Clear search</button>
+          <Icon name="handbook" />
+          <h2>{!data.sourceAvailable ? "Vocabulary file not found" : filtered ? "No matching words" : "Your vocabulary starts here"}</h2>
+          <p>{!data.sourceAvailable ? "Choose your vocabulary file in Settings to browse your saved words." : filtered ? "Broaden your review and learning filters to see more words." : "Look up an expression and save it to find it here."}</p>
+          {!data.sourceAvailable ? <a className="secondary" href="#settings">Open Settings</a> : filtered
+            ? <button className="secondary" onClick={clearFilters}>Clear filters</button>
             : <a className="primary" href="#word-lookup">Look up a word<Icon name="arrow" /></a>}
         </section>
       ))}
@@ -126,7 +223,7 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         onKeyDown={event => {
           if (event.key !== "Tab") return;
           const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
-            'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+            'button:not(:disabled), summary, a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
           )).filter(element => element.getClientRects().length > 0);
           const first = controls[0], last = controls.at(-1);
           if (event.shiftKey && document.activeElement === first) {
@@ -142,7 +239,9 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
           if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.currentTarget.close();
         }}>
         <header className="saved-word-dialog-header">
-          <h2 id="saved-word-dialog-title">Word details</h2>
+          <div className="saved-word-dialog-heading"><h2 id="saved-word-dialog-title">Word details</h2>
+            {selected && <span className="word-learning-label saved-word-dialog-status" data-learning-status={selected.learningStatus} aria-label={`Learning status: ${statusLabels[selected.learningStatus || "unavailable"]}`}><i aria-hidden="true" />{statusLabels[selected.learningStatus || "unavailable"]}</span>}
+          </div>
           <button ref={closeRef} type="button" className="secondary" onClick={() => dialogRef.current?.close()}>
             <Icon name="close" />Close
           </button>
