@@ -3,9 +3,10 @@ import { IconButton } from "./IconButton";
 import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
+import { useGuideCopy, type LearnerLanguage } from "./learner-language";
 import "./Ask.css";
 
-type Turn = { question: string; answer: string; title?: string; related?: string[]; tags?: string[]; category?: string };
+type Turn = { question: string; answer: string; title?: string; related?: string[]; tags?: string[]; category?: string; language?: LearnerLanguage };
 type Note = { id: string; modifiedAt: string; bytes: number; content: string; title?: string; tags?: string[]; category?: string };
 type Discussion = { turns: Turn[]; question: string; context?: Note };
 type SaveState = { status: "saving" | "saved" | "error" | "uncertain"; message: string };
@@ -15,7 +16,7 @@ const noteExcerpt = (note: Note) => noteBody(note)
   .replace(/<[^>]*>/g, " ").replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
   .replace(/^#{1,6}\s+.*$/gm, "").replace(/^\*{0,2}Date:.*$/gm, "")
   .replace(/[*_`#>|~]/g, "").replace(/\s+/g, " ").trim().slice(0, 320);
-const snapshot = (turns: Turn[]) => JSON.stringify(turns.map(({ question, answer }) => ({ question, answer })));
+const snapshot = (turns: Turn[], language?: LearnerLanguage) => JSON.stringify(turns.map(({ question, answer }) => ({ question, answer }))) + (turns.length > 1 && language ? `\0${language}` : "");
 function dateLabel(value: string, short = false) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Unknown date";
@@ -24,9 +25,14 @@ function dateLabel(value: string, short = false) {
 }
 
 export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }) {
+  const { language, t } = useGuideCopy();
+  const [answerOverride, setAnswerOverride] = useState<LearnerLanguage>();
+  const [summaryOverride, setSummaryOverride] = useState<LearnerLanguage>();
+  const answerLanguage = answerOverride ?? language;
   const [discussion, setDiscussion] = useState<Discussion>({ turns: [], question: "" });
   const [previous, setPrevious] = useState<Discussion[]>([]);
   const { turns, question, context } = discussion;
+  const summaryLanguage = summaryOverride ?? turns.at(-1)?.language ?? answerLanguage;
   const [notes, setNotes] = useState<Note[]>([]);
   const [directory, setDirectory] = useState("");
   const [query, setQuery] = useState("");
@@ -104,7 +110,7 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   // Warn before the browser discards them; they are not disk-persisted drafts.
   useEffect(() => {
     const hasUnsaved = [discussion, ...previous].some((item) => item.question.trim() || item.turns.some((turn) =>
-      saves[snapshot([turn])]?.status !== "saved" && saves[snapshot(item.turns)]?.status !== "saved"));
+      saves[snapshot([turn])]?.status !== "saved" && !([undefined, "en", "zh-CN"] as const).some(lang => saves[snapshot(item.turns, lang)]?.status === "saved")));
     if (!hasUnsaved && !busy && !saving.current.size) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
     window.addEventListener("beforeunload", warn);
@@ -122,16 +128,16 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
       ? [{ question: `Saved note: ${noteTitle(context)}`, answer: context.content }, ...turns]
       : turns;
     try {
-      const result = await webApi.ask(submitted, history);
+      const result = await webApi.ask(submitted, history, answerLanguage);
       const data = result.data;
       const answer = typeof data === "string" ? data : data?.answer;
       if (typeof answer !== "string" || !answer.trim()) throw new Error("The response was empty. Please try again.");
       const relatedQuestions = Array.isArray(data?.related) ? data.related.filter((item: unknown): item is string => typeof item === "string" && Boolean(item.trim())) : [];
       setDiscussion((old) => ({ ...old, question: old.question === (related ? submitted : value) ? "" : old.question,
-        turns: [...old.turns, { question: submitted, answer, title: data?.title, related: relatedQuestions,
+        turns: [...old.turns, { question: submitted, answer, language: answerLanguage, title: data?.title, related: relatedQuestions,
           tags: Array.isArray(data?.tags) ? data.tags.filter((item: unknown): item is string => typeof item === "string") : [], category: data?.category }] }));
     } catch (error: any) {
-      setRequestError(`Could not get an answer. Your question is still here. ${error.message}`);
+      setRequestError(error.message);
     } finally {
       sending.current = false;
       setBusy(false);
@@ -140,12 +146,13 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   }
 
   async function save(messages: Turn[]) {
-    const key = snapshot(messages);
+    const selectedLanguage = messages.length > 1 ? summaryLanguage : undefined;
+    const key = snapshot(messages, selectedLanguage);
     if (saving.current.has(key) || saves[key]?.status === "saved") return;
     saving.current.add(key);
-    setSaves((old) => ({ ...old, [key]: { status: "saving", message: messages.length > 1 ? "Summarizing and saving your conversation…" : "Saving to notes…" } }));
+    setSaves((old) => ({ ...old, [key]: { status: "saving", message: messages.length > 1 ? t("Summarizing and saving your conversation…") : t("Saving to notes…") } }));
     try {
-      const result = await webApi.saveAsk(messages);
+      const result = await webApi.saveAsk(messages, selectedLanguage);
       if (!result.saved) throw new Error("There is no answer to save.");
       const metadata = result.metadata;
       const details = metadata ? ` · ${metadata.category}${metadata.tags?.length ? ` · ${metadata.tags.map((item: string) => `#${item}`).join(" ")}` : ""}` : "";
@@ -154,17 +161,17 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
     } catch (error: any) {
       const uncertain = ["NETWORK_ERROR", "REQUEST_TIMEOUT", "REQUEST_ABORTED"].includes(error.code);
       setSaves((old) => ({ ...old, [key]: { status: uncertain ? "uncertain" : "error", message: uncertain
-        ? "Save not confirmed. Retry safely; an already saved conversation will be reused." : `Could not save. ${error.message}` } }));
+        ? t("Save not confirmed. Retry safely; an already saved conversation will be reused.") : `Could not save. ${error.message}` } }));
     } finally { saving.current.delete(key); }
   }
 
   function saveAction(messages: Turn[], label: string) {
-    const state = saves[snapshot(messages)];
+    const state = saves[snapshot(messages, messages.length > 1 ? summaryLanguage : undefined)];
     return <div className="ask-save-action">
       <button className="secondary" aria-busy={state?.status === "saving"} data-saved={state?.status === "saved"} disabled={state?.status === "saving" || state?.status === "saved"} onClick={() => void save(messages)}>
-        <Icon name="bookmark" />{state?.status === "saved" ? "Saved to notes" : state?.status === "saving" ? "Saving…" : state?.status === "uncertain" ? "Retry save" : label}
+        <Icon name="bookmark" />{state?.status === "saved" ? t("Saved to notes") : state?.status === "saving" ? t("Saving…") : state?.status === "uncertain" ? t("Retry save") : label}
       </button>
-      {state && <span className={state.status === "error" || state.status === "uncertain" ? "ask-error" : "ask-action-status"} role="status">{state.message}</span>}
+      {state && <span className={state.status === "error" || state.status === "uncertain" ? "ask-error" : "ask-action-status"} role="status">{t(state.message)}</span>}
     </div>;
   }
   async function copy(answer: string) {
@@ -193,9 +200,9 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   function clearFilters() { setQuery(""); setCategory(""); setTag(""); }
 
   return <div className={`ask-page${view === "ask" ? " is-asking" : ""}${hasConversation ? " has-conversation" : ""}`}>
-    <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p>{view === "notes" ? "Useful explanations, kept for later. Find a note and pick up where you left off." : "Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question."}</p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" />Ask a question<Icon name="arrow" /></a>}</div>
-    {view === "ask" && hasConversation && <div className="ask-view-bar"><button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><Icon name="ask" />New question</button></div>}
-    <section id="ask-panel-ask" aria-label="Ask a question" hidden={view !== "ask"}>
+    <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p>{view === "notes" ? t("Useful explanations, kept for later. Find a note and pick up where you left off.") : t("Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question.")}</p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" />{t("Ask a question")}<Icon name="arrow" /></a>}</div>
+    {view === "ask" && hasConversation && <div className="ask-view-bar"><button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><Icon name="ask" />{t("New question")}</button></div>}
+    <section id="ask-panel-ask" aria-label={t("Ask a question")} hidden={view !== "ask"}>
       <div className="ask-reading-column">
         {previous.length > 0 && <div className="ask-history-row"><details className="ask-previous"><summary>Previous questions in this session ({previous.length})</summary>
           {previous.map((item, index) => <button key={index} className="text-button" disabled={busy} onClick={() => {
@@ -203,51 +210,62 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
             setDiscussion(item); setRequestError(""); setCopyStatus("");
           }}>{item.turns[0]?.question || item.context?.id || item.question}</button>)}
         </details></div>}
-        {context && <aside className="ask-context"><strong>Discussing: {noteTitle(context)}</strong><p>This is a new discussion using the complete saved note as context. Your note stays unchanged.</p></aside>}
+        {context && <aside className="ask-context"><strong>Discussing: {noteTitle(context)}</strong><p>{t("This is a new discussion using the complete saved note as context. Your note stays unchanged.")}</p></aside>}
         {turns.map((turn, index) => <article className="ask-turn" key={index} aria-label={`Question ${index + 1}`}>
           <div className="ask-question"><span className="ask-speaker">You asked</span><p>{turn.question}</p></div>
           <div className="ask-answer"><h2 className="ask-speaker">Explanation</h2><Markdown source={turn.answer} />
             <div className="ask-response-actions" role="group" aria-label="Response actions">
               <details className="ask-save-menu" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }}>
-                <summary><Icon name={saves[snapshot([turn])]?.status === "saved" ? "check" : "bookmark"} />{saves[snapshot([turn])]?.status === "saved" ? "Saved to notes" : "Save"}<Icon name="chevron" /></summary>
-                <div className="ask-save-options">{saveAction([turn], "Save this answer")}{turns.length > 1 && saveAction(turns, "Summarize & save conversation")}</div>
+                <summary><Icon name={saves[snapshot([turn])]?.status === "saved" ? "check" : "bookmark"} />{saves[snapshot([turn])]?.status === "saved" ? t("Saved to notes") : "Save"}<Icon name="chevron" /></summary>
+                <div className="ask-save-options">{saveAction([turn], t("Save this answer"))}{turns.length > 1 && <><label className="ask-language-control">{t("Note language")}<select aria-label={t("Note language")} value={summaryLanguage} onChange={event => setSummaryOverride(event.target.value as LearnerLanguage)}><option value="zh-CN">中文讲解</option><option value="en">English</option></select></label>{saveAction(turns, t("Summarize & save conversation"))}</>}</div>
               </details>
-              <button className="secondary" onClick={() => void copy(turn.answer)}><Icon name="copy" />Copy response</button>
+              <button className="secondary" onClick={() => void copy(turn.answer)}><Icon name="copy" />{t("Copy response")}</button>
             </div>
           </div>
-          {Boolean(turn.related?.length) && <div className="ask-related"><h3>Explore further</h3><div className="ask-related-grid">{turn.related!.map((item, i) => <button className="ask-related-question" key={i} disabled={busy} onClick={() => void send(item, true)}>{item}<Icon name="arrow" /></button>)}</div></div>}
+          {Boolean(turn.related?.length) && <div className="ask-related"><h3>{t("Explore further")}</h3><div className="ask-related-grid">{turn.related!.map((item, i) => <button className="ask-related-question" key={i} disabled={busy} onClick={() => void send(item, true)}>{item}<Icon name="arrow" /></button>)}</div></div>}
         </article>)}
-        {copyStatus && <p className="ask-action-status" role="status">{copyStatus}</p>}
+        {copyStatus && <p className="ask-action-status" role="status">{t(copyStatus)}</p>}
         <div className="ask-composer" aria-busy={busy}>
-          <label className="form-label" htmlFor="ask-input">{hasConversation ? "Keep the conversation going" : "What would you like to understand?"}</label>
+          <label className="form-label" htmlFor="ask-input">{hasConversation ? t("Keep the conversation going") : t("What would you like to understand?")}</label>
           <textarea ref={inputRef} id="ask-input" value={question} readOnly={busy} aria-describedby="ask-shortcut" onChange={(event) => setDiscussion((old) => ({ ...old, question: event.target.value }))}
             onKeyDown={(event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }}
-            placeholder={hasConversation ? "Ask a follow-up. Add an example or tell us what is still unclear…" : "Type your question here. Add a sentence or an example for context…"} />
+            placeholder={hasConversation ? t("Ask a follow-up. Add an example or tell us what is still unclear…") : t("Type your question here. Add a sentence or an example for context…")} />
           <div className="ask-composer-actions">
-            {turns.length > 0 && <button type="button" className="text-button" disabled={busy} onClick={() => start({ turns: turns.slice(0, -1), question: turns[turns.length - 1].question, context })}>Back to question</button>}
-            <span id="ask-shortcut">Ctrl / ⌘ + Enter to send</span><button className="primary" aria-busy={busy} disabled={busy || !question.trim()} onClick={() => void send()}>{busy ? "Thinking…" : hasConversation ? "Send" : "Ask"}<Icon name="arrow" /></button>
+            <label className="ask-language-control" htmlFor="ask-answer-language">
+              <span>{t("Answer language")}</span>
+              <select id="ask-answer-language" aria-describedby="ask-language-hint" title={t("Applies to your next answer. English examples stay in English.")} value={answerLanguage} onChange={event => setAnswerOverride(event.target.value as LearnerLanguage)}>
+                <option value="zh-CN" lang="zh-CN">中文讲解</option>
+                <option value="en" lang="en">English</option>
+              </select>
+            </label>
+            <span className="sr-only" id="ask-language-hint">{t("Applies to your next answer. English examples stay in English.")}</span>
+            <div className="ask-submit-actions">
+              <span className="ask-shortcut" id="ask-shortcut">{t("Ctrl / ⌘ + Enter to send")}</span>
+              <button className="primary" aria-busy={busy} disabled={busy || !question.trim()} onClick={() => void send()}>{busy ? t("Thinking…") : t("Send")}<Icon name="arrow" /></button>
+            </div>
           </div>
+          {turns.length > 0 && <button type="button" className="text-button ask-back-question" disabled={busy} onClick={() => start({ turns: turns.slice(0, -1), question: turns[turns.length - 1].question, context })}>{t("Back to question")}</button>}
         </div>
-        {busy && <p className="ask-pending" role="status">Thinking about your question…</p>}
-        {requestError && <p className="ask-error" role="alert">{requestError}</p>}
-        <p className="ask-guidance">AI explanations may need checking. Save useful answers to revisit them.</p>
+        {busy && <p className="ask-pending" role="status">{t("Thinking about your question…")}</p>}
+        {requestError && <p className="ask-error" role="alert">{t("Could not get an answer. Your question is still here.")} {requestError}</p>}
+        <p className="ask-guidance">{t("AI explanations may need checking. Save useful answers to revisit them.")}</p>
       </div>
     </section>
     <section id="ask-panel-notes" aria-label="Saved notes" hidden={view !== "notes"}>
       <div className="ask-library-layout">
         <aside className="ask-notes-index">
-          <div className="ask-library-tools"><div className="ask-library-search"><label className="form-label" htmlFor="ask-notes-search">Search saved notes</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search titles, tags or content…" /></div>
+          <div className="ask-library-tools"><div className="ask-library-search"><label className="form-label" htmlFor="ask-notes-search">{t("Search saved notes")}</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Search titles, tags or content…")} /></div>
           <div className="ask-note-filters">
-            <label htmlFor="ask-category">Category<select id="ask-category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-            <label htmlFor="ask-tag">Tag<select id="ask-tag" value={tag} onChange={(event) => setTag(event.target.value)}><option value="">All tags</option>{tags.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label htmlFor="ask-category">{t("Category")}<select id="ask-category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">{t("All categories")}</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label htmlFor="ask-tag">{t("Tag")}<select id="ask-tag" value={tag} onChange={(event) => setTag(event.target.value)}><option value="">{t("All tags")}</option>{tags.map((item) => <option key={item}>{item}</option>)}</select></label>
           </div>
           </div>
-          <div className="ask-section-heading ask-library-results"><div className="ask-results-label"><h2>{hasFilters ? "Matching notes" : "All notes"} <span className="ask-note-count">{hasFilters ? `${matching.length} / ${notes.length}` : notes.length}</span></h2>{hasFilters && <button className="text-button" onClick={clearFilters}>Clear filters</button>}</div><button className="text-button" aria-label="Refresh saved notes" disabled={notesBusy} onClick={() => void refreshNotes()}>{notesBusy ? "Loading…" : "Refresh"}</button></div>
+          <div className="ask-section-heading ask-library-results"><div className="ask-results-label"><h2>{hasFilters ? "Matching notes" : "All notes"} <span className="ask-note-count">{hasFilters ? `${matching.length} / ${notes.length}` : notes.length}</span></h2>{hasFilters && <button className="text-button" onClick={clearFilters}>{t("Clear filters")}</button>}</div><button className="text-button" aria-label="Refresh saved notes" disabled={notesBusy} onClick={() => void refreshNotes()}>{notesBusy ? "Loading…" : "Refresh"}</button></div>
           <span className="sr-only" role="status">{!notesBusy && !notesError ? `${matching.length} ${matching.length === 1 ? "note" : "notes"}${hasFilters ? ` matching your filters out of ${notes.length}` : " saved"}` : ""}</span>
-          {notesBusy && <p role="status" className="ask-pending">{notes.length ? "Refreshing your notes…" : "Loading saved notes…"}</p>}
-          {notesError && <div role="alert" className="ask-error"><p>Saved notes could not be loaded. {notesError}</p><button className="secondary" disabled={notesBusy} onClick={() => void refreshNotes()}>Retry loading notes</button></div>}
-          {!notesBusy && !notesError && !notes.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="bookmark" /></span><h2>No saved conversations yet</h2><p>Save a useful answer in Ask to revisit it here.<br />Your saved CLI notes appear here too.</p><a className="secondary" href="#ask">Ask your first question<Icon name="arrow" /></a></div>}
-          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="word-lookup" /></span><h2>No notes match these filters</h2><p>Try a different word, category or tag.</p><button className="secondary" onClick={clearFilters}>Clear filters</button></div>}
+          {notesBusy && <p role="status" className="ask-pending">{notes.length ? t("Refreshing your notes…") : t("Loading saved notes…")}</p>}
+          {notesError && <div role="alert" className="ask-error"><p>{t("Saved notes could not be loaded.")} {notesError}</p><button className="secondary" disabled={notesBusy} onClick={() => void refreshNotes()}>{t("Retry loading notes")}</button></div>}
+          {!notesBusy && !notesError && !notes.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="bookmark" /></span><h2>{t("No saved conversations yet")}</h2><p>{t("Save a useful answer in Ask to revisit it here.")}<br />{t("Your saved CLI notes appear here too.")}</p><a className="secondary" href="#ask">Ask your first question<Icon name="arrow" /></a></div>}
+          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="word-lookup" /></span><h2>{t("No notes match these filters")}</h2><p>{t("Try a different word, category or tag.")}</p><button className="secondary" onClick={clearFilters}>{t("Clear filters")}</button></div>}
           <nav ref={listRef} className="ask-note-list" aria-label="Saved Ask notes" aria-busy={notesBusy}>{matching.map((note) => <button key={note.id} className="ask-note-link" aria-current={note.id === selectedId ? "true" : undefined} aria-haspopup="dialog" aria-controls="ask-note-reader" onClick={() => {
             setSelectedId(note.id); setNoteOpen(true);
           }}>
@@ -270,8 +288,8 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
         <article className="ask-note-card">
           {selected && <><header><h2 id="ask-note-title">{noteTitle(selected)}</h2><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><div className="ask-note-metadata" aria-label="Note topics"><button className="secondary" onClick={() => { setCategory(selected.category || "Uncategorized"); closeNote(); }}>{selected.category || "Uncategorized"}</button>{(selected.tags || []).map((item) => <button className="text-button" key={item} onClick={() => { setTag(item); closeNote(); }}>#{item}</button>)}</div></header><Markdown source={noteBody(selected)} /></>}
         </article>
-        <div className="ask-note-dialog-footer"><span className="sr-only" id="ask-note-discussion-hint">Use this note as context for a new question.</span><button className="text-button" aria-describedby="ask-note-discussion-hint" disabled={busy || !selected} onClick={() => selected && start({ turns: [], question: "", context: selected })}>Continue discussion<Icon name="arrow" /></button>{busy && <p className="ask-action-status">Wait for your current answer before starting another discussion.</p>}</div>
-        <div className="ask-reader-size-bar"><span id="ask-reader-resize-hint">Drag the corner to resize · Arrow keys when focused</span><button className="ask-reader-resize" type="button" aria-label="Resize note window" aria-describedby="ask-reader-resize-hint" title="Drag to resize. Use arrow keys when focused; Home resets size."
+        <div className="ask-note-dialog-footer"><span className="sr-only" id="ask-note-discussion-hint">{t("Use this note as context for a new question.")}</span><button className="text-button" aria-describedby="ask-note-discussion-hint" disabled={busy || !selected} onClick={() => selected && start({ turns: [], question: "", context: selected })}>{t("Continue discussion")}<Icon name="arrow" /></button>{busy && <p className="ask-action-status">{t("Wait for your current answer before starting another discussion.")}</p>}</div>
+        <div className="ask-reader-size-bar"><span id="ask-reader-resize-hint">{t("Drag the corner to resize · Arrow keys when focused")}</span><button className="ask-reader-resize" type="button" aria-label="Resize note window" aria-describedby="ask-reader-resize-hint" title="Drag to resize. Use arrow keys when focused; Home resets size."
           onPointerDown={(event) => {
             if (event.button !== 0) return;
             const box = dialogRef.current!.getBoundingClientRect();

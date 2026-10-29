@@ -1,3 +1,4 @@
+import { useGuideCopy } from "./learner-language";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { webApi } from "./api/client";
 import { Icon } from "./Icon";
@@ -40,6 +41,7 @@ export type VocabularyHistoryResult = {
   total: number; offset: number; hasMore: boolean;
 };
 function StatusGuide() {
+  const { t } = useGuideCopy();
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -54,7 +56,7 @@ function StatusGuide() {
     return () => { document.body.style.overflow = previousOverflow; window.scrollTo({ top: previousScrollY, behavior: "instant" }); };
   }, [open]);
   return <>
-    <button ref={triggerRef} type="button" className="vocabulary-status-guide-trigger" aria-haspopup="dialog" aria-controls="vocabulary-status-guide" onClick={() => setOpen(true)}><Icon name="info" />About statuses</button>
+    <button ref={triggerRef} type="button" className="vocabulary-status-guide-trigger" aria-haspopup="dialog" aria-controls="vocabulary-status-guide" onClick={() => setOpen(true)}><Icon name="info" />{t("About statuses")}</button>
     <dialog ref={dialogRef} id="vocabulary-status-guide" className="saved-word-dialog vocabulary-status-guide-dialog" aria-labelledby="vocabulary-status-guide-title"
       onKeyDown={event => { if (event.key === "Tab") { event.preventDefault(); closeRef.current?.focus(); } }}
       onClose={() => { setOpen(false); triggerRef.current?.focus({ preventScroll: true }); }}
@@ -64,18 +66,19 @@ function StatusGuide() {
         if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.currentTarget.close();
       }}>
       <header className="saved-word-dialog-header">
-        <h2 id="vocabulary-status-guide-title">About statuses</h2>
+        <h2 id="vocabulary-status-guide-title">{t("About statuses")}</h2>
         <button ref={closeRef} type="button" className="secondary" onClick={() => dialogRef.current?.close()}><Icon name="close" />Close</button>
       </header>
       <div className="vocabulary-status-guide-body">
-        <p>Learning statuses describe recorded recall evidence, not complete mastery. Review schedules are tracked separately.</p>
-        <dl>{learningStatuses.map(key => <div key={key} data-learning-status={key}><dt className="word-learning-label"><i aria-hidden="true" />{statusLabels[key]}</dt><dd>{statusHelp[key]}</dd></div>)}</dl>
-        <p>Classification depends on available history. Ratings and scheduled intervals alone do not establish retention.</p>
+        <p>{t("Learning statuses describe recorded recall evidence, not complete mastery. Review schedules are tracked separately.")}</p>
+        <dl>{learningStatuses.map(key => <div key={key} data-learning-status={key}><dt className="word-learning-label"><i aria-hidden="true" />{statusLabels[key]}</dt><dd>{t(statusHelp[key])}</dd></div>)}</dl>
+        <p>{t("Classification depends on available history. Ratings and scheduled intervals alone do not establish retention.")}</p>
       </div>
     </dialog>
   </>;
 }
 export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: SavedVocabularyEntry) => ReactNode }) {
+  const { t } = useGuideCopy();
   const [sort, setSort] = useState("az");
   const [schedule, setSchedule] = useState("all");
   const [status, setStatus] = useState("all");
@@ -133,13 +136,13 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         <div className="vocabulary-overview-totals">
         {[
           { label: "Saved words", value: data?.sourceAvailable ? data.totalSaved : undefined, help: "Total in library", active: schedule === "all" && status === "all", onClick: clearFilters },
-          { label: "Due for review", value: data?.overview?.due, help: data?.overview ? `${data.overview.overdue} overdue · ${data.overview.dueToday} today` : "Today and overdue", active: schedule === "due" && status === "all", onClick: () => { setSchedule("due"); setStatus("all"); setOffset(0); } },
+          { label: t("Due for review"), value: data?.overview?.due, help: data?.overview ? `${data.overview.overdue} overdue · ${data.overview.dueToday} today` : "Today and overdue", active: schedule === "due" && status === "all", onClick: () => { setSchedule("due"); setStatus("all"); setOffset(0); } },
         ].map(metric => <button key={metric.label} type="button" className="vocabulary-overview-metric" aria-pressed={metric.active} disabled={loading || !!error || metric.value === undefined} onClick={metric.onClick}>
           <span>{metric.label}</span><strong>{error || metric.value === undefined ? "—" : metric.value}</strong><small>{metric.help}</small>
         </button>)}
         </div>
         <div className="vocabulary-distribution">
-          <div className="vocabulary-distribution-heading"><h3>Learning distribution</h3><span>{data?.sourceAvailable ? `${data.totalSaved} words` : "—"}</span></div>
+          <div className="vocabulary-distribution-heading"><h3>{t("Learning distribution")}</h3><span>{data?.sourceAvailable ? `${data.totalSaved} words` : "—"}</span></div>
           {data?.overview?.distribution && !error ? <>
             <div className="vocabulary-distribution-bar" role="img" aria-label={learningStatuses.map(key => `${statusLabels[key]}: ${data.overview?.distribution[key] || 0}`).join(", ")}>
               {learningStatuses.map(key => { const count = data.overview?.distribution[key] || 0; return count > 0 && <span key={key} data-learning-status={key} style={{ flexGrow: count }} />; })}
@@ -157,20 +160,20 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
           </> : <p className="vocabulary-evidence-note" role="status">{loading ? "Loading learning history…" : "Learning history is unavailable. Saved words remain available below."}</p>}
         </div>
       </section>
-      <div className="vocabulary-library-browse-heading"><div><h2>Saved words</h2><p>{status === "all" ? "All learning statuses" : statusLabels[status]}</p></div></div>
+      <div className="vocabulary-library-browse-heading"><div><h2>Saved words</h2><p>{status === "all" ? t("All learning statuses") : statusLabels[status]}</p></div></div>
       <div className="vocabulary-library-filters">
-        <label className="vocabulary-library-sort" htmlFor="saved-word-sort">Sort by
+        <label className="vocabulary-library-sort" htmlFor="saved-word-sort">{t("Sort by")}
           <select id="saved-word-sort" value={sort} onChange={event => { setSort(event.target.value); setOffset(0); }}>
-            <option value="az">Word: A–Z</option><option value="newest">Recently saved</option><option value="next-review" disabled={!data?.overview}>Next review</option>
+            <option value="az">{t("Word: A–Z")}</option><option value="newest">{t("Recently saved")}</option><option value="next-review" disabled={!data?.overview}>{t("Next review")}</option>
           </select>
         </label>
-        <label htmlFor="saved-word-schedule">Review schedule<select id="saved-word-schedule" value={schedule} disabled={!data?.overview} onChange={event => { setSchedule(event.target.value); setOffset(0); }}>
-          <option value="all">Any schedule</option><option value="due">Due for review</option><option value="upcoming">Upcoming</option><option value="unscheduled">Not scheduled</option>
+        <label htmlFor="saved-word-schedule">{t("Review schedule")}<select id="saved-word-schedule" value={schedule} disabled={!data?.overview} onChange={event => { setSchedule(event.target.value); setOffset(0); }}>
+          <option value="all">{t("Any schedule")}</option><option value="due">{t("Due for review")}</option><option value="upcoming">{t("Upcoming")}</option><option value="unscheduled">{t("Not scheduled")}</option>
         </select></label>
-        <label htmlFor="saved-word-status">Learning status<select id="saved-word-status" value={status} disabled={!data?.overview} onChange={event => { setStatus(event.target.value); setOffset(0); }}>
-          <option value="all">All learning statuses</option>{learningStatuses.map(key => <option key={key} value={key}>{statusLabels[key]}</option>)}
+        <label htmlFor="saved-word-status">{t("Learning status")}<select id="saved-word-status" value={status} disabled={!data?.overview} onChange={event => { setStatus(event.target.value); setOffset(0); }}>
+          <option value="all">{t("All learning statuses")}</option>{learningStatuses.map(key => <option key={key} value={key}>{statusLabels[key]}</option>)}
         </select></label>
-        {filtered && <button type="button" className="text-button" onClick={clearFilters}>Clear filters</button>}
+        {filtered && <button type="button" className="text-button" onClick={clearFilters}>{t("Clear filters")}</button>}
       </div>
       <div className="vocabulary-library-status" role="status" aria-live="polite">
         {loading ? "Loading saved words…" : error ? "Could not load saved words." : data && (filtered
@@ -213,9 +216,9 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         <section className="vocabulary-library-empty">
           <Icon name="handbook" />
           <h2>{!data.sourceAvailable ? "Vocabulary file not found" : filtered ? "No matching words" : "Your vocabulary starts here"}</h2>
-          <p>{!data.sourceAvailable ? "Choose your vocabulary file in Settings to browse your saved words." : filtered ? "Broaden your review and learning filters to see more words." : "Look up an expression and save it to find it here."}</p>
+          <p>{!data.sourceAvailable ? t("Choose your vocabulary file in Settings to browse your saved words.") : filtered ? t("Broaden your review and learning filters to see more words.") : t("Look up an expression and save it to find it here.")}</p>
           {!data.sourceAvailable ? <a className="secondary" href="#settings">Open Settings</a> : filtered
-            ? <button className="secondary" onClick={clearFilters}>Clear filters</button>
+            ? <button className="secondary" onClick={clearFilters}>{t("Clear filters")}</button>
             : <a className="primary" href="#word-lookup">Look up a word<Icon name="arrow" /></a>}
         </section>
       ))}
@@ -249,7 +252,7 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         {selected && <div className="saved-word-details">
           {renderDetails(selected)}
           {selected.memory && <section className="saved-word-memory"><h4>Memory cue</h4><p>{selected.memory}</p></section>}
-          {selected.added && <p className="saved-word-date">Saved <time dateTime={selected.added}>{new Date(`${selected.added}T12:00:00`).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time></p>}
+          {selected.added && <p className="saved-word-date">{t("Saved")} <time dateTime={selected.added}>{new Date(`${selected.added}T12:00:00`).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time></p>}
         </div>}
       </dialog>
     </div>

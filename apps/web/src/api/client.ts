@@ -57,8 +57,8 @@ export const webApi = {
   checkGrammar: (text: string) => requestJson<any>("/grammar", { method: "POST", body: JSON.stringify({ text }) }),
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
   translate: (text: string, direction: string) => requestJson<any>("/translation", { method: "POST", body: JSON.stringify({ text, direction }) }),
-  ask: (question: string, messages: unknown[]) => requestJson<any>("/ask", { method: "POST", body: JSON.stringify({ question, messages }) }),
-  saveAsk: (messages: unknown[]) => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages }), timeoutMs: 180_000 }),
+  ask: (question: string, messages: unknown[], language?: "zh-CN" | "en") => requestJson<any>("/ask", { method: "POST", body: JSON.stringify({ question, messages, language }) }),
+  saveAsk: (messages: unknown[], language?: "zh-CN" | "en") => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages, language }), timeoutMs: 180_000 }),
   listAskNotes: () => requestJson<{ directory: string; notes: Array<{ id: string; modifiedAt: string; bytes: number; content?: string; title?: string; category?: string; tags?: string[] }> }>("/ask/notes"),
   readAskNote: (id: string) => requestJson<{ id: string; content: string; bytes: number }>(`/ask/notes/read?${new URLSearchParams({ id })}`),
   getReviewDue: async (limit = 20) => {

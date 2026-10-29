@@ -1,3 +1,4 @@
+import { useGuideCopy, LearnerLanguageSwitch } from "./learner-language";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { IconButton } from "./IconButton";
@@ -44,6 +45,7 @@ function formatActivityTimestamp(value: unknown) {
 }
 
 function Dashboard() {
+  const { t } = useGuideCopy();
   const [data, setData] = useState<any>();
   const [error, setError] = useState("");
   useEffect(() => {
@@ -52,8 +54,8 @@ function Dashboard() {
       .then(setData)
       .catch((e) => setError(e.message));
   }, []);
-  if (error) return <State title="Overview is unavailable" detail={error} />;
-  if (!data) return <State title="Loading your learning activity…" />;
+  if (error) return <State title={t("Overview is unavailable")} detail={error} />;
+  if (!data) return <State title={t("Loading your learning activity…")} />;
   const focus = data.coach?.focus;
   return (
     <>
@@ -66,22 +68,22 @@ function Dashboard() {
             <em>Practice beyond the page.</em>
           </>
         }
-        detail="ClearWrite helps you check your writing, explore words, and practise expressing ideas. Use it alongside regular reading, listening, and real conversations—learning English takes more than a tool."
+        detail={t("ClearWrite helps you check your writing, explore words, and practise expressing ideas. Use it alongside regular reading, listening, and real conversations—learning English takes more than a tool.")}
       />
       <section className="focus">
         <div>
           <span className="focus-label">
             <Icon name="coach" />
-            Current focus
+            {t("Current focus")}
           </span>
           <h2>{focus?.error_type || "Start with your own words"}</h2>
           <p>
             {focus
               ? `Seen ${focus.hits} times recently. Try revisiting it after a break.`
-              : "Write about something from your day, then review the suggested changes."}
+              : t("Write about something from your day, then review the suggested changes.")}
           </p>
           <a className="primary" href="#grammar">
-            Write a sentence
+            {t("Write a sentence")}
             <Icon name="arrow" />
           </a>
         </div>
@@ -94,7 +96,7 @@ function Dashboard() {
         />
       </section>
       <div className="columns">
-        <Panel title="Recent writing" icon="grammar">
+        <Panel title={t("Recent writing")} icon="grammar">
           {(data.recentActivity || []).slice(0, 5).map((item: any) => {
             const original = String(item.userInput || "");
             const correction = String(item.correction || "Recorded");
@@ -136,9 +138,9 @@ function Dashboard() {
               </article>
             );
           })}
-          {!data.recentActivity?.length && <State title="No saved writing yet" detail="Check a sentence in Grammar, then save the feedback you want to revisit." />}
+          {!data.recentActivity?.length && <State title={t("No saved writing yet")} detail={t("Check a sentence in Grammar, then save the feedback you want to revisit.")} />}
         </Panel>
-        <Panel title="Your activity here" icon="word-review">
+        <Panel title={t("Your activity here")} icon="word-review">
           <div className="stat">
             {data.stats?.totalInputs || 0}
             <small> review entries</small>
@@ -164,7 +166,7 @@ function Dashboard() {
           </div>
         </Panel>
       </div>
-      <Panel title="Your learning library" icon="handbook">
+      <Panel title={t("Your learning library")} icon="handbook">
         <div className="asset-list">
           {[
             ["Review log", data.assets?.reviewLog],
@@ -186,6 +188,7 @@ function Dashboard() {
 }
 
 function Grammar() {
+  const { t } = useGuideCopy();
   const [text, setText] = useState("");
   const [result, setResult] = useState<any>();
   const [busy, setBusy] = useState(false);
@@ -279,7 +282,7 @@ function Grammar() {
             clarity<span className="accent-dot">.</span>
           </span>
         </h1>
-        <p>Check your writing. Understand the suggested changes.</p>
+        <p>{t("Check your writing. Understand the suggested changes.")}</p>
       </div>
       <form
         className="grammar-composer"
@@ -290,7 +293,7 @@ function Grammar() {
         aria-busy={busy}
       >
         <label className="sr-only" htmlFor="grammar-input">
-          Your English sentence
+          {t("Your English sentence")}
         </label>
         <textarea
           ref={inputRef}
@@ -308,22 +311,22 @@ function Grammar() {
               void submit();
             }
           }}
-          placeholder="Write something in English…"
+          placeholder={t("Write something in English…")}
           aria-describedby="grammar-hint"
         />
         <div className="composer-actions">
           <span id="grammar-hint">
-            {busy ? "Checking grammar and wording…" : "A sentence or a short paragraph"}
+            {busy ? t("Checking grammar and wording…") : t("A sentence or a short paragraph")}
           </span>
           <button className={data && !didSave && text.trim() === checkedText ? "secondary" : "primary"} type="submit" aria-busy={busy} disabled={busy || saving || !text.trim()}>
             {busy ? (
               <>
                 <span className="loading-spinner" />
-                Checking…
+                {t("Checking…")}
               </>
             ) : (
               <>
-                Check my English
+                {t("Check my English")}
                 <Icon name="arrow" />
               </>
             )}
@@ -331,10 +334,10 @@ function Grammar() {
         </div>
       </form>
       <p className="grammar-note">
-        Try writing it yourself first. Use AI feedback as a guide, then practise the expression in your own context. Save only when you choose.
+        {t("Try writing it yourself first. Use AI feedback as a guide, then practise the expression in your own context. Save only when you choose.")}
       </p>
       {result?.error && (
-        <State title="Could not check your English. Try again." detail={result.error} />
+        <State title={t("Could not check your English. Try again.")} detail={result.error} />
       )}
       {data && (
         <div className="correction-detail" aria-live="polite">
@@ -384,7 +387,7 @@ function Grammar() {
               disabled={busy || saving || didSave}
             >
               <Icon name="bookmark" />
-              {saving ? "Saving…" : didSave ? "Saved to review log" : "Save to review log"}
+              {saving ? t("Saving…") : didSave ? "Saved to review log" : t("Save to review log")}
             </button>
             {saved && (
               <p className="status" role="status">
@@ -398,6 +401,7 @@ function Grammar() {
   );
 }
 function Express() {
+  const { t } = useGuideCopy();
   const [text, setText] = useState("");
   const [direction, setDirection] = useState("zh2en");
   const [result, setResult] = useState<any>();
@@ -425,9 +429,9 @@ function Express() {
       <Heading
         eyebrow="EXPRESS"
         title="Find the right words."
-        detail="Explore an English version of your Chinese text, or check what an English passage means in Chinese. Compare the wording, then try expressing the idea yourself."
+        detail={t("Explore an English version of your Chinese text, or check what an English passage means in Chinese. Compare the wording, then try expressing the idea yourself.")}
       />
-      <Panel title="Your text" icon="translation">
+      <Panel title={t("Your text")} icon="translation">
         <div className="switches">
           <button
             className={direction === "zh2en" ? "selected" : ""}
@@ -435,7 +439,7 @@ function Express() {
             disabled={busy}
             onClick={() => changeDirection("zh2en")}
           >
-            Chinese → English
+            {t("Chinese → English")}
           </button>
           <button
             className={direction === "en2zh" ? "selected" : ""}
@@ -443,11 +447,11 @@ function Express() {
             disabled={busy}
             onClick={() => changeDirection("en2zh")}
           >
-            English → Chinese
+            {t("English → Chinese")}
           </button>
         </div>
         <label className="form-label" htmlFor="translation-input">
-          {toEnglish ? "What do you want to say?" : "What do you want to understand?"}
+          {toEnglish ? t("What do you want to say?") : t("What do you want to understand?")}
         </label>
         <textarea
           id="translation-input"
@@ -455,22 +459,22 @@ function Express() {
           onChange={(e) => setText(e.target.value)}
           placeholder={
             toEnglish
-              ? "Describe your idea in Chinese. You can include who you’re speaking to and the tone you want."
-              : "Paste an English sentence or passage. Include the context if it helps explain the meaning."
+              ? t("Describe your idea in Chinese. You can include who you’re speaking to and the tone you want.")
+              : t("Paste an English sentence or passage. Include the context if it helps explain the meaning.")
           }
         />
         <button className="primary" onClick={submit} aria-busy={busy} disabled={busy || !text.trim()}>
           {busy
             ? toEnglish
-              ? "Finding the right words…"
-              : "Explaining the meaning…"
+              ? t("Finding the right words…")
+              : t("Explaining the meaning…")
             : toEnglish
-              ? "Say it in English →"
-              : "Explain in Chinese →"}
+              ? t("Say it in English →")
+              : t("Explain in Chinese →")}
         </button>
       </Panel>
       {result?.error && (
-        <State title="Couldn’t find an expression. Try again." detail={result.error} />
+        <State title={t("Couldn’t find an expression. Try again.")} detail={result.error} />
       )}
       {translation && (
         <Panel
@@ -516,6 +520,7 @@ function ReviewSentence({ text, masked }: { text: string; masked?: boolean }) {
   );
 }
 function WordReview() {
+  const { t } = useGuideCopy();
   const {
     cards,
     index,
@@ -639,15 +644,15 @@ function WordReview() {
           <Heading
             eyebrow="VOCABULARY · REVIEW"
             title="Vocabulary review"
-            detail="Recall the expression. Make it easier to use next time."
+            detail={t("Recall the expression. Make it easier to use next time.")}
           />
         </div>
         <button className="secondary review-new-session" onClick={startNew} disabled={loading || grading || starting} aria-busy={starting}>
-          {starting ? "Starting…" : "Start a new session"}<Icon name="arrow" />
+          {starting ? "Starting…" : t("Start a new session")}<Icon name="arrow" />
         </button>
       </div>
       {startError && (
-        <State title="Could not start a new session. Try again." detail={startError} />
+        <State title={t("Could not start a new session. Try again.")} detail={startError} />
       )}
       {loading && <State title="Loading your review…" />}
       {notice && (
@@ -792,7 +797,7 @@ function WordReview() {
                     autoComplete="off"
                     autoCapitalize="off"
                     spellCheck={false}
-                    placeholder="Type the English word or phrase…"
+                    placeholder={t("Type the English word or phrase…")}
                     readOnly={
                       (submittedAnswer !== null && submittedAnswer !== undefined) || grading || starting
                     }
@@ -808,12 +813,12 @@ function WordReview() {
                   />
                 </div>
                 <div id="review-recall-hint" className="review-answer-guidance">
-                  <p>Case, spaces and hyphens do not affect spelling.</p>
-                  <p>Cannot recall it? Leave your answer blank and check.</p>
+                  <p>{t("Case, spaces and hyphens do not affect spelling.")}</p>
+                  <p>{t("Cannot recall it? Leave your answer blank and check.")}</p>
                 </div>
                 <div className="review-recall-actions">
                   <button type="submit" className="primary review-check" aria-busy={grading} disabled={grading || starting}>
-                    {grading ? "Checking…" : submittedAnswer != null ? "Retry check" : "Check answer"}
+                    {grading ? t("Checking…") : submittedAnswer != null ? "Retry check" : t("Check answer")}
                     <Icon name="arrow" />
                   </button>
                 </div>
@@ -915,7 +920,7 @@ function WordReview() {
                                   <path className="review-face-features" d="M12 13h.01 M24 13h.01" strokeWidth="3.5" />
                                   <path className="review-face-features" d={key === "again" ? "M11 25c3-7 11-7 14 0" : key === "hard" ? "M12 23h12" : key === "good" ? "M11 22c3 5 11 5 14 0" : "M10 21c3 8 13 8 16 0"} strokeWidth="1.8" />
                                 </svg>
-                                <strong>{pendingRating === key ? grading ? "Saving…" : `Retry ${label}` : label}</strong>
+                                <strong>{pendingRating === key ? grading ? t("Saving…") : `Retry ${label}` : label}</strong>
                                 <span className="review-rating-interval">{days === 0 ? "Later" : days != null ? `${days}d` : ""}</span>
                               </button>
                               <span id={`review-rating-hint-${key}`} role="tooltip" className="review-rating-hint" hidden={ratingHint !== key} lang="zh-CN">
@@ -940,7 +945,7 @@ function WordReview() {
                       disabled={grading || starting || !result?.persistence?.saved}
                       onClick={next}
                     >
-                      {index + 1 === cards.length ? "Finish review" : "Next word"}
+                      {index + 1 === cards.length ? "Finish review" : t("Next word")}
                       <Icon name="arrow" />
                     </button>
                   </div>
@@ -997,6 +1002,7 @@ function WordReview() {
   );
 }
 function Coach() {
+  const { t } = useGuideCopy();
   const [data, setData] = useState<any>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -1020,14 +1026,14 @@ function Coach() {
         <Heading
           eyebrow="COACH · SUGGESTIONS"
           title="Find your next step."
-          detail="Find possible practice priorities in your saved writing. These suggestions reflect your activity here, not a full assessment of your English."
+          detail={t("Find possible practice priorities in your saved writing. These suggestions reflect your activity here, not a full assessment of your English.")}
         />
         <button className="secondary" onClick={() => load(true)} aria-busy={busy} disabled={busy}>
           {busy ? "Analysing…" : "Refresh analysis"}
         </button>
       </div>
-      {error && <State title="Coach is unavailable" detail={error} />}
-      {!data && !error && <State title="Looking at your learning history…" />}
+      {error && <State title={t("Coach is unavailable")} detail={error} />}
+      {!data && !error && <State title={t("Looking at your learning history…")} />}
       {data && (
         <>
           <Panel title="Learning history" className="coach-sample">
@@ -1081,10 +1087,9 @@ function Coach() {
               ))}
             </Panel>
           ) : (
-            <Panel title="A little more practice first." className="coach-empty-priorities">
+            <Panel title={t("A little more practice first.")} className="coach-empty-priorities">
               <p>
-                There is not enough evidence to choose a focus yet. Keep saving your writing and
-                feedback, then check back.
+                {t("There is not enough evidence to choose a focus yet. Keep saving your writing and feedback, then check back.")}
               </p>
             </Panel>
           )}
@@ -1096,7 +1101,7 @@ function Coach() {
                 ))}
               </ul>
             ) : (
-              <p>These suggestions are based on the records available here. They do not show everything you know or how you use English elsewhere.</p>
+              <p>{t("These suggestions are based on the records available here. They do not show everything you know or how you use English elsewhere.")}</p>
             )}
           </Panel>
         </>
@@ -1105,6 +1110,7 @@ function Coach() {
   );
 }
 function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: string; compact?: boolean }) {
+  const { t } = useGuideCopy();
   const [query, setQuery] = useState(initialQuery);
   const [entry, setEntry] = useState<any>();
   const [status, setStatus] = useState("");
@@ -1157,7 +1163,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
       {!compact && <Heading
         eyebrow="WORD LOOKUP"
         title="Get to know a word."
-        detail="Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review."
+        detail={t("Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review.")}
       />}
       <Panel title="Word or phrase" icon="word-lookup" className="lookup-form">
         <label className="form-label" htmlFor={compact ? "selection-lookup-input" : "word-lookup-input"}>
@@ -1169,14 +1175,14 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) void lookup(); }}
-            placeholder="Try “follow up” or “跟进”"
+            placeholder={t("Try “follow up” or “跟进”")}
           />
           <button className={entry && !entry.existing ? "secondary" : "primary"} onClick={lookup} aria-busy={busy} disabled={busy || saving}>
             {busy ? (
               "Looking it up…"
             ) : (
               <>
-                Look up
+                {t("Look up")}
                 <Icon name="arrow" />
               </>
             )}
@@ -1189,7 +1195,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
           <WordDetails entry={entry} examples={examples} />
           <button className="primary" onClick={add} aria-busy={saving} disabled={saving || entry.existing}>
             <Icon name="handbook" />
-            {saving ? "Saving…" : entry.existing ? "Already in your vocabulary" : "Save to vocabulary"}
+            {saving ? t("Saving…") : entry.existing ? "Already in your vocabulary" : "Save to vocabulary"}
             <Icon name="arrow" />
           </button>
         </Panel>
@@ -1329,6 +1335,7 @@ function PracticeFilter({
   names: Record<string, string>;
   disabled: boolean;
 }) {
+  const { t } = useGuideCopy();
   const pickerRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const picker = pickerRef.current;
@@ -1385,7 +1392,7 @@ function PracticeFilter({
         </span>
         {label}
       </legend>
-      <p className="practice-section-hint">Choose a context or keep all contexts.</p>
+      <p className="practice-section-hint">{t("Choose a context or keep all contexts.")}</p>
       <details className="practice-picker" ref={pickerRef}>
         <summary
           aria-label={`${label}: ${names[value]}`}
@@ -1424,6 +1431,7 @@ function PracticeFilter({
 }
 
 function Practice() {
+  const { t } = useGuideCopy();
   const params = new URLSearchParams(location.hash.split("?")[1] || "");
   const targetErrorType = params.get("targetErrorType") || "";
   const returnDays = ["0", "30", "90"].includes(params.get("returnDays") || "") ? params.get("returnDays")! : "90";
@@ -1528,11 +1536,11 @@ function Practice() {
       <Heading
         eyebrow="PRACTICE"
         title="Put your English to work."
-        detail="Try translating a Chinese sentence into English before checking the AI feedback. Use the suggestions to revise your answer and try a new sentence of your own."
+        detail={t("Try translating a Chinese sentence into English before checking the AI feedback. Use the suggestions to revise your answer and try a new sentence of your own.")}
       />
       {targetErrorType && <section className="practice-target" aria-label="Handbook learning target">
         <h2>{targetErrorType}</h2>
-        <p>Related sentence practice from your Handbook. Your overall translation score and hints used will be recorded separately from mastery of this pattern.</p>
+        <p>{t("Related sentence practice from your Handbook. Your overall translation score and hints used will be recorded separately from mastery of this pattern.")}</p>
         <a href={handbookHref}>Return to this Handbook category</a>
         {!question && <a href="#practice">Practise without this target</a>}
       </section>}
@@ -1546,7 +1554,7 @@ function Practice() {
                 </span>
                 Number of questions
               </legend>
-              <p className="practice-section-hint">Choose how many questions for this session.</p>
+              <p className="practice-section-hint">{t("Choose how many questions for this session.")}</p>
               <div className="count-options count-segments">
                 {[3, 5, 10].map((value) => (
                   <label className={count === value ? "selected" : ""} key={value}>
@@ -1582,7 +1590,7 @@ function Practice() {
                   Difficulty
                 </legend>
                 <p className="practice-section-hint">
-                  Match the level to your current ability and goal.
+                  {t("Match the level to your current ability and goal.")}
                 </p>
                 <div className="count-options difficulty-segments">
                   {(["easy", "standard", "challenge"] as const).map((value) => (
@@ -1656,7 +1664,7 @@ function Practice() {
               <Icon name="document" />
               <div>
                 <h3>Start with a sentence</h3>
-                <p>Choose a level and context for a short session from the question bank.</p>
+                <p>{t("Choose a level and context for a short session from the question bank.")}</p>
               </div>
             </div>
             <div className="practice-guide-item">
@@ -1664,7 +1672,7 @@ function Practice() {
               <div>
                 <h3>Try it yourself</h3>
                 <p>
-                  Write your own translation first. If you get stuck, reveal a hint one step at a time.
+                  {t("Write your own translation first. If you get stuck, reveal a hint one step at a time.")}
                 </p>
               </div>
             </div>
@@ -1672,12 +1680,12 @@ function Practice() {
               <Icon name="ask" />
               <div>
                 <h3>Learn from feedback</h3>
-                <p>Compare the suggestions with your answer. The reference is one possible expression; other answers may also work.</p>
+                <p>{t("Compare the suggestions with your answer. The reference is one possible expression; other answers may also work.")}</p>
               </div>
             </div>
             <p className="practice-guide-note">
               <Icon name="bookmark" />
-              Your attempts are recorded. One good answer is a useful step; try using the expression again later.
+              {t("Your attempts are recorded. One good answer is a useful step; try using the expression again later.")}
             </p>
           </aside>
           <aside className="practice-session" aria-label="Your session">
@@ -1718,7 +1726,7 @@ function Practice() {
         </div>
       )}
       {!question && generationError && (
-        <State title="Could not prepare practice. Please try again." detail={generationError} />
+        <State title={t("Could not prepare practice. Please try again.")} detail={generationError} />
       )}
       {question && (
         <Panel
@@ -1743,7 +1751,7 @@ function Practice() {
               {categoryName[question.context]}
             </span>
             <h2>{prompt}</h2>
-            <p>Translate this sentence into English.</p>
+            <p>{t("Translate this sentence into English.")}</p>
             {question.focus_id && (
               <p className="practice-mode-hint">
                 {question.focus_id} · {question.focus}
@@ -1788,20 +1796,20 @@ function Practice() {
               setEvaluation(undefined);
               setSaveWarning("");
             }}
-            placeholder="Write your translation in English…"
+            placeholder={t("Write your translation in English…")}
           />
           <button className="primary" onClick={evaluate} aria-busy={busy} disabled={busy || !answer.trim()}>
             {busy ? (
               "Reviewing…"
             ) : (
               <>
-                Check answer
+                {t("Check answer")}
                 <Icon name="arrow" />
               </>
             )}
           </button>
           {evaluation?.error && (
-            <State title="Could not review this answer. Try again." detail={evaluation.error} />
+            <State title={t("Could not review this answer. Try again.")} detail={evaluation.error} />
           )}
           {saveWarning && (
             <p className="practice-warning" role="status">
@@ -1951,6 +1959,7 @@ function HandbookSentence({ original, correction, corrected = false }: { origina
 }
 
 function Handbook() {
+  const { t } = useGuideCopy();
   const [data, setData] = useState<any>();
   const [selected, setSelected] = useState(() => new URLSearchParams(location.hash.split("?")[1] || "").get("errorType") || "");
   const [error, setError] = useState("");
@@ -2003,7 +2012,7 @@ function Handbook() {
         <Heading
           eyebrow="HANDBOOK · REFERENCE"
           title="Learn from your own words."
-          detail="Revisit corrections and notes from your writing. Try a fresh example without looking, then compare it with your notes."
+          detail={t("Revisit corrections and notes from your writing. Try a fresh example without looking, then compare it with your notes.")}
         />
         <button className="secondary" onClick={() => load()} disabled={busy || loadingSelection}>
           {busy ? "Loading…" : "Refresh"}
@@ -2013,18 +2022,18 @@ function Handbook() {
         <label>Time window<select value={days} disabled={busy} onChange={(event) => load("", Number(event.target.value), appliedSearch)}>
           <option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All history</option>
         </select></label>
-        <label>Search your examples<input type="search" value={search} maxLength={200} onChange={(event) => setSearch(event.target.value)} placeholder="Search sentences, corrections or notes" /></label>
+        <label>{t("Search your examples")}<input type="search" value={search} maxLength={200} onChange={(event) => setSearch(event.target.value)} placeholder={t("Search sentences, corrections or notes")} /></label>
         <button className="primary" type="submit" disabled={busy}>Search</button>
         {appliedSearch && <button type="button" disabled={busy} onClick={() => { setSearch(""); load("", days, ""); }}>Clear search</button>}
       </form>
       <HandbookReports />
       {!data &&
         (busy ? (
-          <State title="Loading your handbook…" />
+          <State title={t("Loading your handbook…")} />
         ) : error ? (
           <Panel title="Unable to load">
             <div className="handbook-empty">
-              <State title="Your learning notes could not be loaded." detail={error} />
+              <State title={t("Your learning notes could not be loaded.")} detail={error} />
               <button className="primary" onClick={() => load()}>
                 Try again
               </button>
@@ -2117,8 +2126,8 @@ function Handbook() {
                 ) : (
                   <div className="handbook-empty">
                     <State
-                      title="No examples in this category yet."
-                      detail="Keep saving your writing to build a collection of useful examples."
+                      title={t("No examples in this category yet.")}
+                      detail={t("Keep saving your writing to build a collection of useful examples.")}
                     />
                   </div>
                 )}
@@ -2131,7 +2140,7 @@ function Handbook() {
               </div>
             </>
           ) : (
-            <Panel title={data.search ? "No matching examples." : "A little more practice first."} className="coach-empty-priorities">
+            <Panel title={data.search ? "No matching examples." : t("A little more practice first.")} className="coach-empty-priorities">
               <div className="handbook-empty">
                 {data.search ? <p>No examples match “{data.search}” in this time window. Try another phrase, clear your search or choose a longer time window.</p> : <p>No grammar observations {data.days === 0 ? "in your saved history" : `in the last ${data.days} days`}. Check and save a sentence to start collecting corrections and explanations here.</p>}
                 <a className="primary" href="#grammar">
@@ -2152,6 +2161,7 @@ const providerNames: Record<string, string> = {
 };
 
 function LlmSettings() {
+  const { t } = useGuideCopy();
   const [settingsTab, setSettingsTab] = useState<"models" | "markdown">("models");
   const [data, setData] = useState<any>();
   const [savedData, setSavedData] = useState<any>();
@@ -2271,18 +2281,18 @@ function LlmSettings() {
     setShowApiKey(false);
   }
 
-  if (error && !data) return <State title="Model settings are unavailable" detail={error} />;
-  if (!data) return <State title="Loading model settings…" />;
+  if (error && !data) return <State title={t("Model settings are unavailable")} detail={error} />;
+  if (!data) return <State title={t("Loading model settings…")} />;
 
   return (
     <div className="llm-settings">
       <div className="heading">
-        <h1>{settingsTab === "models" ? "Model settings" : "Markdown file settings"}</h1>
+        <h1>{settingsTab === "models" ? "Model settings" : t("Markdown file settings")}</h1>
         <p>{settingsTab === "models"
-          ? "Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services."
-          : "Choose where IGT reads and saves your Markdown learning records."}</p>
+          ? t("Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services.")
+          : t("Choose where IGT reads and saves your Markdown learning records.")}</p>
       </div>
-      <div className="settings-tabs" role="tablist" aria-label="Settings sections" onKeyDown={(event) => {
+      <div className="settings-tabs" role="tablist" aria-label={t("Settings sections")} onKeyDown={(event) => {
         if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
         const next = event.key === "Home" ? "models" : event.key === "End" ? "markdown" : settingsTab === "models" ? "markdown" : "models";
@@ -2311,7 +2321,7 @@ function LlmSettings() {
           className={settingsTab === "markdown" ? "is-active" : ""}
           onClick={() => setSettingsTab("markdown")}
         >
-          Markdown files
+          {t("Markdown files")}
         </button>
       </div>
       <div id="settings-panel-models" role="tabpanel" aria-labelledby="settings-tab-models" hidden={settingsTab !== "models"}>
@@ -2335,7 +2345,7 @@ function LlmSettings() {
             </option>
           ))}
         </select>
-        <small>Used for requests after you save.</small>
+        <small>{t("Used for requests after you save.")}</small>
       </Panel>
       <Panel title={`Configure: ${providerNames[editProvider]}`} className="llm-config-panel">
         <div className="llm-settings-section">
@@ -2356,8 +2366,8 @@ function LlmSettings() {
               />
               <small>
                 {editProvider === "custom"
-                  ? "ⓘ API base URL, usually ending in /v1"
-                  : "API base URL, usually ending in /v1"}
+                  ? t("ⓘ API base URL, usually ending in /v1")
+                  : t("API base URL, usually ending in /v1")}
               </small>
             </div>
           )}
@@ -2383,8 +2393,8 @@ function LlmSettings() {
               />
               <small>
                 {editProvider === "custom"
-                  ? "ⓘ Optional for local services. Stored on this device."
-                  : "Stored on this device; leave blank to keep the saved key."}
+                  ? t("ⓘ Optional for local services. Stored on this device.")
+                  : t("Stored on this device; leave blank to keep the saved key.")}
               </small>
               <div className="llm-key-actions">
                 <button
@@ -2460,7 +2470,7 @@ function LlmSettings() {
                   value={providerSettings?.models?.flash || ""}
                   onChange={(e) => updateModel("flash", e.target.value)}
                 />
-                <small>Grammar, Express, and Ask</small>
+                <small>{t("Grammar, Express, and Ask")}</small>
               </label>
               <label className="settings-field" htmlFor="llm-pro-model">
                 <span className="form-label">Pro · Complex tasks</span>
@@ -2469,13 +2479,13 @@ function LlmSettings() {
                   value={providerSettings?.models?.pro || ""}
                   onChange={(e) => updateModel("pro", e.target.value)}
                 />
-                <small>Handbook, Coach, and text analysis</small>
+                <small>{t("Handbook, Coach, and text analysis")}</small>
               </label>
             </div>
           </div>
         </div>
       </Panel>
-      {error && <State title="Could not save" detail={error} />}
+      {error && <State title={t("Could not save")} detail={error} />}
       {status && (
         <p className="settings-status" role="status">
           {status}
@@ -2483,7 +2493,7 @@ function LlmSettings() {
       )}
       <div className="llm-form-actions">
         <button className="primary" aria-busy={busy} disabled={busy} onClick={save}>
-          {busy ? "Saving…" : "Save changes"}
+          {busy ? t("Saving…") : "Save changes"}
         </button>
         <button className="secondary" disabled={busy} onClick={reset}>
           Reset
@@ -2507,6 +2517,7 @@ type MarkdownPaths = {
 };
 
 function MarkdownFileSettings() {
+  const { t } = useGuideCopy();
   const [paths, setPaths] = useState<MarkdownPaths>();
   const [savedPaths, setSavedPaths] = useState<MarkdownPaths>();
   const [busy, setBusy] = useState(false);
@@ -2587,15 +2598,15 @@ function MarkdownFileSettings() {
 
   if (!paths) {
     return error
-      ? <State title="Markdown file settings are unavailable" detail={error} />
-      : <State title="Loading Markdown file settings…" />;
+      ? <State title={t("Markdown file settings are unavailable")} detail={error} />
+      : <State title={t("Loading Markdown file settings…")} />;
   }
 
   return (
     <>
       <Panel title="Markdown file locations" className="llm-config-panel markdown-settings-panel">
         <p className="markdown-settings-intro">
-          Choose where IGT reads and saves its Markdown learning records. Paths are stored locally.
+          {t("Choose where IGT reads and saves its Markdown learning records. Paths are stored locally.")}
         </p>
         {[{ title: "Folders", kind: "folder" as const, fields: folderFields }, { title: "Files", kind: "file" as const, fields: fileFields }].map(({ title, kind, fields }) => (
           <section className="markdown-path-group" key={kind} aria-label={title}>
@@ -2627,7 +2638,7 @@ function MarkdownFileSettings() {
       {status && <p className="settings-status" role="status">{status}</p>}
       <div className="llm-form-actions">
         <button className="primary" aria-busy={busy} disabled={busy} onClick={savePaths}>
-          {busy ? "Saving…" : "Save file locations"}
+          {busy ? t("Saving…") : "Save file locations"}
         </button>
         <button className="secondary" disabled={busy} onClick={() => {
           setPaths(savedPaths);
@@ -2866,6 +2877,7 @@ function currentRoute(): Route {
   return hash === "dashboard" || items.some(([key]) => key === hash) ? (hash as Route) : "grammar";
 }
 export function App() {
+  const { t } = useGuideCopy();
   const [menuOpen, setMenuOpen] = useState(false);
   const [route, setRoute] = useState<Route>(currentRoute);
   const [routeHash, setRouteHash] = useState(location.hash);
@@ -2929,7 +2941,7 @@ export function App() {
   return (
     <div className="shell">
       <a className="skip-link" href="#main-content">
-        Skip to content
+        {t("Skip to content")}
       </a>
       <header
         className="topbar"
@@ -2946,7 +2958,7 @@ export function App() {
           }
         }}
       >
-        <a className="brand" href="#grammar" aria-label="ClearWrite home">
+        <a className="brand" href="#grammar" aria-label={t("ClearWrite home")}>
           <span className="brand-mark">
             <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
               <path d="M5 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-7l-5 4v-4H8a3 3 0 0 1-3-3V9Z" />
@@ -2970,18 +2982,18 @@ export function App() {
         <button
           ref={menuRef}
           className="menu-toggle"
-          aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+          aria-label={menuOpen ? t("Close navigation") : t("Open navigation")}
           aria-expanded={menuOpen}
           aria-controls="workspace-nav"
           onClick={() => setMenuOpen(!menuOpen)}
         >
           <Icon name={menuOpen ? "close" : "menu"} />
-          <span>Menu</span>
+          <span>{t("Menu")}</span>
         </button>
         <nav
           ref={navRef}
           id="workspace-nav"
-          aria-label="Main navigation"
+          aria-label={t("Main navigation")}
           className={menuOpen ? "top-nav is-open" : "top-nav"}
           onClick={(event) => {
             if ((event.target as Element).closest("a")) {
@@ -3049,6 +3061,7 @@ export function App() {
             <Icon name="settings" />
             <span>Settings</span>
           </a>
+          <LearnerLanguageSwitch />
         </nav>
       </header>
       <main

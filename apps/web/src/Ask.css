@@ -1,6 +1,7 @@
 .ask-page { padding-top: 2.5rem; min-width: 0; }
 .ask-page > .heading { max-width: 44rem; margin-bottom: 2rem; }
 .ask-page.is-asking > .heading, .ask-page.is-asking > .ask-view-bar { max-width: 47.5rem; margin-inline: auto; }
+.ask-page.is-asking > .heading p { max-width: 44rem; line-height: 1.8; }
 .ask-page .text-button { font-size: .875rem; }
 .ask-view-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
 .ask-new-question { flex-shrink: 0; font-size: .875rem; }
@@ -11,16 +12,23 @@
 .ask-composer { border: 1px solid var(--control); border-radius: var(--radius); padding: 1.5rem; min-width: 0; }
 .ask-composer:focus-within { border-color: var(--focus); background: var(--focus-surface); }
 .ask-composer:has(textarea:focus-visible) { outline: var(--focus-width) solid var(--focus); outline-offset: -1px; }
-.ask-composer .form-label { display: block; margin-bottom: 1.25rem; font-size: 1rem; font-weight: 600; }
+.ask-composer .form-label { display: block; margin-bottom: .875rem; font-size: .9375rem; font-weight: 600; }
 .ask-composer textarea { border: 0; border-radius: 0; padding: 0; margin: 0; min-height: 10rem; max-height: 20rem; overflow-y: auto; font-size: 1.125rem; line-height: 1.7; background: transparent; resize: vertical; }
-.ask-page:not(.has-conversation) .ask-composer { padding: 1rem; }
-.ask-page:not(.has-conversation) .ask-composer .form-label { margin-bottom: .5rem; }
-.ask-page:not(.has-conversation) .ask-composer textarea { min-height: 4rem; font-size: 1rem; line-height: 1.6; }
+.ask-page:not(.has-conversation) .ask-composer textarea { min-height: 7rem; font-size: 1.0625rem; line-height: 1.8; }
 .has-conversation .ask-composer textarea { min-height: 6.25rem; }
 .ask-composer textarea:focus { outline: none; }
-.ask-composer-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
-.ask-composer-actions > .primary { margin-left: auto; }
-.ask-composer-actions > span { color: var(--muted); font-size: .75rem; }
+.ask-composer-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1rem; margin-top: 1rem; padding-top: .875rem; border-top: 1px solid var(--line); }
+.ask-submit-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; margin-left: auto; }
+.ask-submit-actions .primary { min-width: 6.5rem; }
+.ask-shortcut { color: var(--muted); font-size: .75rem; }
+.ask-back-question { margin-top: .5rem; }
+.ask-language-control { display: flex; flex-wrap: wrap; align-items: center; gap: .625rem; color: var(--muted); font-size: .875rem; }
+.ask-language-control select { width: auto; max-width: 100%; min-height: var(--target-size); padding: .5rem .75rem; }
+.ask-composer .ask-language-control { font-size: .8125rem; }
+.ask-composer .ask-language-control select { border-color: var(--line); font-size: .875rem; }
+.ask-composer .ask-language-control select:hover { border-color: var(--control); }
+.ask-composer .ask-language-control select:focus { border-color: var(--focus); }
+.ask-save-options .ask-language-control { padding: .5rem; }
 .ask-guidance, .ask-action-status, .ask-pending { color: var(--muted); font-size: .875rem; margin: .75rem 0 0; }
 .ask-error { color: var(--danger); font-size: .875rem; margin: .75rem 0 0; overflow-wrap: anywhere; }
 .ask-turn { margin-bottom: 2rem; min-width: 0; }
@@ -141,8 +149,14 @@
   .ask-composer { padding: 1rem; }
   .ask-answer { padding: 1rem; }
   .ask-composer textarea { font-size: 1rem; }
-  .ask-composer-actions { flex-wrap: wrap; gap: .75rem; }
-  .ask-composer-actions > button { margin-left: auto; }
+  .ask-composer-actions { gap: .5rem; }
+  .ask-composer .ask-language-control { gap: .375rem; }
+  .ask-composer .ask-language-control select { padding-inline: .5rem; }
+  .ask-submit-actions .primary { min-width: 0; padding-inline: .875rem; }
+  .ask-shortcut { display: none; }
+}
+@media (max-width: 360px) {
+  .ask-composer .ask-language-control > span { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (max-height: 640px) {
   .ask-note-dialog[open] { display: block; height: auto; overflow-y: auto; overscroll-behavior: contain; }

@@ -29,6 +29,7 @@ tests/*
 !tests/handbook-reports.test.mjs
 !tests/review-ask-parity.test.mjs
 !tests/ask-metadata.test.mjs
+!tests/ask-language.test.mjs
 !tests/vocabulary-ratings.test.mjs
 !tests/vocabulary-library.test.mjs
 CLAUDE.md
