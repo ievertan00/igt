@@ -330,22 +330,6 @@ function Grammar() {
           </button>
         </div>
       </form>
-      {!result && !busy && (
-        <div className="grammar-examples">
-          <span>Need a starting point?</span>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => {
-              setText("I suggested him to join the call.");
-              inputRef.current?.focus();
-            }}
-          >
-            Try an example
-            <Icon name="arrow" />
-          </button>
-        </div>
-      )}
       <p className="grammar-note">
         Try writing it yourself first. Use AI feedback as a guide, then practise the expression in your own context. Save only when you choose.
       </p>

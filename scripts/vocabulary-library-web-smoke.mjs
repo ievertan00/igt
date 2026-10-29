@@ -90,6 +90,16 @@ try {
         return box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight && dialog.scrollWidth <= dialog.clientWidth;
       }), true, `modal fits ${width}`);
       await page.screenshot({ path: path.join(output, `${name}-${width}.png`), fullPage: !(await page.$('dialog[open]')) });
+      const audioButtons = await page.$$eval('#saved-word-dialog[open] .audio-btn', buttons => buttons.map(button => {
+        const box = button.getBoundingClientRect();
+        const icon = button.querySelector('.icon, .loading-spinner').getBoundingClientRect();
+        return { width: box.width, height: box.height, iconWidth: icon.width, iconHeight: icon.height };
+      }));
+      for (const button of audioButtons) {
+        assert.equal(button.width, button.height, `speaker button must stay circular at ${width}: ${JSON.stringify(button)}`);
+        assert.ok(button.width >= 44, `speaker target must be at least 44px at ${width}`);
+        assert.equal(button.iconWidth, button.iconHeight, `speaker icon must stay square at ${width}`);
+      }
     }
   }
   await page.setViewport({ width: 1440, height: 1000 });

@@ -24,38 +24,13 @@ const waitAnswer = async (count) => page.waitForFunction((count) => document.que
 try {
   await page.setViewport({ width: 1440, height: 1100 });
   await page.goto(`${base}/#ask`);
-  await page.waitForSelector('.ask-quick-question');
-  assert.equal(await page.$eval('.ask-more', (el) => el.getAttribute('aria-expanded')), 'false');
-  const initialLayout = await page.evaluate(() => {
-    const composer = document.querySelector('.ask-composer').getBoundingClientRect();
-    const inspiration = document.querySelector('.ask-welcome').getBoundingClientRect();
-    return { composer: composer.height, inspiration: inspiration.height, gap: inspiration.top - composer.bottom };
-  });
-  assert.ok(initialLayout.composer >= 180 && initialLayout.composer <= 200, JSON.stringify(initialLayout));
-  assert.ok(initialLayout.inspiration >= 40 && initialLayout.inspiration <= 60, JSON.stringify(initialLayout));
-  assert.ok(initialLayout.gap >= 12 && initialLayout.gap <= 16);
-  for (const [label, question] of [
-    ['Word choice', "What's the difference between 'affect' and 'effect'?"],
-    ['Grammar', "Is 'I have been working' correct here?"],
-    ['Tenses', 'Can you explain when to use the present perfect?'],
-  ]) {
-    await click(label);
-    assert.equal(await page.$eval('#ask-input', (el) => el.value), question);
-  }
-  await click('More');
-  assert.equal(await page.$eval('#ask-more-suggestions', (el) => el.hidden), false);
-  await page.click('.ask-suggestion');
-  assert.equal(await page.$eval('#ask-input', (el) => el.value), "How do I use 'would' to sound more polite?");
-  await page.evaluate(() => document.querySelectorAll('.ask-suggestion')[1].click());
-  assert.equal(await page.$eval('#ask-input', (el) => el.value), "What's a more natural way to say this?");
-  await click('Less');
-  assert.equal(await page.$eval('#ask-more-suggestions', (el) => el.hidden), true);
+  await page.waitForSelector('#ask-input');
+  assert.equal(await page.$('.ask-welcome'), null);
   await fill('#ask-input', 'A longer question with context.\n'.repeat(25));
   assert.equal(await page.$eval('#ask-input', (el) => el.clientHeight <= 320 && el.scrollHeight > el.clientHeight), true, 'Input grows up to its cap and then scrolls');
   await fill('#ask-input', '');
   await page.waitForFunction(() => document.querySelector('.ask-composer .primary').disabled);
   assert.equal(await page.$eval('#ask-panel-notes', (el) => el.hidden), true);
-  assert.equal(await page.evaluate(() => document.querySelector('.ask-composer').getBoundingClientRect().top < document.querySelector('.ask-welcome').getBoundingClientRect().top), true);
   await page.screenshot({ path: path.join(root, 'ask-desktop.png'), fullPage: true });
   await click('Saved notes');
   await page.waitForFunction(() => !document.querySelector('.ask-notes-index .ask-pending'));
@@ -115,8 +90,8 @@ try {
   });
   await page.setViewport({ width: 1440, height: 1100 });
   await page.reload();
-  await page.waitForSelector('.ask-quick-question');
-  await click('Word choice');
+  await page.waitForSelector('#ask-input');
+  await fill('#ask-input', "What's the difference between 'affect' and 'effect'?" );
   const initial = await page.$eval('#ask-input', (el) => el.value);
   assert.ok(initial.length > 10);
   await click('Saved notes');

@@ -9,13 +9,6 @@ type Turn = { question: string; answer: string; title?: string; related?: string
 type Note = { id: string; modifiedAt: string; bytes: number; content: string; title?: string; tags?: string[]; category?: string };
 type Discussion = { turns: Turn[]; question: string; context?: Note };
 type SaveState = { status: "saving" | "saved" | "error" | "uncertain"; message: string };
-const suggestions = [
-  ["Word choice", "What's the difference between 'affect' and 'effect'?"],
-  ["Grammar in context", "Is 'I have been working' correct here?"],
-  ["Tone & politeness", "How do I use 'would' to sound more polite?"],
-  ["Tenses", "Can you explain when to use the present perfect?"],
-  ["Natural expression", "What's a more natural way to say this?"],
-];
 const noteTitle = (note: Note) => note.title || note.id.replace(/\.md$/i, "");
 const noteBody = (note: Note) => note.content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "").replace(/<!-- igt-ask-save:[a-f0-9]+ -->\s*/g, "").trim();
 const noteExcerpt = (note: Note) => noteBody(note)
@@ -33,7 +26,6 @@ function dateLabel(value: string, short = false) {
 export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }) {
   const [discussion, setDiscussion] = useState<Discussion>({ turns: [], question: "" });
   const [previous, setPrevious] = useState<Discussion[]>([]);
-  const [inspirationExpanded, setInspirationExpanded] = useState(false);
   const { turns, question, context } = discussion;
   const [notes, setNotes] = useState<Note[]>([]);
   const [directory, setDirectory] = useState("");
@@ -238,17 +230,6 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
         </div>
         {busy && <p className="ask-pending" role="status">Thinking about your question…</p>}
         {requestError && <p className="ask-error" role="alert">{requestError}</p>}
-        {!hasConversation && <section className="ask-welcome" aria-label="Question suggestions">
-          <div className="ask-quick-questions"><span>Try asking</span>
-            {([["Word choice", 0], ["Grammar", 1], ["Tenses", 3]] as const).map(([label, index]) => <button type="button" className="ask-quick-question" key={label} disabled={busy} title={suggestions[index][1]} onClick={() => {
-              setDiscussion((old) => ({ ...old, question: suggestions[index][1] })); inputRef.current?.focus({ preventScroll: true });
-            }}>{label}</button>)}
-            <button type="button" className="ask-more" aria-expanded={inspirationExpanded} aria-controls="ask-more-suggestions" onClick={() => setInspirationExpanded((old) => !old)}>{inspirationExpanded ? "Less" : "More"}<Icon name="chevron" /></button>
-          </div>
-          <div className="ask-suggestions" id="ask-more-suggestions" hidden={!inspirationExpanded}>
-            {suggestions.filter((_, index) => index === 2 || index === 4).map(([label, value]) => <button type="button" key={label} className="ask-suggestion" disabled={busy} onClick={() => { setDiscussion((old) => ({ ...old, question: value })); inputRef.current?.focus({ preventScroll: true }); }}><span><strong>{label}</strong><span>{value}</span></span><Icon name="arrow" /></button>)}
-          </div>
-        </section>}
         <p className="ask-guidance">AI explanations may need checking. Save useful answers to revisit them.</p>
       </div>
     </section>

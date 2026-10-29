@@ -74,7 +74,33 @@ try {
   }
   for (const name of ["grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "ask", "dashboard", "handbook", "coach", "settings"]) {
     await route(name);
+    const focusTarget = { grammar: '#grammar-input', ask: '#ask-input', 'word-lookup': '#word-lookup-input' }[name];
+    if (focusTarget) {
+      await page.focus(focusTarget);
+      await page.keyboard.press('Tab');
+      await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift');
+      const focus = await page.$eval(focusTarget, el => {
+        const surface = el.closest('.grammar-composer, .ask-composer') || el;
+        const style = getComputedStyle(surface);
+        return { active: document.activeElement === el, color: style.outlineColor, width: style.outlineWidth, offset: style.outlineOffset,
+          innerOutline: surface === el ? 'none' : getComputedStyle(el).outlineStyle };
+      });
+      assert.deepEqual(focus, { active: true, color: 'rgb(116, 131, 108)', width: '1px', offset: '-1px', innerOutline: 'none' });
+    }
+    if (name === 'translation') {
+      const selected = await page.$eval('.switches button.selected', el => {
+        const style = getComputedStyle(el);
+        return { border: style.borderColor, background: style.backgroundColor, width: style.borderWidth };
+      });
+      assert.deepEqual(selected, { border: 'rgb(116, 131, 108)', background: 'rgb(243, 250, 223)', width: '1px' });
+    }
     await capture(name);
+    if (focusTarget) {
+      for (const viewport of [{ width: 375, height: 812 }, { width: 812, height: 375 }]) {
+        await page.setViewport(viewport);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${name} fits small phone and landscape`);
+      }
+    }
   }
   await page.focus("#settings-tab-models");
   await page.keyboard.press("ArrowRight");
@@ -88,7 +114,7 @@ try {
   await page.click(".lookup-row .primary");
   await page.waitForSelector(".word-details");
   await capture("word-result");
-  const utilityStyles = await page.$$eval(".icon-button", buttons => buttons.map(el => {
+  const utilityStyles = await page.$$eval(".icon-button", buttons => buttons.filter(el => el.getClientRects().length > 0).map(el => {
     const style = getComputedStyle(el), rect = el.getBoundingClientRect();
     return { width: rect.width, height: rect.height, radius: style.borderRadius, icon: getComputedStyle(el.querySelector("svg")).width };
   }));
@@ -97,6 +123,7 @@ try {
   await page.keyboard.press("Tab");
   await page.keyboard.down("Shift"); await page.keyboard.press("Tab"); await page.keyboard.up("Shift");
   assert.equal(await page.$eval(".audio-btn", el => getComputedStyle(el).outlineStyle), "solid");
+  assert.equal(await page.$eval(".audio-btn", el => getComputedStyle(el).outlineColor), "rgb(116, 131, 108)");
   await page.click(".audio-btn");
   assert.equal(await page.$eval(".audio-btn", el => el.disabled && el.getAttribute("aria-busy") === "true"), true);
   await page.screenshot({ path: path.join(output, "audio-pending.png"), fullPage: true });
@@ -124,6 +151,10 @@ try {
     document.dispatchEvent(new Event("selectionchange"));
   });
   await page.waitForSelector(".selection-lookup-trigger");
+  await page.keyboard.press('Tab');
+  await page.focus('.selection-lookup-trigger');
+  assert.equal(await page.$eval('.selection-lookup-trigger', el => getComputedStyle(el).outlineColor), 'rgb(116, 131, 108)');
+  assert.equal(await page.$eval('.selection-lookup-trigger', el => getComputedStyle(el).outlineStyle), 'solid');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: path.join(output, "selection-action.png"), fullPage: true });
   await page.click(".selection-lookup-trigger");

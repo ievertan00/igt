@@ -12,7 +12,7 @@
   border-radius: var(--radius-control);
   box-shadow: 0 4px 12px rgb(23 23 23 / 12%);
 }
-.selection-lookup-trigger:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--ink); }
+.selection-lookup-trigger:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--focus); }
 .selection-lookup-trigger:active:not(:disabled) { background: var(--accent); }
 .selection-lookup-dialog {
   width: min(44rem, calc(100% - 2rem));

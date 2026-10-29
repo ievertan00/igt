@@ -17,7 +17,12 @@
   --radius-control: 10px;
   --target-size: 44px;
   --action-height: 48px;
-  --focus: var(--ink);
+  --focus: #74836c;
+  --focus-width: 1px;
+  --focus-offset: 2px;
+  --focus-surface: color-mix(in srgb, var(--accent-soft) 30%, var(--paper));
+  --selection-surface: var(--accent-soft);
+  --selection-border: var(--focus);
   --action-hover: #363636;
   --action-active: #090909;
   --disabled-bg: #f0f0ed;
@@ -32,8 +37,8 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-size: 16px; line-height: 1.6; }
-::selection { background: var(--accent); color: var(--ink); }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--accent) 45%, var(--paper)); color: var(--ink); }
+:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
 a { color: inherit; text-underline-offset: 4px; }
 button, input, textarea, select { font: inherit; }
 button, summary, select { cursor: pointer; }
@@ -47,6 +52,7 @@ input, textarea, select { color: var(--ink); accent-color: var(--ink); caret-col
 input:not([type="radio"]):not([type="checkbox"]), textarea, select { width: 100%; min-height: 48px; border: 1px solid var(--control); border-radius: 10px; padding: 12px 14px; background: var(--paper); }
 textarea { display: block; resize: vertical; min-height: 150px; margin-bottom: 20px; line-height: 1.7; }
 textarea::placeholder, input::placeholder { color: var(--muted); opacity: 1; }
+:where(input:not([type="radio"]):not([type="checkbox"]):not([type="range"]), textarea, select):focus:not([aria-invalid="true"]) { border-color: var(--focus); background: var(--focus-surface); outline-offset: -1px; }
 input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; flex-shrink: 0; }
 h1,h2,h3,h4,p { margin-top: 0; }
 h1,h2,h3,h4 { line-height: 1.25; }
@@ -108,13 +114,12 @@ p { overflow-wrap: anywhere; }
 .accent-dot::before { content: ""; position: absolute; background: var(--accent); width: .29em; height: .29em; border-radius: 50%; bottom: .1em; left: -.035em; z-index: -1; }
 .grammar-intro p { color: var(--muted); font-size: 16px; margin-bottom: 0; }
 .grammar-composer { max-width: 720px; margin: 0 auto; border: 1px solid #b9b9b2; border-radius: 20px; padding: 22px 24px 18px; transition: border-color 150ms ease; }
-.grammar-composer:focus-within { border-color: var(--ink); }
+.grammar-composer:focus-within { border-color: var(--focus); background: var(--focus-surface); }
+.grammar-composer:has(textarea:focus-visible) { outline: var(--focus-width) solid var(--focus); outline-offset: -1px; }
 .grammar-composer textarea { border: 0; border-radius: 0; padding: 0; margin: 0 0 18px; min-height: 85px; font-size: 18px; background: transparent; outline-offset: 7px; }
 .grammar-composer textarea:focus { outline: none; }
-.grammar-composer textarea:focus-visible { outline: 2px solid var(--control); border-radius: 3px; }
 .composer-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .composer-actions > span { color: var(--muted); font-size: 12px; }
-.grammar-examples { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 18px; color: var(--muted); font-size: 13px; }
 .grammar-note { text-align: center; color: var(--muted); font-size: 12px; margin: 24px auto 0; max-width: 56ch; }
 .grammar-page.has-result .grammar-intro h1 { font-size: 40px; }
 .grammar-page.has-result .grammar-intro h1 br { display: none; }
@@ -149,7 +154,7 @@ p { overflow-wrap: anywhere; }
 .state p { margin: 8px 0 0; max-width: 65ch; font-size: 14px; }
 .status, .settings-status { color: var(--success); font-size: 14px; }
 .switches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-.switches button.selected, .practice-options button.selected, .count-options label.selected, .handbook-list button.selected { background: var(--accent-soft); border-color: color-mix(in srgb, var(--ink) 22%, transparent); color: var(--ink); }
+.switches button.selected, .practice-options button.selected, .count-options label.selected, .handbook-list button.selected { background: var(--selection-surface); border-color: var(--selection-border); color: var(--ink); }
 .translation-result { font-size: 22px; line-height: 1.7; }
 /* Ask conversation */
 /* Ask answers are markdown; mirror the CLI subset in lib/features/ask/render.mjs. */
@@ -269,8 +274,7 @@ p { overflow-wrap: anywhere; }
 .review-answer-composer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .review-answer-composer .form-label { grid-column: 1 / -1; margin: 0; }
 .review-answer-composer input:not([type="radio"]):not([type="checkbox"]) { min-height: 64px; padding: 16px 20px; border: 1px solid var(--control); border-radius: 10px; background: var(--paper); font-size: 1.125rem; font-weight: 400; letter-spacing: normal; }
-.review-answer-composer input:focus { border-color: var(--success); }
-.review-answer-composer input:focus-visible { outline: 2px solid var(--success); outline-offset: 3px; }
+.review-answer-composer input:focus { border-color: var(--focus); }
 .word-review-page[data-focus-method="pointer"] :focus { outline: none; box-shadow: none; }
 .review-answer-composer input::placeholder { font-size: 1rem; font-weight: 400; letter-spacing: normal; }
 .review-answer-composer input[readonly] { background: var(--wash); }
@@ -426,7 +430,7 @@ p { overflow-wrap: anywhere; }
 .count-options { display: flex; gap: 10px; flex-wrap: wrap; }
 .count-options label { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; cursor: pointer; font-size: 14px; transition: background 160ms ease, border-color 160ms ease; }
 .count-options label:hover { background: var(--wash); border-color: var(--control); }
-.count-options label.selected { background: var(--accent-soft); border-color: color-mix(in srgb, var(--ink) 22%, transparent); color: var(--ink); }
+.count-options label.selected { background: var(--selection-surface); border-color: var(--selection-border); color: var(--ink); }
 .practice-difficulty { border: 0; padding: 0; margin: 0 0 28px; min-width: 0; }
 .practice-difficulty legend { padding: 0; }
 .practice-difficulty .practice-mode-hint { margin: 14px 0 0; max-width: 68ch; font-size: 13px; color: var(--muted); }
@@ -609,7 +613,6 @@ p { overflow-wrap: anywhere; }
 .settings-tabs button:hover { color: var(--ink); }
 .settings-tabs button.is-active { color: var(--ink); }
 .settings-tabs button.is-active::after { position: absolute; right: 12px; bottom: -1px; left: 12px; height: 2px; background: var(--ink); content: ""; }
-.settings-tabs button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .markdown-path-group { margin-top: 28px; }
 .markdown-path-group h3 { margin: 0 0 18px; font-size: 17px; font-weight: 600; }
 .markdown-path-control { display: flex; gap: 8px; align-items: stretch; }
@@ -675,7 +678,6 @@ p { overflow-wrap: anywhere; }
   .composer-actions { flex-direction: column; align-items: stretch; gap: 16px; }
   .composer-actions > span { font-size: 11px; }
   .composer-actions .primary { width: 100%; }
-  .grammar-examples { flex-wrap: wrap; margin-top: 12px; }
   .grammar-note { font-size: 11px; max-width: 36ch; }
   .grammar-page.has-result .grammar-intro h1 { font-size: 30px; }
   .panel { padding: 20px; }
@@ -713,18 +715,18 @@ p { overflow-wrap: anywhere; }
 .practice-step { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 2rem; height: 2rem; border-radius: .625rem; background: var(--wash); color: var(--ink); font-size: 1rem; font-variant-numeric: tabular-nums; }
 .practice-section-hint { margin: 0 0 1.25rem 2.75rem; color: var(--muted); font-size: .875rem; }
 .practice-setup .count-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 0; }
-.practice-setup .count-options label { position: relative; display: flex; align-items: flex-start; gap: .625rem; min-width: 0; min-height: 5.75rem; padding: 1rem .75rem; border: 1px solid var(--control); border-radius: .75rem; background: var(--paper); color: var(--ink); cursor: pointer; transition: background 160ms ease, border-color 160ms ease; }
+.practice-setup .count-options label { position: relative; display: flex; align-items: flex-start; gap: .625rem; min-width: 0; min-height: 4rem; padding: .5rem .75rem; border: 1px solid var(--control); border-radius: .75rem; background: var(--paper); color: var(--ink); cursor: pointer; transition: background 160ms ease, border-color 160ms ease; }
 .practice-setup .count-options label > .icon:first-of-type { margin-top: .125rem; width: 1.125rem; height: 1.125rem; }
-.practice-choice-copy { display: grid; gap: .375rem; min-width: 0; padding-right: .375rem; }
+.practice-choice-copy { display: grid; gap: .125rem; min-width: 0; padding-right: .375rem; }
 .practice-choice-copy strong { font-size: .9375rem; font-weight: 650; line-height: 1.4; }
 .practice-choice-copy small { color: var(--muted); font-size: .875rem; line-height: 1.5; }
-.practice-choice-check { position: absolute; right: .5rem; bottom: .5rem; width: 1rem; height: 1rem; visibility: hidden; }
-.practice-setup .count-options label.selected { background: var(--accent-soft); border-color: var(--success); color: var(--ink); }
+.practice-choice-check { position: absolute; top: .5rem; right: .5rem; width: 1rem; height: 1rem; visibility: hidden; }
+.practice-setup .count-options label.selected { background: var(--selection-surface); border-color: var(--selection-border); color: var(--ink); }
 .practice-setup .selected .practice-choice-check { visibility: visible; color: var(--success); }
 .practice-setup .count-options label:hover { background: var(--wash); }
 .practice-setup .count-options label.selected:hover { background: var(--accent-soft); }
 .practice-setup .count-options input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.practice-setup .count-options label:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
+.practice-setup .count-options label:has(input:focus-visible) { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
 .practice-setup fieldset:disabled label { cursor: wait; background: var(--wash); }
 .practice-setup .practice-difficulty .practice-mode-hint { display: flex; align-items: flex-start; gap: .625rem; max-width: none; margin: 1rem 0 0; padding: .875rem 1rem; border-radius: .625rem; background: var(--wash); font-size: .875rem; }
 .practice-filter-stack { min-width: 0; }
@@ -735,7 +737,7 @@ p { overflow-wrap: anywhere; }
 .practice-picker > summary > span { flex: 1; }
 .practice-picker > summary .picker-chevron { width: 18px; height: 18px; transition: transform 160ms ease; }
 .practice-picker[open] > summary .picker-chevron { transform: rotate(180deg); }
-.practice-picker[open] > summary { border-color: var(--accent); }
+.practice-picker[open] > summary { border-color: var(--selection-border); background: var(--selection-surface); }
 .practice-picker-menu { position: absolute; z-index: 5; top: calc(100% + 6px); right: 0; left: 0; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 8px 24px rgb(23 23 23 / 12%); }
 .practice-picker[data-side="above"] .practice-picker-menu { top: auto; bottom: calc(100% + 6px); }
 .practice-picker-menu button { display: flex; gap: 12px; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; padding: 8px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--ink); text-align: left; }
@@ -771,7 +773,7 @@ p { overflow-wrap: anywhere; }
   .practice-config { gap: 1rem; }
   .practice-setup, .practice-guide, .practice-session { padding: 1.25rem; }
   .practice-setup .count-options { grid-template-columns: minmax(0, 1fr); gap: .625rem; }
-  .practice-setup .count-options label { align-items: center; min-height: 4.5rem; padding: .75rem 1rem; gap: .875rem; }
+  .practice-setup .count-options label { align-items: center; min-height: 3.5rem; padding: .25rem 1rem; gap: .875rem; }
   .practice-choice-copy { padding-right: 1rem; gap: .125rem; }
   .practice-choice-check { top: 50%; right: .875rem; bottom: auto; transform: translateY(-50%); }
   .practice-section-hint { margin-left: 0; }
