@@ -73,23 +73,17 @@ test("daily plan handles a fresh learner without prompting for nonexistent cards
   await runToday(async () => { assert.fail("No review prompt expected"); }, null, {});
 });
 
-test("daily plan shows coach tasks from the diagnosis seam", async (t) => {
+test("today does not recreate retired Coach plans or task controls", async (t) => {
   let output = "";
   t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
   t.mock.method(api, "getStats", async () => ({ dueCounts: { grammar: 0, vocab: 0 }, priorities: [] }));
   t.mock.method(api, "getTodayEffort", async () => ({ inputs_today: 1, vocab_added_today: 0, grammar_reviewed: 0, vocab_reviewed: 0 }));
   const config = {
-    loadLearningDiagnosis: async () => ({
-      priorities: [{
-        errorType: "Grammar / Verb Tense",
-        practiceAttempts: 0,
-        prescription: [{ name: "识别", task: "标记时间线", check: "完成 5 题" }],
-      }],
-    }),
+    loadLearningDiagnosis: async () => { assert.fail("Retired plan generation must not run"); },
   };
   await runToday(async () => { assert.fail("No review prompt expected"); }, null, config);
-  assert.match(output, /Coach tasks for today/);
-  assert.match(output, /标记时间线/);
+  assert.doesNotMatch(output, /Coach tasks for today|--complete|--resume-plan/);
+  assert.match(output, /Choose a short practice session/);
 });
 
 test("listen uses English translation and quiz feedback even with automatic voice off", async (t) => {

@@ -17,6 +17,8 @@
     "test:ask-contract": "node scripts/ask-contract-smoke.mjs",
     "test:runtime": "node scripts/runtime-api-smoke.mjs",
     "test:coach-cache": "node scripts/coach-cache-smoke.mjs",
+    "test:my-learning": "node --test tests/my-learning.test.mjs tests/grammar-history.test.mjs tests/handbook-cli.test.mjs",
+    "test:my-learning-web": "node scripts/my-learning-web-smoke.mjs",
     "test:vocabulary-sync": "node scripts/vocabulary-sync-smoke.mjs",
     "test:review-log-contract": "node scripts/review-log-contract-smoke.mjs",
     "test:config-paths": "node scripts/config-path-smoke.mjs",

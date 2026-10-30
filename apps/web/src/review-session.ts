@@ -16,6 +16,9 @@ type ReviewSession = {
   answer: string | null; result: ReviewResult | null; audioPlayed: boolean;
   correct: number; wrong: number;
   pendingRating?: ReviewRating | null;
+  /** True between a confirmed rating save and the auto-advance timer firing.
+   *  Percolates through localStorage so a refresh in that window can resume the advance. */
+  advanceDue?: boolean;
 };
 export function reviewDay(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
@@ -49,6 +52,7 @@ export function useDailyReviewSession() {
   const limitRef = useRef(limit);
   limitRef.current = limit;
   const refresh = useRef<(fresh?: boolean) => void>(() => {});
+  const advanceTimer = useRef<number | null>(null);
   function update(next: ReviewSession) {
     current.current = next;
     try { localStorage.setItem(REVIEW_SESSION_KEY, JSON.stringify(next)); if (mounted.current) setNotice(""); }
@@ -100,7 +104,17 @@ export function useDailyReviewSession() {
     window.addEventListener("focus", onFocus);
     window.addEventListener("storage", onStorage);
     return () => { cancelled = true; mounted.current = false; locked.current = false; window.clearInterval(timer);
+      if (advanceTimer.current !== null) clearTimeout(advanceTimer.current);
       window.removeEventListener("focus", onFocus); window.removeEventListener("storage", onStorage); };
+  }, []);
+  // A rating saves the session with advanceDue: true and starts a 0.5s timer. If
+  // the page is refreshed inside that window the timer is lost, so this effect
+  // re-arms it whenever the restored session still has the marker set.
+  useEffect(() => {
+    const stored = readSession(reviewDay());
+    if (!stored?.advanceDue || !stored.result?.persistence?.saved) return;
+    advanceTimer.current = window.setTimeout(() => next(), 500);
+    return () => { if (advanceTimer.current !== null) clearTimeout(advanceTimer.current); };
   }, []);
   async function submit(answer: string) {
     const value = current.current;
@@ -134,14 +148,20 @@ export function useDailyReviewSession() {
         cards: rating === "again" ? [...value.cards, card] : value.cards,
         correct: value.correct + Number(result.correct),
         wrong: value.wrong + Number(!result.correct),
+        advanceDue: true,
       });
+      // Advance to the next card shortly after the rating is confirmed saved. The
+      // advanceDue marker above survives a refresh in this window; on restore the
+      // recovery effect below re-arms the timer instead of stranding the rated card.
+      if (advanceTimer.current !== null) clearTimeout(advanceTimer.current);
+      advanceTimer.current = window.setTimeout(() => next(), 500);
     } catch (e: any) { if (mounted.current) setError(e.message); }
     finally { locked.current = false; if (mounted.current) { setGrading(false); refresh.current(); } }
   }
   function next() {
     const value = current.current;
     if (value?.day !== reviewDay()) { refresh.current(); return; }
-    if (value?.result?.persistence?.saved && !locked.current) update({ ...value, index: value.index + 1, answer: null, result: null, audioPlayed: false, pendingRating: null });
+    if (value?.result?.persistence?.saved && !locked.current) update({ ...value, index: value.index + 1, answer: null, result: null, audioPlayed: false, pendingRating: null, advanceDue: false });
   }
   async function remove() {
     const value = current.current;

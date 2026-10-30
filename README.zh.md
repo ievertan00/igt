@@ -383,16 +383,16 @@ igt
 
 有卡片待复习时，输入 `g` 复习五张语法卡，输入 `w` 复习五张词汇卡，直接回车稍后再练。数量统计 SQLite 中已有的卡片；`/word` 还会导入词汇笔记中的新词。
 
-`/today` 也会显示当前教练计划中尚未完成的任务。完成任务后运行 `/coach --complete=<任务编号>`，下次 `/today` 会移除该任务。
+`/today` 保留复习入口，不再创建教练计划或显示计划任务。
 
-### 数据统计 (`/stats`)
+### 学习概况 (`/stats`)
 
-统计面板提供了学习旅程的全方位视图：
+Web Overview 与 `/stats` 按活动类型汇总已保存的学习记录，并展示最近活动时间线。语法检查、句子练习、词汇复习、词汇保存和 Ask 笔记分别计数，不合并为掌握度分数。没有持久记录的翻译、跟读和对话不计入历史；缺少日期或读取失败的来源会单独说明。
 
-![/stats 截图](assets/03_stats.png)
-
-- **努力趋势 (Effort Trend)**: 过去 7 天输入量的可视化图表。
-- **掌握度分析 (Mastery Breakdown)**: 识别你最频繁的错误类型（前 3 项优先任务）。
+```text
+/stats --days 30 --limit 10
+/stats --days 0 --offset 10
+```
 
 ### 个性化中译英测验 (`/quiz`)
 
@@ -404,194 +404,28 @@ igt
 /quiz 5 --days=0      # 使用全部历史错误记录
 ```
 
-### 个人错误手册 (`/handbook`)
+### 语法检查记录 (`/handbook`)
 
-手册将你积累的错误记录转化为一份个性化参考文档。它不是泛泛的语法教材，而是分析你的真实错误，识别你专属的反复出现的子模式（你的"语言指纹"），并从你个人习惯的角度解释根本原因。
+Handbook 仅展示主动保存的 Grammar 检查，按时间倒序排列，保留原文、纠正、解释与日期。支持搜索、错误类型、时间范围和“无诊断错误”筛选。一条检查只显示一次，即使包含多个诊断；没有诊断不代表已掌握或完全无误。来源不明的旧记录原样保留，但不会冒充 Grammar 检查。
 
-除了错误分类，手册还会生成 **Learning Profile & Next Actions**：结合错误出现的次数、跨天重复、近期趋势、严重程度和 SRS 复习反馈，筛选出证据较充分的薄弱环节。每个优先项都会给出适合的主动回忆/新语境迁移练习，以及一个针对该弱项的外部学习资源。单次或证据不足的错误会标为低置信度，不会直接被当成稳定能力缺陷。
-
-建议流程：先运行 `/handbook --days=30`，按优先级完成 3 次主动回忆和 3 个新语境句子，隔天再运行一次手册，观察趋势是否从 `rising` 变为 `stable` 或 `improving`。
-
-在命令行运行：
-
-```sh
-node tools/igt-handbook.mjs --days=30
+```text
+/handbook
+/handbook --search "a book" --days 0
+/handbook --type "Articles" --limit 10 --offset 0
+/handbook --diagnosis none
 ```
 
-![/handbook 截图](assets/05_handbook.png)
+### 常见错误分析 (`/coach`)
 
-**生成的文件内容示例：**
+Coach 仅从已保存的 Grammar 检查识别重复错误。至少两条不同检查包含同类问题时才显示为重复模式。默认列出模式；选择模式后才请求模型解释可能原因、正确语法规则、适用范围和例外，并展示可回查的原始例句。原因属于假设，不能据此判断心理原因或整体英语水平。
 
-输出是一个为 Obsidian 优化的 Markdown 文件（支持可折叠标注块、表格）。以下是一段真实风格的示例：
-
----
-
-```markdown
-# 📘 Personal English Error Handbook
-
-> [!INFO] Generated with: GEMINI (gemini-2.5-pro) on 2026-05-07
-
-> [!ABSTRACT] 📊 Performance Summary
->
-> - **Period**: Last 30 days
-> - **Inputs Analyzed**: 283
-> - **Total Diagnoses**: 156
-> - **Unique Error Types**: 6
-> - **Critical Priority**: Verb Tense
-
-## 📝 Executive Linguistic Summary
-
-### 📝 Linguistic Profile
-
-你的写作整体达到 B1–B2 水平，词汇量和句子结构表现稳健。
-在 283 条输入中，最显著的模式是从句边界处的时态混用——
-尤其是在同一句话中将一般过去时和现在完成时交替使用。
-拼写和标点错误极少，说明你有扎实的书面英语基础。
-
-### 🚀 Key Strengths & Bottlenecks
-
-- **Strength**：冠词用法已显著改善——最近两周仅出现 3 次，
-  而上个月有 14 次。
-- **Bottleneck**：动词时态占全部诊断的 41%。具体子模式为：
-  你在带有明确过去时间状语（"yesterday"、"last week"）的
-  句子中使用了现在完成时，而这类句子必须用一般过去时。
-
-### 🎯 Strategic Goals
-
-1. 未来两周专项训练"现在完成时 vs. 一般过去时 + 时间状语"的区分；
-   每天使用 /word review 复习闪卡。
-2. 在 /practice 练习中针对介词搭配——固定动词介词组合
-   （arrive at、good at、depend on）占剩余介词错误的大部分。
-
-> [!TIP] Coach's Note
-> 每天针对"现在完成时 / 一般过去时"做一组专项练习，
-> 就能解决你 40% 的剩余错误。
-
-## 🎯 Error Frequency Ranking
-
-| Error Type             | Freq | Severity    |
-| :--------------------- | :--- | :---------- |
-| Verb Tense             | 64   | 🔴 Major    |
-| Article Usage          | 28   | 🟡 Moderate |
-| Preposition Usage      | 19   | 🟡 Moderate |
-| Subject-Verb Agreement | 14   | 🟢 Minor    |
-| Word Choice            | 11   | 🟢 Minor    |
-| Punctuation            | 9    | 🟢 Minor    |
-
-## 📈 Weekly Trend
-
-| Week    | Errors            |
-| :------ | :---------------- |
-| 2026-17 | ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 14 |
-| 2026-18 | ▓▓▓▓▓▓▓▓▓▓▓ 11    |
-| 2026-19 | ▓▓▓▓▓▓▓▓ 8        |
-| 2026-20 | ▓▓▓▓▓ 5           |
-
-> [!SUCCESS] ✅ Good news! Your errors decreased by 28.6% in recent weeks.
-
-## 🔍 Detailed Error Analysis
-
-> [!CAUTION]- 🔴 Verb Tense (64 Occurrences)
->
-> ### 📝 Example 1
->
-> > [!FAILURE] Original (❌)
-> > `I have seen him yesterday at the office.`
->
-> > [!SUCCESS] Corrected (✅)
-> > `I saw him yesterday at the office.`
->
-> > [!TIP] Natural Phrasing (✨)
-> > `I ran into him at the office yesterday.`
->
-> > [!INFO] Logic & Rules
-> > **Why**: "Yesterday" 是明确的过去时间状语，不能与现在完成时连用，
-> > 必须使用一般过去时（"saw"）。
-> > **Rule**: 现在完成时 = 不指定具体时间。一般过去时 = 指定具体时间
-> > （yesterday、last week、in 2020）。
-> > **Pro Tip**: 如果能回答"具体是什么时候？"，就用一般过去时。
->
-> ---
->
-> ### 📝 Example 2
->
-> > [!FAILURE] Original (❌)
-> > `She has graduated last June and found a job immediately.`
->
-> > [!SUCCESS] Corrected (✅)
-> > `She graduated last June and found a job immediately.`
->
-> > [!TIP] Natural Phrasing (✨)
-> > `She graduated last June and landed a job right away.`
->
-> > [!INFO] Logic & Rules
-> > **Why**: "Last June" 是明确的过去时间——现在完成时在此无效。
-> > **Rule**: 并列谓语中的两个动词必须使用相同时态。
-
-## 📚 Grammar Rules Reference (AI-Powered)
-
-### Grammar
-
-> [!NOTE]- 🔴 Verb Tense
->
-> #### Overview
->
-> 英语时态不只是编码时间，还表达说话者与事件的关系。
-> 现在完成时表示与当下时刻的相关性；一般过去时将事件封闭为已完成的历史。
-> 两者不可互换。
->
-> #### Detected Habit
->
-> _"The Yesterday Trap（昨天陷阱）"_ —— 你在描述近期过去事件时习惯使用现在
-> 完成时，随后又附上一个与之矛盾的具体时间状语。
->
-> #### Root Cause
->
-> 普通话用体标记（了、过）表示完成，没有时态的区分，因此现在完成时 /
-> 一般过去时的对立在母语中没有直接对应物——学习者往往默认选择"听起来
-> 更完整"的那种形式。
->
-> #### Before / After
->
-> | ❌ User wrote                        | ✅ Should be                    | Why                     |
-> | :----------------------------------- | :------------------------------ | :---------------------- |
-> | I have seen him yesterday.           | I saw him yesterday.            | 有具体时间 → 一般过去时 |
-> | She has graduated last June.         | She graduated last June.        | "last June" 锚定了过去  |
-> | We have finished the report at 5 PM. | We finished the report at 5 PM. | 时钟时间 → 一般过去时   |
->
-> #### The Rule
->
-> - 凡是带有具体时间状语的句子（yesterday、last week、in 2020、at 3 PM、
->   when I was young），一律使用**一般过去时**。
-> - 不指定时间、强调当下结果或相关性时，使用**现在完成时**
->   （I've lost my keys — 钥匙现在还不见了）。
-> - 现在完成时与具体过去时间状语**永远不能共存**。
-> - 并列谓语（"she graduated and found"）中，两个动词必须时态一致。
->
-> #### Mnemonic
->
-> _"有具体时间，就用简单过去。"_（Specific time? Simple past every time.）
->
-> > [!TIP] Key Takeaway
-> > 只要能回答"具体是什么时候？"，答案就永远是一般过去时，没有例外。
+```text
+/coach --days 90
+/coach --type "Articles" --days 90
+/coach --type "Articles" --refresh
 ```
 
----
-
-**命令行选项：**
-
-```sh
-node tools/igt-handbook.mjs --days=30            # 最近 30 天（默认）
-node tools/igt-handbook.mjs --days=7             # 仅本周
-node tools/igt-handbook.mjs --days=0             # 全部历史数据
-node tools/igt-handbook.mjs --days=30 --incremental   # 跳过无变化的章节
-node tools/igt-handbook.mjs --cache-stats        # 查看缓存状态
-node tools/igt-handbook.mjs --days=30 --clear-cache   # 强制完整重建
-```
-
-`--incremental` 模式会对每种错误类型的示例数据计算 MD5 哈希值。如果自上次运行以来示例未发生变化，则直接复用缓存的 LLM 输出——每周重新生成时通常能节省 60–80% 的 API 调用。
-
-输出文件保存在 `.env` 中 `IGT_REPORT_PATH` 指定的目录下，文件名包含日期：`handbook_2026-05-07.md`。用 Obsidian 打开后，可折叠标注块、表格和提示框会以交互方式渲染。
+旧 `/handbook` 报告生成、缓存管理选项及 `/coach` 计划和任务选项已被替换，`/plan` 别名已移除。已有报告、计划和学习记录不会删除。查看全部参数请使用 `--help`。
 
 ### 产出练习 (`/practice`)
 
@@ -663,9 +497,9 @@ Delete last 1 input and all associated cards? [y/n] y
 | `/word` (`/w`)       | 查询、保存和 SRS 复习词汇；`/word --list` 浏览词汇 |
 | `/vocab-test` (`/vtest`) | 完整词汇测试，在真实场景中使用词汇 |
 | `/today` | 语法与词汇待复习数量，以及听读、写作和对话建议 |
-| `/stats` (`/st`)     | 事实性活动、重复错误、掌握度和复习统计   |
-| `/handbook` (`/h`)   | 生成个人错误手册（后台运行）                  |
-| `/coach` (`/plan`)   | 使用高级模型分析英语综合能力、证据和薄弱环节，生成并保存两周学习计划；`--complete=<任务编号>` 完成，`--skip=<任务编号>` 跳过，`--resume=<任务编号>` 恢复 |
+| `/stats` (`/st`) | 各类已记录学习活动的概况和时间线 |
+| `/handbook` (`/h`) | 按时间浏览、搜索和筛选已保存的语法检查 |
+| `/coach` | 常见语法错误分析，按需解释可能原因和语法规则 |
 | `/practice` (`/p`)   | 在不同场景中练习句子和表达的主动产出            |
 | `/drill` (`/mc`)     | 按级别或错误类型进行多选题语法练习              |
 | `/quiz [1-10]`       | 根据错误手册记录进行中译英测验，并逐题获得中文反馈        |

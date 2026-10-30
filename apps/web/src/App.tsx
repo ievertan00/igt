@@ -1,11 +1,11 @@
+import { Dashboard, Coach } from "./LearningPages";
+import { Heading, Panel, State } from "./Page";
 import { useGuideCopy, LearnerLanguageSwitch } from "./learner-language";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { IconButton } from "./IconButton";
 import { Ask } from "./Ask";
 import { SelectionLookup } from "./SelectionLookup";
-import { HandbookKnowledge } from "./HandbookKnowledge";
-import { HandbookReports } from "./HandbookReports";
 import { webApi } from "./api/client";
 import { useDailyReviewSession } from "./review-session";
 import { reviewExampleParts } from "./review-example";
@@ -42,149 +42,6 @@ function formatActivityTimestamp(value: unknown) {
   if (Number.isNaN(date.getTime())) return "Unknown date";
   const pad = (part: number) => String(part).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function Dashboard() {
-  const { t } = useGuideCopy();
-  const [data, setData] = useState<any>();
-  const [error, setError] = useState("");
-  useEffect(() => {
-    webApi
-      .getDashboard()
-      .then(setData)
-      .catch((e) => setError(e.message));
-  }, []);
-  if (error) return <State title={t("Overview is unavailable")} detail={error} />;
-  if (!data) return <State title={t("Loading your learning activity…")} />;
-  const focus = data.coach?.focus;
-  return (
-    <>
-      <Heading
-        eyebrow="OVERVIEW"
-        title={
-          <>
-            Support for your English.
-            <br />
-            <em>Practice beyond the page.</em>
-          </>
-        }
-        detail={t("ClearWrite helps you check your writing, explore words, and practise expressing ideas. Use it alongside regular reading, listening, and real conversations—learning English takes more than a tool.")}
-      />
-      <section className="focus">
-        <div>
-          <span className="focus-label">
-            <Icon name="coach" />
-            {t("Current focus")}
-          </span>
-          <h2>{focus?.error_type || "Start with your own words"}</h2>
-          <p>
-            {focus
-              ? `Seen ${focus.hits} times recently. Try revisiting it after a break.`
-              : t("Write about something from your day, then review the suggested changes.")}
-          </p>
-          <a className="primary" href="#grammar">
-            {t("Write a sentence")}
-            <Icon name="arrow" />
-          </a>
-        </div>
-        <img
-          className="focus-image"
-          src="/images/study-desk.webp"
-          alt=""
-          width="960"
-          height="640"
-        />
-      </section>
-      <div className="columns">
-        <Panel title={t("Recent writing")} icon="grammar">
-          {(data.recentActivity || []).slice(0, 5).map((item: any) => {
-            const original = String(item.userInput || "");
-            const correction = String(item.correction || "Recorded");
-            const isLong = original.length > 160 || correction.length > 160;
-            return (
-              <article className="activity activity-entry" key={item.entryId}>
-                <time className="activity-time" dateTime={item.timestamp || undefined}>
-                  {formatActivityTimestamp(item.timestamp)}
-                </time>
-                <div className="activity-copy">
-                  <section className="activity-copy-section">
-                    <span className="activity-label">Original</span>
-                    <p className={isLong ? "activity-preview is-clamped" : "activity-preview"}>
-                      {original}
-                    </p>
-                  </section>
-                  <section className="activity-copy-section activity-correction">
-                    <span className="activity-label">Correction</span>
-                    <p className={isLong ? "activity-preview is-clamped" : "activity-preview"}>
-                      {correction}
-                    </p>
-                  </section>
-                  {isLong && (
-                    <details className="activity-full">
-                      <summary>Read full entry</summary>
-                      <div className="activity-full-content">
-                        <section>
-                          <strong>Original</strong>
-                          <p>{original}</p>
-                        </section>
-                        <section>
-                          <strong>Correction</strong>
-                          <p>{correction}</p>
-                        </section>
-                      </div>
-                    </details>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-          {!data.recentActivity?.length && <State title={t("No saved writing yet")} detail={t("Check a sentence in Grammar, then save the feedback you want to revisit.")} />}
-        </Panel>
-        <Panel title={t("Your activity here")} icon="word-review">
-          <div className="stat">
-            {data.stats?.totalInputs || 0}
-            <small> review entries</small>
-          </div>
-          <p>
-            Today: {data.today?.inputs_today || 0} entries · Words due{" "}
-            {data.stats?.dueCounts?.vocab || 0}
-          </p>
-          <div className="daily-effort" aria-label="Activity over the last seven days">
-            <span className="eyebrow">Last 7 days</span>
-            {(data.stats?.dailyEffort || [])
-              .slice()
-              .reverse()
-              .map((item: any) => (
-                <div className="effort-row" key={item.day}>
-                  <small>{item.day.slice(5)}</small>
-                  <div className="effort-track">
-                    <span style={{ width: `${Math.min(100, item.count * 20)}%` }} />
-                  </div>
-                  <strong>{item.count}</strong>
-                </div>
-              ))}
-          </div>
-        </Panel>
-      </div>
-      <Panel title={t("Your learning library")} icon="handbook">
-        <div className="asset-list">
-          {[
-            ["Review log", data.assets?.reviewLog],
-            ["Vocabulary", data.assets?.vocabulary],
-            ["Ask", data.assets?.ask],
-            ["Practice", data.assets?.practice],
-          ].map(([label, available]) => (
-            <div className="asset-row" key={String(label)}>
-              <span>{label}</span>
-              <strong className={available ? "asset-ok" : "asset-missing"}>
-                {available ? "Available" : "Not found"}
-              </strong>
-            </div>
-          ))}
-        </div>
-      </Panel>
-    </>
-  );
 }
 
 function Grammar() {
@@ -553,7 +410,6 @@ function WordReview() {
   const [focusMethod, setFocusMethod] = useState<"pointer" | "keyboard">("pointer");
   const composing = useRef(false);
   const answerRef = useRef<HTMLInputElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
   const ratingRef = useRef<HTMLFieldSetElement>(null);
   const card = cards[index];
   useLayoutEffect(() => {
@@ -564,12 +420,12 @@ function WordReview() {
     composing.current = false;
   }, [index, cards]);
   useLayoutEffect(() => {
-    if (revealed) {
-      if (result?.persistence?.saved) nextRef.current?.focus({ preventScroll: true });
-      else ratingRef.current?.focus({ preventScroll: true });
+    if (!revealed) {
+      answerRef.current?.focus({ preventScroll: true });
+    } else {
+      ratingRef.current?.focus({ preventScroll: true });
     }
-    else answerRef.current?.focus({ preventScroll: true });
-  }, [card?.id, revealed, result?.persistence?.saved]);
+  }, [card?.id, revealed]);
   const details = card?.vocab_details;
   const examples = details?.examples?.length ? details.examples : [card?.example].filter(Boolean);
   const targetWord = card?.word || card?.answer || "";
@@ -746,6 +602,9 @@ function WordReview() {
               <h2 lang={card.zh ? "zh" : undefined}>
                 {card.zh || "Recall this English expression"}
               </h2>
+              {pronunciation && (
+                <p className="review-phonetic" lang="en">{pronunciation}</p>
+              )}
               <p className="review-meaning" lang="en">
                 {card.meaning || "Write the English expression that matches this clue."}
               </p>
@@ -879,6 +738,49 @@ function WordReview() {
                   )}
                 </div>
                 <div className="review-flow-actions">
+                  {hasMoreDetails && (
+                    <section className="review-explore">
+                      <div className="review-explore-heading">
+                        <h3 className="review-explore-title">Explore this word</h3>
+                      </div>
+                      {exploreExamples.length > 0 && (
+                        <div className="review-explore-examples">
+                          <div className="review-examples-heading">
+                            <Icon name="document" />
+                            <h4 className="review-explore-subtitle">In a sentence</h4>
+                            <span>{exploreExamples.length} example{exploreExamples.length === 1 ? "" : "s"}</span>
+                          </div>
+                          <ul className="review-example-list">
+                            {exploreExamples.map((example: string, i: number) => (
+                              <li className="review-result-example" key={i}>
+                                <p lang="en">{reviewExampleParts(example, targetWord).map((part, index) =>
+                                  part.highlighted ? <mark key={index}>{part.text}</mark> : part.text
+                                )}</p>
+                                <span className="example-controls">
+                                  <AudioButton text={example} small />
+                                  <CopyButton value={example} label="Example" small />
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <dl>
+                        {[
+                          ["Synonyms", details?.synonyms],
+                          ["Collocations", details?.collocations],
+                          ["Usage note", details?.note || card.note],
+                        ]
+                          .filter(([, value]) => value)
+                          .map(([label, value]) => (
+                            <div key={label} className={label === "Usage note" ? "review-usage-note" : label === "Synonyms" ? "review-synonyms" : "review-collocations"}>
+                              <dt><Icon name={label === "Usage note" ? "idea" : label === "Synonyms" ? "word-lookup" : "document"} />{label}</dt>
+                              <dd>{value}</dd>
+                            </div>
+                          ))}
+                      </dl>
+                    </section>
+                  )}
                   {(!result?.persistence?.saved || result?.rating) && (
                     <fieldset className="review-ratings" ref={ratingRef} tabIndex={-1} aria-describedby="review-rating-help" aria-busy={grading}>
                       <legend>How well did you recall it?</legend>
@@ -938,173 +840,11 @@ function WordReview() {
                         : `${result.rating[0].toUpperCase()}${result.rating.slice(1)} saved. Next review in ${result.next?.intervalDays} day${result.next?.intervalDays === 1 ? "" : "s"}.`}
                     </p>
                   )}
-                  <div className="review-actions" aria-busy={grading}>
-                    <button
-                      ref={nextRef}
-                      className="primary"
-                      disabled={grading || starting || !result?.persistence?.saved}
-                      onClick={next}
-                    >
-                      {index + 1 === cards.length ? "Finish review" : t("Next word")}
-                      <Icon name="arrow" />
-                    </button>
-                  </div>
                 </div>
-                {hasMoreDetails && (
-                  <section className="review-explore">
-                    <div className="review-explore-heading">
-                      <h3 className="review-explore-title">Explore this word</h3>
-                    </div>
-                    {exploreExamples.length > 0 && (
-                      <div className="review-explore-examples">
-                        <div className="review-examples-heading">
-                          <Icon name="document" />
-                          <h4 className="review-explore-subtitle">In a sentence</h4>
-                          <span>{exploreExamples.length} example{exploreExamples.length === 1 ? "" : "s"}</span>
-                        </div>
-                        <ul className="review-example-list">
-                          {exploreExamples.map((example: string, i: number) => (
-                            <li className="review-result-example" key={i}>
-                              <p lang="en">{reviewExampleParts(example, targetWord).map((part, index) =>
-                                part.highlighted ? <mark key={index}>{part.text}</mark> : part.text
-                              )}</p>
-                              <span className="example-controls">
-                                <AudioButton text={example} small />
-                                <CopyButton value={example} label="Example" small />
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    <dl>
-                      {[
-                        ["Synonyms", details?.synonyms],
-                        ["Collocations", details?.collocations],
-                        ["Usage note", details?.note || card.note],
-                      ]
-                        .filter(([, value]) => value)
-                        .map(([label, value]) => (
-                          <div key={label} className={label === "Usage note" ? "review-usage-note" : label === "Synonyms" ? "review-synonyms" : "review-collocations"}>
-                            <dt><Icon name={label === "Usage note" ? "idea" : label === "Synonyms" ? "word-lookup" : "document"} />{label}</dt>
-                            <dd>{value}</dd>
-                          </div>
-                        ))}
-                    </dl>
-                  </section>
-                )}
               </div>
             )}
           </div>
         </section>
-      )}
-    </div>
-  );
-}
-function Coach() {
-  const { t } = useGuideCopy();
-  const [data, setData] = useState<any>();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  async function load(refresh = false) {
-    setBusy(true);
-    setError("");
-    try {
-      setData(await (refresh ? webApi.analyzeCoach() : webApi.getCoach()));
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  useEffect(() => {
-    load();
-  }, []);
-  return (
-    <div className="coach-page">
-      <div className="coach-header">
-        <Heading
-          eyebrow="COACH · SUGGESTIONS"
-          title="Find your next step."
-          detail={t("Find possible practice priorities in your saved writing. These suggestions reflect your activity here, not a full assessment of your English.")}
-        />
-        <button className="secondary" onClick={() => load(true)} aria-busy={busy} disabled={busy}>
-          {busy ? "Analysing…" : "Refresh analysis"}
-        </button>
-      </div>
-      {error && <State title={t("Coach is unavailable")} detail={error} />}
-      {!data && !error && <State title={t("Looking at your learning history…")} />}
-      {data && (
-        <>
-          <Panel title="Learning history" className="coach-sample">
-            <dl className="coach-sample-grid">
-              <div>
-                <dt>Writing entries</dt>
-                <dd>
-                  {data.sample?.totalInputs || 0}
-                  <span> entries</span>
-                </dd>
-              </div>
-              <div>
-                <dt>Grammar observations</dt>
-                <dd>
-                  {data.sample?.totalDiagnoses || 0}
-                  <span> observations</span>
-                </dd>
-              </div>
-              <div>
-                <dt>Time window</dt>
-                <dd>
-                  {data.windowDays ?? "—"}
-                  <span> days</span>
-                </dd>
-              </div>
-            </dl>
-          </Panel>
-          {(data.priorities || []).length > 0 ? (
-            <Panel title="Where to focus" className="coach-priorities">
-              {(data.priorities || []).map((item: any) => (
-                <article className="coach-priority" key={item.errorType}>
-                  <h3>{item.errorType}</h3>
-                  {item.mechanism?.statement && (
-                    <p className="coach-mechanism">{item.mechanism.statement}</p>
-                  )}
-                  <ol className="coach-tasks">
-                    {item.prescription?.slice(0, 2).map((phase: any) => (
-                      <li key={phase.phase}>
-                        <strong>{phase.name}</strong>
-                        {phase.task && <p>{phase.task}</p>}
-                        {phase.check && (
-                          <p className="coach-check">
-                            <span>How to check</span>
-                            {phase.check}
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ol>
-                </article>
-              ))}
-            </Panel>
-          ) : (
-            <Panel title={t("A little more practice first.")} className="coach-empty-priorities">
-              <p>
-                {t("There is not enough evidence to choose a focus yet. Keep saving your writing and feedback, then check back.")}
-              </p>
-            </Panel>
-          )}
-          <Panel title="What this evidence can tell us" className="coach-limitations">
-            {data.limitations?.length ? (
-              <ul>
-                {data.limitations.map((item: string) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>{t("These suggestions are based on the records available here. They do not show everything you know or how you use English elsewhere.")}</p>
-            )}
-          </Panel>
-        </>
       )}
     </div>
   );
@@ -1960,201 +1700,97 @@ function HandbookSentence({ original, correction, corrected = false }: { origina
 
 function Handbook() {
   const { t } = useGuideCopy();
-  const [data, setData] = useState<any>();
-  const [selected, setSelected] = useState(() => new URLSearchParams(location.hash.split("?")[1] || "").get("errorType") || "");
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const rawDays = Number(params.get("days") ?? 90);
+  const days = Number.isInteger(rawDays) && rawDays >= 0 && rawDays <= 3650 ? rawDays : 90;
+  const diagnosis = (["all", "with", "none"].includes(params.get("diagnosis") || "") ? params.get("diagnosis") : "all") as "all" | "with" | "none";
+  const errorType = diagnosis === "none" ? "" : params.get("errorType") || "";
+  const appliedSearch = params.get("search") || "";
+  const entryId = params.get("entry") || "";
+  const rawOffset = Number(params.get("offset") || 0);
+  const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+  const [search, setSearch] = useState(appliedSearch);
+  const [data, setData] = useState<Awaited<ReturnType<typeof webApi.getHandbook>>>();
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [loadingSelection, setLoadingSelection] = useState(false);
-  const [days, setDays] = useState(() => {
-    const value = new URLSearchParams(location.hash.split("?")[1] || "").get("days");
-    return value !== null && [0, 30, 90].includes(Number(value)) ? Number(value) : 90;
-  });
-  const [search, setSearch] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
   const requestId = useRef(0);
-  async function load(value = selected, windowDays = days, query = appliedSearch, offset = 0) {
+  async function load() {
     const id = ++requestId.current;
     setBusy(true);
     setError("");
     try {
-      const result = await webApi.getHandbook(value, { days: windowDays, search: query, offset });
-      if (id !== requestId.current) return;
-      setData(result);
-      setSelected(result.selected || "");
-      setDays(windowDays);
-      setAppliedSearch(query);
+      const result = await webApi.getHandbook(errorType, { days, search: appliedSearch, diagnosis, offset, entryId });
+      if (id === requestId.current) setData(result);
     } catch {
-      if (id !== requestId.current) return;
-      setError("Your handbook could not be loaded. Please try again.");
+      if (id === requestId.current) setError("Your saved Grammar checks could not be loaded. Please try again.");
     } finally {
       if (id === requestId.current) setBusy(false);
     }
   }
-  useEffect(() => {
-    load();
-    return () => { requestId.current++; };
-  }, []);
-  async function choose(value: string) {
-    if (value === selected || loadingSelection) return;
-    setLoadingSelection(true);
-    try {
-      await load(value);
-    } finally {
-      setLoadingSelection(false);
-    }
+  useEffect(() => { setSearch(appliedSearch); void load(); return () => { requestId.current++; }; }, [days, diagnosis, errorType, appliedSearch, offset, entryId]);
+  function navigate(changes: Record<string, string | number>) {
+    const next = new URLSearchParams({ days: String(days), search: appliedSearch, diagnosis, errorType, offset: "0", ...Object.fromEntries(Object.entries(changes).map(([key, value]) => [key, String(value)])) });
+    if (next.get("diagnosis") === "none") next.delete("errorType");
+    for (const [key, value] of [...next]) if (!value) next.delete(key);
+    const hash = `#handbook?${next}`;
+    if (location.hash === hash) void load(); else location.hash = hash;
   }
-  const hasFrequencies = Boolean(data?.frequencies?.length);
-  const preferredDifficulty = ["standard", "easy", "challenge"].find((value) => data?.practice?.byDifficulty?.[value] > 0) || "standard";
-  const practiceHref = data?.practice?.status === "available" ? `#practice?${new URLSearchParams({ targetErrorType: selected, difficulty: preferredDifficulty, returnDays: String(data.days) })}` : undefined;
-  return (
-    <div className="handbook-page">
-      <div className="coach-header">
-        <Heading
-          eyebrow="HANDBOOK · REFERENCE"
-          title="Learn from your own words."
-          detail={t("Revisit corrections and notes from your writing. Try a fresh example without looking, then compare it with your notes.")}
-        />
-        <button className="secondary" onClick={() => load()} disabled={busy || loadingSelection}>
-          {busy ? "Loading…" : "Refresh"}
-        </button>
-      </div>
-      <form className="handbook-filters" onSubmit={(event) => { event.preventDefault(); load("", days, search.trim()); }}>
-        <label>Time window<select value={days} disabled={busy} onChange={(event) => load("", Number(event.target.value), appliedSearch)}>
-          <option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All history</option>
-        </select></label>
-        <label>{t("Search your examples")}<input type="search" value={search} maxLength={200} onChange={(event) => setSearch(event.target.value)} placeholder={t("Search sentences, corrections or notes")} /></label>
-        <button className="primary" type="submit" disabled={busy}>Search</button>
-        {appliedSearch && <button type="button" disabled={busy} onClick={() => { setSearch(""); load("", days, ""); }}>Clear search</button>}
-      </form>
-      <HandbookReports />
-      {!data &&
-        (busy ? (
-          <State title={t("Loading your handbook…")} />
-        ) : error ? (
-          <Panel title="Unable to load">
-            <div className="handbook-empty">
-              <State title={t("Your learning notes could not be loaded.")} detail={error} />
-              <button className="primary" onClick={() => load()}>
-                Try again
-              </button>
-            </div>
-          </Panel>
-        ) : null)}
-      {data && (
-        <>
-          {error && <State title="Could not update handbook" detail={error} />}
-          <Panel title="Your writing history" className="coach-sample">
-            <dl className="coach-sample-grid">
-              <div>
-                <dt>Writing entries</dt>
-                <dd>
-                  {data.stats?.total_inputs || 0}
-                  <span> entries</span>
-                </dd>
-              </div>
-              <div>
-                <dt>Grammar observations</dt>
-                <dd>
-                  {data.stats?.total_diagnoses || 0}
-                  <span> observations</span>
-                </dd>
-              </div>
-              <div>
-                <dt>Time window</dt>
-                <dd>
-                  {data.days === 0 ? "All history" : data.days ?? "—"}
-                  {data.days !== 0 && <span> days</span>}
-                </dd>
-              </div>
-            </dl>
-          </Panel>
-          {hasFrequencies ? (
-            <>
-              <div className="handbook-list" aria-label="Filter by error type">
-                {data.frequencies.map((item: any) => (
-                  <button
-                    className={selected === item.error_type ? "selected" : ""}
-                    key={item.error_type}
-                    onClick={() => choose(item.error_type)}
-                    aria-pressed={selected === item.error_type}
-                    disabled={busy || loadingSelection}
-                  >
-                    {item.error_type}
-                    <span>{item.count}</span>
-                  </button>
-                ))}
-              </div>
-              <div aria-busy={busy}>
-              {busy && <p role="status">Updating examples…</p>}
-              <Panel title={selected}>
-                {data.evidence && <HandbookKnowledge key={`${selected}:${data.days}:${data.ruleVersion}`} errorType={selected} days={data.days} version={data.ruleVersion} evidence={data.evidence} disabled={busy} practice={data.practice} practiceHref={practiceHref} />}
-                {data.examples?.length ? (
-                  data.examples.map((item: any, index: number) => (
-                    <article
-                      className="activity handbook-example"
-                      key={item.id || `${item.original_text}-${index}`}
-                    >
-                      <header className="handbook-source">
-                        <span>From your Review log</span>
-                        {item.timestamp && <time dateTime={item.timestamp}>{Number.isFinite(Date.parse(item.timestamp)) ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.timestamp)) : "Date unavailable"}</time>}
-                        {item.entryId && <details><summary>Source details</summary><p>Review log entry: <code>{item.entryId}</code></p><p>Find this entry in your saved Review log using its entry ID.</p></details>}
-                      </header>
-                      <div>
-                        <span>Original</span>
-                        {item.correction ? <HandbookSentence original={item.original_text} correction={item.correction} /> : <p lang="en">{item.original_text}</p>}
-                      </div>
-                      <div>
-                        <span>Correction</span>
-                        <HandbookSentence original={item.original_text} correction={item.correction || ""} corrected />
-                      </div>
-                      {item.explanation && (
-                        <div>
-                          <span>Why</span>
-                          <p>{item.explanation}</p>
-                        </div>
-                      )}
-                      {item.remember && (
-                        <div>
-                          <span>Remember</span>
-                          <ul>{String(item.remember).split(/\r?\n/).filter(Boolean).map((note, i) => <li key={i}>{note}</li>)}</ul>
-                        </div>
-                      )}
-                      {item.refine && <details className="handbook-refine"><summary>More natural</summary><p lang="en">{item.refine}</p></details>}
-                      {practiceHref && <footer className="handbook-example-action"><a href={practiceHref}>Practice this pattern</a></footer>}
-                    </article>
-                  ))
-                ) : (
-                  <div className="handbook-empty">
-                    <State
-                      title={t("No examples in this category yet.")}
-                      detail={t("Keep saving your writing to build a collection of useful examples.")}
-                    />
-                  </div>
-                )}
-              </Panel>
-              {data.pagination?.total > 0 && <nav className="handbook-pagination" aria-label="Example pages">
-                <span role="status">{data.pagination.offset + 1}–{Math.min(data.pagination.offset + data.pagination.limit, data.pagination.total)} of {data.pagination.total} examples{data.search ? ` matching “${data.search}”` : ""}</span>
-                <button disabled={busy || data.pagination.offset === 0} onClick={() => load(selected, days, appliedSearch, Math.max(0, data.pagination.offset - data.pagination.limit))}>Previous</button>
-                <button disabled={busy || !data.pagination.hasMore} onClick={() => load(selected, days, appliedSearch, data.pagination.offset + data.pagination.limit)}>Next</button>
-              </nav>}
-              </div>
-            </>
-          ) : (
-            <Panel title={data.search ? "No matching examples." : t("A little more practice first.")} className="coach-empty-priorities">
-              <div className="handbook-empty">
-                {data.search ? <p>No examples match “{data.search}” in this time window. Try another phrase, clear your search or choose a longer time window.</p> : <p>No grammar observations {data.days === 0 ? "in your saved history" : `in the last ${data.days} days`}. Check and save a sentence to start collecting corrections and explanations here.</p>}
-                <a className="primary" href="#grammar">
-                  Check a sentence
-                  <Icon name="arrow" />
-                </a>
-              </div>
-            </Panel>
-          )}
-        </>
-      )}
+  function timestampLabel(value: string) {
+    if (!Number.isFinite(Date.parse(value))) return "Date unavailable";
+    // Review Log timestamps contain Beijing wall time encoded with a Z suffix.
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(value)) + " · Beijing time";
+  }
+  return <div className="handbook-page">
+    <div className="coach-header">
+      <Heading eyebrow="HANDBOOK · HISTORY" title="Your saved Grammar checks." detail={t("Revisit your original sentences, corrections and saved explanations, newest first.")} />
+      <button className="secondary" disabled={busy} onClick={() => void load()}>{busy ? "Loading…" : "Refresh"}</button>
     </div>
-  );
+    <form className="handbook-filters" onSubmit={event => { event.preventDefault(); navigate({ search: search.trim() }); }}>
+      <label>Time window<select value={days} disabled={busy} onChange={event => navigate({ days: event.target.value })}>
+        {![0, 30, 90].includes(days) && <option value={days}>Last {days} days</option>}
+        <option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All history</option>
+      </select></label>
+      <label>Search saved checks<input type="search" value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder="Search sentences, corrections or notes" /></label>
+      <label>Diagnoses<select value={diagnosis} disabled={busy} onChange={event => navigate({ diagnosis: event.target.value })}>
+        <option value="all">All checks</option><option value="with">With diagnosed mistakes</option><option value="none">No diagnosed mistakes</option>
+      </select></label>
+      <label>Mistake type<select value={errorType} disabled={busy || diagnosis === "none"} onChange={event => navigate({ errorType: event.target.value })}>
+        <option value="">All mistake types</option>
+        {errorType && !data?.categories.some(item => item.errorType === errorType) && <option value={errorType}>{errorType}</option>}
+        {data?.categories.map(item => <option key={item.errorType} value={item.errorType}>{item.errorType} ({item.checks})</option>)}
+      </select></label>
+      <button className="primary" type="submit" disabled={busy}>Search</button>
+      {(appliedSearch || errorType || diagnosis !== "all" || offset > 0 || entryId) && <button type="button" disabled={busy} onClick={() => navigate({ search: "", errorType: "", diagnosis: "all" })}>Clear filters</button>}
+    </form>
+    {error && <div role="alert" className="handbook-empty"><State title="Could not load Handbook" detail={error} />{data && <p>Previously loaded checks remain below.</p>}<button onClick={() => void load()}>Try again</button></div>}
+    <div aria-busy={busy}>
+      {busy && <p role="status">Loading saved checks…</p>}
+      {data && <>
+        <p className="handbook-evidence" role="status">{data.pagination.total} matching saved check{data.pagination.total === 1 ? "" : "s"} · Newest first</p>
+        {data.coverage.unclassified > 0 && <p className="handbook-evidence">{data.coverage.unclassified} historical record{data.coverage.unclassified === 1 ? " has" : "s have"} no identified source and {data.coverage.unclassified === 1 ? "is" : "are"} excluded here. Your original records are preserved.</p>}
+        {data.coverage.undated > 0 && days !== 0 && <p className="handbook-evidence">Some records have no usable date and cannot be placed in this time window.</p>}
+        {data.diagnosis === "none" && <p className="handbook-evidence">No diagnosed mistakes describes the saved feedback. It does not establish error-free writing or mastery.</p>}
+        <Panel title="Grammar check log">
+          {data.entries.length ? data.entries.map(entry => <article className="activity handbook-example" key={entry.entryId} id={`check-${entry.entryId}`}>
+            <header className="handbook-source"><time>{timestampLabel(entry.timestamp)}</time><details><summary>Source details</summary><p>Saved Grammar check: <code>{entry.entryId}</code></p></details></header>
+            <div><span>Original</span>{entry.correction ? <HandbookSentence original={entry.userInput} correction={entry.correction} /> : <p lang="en">{entry.userInput}</p>}</div>
+            {entry.correction && <div><span>Correction</span><HandbookSentence original={entry.userInput} correction={entry.correction} corrected /></div>}
+            {!entry.diagnoses.length && <p className="handbook-evidence">No diagnosed mistakes in saved feedback.</p>}
+            <details className="handbook-refine"><summary>Saved explanations and notes</summary>
+              {entry.evaluate && <p>{entry.evaluate}</p>}
+              {entry.diagnoses.map((item, index) => <section className="handbook-diagnosis" key={index}><h3>{item.error_type}</h3><p>{item.explanation}</p>{item.evidence && <p>Evidence: {item.evidence}</p>}{item.suggestion && <p>Suggestion: {item.suggestion}</p>}</section>)}
+              {entry.refine && <section className="handbook-diagnosis"><h3>More natural</h3><p lang="en">{entry.refine}</p></section>}
+              {entry.remember && <section className="handbook-diagnosis"><h3>Remember</h3><p>{Array.isArray(entry.remember) ? entry.remember.join("\n") : entry.remember}</p></section>}
+              {!entry.evaluate && !entry.diagnoses.length && !entry.refine && !entry.remember && <p>No additional notes were saved.</p>}
+            </details>
+          </article>) : <div className="handbook-empty"><State title="No saved checks to show." detail={data.coverage.grammar ? "Try another search, clear your filters or return to the first page." : "Save a Grammar check to start your log, or choose a longer time window."} /><a href="#grammar">Check a sentence</a></div>}
+        </Panel>
+        {(data.pagination.total > 0 || offset > 0) && <nav className="handbook-pagination" aria-label="Grammar check pages"><span>{data.entries.length ? `${data.pagination.offset + 1}–${data.pagination.offset + data.entries.length} of ${data.pagination.total} checks` : "No checks on this page"}</span><button disabled={busy || offset === 0} onClick={() => navigate({ offset: Math.max(0, offset - data.pagination.limit) })}>Previous</button><button disabled={busy || !data.pagination.hasMore} onClick={() => navigate({ offset: offset + data.pagination.limit })}>Next</button></nav>}
+      </>}
+    </div>
+  </div>;
 }
+
 const providerNames: Record<string, string> = {
   custom: "OpenAI-compatible",
   ollama: "Ollama (local)",
@@ -2653,43 +2289,6 @@ function MarkdownFileSettings() {
   );
 }
 
-function Heading({ title, detail }: { eyebrow: string; title: React.ReactNode; detail: string }) {
-  return (
-    <div className="heading">
-      <h1>{title}</h1>
-      <p>{detail}</p>
-    </div>
-  );
-}
-function Panel({
-  title,
-  children,
-  icon,
-  className = "",
-}: {
-  title: string;
-  children: React.ReactNode;
-  icon?: React.ComponentProps<typeof Icon>["name"];
-  className?: string;
-}) {
-  return (
-    <section className={`panel ${className}`}>
-      <div className="panel-heading">
-        {icon && <Icon name={icon} />}
-        <h2>{title}</h2>
-      </div>
-      {children}
-    </section>
-  );
-}
-function State({ title, detail }: { title: string; detail?: string }) {
-  return (
-    <div className="state">
-      <strong>{title}</strong>
-      {detail && <p>{detail}</p>}
-    </div>
-  );
-}
 function AudioButton({
   text,
   small,
@@ -2935,7 +2534,7 @@ export function App() {
     "word-lookup": <WordLookup />,
     coach: <Coach />,
     practice: <Practice key={routeHash} />,
-    handbook: <Handbook key={routeHash} />,
+    handbook: <Handbook />,
     settings: <LlmSettings />,
   };
   return (

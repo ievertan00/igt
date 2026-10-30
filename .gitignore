@@ -24,6 +24,10 @@ tests/*
 !tests/word-client-timeout.test.mjs
 !tests/word-lookup.test.mjs
 !tests/handbook-browser-data.test.mjs
+!tests/grammar-history.test.mjs
+!tests/handbook-cli.test.mjs
+!tests/my-learning.test.mjs
+!tests/handbook-evidence.test.mjs
 !tests/handbook-rules.test.mjs
 !tests/handbook-practice.test.mjs
 !tests/handbook-reports.test.mjs

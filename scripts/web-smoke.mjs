@@ -26,16 +26,13 @@ try {
       if (path === "/runtime") {
         await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ runtime: "local", storage: { database: "sqlite", assets: "markdown" } }) });
       } else if (path === "/dashboard") {
-        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ stats: { totalInputs: 2, dueCounts: { vocab: 1 } }, today: { inputs_today: 1 }, recentActivity: [], coach: { focus: null } }) });
+        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ days: 30, summary: [], events: [], pagination: { total: 0, limit: 10, offset: 0, hasMore: false }, coverage: [], undated: 0, patterns: [] }) });
       } else if (path === "/coach") {
-        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ windowDays: 30, sample: { totalInputs: 2, totalDiagnoses: 1 }, priorities: [], limitations: ["mocked browser smoke data"] }) });
-      } else if (path === "/coach/analyze" && request.method() === "POST") {
-        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ windowDays: 30, sample: { totalInputs: 3, totalDiagnoses: 2 }, priorities: [], limitations: ["forced refresh completed"] }) });
+        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ days: 90, checks: 2, patterns: [], coverage: { grammar: 2, unclassified: 0, excludedOtherSources: 0, undated: 0 } }) });
       } else if (path === "/handbook") {
         const params = new URL(request.url()).searchParams;
         handbookRequests.push(params.get("errorType") || "");
-        const selected = params.get("errorType") || null;
-        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ days: 90, stats: { total_inputs: 2, total_diagnoses: 1 }, frequencies: [{ error_type: "Articles", count: 2 }], selected, examples: selected ? [{ original_text: "I bought book.", correction: "I bought a book.", explanation: "Use an article before a singular countable noun." }] : [] }) });
+        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ days: 90, search: "", errorType: params.get("errorType") || "", diagnosis: "all", coverage: { grammar: 1, excludedOtherSources: 0, unclassified: 0, undated: 0 }, categories: [{ errorType: "Articles", checks: 1 }], pagination: { total: 1, limit: 10, offset: 0, hasMore: false }, entries: [{ entryId: "smoke-grammar", timestamp: "2026-10-30T10:00:00Z", userInput: "I bought book.", correction: "I bought a book.", diagnoses: [{ error_type: "Articles", explanation: "Use an article before a singular countable noun." }] }] }) });
       } else if (path === "/review/due") {
         await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ cards: [{ id: 1, word: "consolidate", zh: "巩固；合并", meaning: "combine into one", example: "We consolidated the notes.", pos: "verb" }] }) });
       } else if (path === "/review/grade" && request.method() === "POST") {
@@ -93,7 +90,7 @@ try {
     await page.waitForFunction(() => location.hash === "#translation");
     assert.equal(await page.$eval(".menu-toggle", (node) => node.getAttribute("aria-expanded")), "false");
     await page.goto("http://127.0.0.1:4173/#coach", { waitUntil: "networkidle0" });
-    assert.match(await page.$eval("h1", (node) => node.textContent), /你的下一轮学习计划/);
+    assert.match(await page.$eval("h1", (node) => node.textContent), /Understand your recurring mistakes/);
     for (const route of ["translation", "word-lookup", "word-review", "practice", "ask", "handbook", "coach"]) {
       await page.goto(`http://127.0.0.1:4173/#${route}`, { waitUntil: "networkidle0" });
       await page.waitForSelector("h1", { timeout: 3000 });
@@ -147,10 +144,11 @@ try {
     assert.equal(practiceGenerateBody.context, "work");
     await page.goto("http://127.0.0.1:4173/#coach", { waitUntil: "networkidle0" });
     await page.click("button.secondary");
-    await page.waitForFunction(() => document.body.textContent.includes("forced refresh completed"));
+    await page.waitForFunction(() => document.body.textContent.includes("2 saved Grammar check"));
     await page.goto("http://127.0.0.1:4173/#handbook", { waitUntil: "networkidle0" });
     await page.waitForFunction(() => document.body.textContent.includes("Articles"));
-    await page.click(".handbook-list button");
+    await page.select(".handbook-filters label:last-of-type select", "Articles");
+    await page.click(".handbook-refine summary");
     await page.waitForFunction(() => document.body.textContent.includes("Use an article"));
     assert.ok(handbookRequests.includes("Articles"));
     await page.goto("http://127.0.0.1:4173/#word-review", { waitUntil: "networkidle0" });

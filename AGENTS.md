@@ -22,6 +22,7 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `scripts/` — database, import, indexing, and verification utilities
 - `tests/` — Node test-suite
 - `docs/` — project documentation and design notes
+- `DESIGN.md` — UI design guidelines
 
 ## Development commands
 
@@ -41,6 +42,7 @@ There is no single full-suite npm script; run individual tests with `node --test
 
 ## Important conventions
 
+- Never read files under `docs/` (including subfolders) unless the user explicitly instructs you to do so. Saving files under `docs/` is allowed.
 - Keep secrets, local paths, ports, and provider choices in `.env`; use `.env.example` as the template. Never commit `.env`.
 - Preserve Markdown exports and vault files as the user-readable learning record. Practice question content is an exception: the actual configured `igt_data.db` is authoritative; never replace its content or usage with a test database, an old seed, or a historical report.
 - For Practice, read `lib/features/practice/SCHEMA.md`. `canonical-questions.json` is a versioned export of the actual database, not a competing authority. Run `npm run verify:practice-bank` before and after changes; deliberately export live content changes with `npm run export:practice-bank`. Tests rebuild only in memory and never write to the actual database.
@@ -57,7 +59,7 @@ The working tree may contain live SQLite `-wal`/`-shm` files and uncommitted fea
 ## UI Development Rules
 
 For UI-related tasks:
-- Read docs/DESIGN.md before making design decisions.
+- Read the root-level `DESIGN.md` before making design decisions.
 - Follow the existing design tokens and shared components.
 - Preserve product functionality and business logic.
 - Do not independently introduce a new visual style.

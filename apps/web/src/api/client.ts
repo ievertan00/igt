@@ -1,5 +1,27 @@
 export type RequestJsonInit = RequestInit & { timeoutMs?: number };
 
+export type GrammarHistory = {
+  days: number; search: string; errorType: string; diagnosis: "all" | "with" | "none";
+  coverage: { grammar: number; excludedOtherSources: number; unclassified: number; undated: number };
+  categories: Array<{ errorType: string; checks: number }>;
+  pagination: { total: number; limit: number; offset: number; hasMore: boolean };
+  entries: Array<{ entryId: string; timestamp: string; userInput: string; correction?: string | null;
+    refine?: string | null; evaluate?: string | null; remember?: string | string[] | null;
+    diagnoses: Array<{ error_type: string; severity?: string; explanation?: string; evidence?: string; suggestion?: string }> }>;
+};
+
+export type CoachPatterns = { days: number; checks: number; coverage: GrammarHistory["coverage"]; patterns: Array<{ errorType: string; checks: number; observations: number; latest: string; version: string }> };
+export type CoachDetail = { errorType: string; days: number; version: string; sampled: boolean; cached: boolean; generatedAt: string;
+  explanation: { observedPattern: string; principle: string; qualifications: string; possibleCauses: Array<{ hypothesis: string; evidenceIds: string[] }>; examples: Array<{ entryId: string; explanation: string }> };
+  evidence: Array<{ entryId: string; timestamp: string; original: string; correction?: string | null }> };
+export type LearningOverview = { days: number; summary: Array<{ type: string; label: string; count: number }>;
+  events: Array<{ source: string; id: string; type: string; timestamp: string; precision?: string; title: string; score?: number; href?: string | null }>;
+  pagination: GrammarHistory["pagination"]; coverage: Array<{ source: string; status: string; count?: number; note: string }>;
+  undated: number; patterns: Array<{ errorType: string; checks: number }>;
+  effort: { daily: Array<{ date: string; label: string; count: number }>; weekly: Array<{ start: string; count: number }>; monthly: Array<{ start: string; count: number }>;
+    momentum: { current: number; previous: number; percent: number | null } };
+  priorities: Array<{ errorType: string; hits: number; habit?: string }> };
+
 function webError(code: string, message: string, retryable: boolean, cause?: unknown) {
   const error = new Error(message, cause === undefined ? undefined : { cause });
   Object.assign(error, { code, retryable });
@@ -53,7 +75,7 @@ export const webApi = {
   getFileSettings: () => requestJson<any>("/settings/files"),
   saveFileSettings: (settings: unknown) => requestJson<any>("/settings/files", { method: "POST", body: JSON.stringify(settings) }),
   pickFileSetting: (kind: "file" | "folder") => requestJson<{ path: string }>("/settings/files/pick", { method: "POST", body: JSON.stringify({ kind }), timeoutMs: 0 }),
-  getDashboard: () => requestJson<any>("/dashboard"),
+  getDashboard: (options: { days?: number; offset?: number; limit?: number } = {}) => requestJson<LearningOverview>(`/dashboard?${new URLSearchParams({ days: String(options.days ?? 30), offset: String(options.offset ?? 0), limit: String(options.limit ?? 10) })}`),
   checkGrammar: (text: string) => requestJson<any>("/grammar", { method: "POST", body: JSON.stringify({ text }) }),
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
   translate: (text: string, direction: string) => requestJson<any>("/translation", { method: "POST", body: JSON.stringify({ text, direction }) }),
@@ -70,8 +92,8 @@ export const webApi = {
   deleteReview: (cardId: number) => requestJson<any>("/review/delete", { method: "POST", body: JSON.stringify({ card_id: cardId }) }),
   listVocabularyWords: (options: { search: string; sort: string; schedule?: string; status?: string; offset: number; limit: number }, signal?: AbortSignal) => requestJson<import("../VocabularyLibrary").VocabularyLibraryResult>(`/vocab/words?${new URLSearchParams({ q: options.search, sort: options.sort, schedule: options.schedule || "all", status: options.status || "all", offset: String(options.offset), limit: String(options.limit) })}`, { signal }),
   vocabularyHistory: (cardId: number, offset: number, signal?: AbortSignal) => requestJson<import("../VocabularyLibrary").VocabularyHistoryResult>(`/vocab/history?${new URLSearchParams({ card_id: String(cardId), offset: String(offset) })}`, { signal }),
-  getCoach: () => requestJson<any>("/coach?windowDays=30"),
-  analyzeCoach: () => requestJson<any>("/coach/analyze", { method: "POST", body: "{}" }),
+  getCoach: (days = 90) => requestJson<CoachPatterns>(`/coach?days=${days}`),
+  explainCoach: (errorType: string, days: number, version: string, refresh = false) => requestJson<CoachDetail>("/coach/explain", { method: "POST", body: JSON.stringify({ errorType, days, version, refresh }), timeoutMs: 180_000 }),
   // Dictionary generation can outlast the generic 30-second deadline,
   // especially when the provider retries or a local model is loading.
   lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`, { timeoutMs: 180_000 }),
@@ -85,9 +107,10 @@ export const webApi = {
     timeoutMs: (question as { kind?: string } | undefined)?.kind === "choice" ? 120_000 : 30_000,
   }),
   getStatusMessage: () => requestJson<any>("/status-message"),
-  getHandbook: (errorType = "", options: { days?: number; search?: string; limit?: number; offset?: number } = {}) => {
-    const params = new URLSearchParams({ days: String(options.days ?? 90), errorType, search: options.search ?? "", limit: String(options.limit ?? 5), offset: String(options.offset ?? 0) });
-    return requestJson<any>(`/handbook?${params}`);
+  getHandbook: (errorType = "", options: { days?: number; search?: string; entryId?: string; diagnosis?: "all" | "with" | "none"; limit?: number; offset?: number } = {}) => {
+    const params = new URLSearchParams({ days: String(options.days ?? 90), errorType, search: options.search ?? "", diagnosis: options.diagnosis ?? "all", limit: String(options.limit ?? 10), offset: String(options.offset ?? 0) });
+    if (options.entryId) params.set("entry", options.entryId);
+    return requestJson<GrammarHistory>(`/handbook?${params}`);
   },
   explainHandbookRule: (errorType: string, days: number, version: string) => requestJson<{ exampleCount: number; rule: { title: string; content: string; generatedAt?: string; cached?: boolean } }>("/handbook/rule", { method: "POST", body: JSON.stringify({ errorType, days, version }), timeoutMs: 180_000 }),
   listHandbookReports: () => requestJson<{ reports: Array<{ id: string; date: string; provider: string }>; truncated?: boolean }>("/handbook/reports"),

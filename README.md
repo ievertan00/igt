@@ -413,202 +413,39 @@ Shows today’s checked sentences, words added, and grammar/vocabulary cards rev
 
 When cards are due, choose `g` for five grammar cards, `w` for five vocabulary cards, or Enter to continue later. Review counts cover cards already in SQLite; `/word` also imports saved vocabulary notes.
 
-`/today` also shows pending tasks from the active coach plan. Mark one complete with `/coach --complete=<task-id>`; it will no longer appear in the next `/today` view.
+`/today` retains review entry points; it no longer creates Coach plans or displays plan tasks.
 
-### Analytics (`/stats`)
+### Learning Overview (`/stats`)
 
-The stats dashboard provides a comprehensive view of your learning journey:
+Web Overview and `/stats` summarize saved activity by type and show a recent-activity timeline. Grammar checks, sentence Practice, vocabulary review attempts, saved words, and Ask notes keep separate counts. Activity volume is not a mastery score. Unsaved translation, listening, and conversation interactions have no durable history; unavailable sources and undated records are disclosed.
 
-![/stats screenshot](assets/03_stats.png)
-
-- **Effort Trend**: A visual 7-day chart of your input volume.
-- **Mastery Breakdown**: Identifies your most frequent error types (Top 3 Priorities).
-
-### Error Handbook (`/handbook`)
-
-The handbook turns your accumulated error history into a personalized reference document. Instead of generic grammar rules, it analyzes your actual mistakes, identifies your specific recurring sub-pattern (your "linguistic fingerprint"), and explains the root cause in terms of what you personally do wrong.
-
-Run it from the command line:
-
-```sh
-node tools/igt-handbook.mjs --days=30
+```text
+/stats --days 30 --limit 10
+/stats --days 0 --offset 10
 ```
 
-![/handbook screenshot](assets/05_handbook.png)
+### Grammar Check History (`/handbook`)
 
-**What the generated file looks like:**
+Handbook lists explicitly saved Grammar checks, newest first, preserving the original text, correction, explanations, and date. Search and filter by mistake type, date window, or no diagnosed mistakes. Each check appears once even if it contains several diagnoses. A check with no diagnoses does not establish mastery or error-free writing. Legacy records with unknown origins remain intact and are excluded from Grammar-only views.
 
-The output is a Markdown file structured for Obsidian (collapsible callouts, tables). Here is what a realistic excerpt looks like:
-
----
-
-```markdown
-# 📘 Personal English Error Handbook
-
-> [!INFO] Generated with: GEMINI (gemini-2.5-pro) on 2026-05-07
-
-> [!ABSTRACT] 📊 Performance Summary
->
-> - **Period**: Last 30 days
-> - **Inputs Analyzed**: 283
-> - **Total Diagnoses**: 156
-> - **Unique Error Types**: 6
-> - **Critical Priority**: Verb Tense
-
-## 📝 Executive Linguistic Summary
-
-### 📝 Linguistic Profile
-
-Your writing demonstrates solid B1–B2 command of vocabulary and sentence structure.
-The dominant pattern across your 283 inputs is tense confusion at clause boundaries —
-particularly mixing simple past and present perfect in the same sentence. Mechanics
-errors (spelling, punctuation) are rare, suggesting strong written foundations.
-
-### 🚀 Key Strengths & Bottlenecks
-
-- **Strength**: Article usage has improved markedly — only 3 occurrences in the last
-  two weeks, down from 14 the month before.
-- **Bottleneck**: Verb tense accounts for 41% of all diagnoses. The sub-pattern is
-  specific: you use present perfect ("have gone", "have seen") with explicit past-time
-  adverbs ("yesterday", "last week") that require simple past.
-
-### 🎯 Strategic Goals
-
-1. Drill the present-perfect vs. simple-past contrast with time-adverb triggers for
-   the next 2 weeks; use the /word review deck daily.
-2. Target Preposition Usage in /practice sessions — fixed verb–preposition pairs
-   (arrive at, good at, depend on) account for your 9 remaining preposition errors.
-
-> [!TIP] Coach's Note
-> One targeted drill per day on the present perfect / simple past contrast will
-> resolve 40% of your remaining error load.
-
-## 🎯 Error Frequency Ranking
-
-| Error Type             | Freq | Severity    |
-| :--------------------- | :--- | :---------- |
-| Verb Tense             | 64   | 🔴 Major    |
-| Article Usage          | 28   | 🟡 Moderate |
-| Preposition Usage      | 19   | 🟡 Moderate |
-| Subject-Verb Agreement | 14   | 🟢 Minor    |
-| Word Choice            | 11   | 🟢 Minor    |
-| Punctuation            | 9    | 🟢 Minor    |
-
-## 📈 Weekly Trend
-
-| Week    | Errors            |
-| :------ | :---------------- |
-| 2026-17 | ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 14 |
-| 2026-18 | ▓▓▓▓▓▓▓▓▓▓▓ 11    |
-| 2026-19 | ▓▓▓▓▓▓▓▓ 8        |
-| 2026-20 | ▓▓▓▓▓ 5           |
-
-> [!SUCCESS] ✅ Good news! Your errors decreased by 28.6% in recent weeks.
-
-## 🔍 Detailed Error Analysis
-
-> [!CAUTION]- 🔴 Verb Tense (64 Occurrences)
->
-> ### 📝 Example 1
->
-> > [!FAILURE] Original (❌)
-> > `I have seen him yesterday at the office.`
->
-> > [!SUCCESS] Corrected (✅)
-> > `I saw him yesterday at the office.`
->
-> > [!TIP] Natural Phrasing (✨)
-> > `I ran into him at the office yesterday.`
->
-> > [!INFO] Logic & Rules
-> > **Why**: "Yesterday" is a specific past-time marker; present perfect cannot
-> > be used with it. Simple past ("saw") is required.
-> > **Rule**: Present perfect = no specific time anchor. Simple past = specific
-> > time anchor (yesterday, last week, in 2020).
-> > **Pro Tip**: If you can answer "when exactly?", use simple past.
->
-> ---
->
-> ### 📝 Example 2
->
-> > [!FAILURE] Original (❌)
-> > `She has graduated last June and found a job immediately.`
->
-> > [!SUCCESS] Corrected (✅)
-> > `She graduated last June and found a job immediately.`
->
-> > [!TIP] Natural Phrasing (✨)
-> > `She graduated last June and landed a job right away.`
->
-> > [!INFO] Logic & Rules
-> > **Why**: "Last June" is a specific past time — present perfect is invalid here.
-> > **Rule**: Both verbs in a compound predicate must share the same tense.
-
-## 📚 Grammar Rules Reference (AI-Powered)
-
-### Grammar
-
-> [!NOTE]- 🔴 Verb Tense
->
-> #### Overview
->
-> English tense encodes not just time but the speaker's relationship to the event.
-> Present perfect signals relevance to the present moment; simple past closes the
-> event as finished history. The two are not interchangeable.
->
-> #### Detected Habit
->
-> _"The Yesterday Trap"_ — you consistently reach for present perfect when narrating
-> recent past events, then attach a specific time adverb that contradicts it.
->
-> #### Root Cause
->
-> In Mandarin, aspect markers (了, 过) indicate completion without tense distinction,
-> so the present-perfect / simple-past contrast has no direct L1 equivalent —
-> learners default to the "more complete-sounding" form.
->
-> #### Before / After
->
-> | ❌ User wrote                        | ✅ Should be                    | Why                          |
-> | :----------------------------------- | :------------------------------ | :--------------------------- |
-> | I have seen him yesterday.           | I saw him yesterday.            | specific time = simple past  |
-> | She has graduated last June.         | She graduated last June.        | "last June" anchors the past |
-> | We have finished the report at 5 PM. | We finished the report at 5 PM. | clock time = simple past     |
->
-> #### The Rule
->
-> - Use **simple past** whenever a specific time expression is present
->   (yesterday, last week, in 2020, at 3 PM, when I was young).
-> - Use **present perfect** when no time is specified and the focus is on
->   the current result or relevance (I've lost my keys — they're still missing).
-> - Never combine present perfect with a specific past-time adverb.
-> - In compound predicates ("she graduated and found"), both verbs must match.
->
-> #### Mnemonic
->
-> _"Specific time? Simple past every time."_
->
-> > [!TIP] Key Takeaway
-> > If you can answer "when exactly?", the answer is always simple past —
-> > no exceptions.
+```text
+/handbook
+/handbook --search "a book" --days 0
+/handbook --type "Articles" --limit 10 --offset 0
+/handbook --diagnosis none
 ```
 
----
+### Recurring Mistakes (`/coach`)
 
-**CLI options:**
+Coach analyzes saved Grammar checks only. A recurring pattern requires at least two distinct checks. The default command lists patterns without a model call; requesting a pattern generates possible causes, the grammar principle, contextual qualifications, and examples linked to their saved records. Causes are hypotheses, not confirmed psychological explanations or assessments of overall English ability.
 
-```sh
-node tools/igt-handbook.mjs --days=30            # last 30 days (default)
-node tools/igt-handbook.mjs --days=7             # focus on this week only
-node tools/igt-handbook.mjs --days=0             # all time
-node tools/igt-handbook.mjs --days=30 --incremental   # skip unchanged sections
-node tools/igt-handbook.mjs --cache-stats        # show what's cached
-node tools/igt-handbook.mjs --days=30 --clear-cache   # force full rebuild
+```text
+/coach --days 90
+/coach --type "Articles" --days 90
+/coach --type "Articles" --refresh
 ```
 
-`--incremental` computes an MD5 of your example data for each error type. If the examples haven't changed since the last run, the cached LLM output is reused — typically saving 60–80% of API calls when you regenerate weekly.
-
-The output file is saved to `IGT_REPORT_PATH` (set in `.env`). The filename includes the date: `handbook_2026-05-07.md`. Opening it in Obsidian renders the collapsible callouts, tables, and tip boxes interactively.
+These commands replace Handbook report generation/cache management and Coach plan/task management. The `/plan` alias is removed. Existing reports, plans, and learning records are preserved. Use `--help` for all supported options.
 
 ### Sentence Translation Practice (`/practice`)
 
@@ -696,9 +533,9 @@ Start IGT with `igt`. All commands use a `/` prefix. Most have a short alias (sh
 | `/word` (`/w`, `/a`) | Vocabulary lookup, saving, and SRS review; `/word --list` to browse |
 | `/practice sentence` | Sentence production practice                                  |
 | `/today` | Grammar and vocabulary review counts, listening, writing, and conversation |
-| `/stats` (`/st`)   | Factual activity, recurring errors, mastery, and review statistics |
-| `/handbook` (`/h`) | Generate your personal error handbook (runs as background task)   |
-| `/coach` (`/plan`)  | Use the Pro model to analyze general English ability and evidence-backed weaknesses, then save a two-week plan; use `--complete=<task-id>` to complete a task |
+| `/stats` (`/st`) | Recorded learning activity summary and timeline |
+| `/handbook` (`/h`) | Browse, search and filter saved Grammar checks |
+| `/coach` | Recurring Grammar mistakes with explanations on demand |
 | `/practice` (`/p`) | Unified word, sentence, and choice practice entry point          |
 | `/ask`             | Open a multi-turn grammar consultation thread (opt-in save)       |
 | `/chat`            | Free-conversation practice with gentle corrections (optional voice) |
