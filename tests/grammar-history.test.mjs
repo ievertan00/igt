@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { formatReviewEntry, parseReviewLog } from "../lib/db/review-log.mjs";
+import { formatReviewEntry, parseReviewLog, readReviewLog } from "../lib/db/review-log.mjs";
 import { saveGrammarReview } from "../lib/application/grammar.mjs";
 import { buildGrammarHistory, getGrammarHistory } from "../lib/application/grammar-history.mjs";
 
@@ -50,6 +50,43 @@ test("history includes whole Grammar checks newest first with honest source cove
   assert.equal(result.entries[1].diagnoses.length, 2);
   assert.deepEqual(result.coverage, { grammar: 2, excludedOtherSources: 1, unclassified: 1, undated: 0 });
   assert.deepEqual(result.categories, [{ errorType: "Articles", checks: 1 }]);
+});
+
+test("Handbook includes historical Review Log checks without changing sources or Coach evidence", () => {
+  const entries = records();
+  const before = JSON.stringify(entries);
+  const result = getGrammarHistory({}, { now, loadData: () => ({ entries }) });
+  assert.equal(result.pagination.total, 3);
+  assert.equal(result.coverage.legacyIncluded, 1);
+  assert.equal(result.entries.find(entry => entry.entryId === "legacy").source, "unknown");
+  assert.equal(result.entries.some(entry => entry.source === "text"), false);
+  assert.equal(getGrammarHistory({ search: "Original legacy" }, { now, loadData: () => ({ entries }) }).pagination.total, 1);
+  assert.equal(getGrammarHistory({ errorType: "Articles" }, { now, loadData: () => ({ entries }) }).pagination.total, 2);
+  assert.equal(buildGrammarHistory(entries, {}, now).pagination.total, 2);
+  assert.equal(JSON.stringify(entries), before);
+});
+
+test("Handbook rereads the Markdown log on refresh and preserves its contents", () => {
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), "igt-handbook-log-"));
+  try {
+    const reviewPath = path.join(folder, "00_Review_logs.md");
+    const legacy = serialize("historical", undefined, [issue], "2020-01-01T12:00:00Z");
+    fs.writeFileSync(reviewPath, legacy);
+    const loadData = () => ({ entries: readReviewLog(reviewPath) });
+    const initial = getGrammarHistory({ days: 0 }, { now, loadData });
+    assert.equal(initial.entries[0].userInput, "Original historical");
+    assert.equal(initial.entries[0].correction, "Corrected historical");
+    assert.equal(initial.entries[0].diagnoses[0].explanation, issue.explanation);
+    assert.equal(fs.readFileSync(reviewPath, "utf8"), legacy);
+
+    const latest = serialize("latest", "grammar", [issue]);
+    fs.appendFileSync(reviewPath, latest);
+    const refreshed = getGrammarHistory({ days: 0 }, { now, loadData });
+    assert.deepEqual(refreshed.entries.map(entry => entry.entryId), ["latest", "historical"]);
+    assert.equal(fs.readFileSync(reviewPath, "utf8"), legacy + latest);
+  } finally {
+    fs.rmSync(folder, { recursive: true, force: true });
+  }
 });
 
 test("no diagnosed mistakes filter composes with search, dates and pagination", () => {

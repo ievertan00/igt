@@ -75,7 +75,8 @@ test("dedicated CLI runs without a provider or database and leaves learning file
     const result = launch(["--days=0", "--diagnosis=none"]);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /saved-check/);
-    assert.match(result.stdout, /1 record\(s\) have unclassified origins/);
+    assert.match(result.stdout, /Includes 1 historical check/);
+    assert.match(result.stdout, /2 matching check\(s\)/);
     assert.equal(fs.readFileSync(reviewPath, "utf8"), content);
     const expectedFiles = [".env", "igt_config.json", "review.md"];
     assert.deepEqual(fs.readdirSync(folder).sort(), expectedFiles);
