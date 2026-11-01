@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { askTurn, saveAsk } from "../lib/application/ask.mjs";
 import { listAskNotes } from "../lib/application/ask-notes.mjs";
-import { askMetadata, readAskMetadata } from "../lib/features/ask/metadata.mjs";
+import { broadAskTags, askMetadata, readAskMetadata } from "../lib/features/ask/metadata.mjs";
 import * as history from "../lib/features/ask/history.mjs";
 
 function fixture(t) {
@@ -40,7 +40,7 @@ test("CLI and Web generate metadata in their existing answer request and save wi
   const note = listAskNotes(config).notes[0];
   assert.equal(note.title, answer.title);
   assert.equal(note.category, "Grammar");
-  assert.deepEqual(note.tags, answer.tags);
+  assert.deepEqual(note.tags, ["Tenses"]);
   const parsed = readAskMetadata(note.content);
   assert.ok(parsed.body.includes(answer.answer));
   assert.ok(!parsed.body.includes("metadataSource:"));
@@ -54,7 +54,7 @@ test("whole-conversation save generates metadata in its existing summary request
   } };
   const result = await saveAsk({ messages: [answer, { question: "Another example?", answer: "I have worked here for years." }], config, llm });
   assert.equal(calls, 1);
-  assert.deepEqual(result.metadata.tags, answer.tags);
+  assert.deepEqual(result.metadata.tags, ["Tenses"]);
   assert.equal(result.vaultFile, `${answer.title}.md`);
 });
 
@@ -63,7 +63,7 @@ test("metadata normalization, YAML quoting, unsafe filenames and legacy notes", 
   const message = { ...answer, title: '冠词:CON?与[名词]', tags: ["#since for", "since for", "中文 标签", null, "<bad>"] };
   const result = await saveAsk({ messages: [message], config });
   assert.equal(result.vaultFile, "冠词CON与名词.md");
-  assert.deepEqual(result.metadata.tags, ["since-for", "中文-标签", "bad"]);
+  assert.deepEqual(result.metadata.tags, ["Usage"]);
   fs.writeFileSync(path.join(config.AskDir, "legacy.md"), "**Date**: 2026-01-01\n\nOld note.");
   const legacy = listAskNotes(config).notes.find((note) => note.id === "legacy.md");
   assert.equal(legacy.title, ""); assert.equal(legacy.category, ""); assert.deepEqual(legacy.tags, []);
@@ -117,4 +117,11 @@ test("invalid or unavailable Chinese title generation never writes an English fi
   const saved = await saveAsk({ sessionId: "title-failure", config, llm: { generateWithFallback: async () => '{"title":"中文标题"}' } });
   assert.equal(saved.vaultFile, "中文标题.md");
   assert.equal(history.get("title-failure").length, 0);
+});
+
+test("broad topics merge legacy aliases and cap note granularity", () => {
+  assert.deepEqual(broadAskTags(["present-perfect", "past-tense", "时态", "prepositions", "polite-requests"]), ["Tenses", "Prepositions"]);
+  assert.deepEqual(broadAskTags(["since-for", "affect-effect"], "Vocabulary"), ["Word choice"]);
+  assert.deepEqual(broadAskTags(["Sentence structure", "Style & tone"]), ["Sentence structure", "Style & tone"]);
+  assert.deepEqual(broadAskTags([], "Grammar"), []);
 });

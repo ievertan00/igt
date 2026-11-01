@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "columns": 3,
+      "modal": true,
+      "focusReturned": true
+    },
+    {
+      "width": 768,
+      "columns": 2,
+      "modal": true,
+      "focusReturned": true
+    },
+    {
+      "width": 390,
+      "columns": 1,
+      "modal": true,
+      "focusReturned": true
+    },
+    {
+      "width": 320,
+      "columns": 1,
+      "modal": true,
+      "focusReturned": true
+    }
+  ],
+  "errors": [],
+  "draftPreserved": true,
+  "completeContext": true,
+  "states": [
+    "error",
+    "empty",
+    "no matches"
+  ]
+}
