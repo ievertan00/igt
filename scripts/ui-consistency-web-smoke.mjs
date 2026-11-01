@@ -3,9 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import puppeteer from "puppeteer";
 import { createServer } from "vite";
+import { buildLearningOverview } from "../lib/application/learning-overview.mjs";
+import { buildGrammarHistory } from "../lib/application/grammar-history.mjs";
+import { buildCoachPatterns } from "../lib/application/grammar-coach.mjs";
 
 // Isolated UI fixtures: every business request is intercepted; no user data is written.
-const output = path.join(process.cwd(), "artifacts", "ui-consistency");
+const output = path.join(process.cwd(), "artifacts", "ui-demo-refresh");
 fs.mkdirSync(output, { recursive: true });
 const server = await createServer({ configFile: "apps/web/vite.config.ts", server: { host: "127.0.0.1", port: 0 } });
 await server.listen();
@@ -14,6 +17,7 @@ try {
   browser = await puppeteer.launch({ headless: true, ...(process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {}), args: ["--no-sandbox"] });
   const page = await browser.newPage();
   const errors = [], checks = [], requests = [];
+  const pageWidths = new Map();
   page.on("pageerror", error => errors.push(error.message));
   await page.evaluateOnNewDocument(() => {
     // Deterministic playback permits inspection of the pending state without a TTS service.
@@ -23,6 +27,8 @@ try {
     };
   });
   const entry = { word: "follow up", pos: "phrasal verb", phonetic: "/ˈfɒləʊ ʌp/", zh: "跟进", meaning: "to act after an earlier event", example: "I will follow up tomorrow.", example2: "Please follow up on the request.", synonyms: "check back", collocations: "follow up on a request" };
+  const historyEntries = Array.from({ length: 3 }, (_, index) => ({ source: "grammar", entryId: `ui-${index}`, timestamp: new Date(Date.now() - index * 86400000).toISOString(), userInput: "I read book.", correction: "I read a book.", diagnoses: [{ error_type: "Articles", severity: "Minor", explanation: "Use an article before a singular countable noun." }] }));
+  const events = historyEntries.map(item => ({ id: item.entryId, source: "review-log", type: "grammar", timestamp: item.timestamp, title: item.userInput, href: `#handbook?entry=${item.entryId}` }));
   await page.setRequestInterception(true);
   page.on("request", async request => {
     const url = new URL(request.url()), pathname = url.pathname;
@@ -30,12 +36,12 @@ try {
     if (pathname.startsWith("/src/") || pathname.startsWith("/@") || pathname.startsWith("/node_modules/") || pathname === "/" || pathname.startsWith("/assets/")) return request.continue();
     if (url.origin !== new URL(base).origin) return request.abort();
     requests.push(`${request.method()} ${pathname}`);
-    if (pathname === "/dashboard") return json({ stats: { totalInputs: 2 }, today: { inputs_today: 1 }, recentActivity: [], coach: {} });
-    if (pathname === "/coach") return json({ windowDays: 30, sample: { totalInputs: 2, totalDiagnoses: 1 }, priorities: [], limitations: ["UI fixture"] });
+    if (pathname === "/dashboard") return json(buildLearningOverview(events, {}, { reviewEntries: historyEntries, coverage: [{ source: "Saved writing", status: "available", note: "UI fixture" }] }));
+    if (pathname === "/coach") return json(buildCoachPatterns(historyEntries));
     if (pathname === "/settings/llm") return json({ provider: "custom", providers: { custom: { baseUrl: "", models: { flash: "", pro: "" } } } });
     if (pathname === "/settings/files") return json({ paths: { vocabulary: "", reviewLog: "", askNotesDir: "", handbookReports: "" } });
     if (pathname === "/ask/notes") return json({ directory: "UI fixture", notes: [] });
-    if (pathname === "/handbook") return json({ days: 90, stats: { total_inputs: 2, total_diagnoses: 1 }, frequencies: [{ error_type: "Articles", count: 1 }], examples: [], pagination: { offset: 0, limit: 20, hasMore: false, total: 0 } });
+    if (pathname === "/handbook") return json(buildGrammarHistory(historyEntries));
     if (pathname === "/review/due") return json({ cards: [{ id: 101, source_type: "vocab", ...entry, vocab_details: entry }] });
     if (pathname === "/review/check") return json({ correct: true, persistence: { saved: false } });
     if (pathname === "/review/grade") return json({ correct: true, next: { intervalDays: 6 }, persistence: { saved: true } });
@@ -48,7 +54,7 @@ try {
     return json({});
   });
   const base = `http://127.0.0.1:${server.httpServer.address().port}`;
-  async function capture(name, widths = [1440, 768, 390, 320]) {
+  async function capture(name, widths = [1440, 1024, 768, 390, 320]) {
     for (const width of widths) {
       await page.setViewport({ width, height: 1000 });
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -56,11 +62,19 @@ try {
         const visible = el => el.getClientRects().length > 0;
         return {
           overflow: document.documentElement.scrollWidth > innerWidth,
+          page: { left: document.querySelector('main').getBoundingClientRect().left, width: document.querySelector('main').getBoundingClientRect().width },
           unnamed: [...document.querySelectorAll("button")].filter(visible).filter(el => !el.getAttribute("aria-label") && !el.textContent.trim()).map(el => el.className),
           short: [...document.querySelectorAll("button")].filter(visible).filter(el => el.getBoundingClientRect().height < 43.5).map(el => ({ className: el.className, height: el.getBoundingClientRect().height })),
         };
       });
       assert.equal(audit.overflow, false, `${name}/${width} overflows`);
+      if (!pageWidths.has(width)) pageWidths.set(width, audit.page);
+      assert.deepEqual(audit.page, pageWidths.get(width), `${name}/${width} uses the shared page width and gutters`);
+      const inputPanel = { grammar: '.grammar-composer', translation: '.panel', 'word-lookup': '.panel', ask: '.ask-composer' }[name];
+      if (inputPanel) {
+        const panel = await page.$eval(inputPanel, el => ({ left: el.getBoundingClientRect().left, width: el.getBoundingClientRect().width }));
+        assert.deepEqual(panel, audit.page, `${name}/${width} input panel fills the shared page width`);
+      }
       assert.deepEqual(audit.unnamed, [], `${name}/${width} unnamed controls`);
       assert.deepEqual(audit.short, [], `${name}/${width} small targets`);
       checks.push({ name, width, ...audit });
@@ -72,7 +86,7 @@ try {
     await page.goto(`${base}/#${name}`, { waitUntil: "networkidle0" });
     await page.waitForSelector("main h1");
   }
-  for (const name of ["grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "ask", "dashboard", "handbook", "coach", "settings"]) {
+  for (const name of ["grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "ask", "ask?view=notes", "dashboard", "handbook", "coach", "settings"]) {
     await route(name);
     const focusTarget = { grammar: '#grammar-input', ask: '#ask-input', 'word-lookup': '#word-lookup-input' }[name];
     if (focusTarget) {
@@ -92,9 +106,9 @@ try {
         const style = getComputedStyle(el);
         return { border: style.borderColor, background: style.backgroundColor, width: style.borderWidth };
       });
-      assert.deepEqual(selected, { border: 'rgb(116, 131, 108)', background: 'rgb(243, 250, 223)', width: '1px' });
+      assert.deepEqual(selected, { border: 'rgb(116, 131, 108)', background: 'rgb(241, 251, 223)', width: '1px' });
     }
-    await capture(name);
+    await capture(name.replace('?view=', '-'));
     if (focusTarget) {
       for (const viewport of [{ width: 375, height: 812 }, { width: 812, height: 375 }]) {
         await page.setViewport(viewport);

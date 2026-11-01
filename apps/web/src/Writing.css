@@ -1,0 +1,50 @@
+/* Reference-led Writing surfaces; scoped to preserve other workspaces. */
+.writing-shell .detail-correction mark { background:var(--success-bg); color:inherit; border-radius:.25rem; padding-inline:.15rem; box-decoration-break:clone; }
+.writing-shell .grammar-workspace { padding-top:2.5rem; padding-bottom:3.5rem; }
+.writing-shell .grammar-intro { margin-bottom:2.5rem; }
+.writing-shell .writing-badge { display:inline-flex; align-items:center; gap:.5rem; padding:.25rem 1rem; margin-bottom:1rem; border:1px solid var(--accent); border-radius:2rem; background:var(--accent-soft); color:var(--accent-text); font-size:.875rem; font-weight:650; }
+.writing-shell .writing-badge .icon { width:1rem; height:1rem; }
+.writing-shell .grammar-page .grammar-intro h1 { font-size:clamp(2.25rem,4vw,3.5rem); margin:0 0 .75rem; line-height:1.15; letter-spacing:-.035em; }
+.writing-shell .accent-dot { color:var(--success); }
+.writing-shell .accent-dot::before { display:none; }
+.writing-shell .grammar-intro p { max-width:43rem; margin-inline:auto; font-size:1.375rem; line-height:1.5; }
+.writing-shell .grammar-composer { max-width:none; background:var(--paper); padding:var(--panel-padding); border-color:var(--line); border-radius:1.25rem; box-shadow:0 1px 3px #10182708; }
+.writing-shell .grammar-composer:focus-within { border-color:var(--focus); }
+.writing-shell .grammar-composer textarea { min-height:7.5rem; font-size:1.375rem; margin-bottom:1rem; }
+.writing-shell .composer-actions { padding-top:1rem; border-top:1px solid var(--line); }
+.writing-shell .composer-actions > span { font-size:.875rem; max-width:44rem; }
+.writing-shell .composer-actions button { flex-shrink:0; font-size:1rem; border-radius:.875rem; }
+.writing-shell .composer-actions button .icon { color:var(--accent); }
+.writing-shell .correction-detail { max-width:none; margin-top:2.5rem; display:grid; gap:1.125rem; }
+.writing-shell .detail-section { background:var(--paper); border:1px solid var(--line); border-radius:1.25rem; padding:1.5rem; grid-template-columns:2rem minmax(0,1fr); gap:.75rem; }
+.writing-shell .detail-section h2 { text-transform:uppercase; letter-spacing:.035em; font-size:.875rem; font-weight:700; margin-top:0; }
+.writing-shell .detail-content { min-width:0; }
+.writing-shell .detail-copy { font-size:1.1875rem; line-height:1.6; }
+.writing-shell .detail-copy p { margin-bottom:0; }
+.writing-shell .detail-icon { background:var(--wash); color:var(--muted); }
+.writing-shell .detail-correction .detail-icon { color:var(--success); background:var(--success-bg); }
+.writing-shell .detail-correction .detail-copy, .writing-shell .detail-natural .detail-copy { font-size:1.375rem; font-weight:400; }
+.writing-shell .detail-natural { background:linear-gradient(110deg,var(--paper),var(--accent-soft)); border-color:var(--accent); }
+.writing-shell .detail-natural .detail-icon { color:var(--ink); background:var(--accent); }
+.writing-shell .detail-natural h2 { color:var(--ink); }
+.writing-shell .detail-remember { background:var(--warning-bg); border-color:var(--warning-border); color:var(--warning); }
+.writing-shell .detail-remember h2 { color:inherit; }
+.writing-shell .detail-remember .detail-icon { color:inherit; background:var(--warning-border); }
+.writing-shell .detail-head button { background:var(--wash); border:1px solid var(--line); border-radius:.625rem; }
+.writing-shell .correction-actions { background:var(--paper); padding:1rem 1.25rem; border:1px solid var(--line); border-radius:1rem; justify-content:space-between; }
+.writing-shell .review-save-hint { display:flex; align-items:center; gap:.75rem; margin:0; font-size:.875rem; color:var(--muted); }
+.writing-shell .save-review { background:var(--wash); color:var(--muted); font-weight:500; }
+.writing-shell .save-review:hover:not(:disabled) { color:var(--ink); background:var(--accent-soft); }
+@media (max-width:600px) {
+ .writing-shell .grammar-workspace { padding-top:2rem; }
+ .writing-shell .grammar-intro { margin-bottom:1.5rem; }
+ .writing-shell .grammar-intro p { font-size:1rem; }
+ .writing-shell .grammar-page .grammar-intro h1 { font-size:2.25rem; }
+ .writing-shell .detail-section { padding:1rem; }
+ .writing-shell .composer-actions { flex-direction:column; align-items:stretch; }
+ .writing-shell .detail-section { grid-template-columns:1.75rem minmax(0,1fr); gap:.625rem; }
+ .writing-shell .detail-icon { width:1.75rem; height:1.75rem; }
+ .writing-shell .detail-head { flex-wrap:wrap; gap:.5rem; }
+ .writing-shell .detail-copy, .writing-shell .detail-correction .detail-copy, .writing-shell .detail-natural .detail-copy { font-size:1rem; }
+}
+

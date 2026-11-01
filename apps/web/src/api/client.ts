@@ -2,10 +2,10 @@ export type RequestJsonInit = RequestInit & { timeoutMs?: number };
 
 export type GrammarHistory = {
   days: number; search: string; errorType: string; diagnosis: "all" | "with" | "none";
-  coverage: { grammar: number; excludedOtherSources: number; unclassified: number; undated: number };
+  coverage: { grammar: number; excludedOtherSources: number; unclassified: number; undated: number; legacyIncluded?: number };
   categories: Array<{ errorType: string; checks: number }>;
   pagination: { total: number; limit: number; offset: number; hasMore: boolean };
-  entries: Array<{ entryId: string; timestamp: string; userInput: string; correction?: string | null;
+  entries: Array<{ entryId: string; source?: string; timestamp: string; userInput: string; correction?: string | null;
     refine?: string | null; evaluate?: string | null; remember?: string | string[] | null;
     diagnoses: Array<{ error_type: string; severity?: string; explanation?: string; evidence?: string; suggestion?: string }> }>;
 };
@@ -83,6 +83,7 @@ export const webApi = {
   saveAsk: (messages: unknown[], language?: "zh-CN" | "en") => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages, language }), timeoutMs: 180_000 }),
   listAskNotes: () => requestJson<{ directory: string; notes: Array<{ id: string; modifiedAt: string; bytes: number; content?: string; title?: string; category?: string; tags?: string[] }> }>("/ask/notes"),
   readAskNote: (id: string) => requestJson<{ id: string; content: string; bytes: number }>(`/ask/notes/read?${new URLSearchParams({ id })}`),
+  deleteAskNote: (id: string) => requestJson<{ deleted: boolean; id: string }>("/ask/notes/delete", { method: "POST", body: JSON.stringify({ id }) }),
   getReviewDue: async (limit = 20) => {
     await requestJson<any>("/vocab/seed", { method: "POST", body: "{}" });
     return requestJson<any>(`/review/due?limit=${limit}&type=vocab`);
@@ -108,7 +109,7 @@ export const webApi = {
   }),
   getStatusMessage: () => requestJson<any>("/status-message"),
   getHandbook: (errorType = "", options: { days?: number; search?: string; entryId?: string; diagnosis?: "all" | "with" | "none"; limit?: number; offset?: number } = {}) => {
-    const params = new URLSearchParams({ days: String(options.days ?? 90), errorType, search: options.search ?? "", diagnosis: options.diagnosis ?? "all", limit: String(options.limit ?? 10), offset: String(options.offset ?? 0) });
+      const params = new URLSearchParams({ days: String(options.days ?? 0), errorType, search: options.search ?? "", diagnosis: options.diagnosis ?? "all", limit: String(options.limit ?? 10), offset: String(options.offset ?? 0) });
     if (options.entryId) params.set("entry", options.entryId);
     return requestJson<GrammarHistory>(`/handbook?${params}`);
   },

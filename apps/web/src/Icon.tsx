@@ -1,6 +1,7 @@
-type IconName = "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
+type IconName = "globe" | "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
 
 const paths: Record<IconName, string> = {
+  globe: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M3 12h18 M12 3c5 5 5 13 0 18 M12 3c-5 5-5 13 0 18",
   home: "M3 11l9-8 9 8 M5 10v11h14V10 M9 21v-7h6v7",
   dining: "M4 3v6a3 3 0 0 0 6 0V3 M7 3v18 M16 21V3c4 2 4 9 0 10h4",
   shopping: "M5 7h14l2 14H3L5 7z M9 7V5a3 3 0 0 1 6 0v2",
@@ -39,3 +40,4 @@ const paths: Record<IconName, string> = {
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
   return <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
 }
+

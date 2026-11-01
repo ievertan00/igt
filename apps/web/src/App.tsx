@@ -5,12 +5,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { IconButton } from "./IconButton";
 import { Ask } from "./Ask";
+import { GrammarFollowUp } from "./GrammarFollowUp";
 import { SelectionLookup } from "./SelectionLookup";
 import { webApi } from "./api/client";
 import { useDailyReviewSession } from "./review-session";
 import { reviewExampleParts } from "./review-example";
 import { VocabularyLibrary } from "./VocabularyLibrary";
-import clearWriteWordmark from "./assets/clearwrite-wordmark.svg";
+import "./Writing.css";
+import { CorrectionText } from "./CorrectionText";
 
 type Route =
   | "dashboard"
@@ -132,14 +134,11 @@ function Grammar() {
   return (
     <div className={`grammar-page${result ? " has-result" : ""}`}>
       <div className="grammar-intro">
+        <span className="writing-badge"><Icon name="spark" />{t("AI-Powered Writing Enhancer")}</span>
         <h1>
-          Write with
-          <br />
-          <span>
-            clarity<span className="accent-dot">.</span>
-          </span>
+          Write with clarity<span className="accent-dot">.</span>
         </h1>
-        <p>{t("Check your writing. Understand the suggested changes.")}</p>
+        <p>{t("Refine your tone, catch subtle grammar nuances, and learn standard phrasing with contextual feedback.")}</p>
       </div>
       <form
         className="grammar-composer"
@@ -173,9 +172,9 @@ function Grammar() {
         />
         <div className="composer-actions">
           <span id="grammar-hint">
-            {busy ? t("Checking grammar and wording…") : t("A sentence or a short paragraph")}
+            {busy ? t("Checking grammar and wording…") : t("Try writing it yourself first. Use AI feedback as your continuous learning guide.")}
           </span>
-          <button className={data && !didSave && text.trim() === checkedText ? "secondary" : "primary"} type="submit" aria-busy={busy} disabled={busy || saving || !text.trim()}>
+          <button className="primary" type="submit" aria-busy={busy} disabled={busy || saving || !text.trim()}>
             {busy ? (
               <>
                 <span className="loading-spinner" />
@@ -190,9 +189,6 @@ function Grammar() {
           </button>
         </div>
       </form>
-      <p className="grammar-note">
-        {t("Try writing it yourself first. Use AI feedback as a guide, then practise the expression in your own context. Save only when you choose.")}
-      </p>
       {result?.error && (
         <State title={t("Could not check your English. Try again.")} detail={result.error} />
       )}
@@ -207,7 +203,7 @@ function Grammar() {
             title="Correction"
             action={<CopyButton value={data.correction} label="Correction" />}
           >
-            <p>{data.correction || "No correction needed."}</p>
+            <p>{data.correction ? <CorrectionText original={checkedText} correction={data.correction} /> : "No correction needed."}</p>
           </DetailSection>
           {data.refine && (
             <DetailSection
@@ -237,21 +233,30 @@ function Grammar() {
             <p>{data.remember || "No reminder provided."}</p>
           </DetailSection>
           <div className="correction-actions">
+            <p className="review-save-hint"><Icon name="bookmark" />{t("Save this feedback to your personalized learning log for revision later.")}</p>
             <button
               className="primary save-review"
               aria-busy={saving}
               onClick={save}
               disabled={busy || saving || didSave}
             >
-              <Icon name="bookmark" />
-              {saving ? t("Saving…") : didSave ? "Saved to review log" : t("Save to review log")}
+              <Icon name={didSave ? "check" : "bookmark"} />
+              {saving ? t("Saving…") : didSave ? t("Saved to review log") : t("Save to review log")}
             </button>
             {saved && (
-              <p className="status" role="status">
+              <p className={didSave ? "sr-only" : "status"} role="status">
                 {saved}
               </p>
             )}
           </div>
+          <GrammarFollowUp key={JSON.stringify([checkedText, data])} context={[
+            `Original sentence: ${checkedText}`,
+            `Evaluation: ${evaluation}`,
+            `Correction: ${data.correction || "No correction needed."}`,
+            data.refine ? `More natural: ${data.refine}` : "",
+            `Why: ${diagnoses.map((item: { label: string; explanation: string }) => `${item.label}: ${item.explanation}`).join("\n") || "No explanation provided."}`,
+            `Remember: ${data.remember || "No reminder provided."}`,
+          ].filter(Boolean).join("\n\n")} />
         </div>
       )}
     </div>
@@ -1701,8 +1706,8 @@ function HandbookSentence({ original, correction, corrected = false }: { origina
 function Handbook() {
   const { t } = useGuideCopy();
   const params = new URLSearchParams(location.hash.split("?")[1] || "");
-  const rawDays = Number(params.get("days") ?? 90);
-  const days = Number.isInteger(rawDays) && rawDays >= 0 && rawDays <= 3650 ? rawDays : 90;
+  const rawDays = Number(params.get("days") ?? 0);
+  const days = Number.isInteger(rawDays) && rawDays >= 0 && rawDays <= 3650 ? rawDays : 0;
   const diagnosis = (["all", "with", "none"].includes(params.get("diagnosis") || "") ? params.get("diagnosis") : "all") as "all" | "with" | "none";
   const errorType = diagnosis === "none" ? "" : params.get("errorType") || "";
   const appliedSearch = params.get("search") || "";
@@ -1742,7 +1747,7 @@ function Handbook() {
   }
   return <div className="handbook-page">
     <div className="coach-header">
-      <Heading eyebrow="HANDBOOK · HISTORY" title="Your saved Grammar checks." detail={t("Revisit your original sentences, corrections and saved explanations, newest first.")} />
+      <Heading eyebrow="HANDBOOK · HISTORY" title="Your saved Grammar checks." detail={t("Review the original sentences, corrections and explanations saved in your Review Log. Refresh to load the latest checks.")} />
       <button className="secondary" disabled={busy} onClick={() => void load()}>{busy ? "Loading…" : "Refresh"}</button>
     </div>
     <form className="handbook-filters" onSubmit={event => { event.preventDefault(); navigate({ search: search.trim() }); }}>
@@ -1767,12 +1772,12 @@ function Handbook() {
       {busy && <p role="status">Loading saved checks…</p>}
       {data && <>
         <p className="handbook-evidence" role="status">{data.pagination.total} matching saved check{data.pagination.total === 1 ? "" : "s"} · Newest first</p>
-        {data.coverage.unclassified > 0 && <p className="handbook-evidence">{data.coverage.unclassified} historical record{data.coverage.unclassified === 1 ? " has" : "s have"} no identified source and {data.coverage.unclassified === 1 ? "is" : "are"} excluded here. Your original records are preserved.</p>}
+        {(data.coverage.legacyIncluded ?? 0) > 0 && <p className="handbook-evidence">Includes {data.coverage.legacyIncluded} historical check{data.coverage.legacyIncluded === 1 ? "" : "s"} from your Review Log saved before source labels were added.</p>}
         {data.coverage.undated > 0 && days !== 0 && <p className="handbook-evidence">Some records have no usable date and cannot be placed in this time window.</p>}
         {data.diagnosis === "none" && <p className="handbook-evidence">No diagnosed mistakes describes the saved feedback. It does not establish error-free writing or mastery.</p>}
         <Panel title="Grammar check log">
           {data.entries.length ? data.entries.map(entry => <article className="activity handbook-example" key={entry.entryId} id={`check-${entry.entryId}`}>
-            <header className="handbook-source"><time>{timestampLabel(entry.timestamp)}</time><details><summary>Source details</summary><p>Saved Grammar check: <code>{entry.entryId}</code></p></details></header>
+            <header className="handbook-source"><time>{timestampLabel(entry.timestamp)}</time><details><summary>Source details</summary><p>{entry.source === "grammar" ? "Saved Grammar check" : "Historical Review Log check (source not recorded)"}: <code>{entry.entryId}</code></p></details></header>
             <div><span>Original</span>{entry.correction ? <HandbookSentence original={entry.userInput} correction={entry.correction} /> : <p lang="en">{entry.userInput}</p>}</div>
             {entry.correction && <div><span>Correction</span><HandbookSentence original={entry.userInput} correction={entry.correction} corrected /></div>}
             {!entry.diagnoses.length && <p className="handbook-evidence">No diagnosed mistakes in saved feedback.</p>}
@@ -2538,7 +2543,7 @@ export function App() {
     settings: <LlmSettings />,
   };
   return (
-    <div className="shell">
+    <div className={`shell${route === "grammar" ? " writing-shell" : ""}`}>
       <a className="skip-link" href="#main-content">
         {t("Skip to content")}
       </a>
@@ -2559,24 +2564,9 @@ export function App() {
       >
         <a className="brand" href="#grammar" aria-label={t("ClearWrite home")}>
           <span className="brand-mark">
-            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
-              <path d="M5 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-7l-5 4v-4H8a3 3 0 0 1-3-3V9Z" />
-              <path d="M10 11h8M10 15h6M10 19h4" />
-              <path
-                d="m26 4 .9 2.6 2.6.9-2.6.9L26 11l-.9-2.6-2.6-.9 2.6-.9L26 4Z"
-                fill="currentColor"
-                stroke="none"
-              />
-            </svg>
+            <Icon name="spark" />
           </span>
-          <img
-            className="brand-wordmark"
-            src={clearWriteWordmark}
-            alt=""
-            aria-hidden="true"
-            width="190"
-            height="33"
-          />
+          <span className="brand-wordmark">Clear<span>Write</span></span>
         </a>
         <button
           ref={menuRef}
@@ -2603,6 +2593,7 @@ export function App() {
             }
           }}
         >
+          <div className="nav-primary">
           {navigationGroups.map((group) => (
             <details key={group.label} className="learning-menu" name="workspace-navigation">
               <summary className={group.routes.some(([key]) => key === route) ? "active" : ""}>
@@ -2652,9 +2643,11 @@ export function App() {
               ))}
             </div>
           </details>
+          </div>
           <a
             className="settings-link"
             href="#settings"
+            aria-label={t("Model settings")}
             aria-current={route === "settings" ? "page" : undefined}
           >
             <Icon name="settings" />
@@ -2667,7 +2660,7 @@ export function App() {
         ref={mainRef}
         id="main-content"
         tabIndex={-1}
-        className={route === "grammar" ? "workspace grammar-workspace" : "workspace"}
+        className={`workspace workspace-${route}${route === "grammar" ? " grammar-workspace" : ""}`}
       >
         {pages[route]}
         <div hidden={route !== "ask"}>{askVisited.current && <Ask active={route === "ask"} view={askView} />}</div>

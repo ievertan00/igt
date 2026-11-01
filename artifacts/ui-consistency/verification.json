@@ -9,6 +9,13 @@
     },
     {
       "name": "grammar",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -37,6 +44,13 @@
     },
     {
       "name": "translation",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "translation",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -65,6 +79,13 @@
     },
     {
       "name": "word-lookup",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-lookup",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -93,6 +114,13 @@
     },
     {
       "name": "word-review",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-review",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -121,6 +149,13 @@
     },
     {
       "name": "word-library",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-library",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -149,6 +184,13 @@
     },
     {
       "name": "practice",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "practice",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -177,6 +219,13 @@
     },
     {
       "name": "ask",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask",
       "width": 768,
       "overflow": false,
       "unnamed": [],
@@ -191,6 +240,41 @@
     },
     {
       "name": "ask",
+      "width": 320,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-notes",
+      "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-notes",
+      "width": 1024,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-notes",
+      "width": 768,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-notes",
+      "width": 390,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-notes",
       "width": 320,
       "overflow": false,
       "unnamed": [],
@@ -199,6 +283,13 @@
     {
       "name": "dashboard",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "dashboard",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -227,6 +318,13 @@
     {
       "name": "handbook",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "handbook",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -255,6 +353,13 @@
     {
       "name": "coach",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "coach",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -283,6 +388,13 @@
     {
       "name": "settings",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -311,6 +423,13 @@
     {
       "name": "settings-markdown",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "settings-markdown",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -339,6 +458,13 @@
     {
       "name": "word-result",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "word-result",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -367,6 +493,13 @@
     {
       "name": "selection-dialog",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "selection-dialog",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -395,6 +528,13 @@
     {
       "name": "review-result",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "review-result",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -423,6 +563,13 @@
     {
       "name": "grammar-result",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "grammar-result",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -451,6 +598,13 @@
     {
       "name": "ask-result",
       "width": 1440,
+      "overflow": false,
+      "unnamed": [],
+      "short": []
+    },
+    {
+      "name": "ask-result",
+      "width": 1024,
       "overflow": false,
       "unnamed": [],
       "short": []
@@ -527,10 +681,10 @@
     "GET /ask/notes",
     "GET /ask/notes",
     "GET /favicon.ico",
+    "GET /favicon.ico",
     "GET /dashboard",
     "GET /dashboard",
     "GET /favicon.ico",
-    "GET /images/study-desk.webp",
     "GET /handbook",
     "GET /handbook",
     "GET /favicon.ico",

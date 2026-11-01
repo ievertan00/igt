@@ -72,7 +72,7 @@ try {
     return request.continue();
   });
   const base = `http://127.0.0.1:${server.httpServer.address().port}`;
-  const output = path.join(process.cwd(), "artifacts", "vocabulary-library");
+  const output = process.env.IGT_VOCABULARY_QA_OUTPUT || path.join(process.cwd(), "artifacts", "vocabulary-library");
   fs.mkdirSync(output, { recursive: true });
   async function capture(name) {
     for (const width of [1440, 768, 390, 320]) {
@@ -162,6 +162,11 @@ try {
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('#saved-word-dialog').open);
   assert.equal(await page.$eval('.saved-word-row', el => document.activeElement === el), true);
+  assert.equal(await page.$eval('.saved-word-row', el => getComputedStyle(el).outlineStyle), 'none', 'Escape restores list position without leaving an outline');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.$('.saved-word-row[data-restored-focus="true"]'), null, 'keyboard navigation clears focus suppression');
+  assert.equal(await page.evaluate(() => document.activeElement.matches('.saved-word-row:focus-visible') && getComputedStyle(document.activeElement).outlineStyle !== 'none'), true, 'the next word retains visible keyboard focus');
+
   assert.equal(await page.evaluate(() => scrollY), scrollBefore);
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   await page.click('.saved-word-row');

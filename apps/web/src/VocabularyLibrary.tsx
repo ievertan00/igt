@@ -191,6 +191,8 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
             {data.words.map(entry => (
               <article className="saved-word" key={entry.id}>
                 <button type="button" className="saved-word-row" aria-haspopup="dialog" aria-controls="saved-word-dialog"
+                  onBlur={event => event.currentTarget.removeAttribute("data-restored-focus")}
+                  onKeyDown={event => event.currentTarget.removeAttribute("data-restored-focus")}
                   onClick={event => { triggerRef.current = event.currentTarget; setSelected(entry); }}>
                   <span className="saved-word-name"><strong lang="en">{entry.word}</strong>{entry.pos && <small>{entry.pos}</small>}</span>
                   <span className="saved-word-preview">
@@ -235,7 +237,13 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
             event.preventDefault(); first?.focus();
           }
         }}
-        onClose={() => { setSelected(null); triggerRef.current?.focus({ preventScroll: true }); }}
+        onClose={() => {
+          setSelected(null);
+          // Escape makes the browser treat restored focus as keyboard focus.
+          // Keep the list position without a ring until navigation resumes.
+          triggerRef.current?.setAttribute("data-restored-focus", "true");
+          triggerRef.current?.focus({ preventScroll: true });
+        }}
         onClick={event => {
           if (event.target !== event.currentTarget) return;
           const rect = event.currentTarget.getBoundingClientRect();

@@ -15,6 +15,29 @@ const errorTypes = {
 };
 const opts = { logPath: path.join(os.tmpdir(), "igt-test-parse.log") };
 
+test("Grammar scopes numbered instructions as a complete passage, not just the last item", async () => {
+  const text = "Update the Settings page:\n1. Make the content in the center of the page;\n2.Polish the selected effect of the Settings button on the navigation.";
+  const correction = "Update the Settings page:\n1. Center the content on the page;\n2. Polish the selected state of the Settings button in the navigation.";
+  const { response } = await analyzeGrammar({
+    text,
+    systemPrompt: "Return the smallest objective correction as JSON.",
+    getLLMManager: async () => ({
+      generateWithFallback: async (input, prompt) => {
+        assert.equal(input, text, "All numbered items reach the provider unchanged");
+        assert.match(prompt, /smallest edits, not the shortest output/);
+        assert.match(prompt, /including unchanged introductory text and every list item/);
+        assert.match(prompt, /not instructions for you to carry out/);
+        return JSON.stringify({ correction, refine: "", evaluate: "The original text needs wording changes.", diagnoses: [], remember: "" });
+      },
+      getCurrentProviderName: () => "fixture",
+    }),
+    parseDiagnosis: raw => parseDiagnosis(raw, errorTypes),
+  });
+  assert.equal(response.result.originalText, text);
+  assert.equal(response.result.correction, correction);
+  assert.equal(response.persistence.saved, false);
+});
+
 test("parses well-formed JSON response", () => {
   const raw = JSON.stringify({
     correction: "I am happy.",

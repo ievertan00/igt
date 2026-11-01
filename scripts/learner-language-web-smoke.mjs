@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import http from "node:http";
 import puppeteer from "puppeteer";
+import { buildLearningOverview } from "../lib/application/learning-overview.mjs";
+import { buildGrammarHistory } from "../lib/application/grammar-history.mjs";
+import { buildCoachPatterns } from "../lib/application/grammar-coach.mjs";
 
 // Isolated built-client QA: all API requests are fixtures, never live learning writes.
 const dist = path.join(process.cwd(), "apps", "web", "dist");
@@ -37,9 +40,9 @@ try {
       const payload = JSON.parse(request.postData()); saves.push(payload);
       body = { saved: true, metadata: { title: "现在完成时用法", category: "Grammar", tags: [] } };
     } else if (url.pathname === "/ask/notes") body = { directory: "", notes: [{ id: "旧笔记.md", title: "旧笔记", content: "Original saved English note with **since**.", bytes: 50, modifiedAt: "2026-10-01T00:00:00Z" }] };
-    else if (url.pathname === "/dashboard") body = { stats: {}, recentActivity: [], assets: {} };
-    else if (url.pathname === "/coach") body = { sample: {}, priorities: [], limitations: [] };
-    else if (url.pathname === "/handbook") body = { frequencies: [], days: 30, evidence: {}, examples: [] };
+    else if (url.pathname === "/dashboard") body = buildLearningOverview([]);
+    else if (url.pathname === "/coach") body = buildCoachPatterns([]);
+    else if (url.pathname === "/handbook") body = buildGrammarHistory([]);
     else if (url.pathname === "/vocab/words") body = { words: [], total: 0, totalSaved: 0, sourceAvailable: true, hasMore: false, offset: 0, limit: 25 };
     else if (url.pathname === "/settings/llm") body = { provider: "custom", providers: { custom: { models: { flash: "fixture", pro: "fixture" } } } };
     else if (url.pathname === "/settings/files") body = { paths: {} };
@@ -65,10 +68,10 @@ try {
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(base);
   await page.waitForSelector("#grammar-input");
-  assert.match(await text(), /Check your writing\. Understand the suggested changes\./);
+  assert.match(await text(), /Refine your tone, catch subtle grammar nuances/);
   await page.type("#grammar-input", "My untouched English draft.");
   await switchGuide("zh-CN");
-  assert.match(await text(), /看懂为什么这样改/);
+  assert.match(await text(), /调整语气、发现细微的语法问题/);
   assert.match(await page.$eval("h1", el => el.textContent), /Write with\s*clarity/);
   assert.equal(await page.$eval("#grammar-input", el => el.value), "My untouched English draft.");
   await page.screenshot({ path: path.join(artifacts, "grammar-zh-desktop.png"), fullPage: true });

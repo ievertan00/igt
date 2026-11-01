@@ -10,7 +10,7 @@ type Turn = { question: string; answer: string; title?: string; related?: string
 type Note = { id: string; modifiedAt: string; bytes: number; content: string; title?: string; tags?: string[]; category?: string };
 type Discussion = { turns: Turn[]; question: string; context?: Note };
 type SaveState = { status: "saving" | "saved" | "error" | "uncertain"; message: string };
-const noteTitle = (note: Note) => note.title || note.id.replace(/\.md$/i, "");
+const noteTitle = (note: Note) => note.id.replace(/\.md$/i, "");
 const noteBody = (note: Note) => note.content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "").replace(/<!-- igt-ask-save:[a-f0-9]+ -->\s*/g, "").trim();
 const noteExcerpt = (note: Note) => noteBody(note)
   .replace(/<[^>]*>/g, " ").replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
@@ -38,8 +38,23 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [tag, setTag] = useState("");
+  const [showAllTopics, setShowAllTopics] = useState(false);
+  const [copiedNote, setCopiedNote] = useState("");
+  const [noteCopyError, setNoteCopyError] = useState("");
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   const [selectedId, setSelectedId] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deletedTitle, setDeletedTitle] = useState("");
+  const deletingRef = useRef(false);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
+  const deleteConfirmRef = useRef<HTMLDivElement>(null);
+  const deleteSubmitRef = useRef<HTMLButtonElement>(null);
+  const returnFocusIdRef = useRef<string | null>(null);
   const [readerSize, setReaderSize] = useState<{ width: number; height: number }>();
   const resizeStart = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const [notesBusy, setNotesBusy] = useState(false);
@@ -69,10 +84,44 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
     if (dialog.open) dialog.close();
   }, [active, view, noteOpen]);
   useEffect(() => { if (!active || view !== "notes") setNoteOpen(false); }, [active, view]);
+  useEffect(() => {
+    if (noteOpen || returnFocusIdRef.current === null) return;
+    const id = returnFocusIdRef.current;
+    returnFocusIdRef.current = null;
+    if (!active || view !== "notes") return;
+    // Wait until the modal has closed before moving focus outside it.
+    const frame = requestAnimationFrame(() => {
+      const card = [...(listRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find(button => button.dataset.noteId === id);
+      const target = card ?? document.getElementById("ask-notes-all");
+      target?.setAttribute("data-restored-focus", "true");
+      target?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [noteOpen, active, view]);
+  useEffect(() => {
+    if (confirmDelete) cancelDeleteRef.current?.focus({ preventScroll: true });
+  }, [confirmDelete]);
+  useEffect(() => {
+    if (deleting) deleteConfirmRef.current?.focus({ preventScroll: true });
+    else if (deleteError) deleteSubmitRef.current?.focus({ preventScroll: true });
+  }, [deleting, deleteError]);
+  function cancelDeletion() {
+    if (deletingRef.current) return;
+    setConfirmDelete(false);
+    setDeleteError("");
+    requestAnimationFrame(() => deleteButtonRef.current?.focus({ preventScroll: true }));
+  }
+  function dismissReader() {
+    if (confirmDelete) cancelDeletion();
+    else closeNote();
+  }
   function closeNote() {
+    if (deletingRef.current) return;
+    setConfirmDelete(false);
+    setDeleteError("");
     resizeStart.current = null;
+    returnFocusIdRef.current = selectedId;
     setNoteOpen(false);
-    requestAnimationFrame(() => listRef.current?.querySelector<HTMLButtonElement>('[aria-current="true"]')?.focus({ preventScroll: true }));
   }
   function resizeReader(width: number, height: number) {
     // The reader stays centered; keep every edge inside the viewport.
@@ -99,7 +148,40 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
       if (requestId === notesRequestId.current) setNotesBusy(false);
     }
   }
+  async function deleteNote() {
+    if (!selected || !confirmDelete || deletingRef.current) return;
+    const id = selectedId;
+    const title = noteTitle(selected);
+    const index = matching.findIndex(note => note.id === id);
+    const nextId = (matching[index + 1] ?? matching[index - 1])?.id;
+    deletingRef.current = true;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await webApi.deleteAskNote(id);
+      ++notesRequestId.current;
+      setNotesBusy(false);
+      setNotes(old => old.filter(note => note.id !== id));
+      setSelectedId("");
+      setDeletedTitle(title);
+      setSaves({});
+      deletingRef.current = false;
+      closeNote();
+      returnFocusIdRef.current = nextId ?? "";
+      window.dispatchEvent(new Event("ask-notes-changed"));
+    } catch (error: any) {
+      setDeleteError(error.message || "Could not delete this note. Try again.");
+    } finally {
+      deletingRef.current = false;
+      setDeleting(false);
+    }
+  }
   useEffect(() => { void refreshNotes(); }, []);
+  useEffect(() => {
+    const refresh = () => { void refreshNotes(); };
+    window.addEventListener("ask-notes-changed", refresh);
+    return () => window.removeEventListener("ask-notes-changed", refresh);
+  }, []);
   useEffect(() => {
     const input = inputRef.current;
     if (!active || view !== "ask" || !input) return;
@@ -178,6 +260,20 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
     try { await navigator.clipboard.writeText(answer); setCopyStatus("Response copied"); }
     catch { setCopyStatus("Could not copy. Select the response text and copy it manually."); }
   }
+  async function copyNote(content: string, id: string) {
+    setNoteCopyError("");
+    try {
+      await navigator.clipboard.writeText(content);
+      clearTimeout(copyTimer.current);
+      setCopiedNote(id);
+      copyTimer.current = setTimeout(() => setCopiedNote(""), 2000);
+    } catch {
+      setNoteCopyError(t("Could not copy. Open the note and copy its text manually."));
+    }
+  }
+  function openNote(note: Note) {
+    setSelectedId(note.id); setConfirmDelete(false); setDeleteError(""); setDeletedTitle(""); setNoteCopyError(""); setNoteOpen(true);
+  }
   function start(next: Discussion) {
     if (sending.current) return;
     if (question.trim() || turns.length || context) setPrevious((old) => [...old, discussion]);
@@ -189,15 +285,18 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
     requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   }
   const categories = [...new Set(notes.map((note) => note.category || "Uncategorized"))].sort();
-  const tags = [...new Set(notes.flatMap((note) => note.tags || []))].sort();
+  const categoryNotes = notes.filter(note => !category || (note.category || "Uncategorized") === category);
+  const tags = [...new Set(categoryNotes.flatMap((note) => note.tags || []))].sort();
+  const visibleTags = showAllTopics ? tags : tags.slice(0, 24);
+  if (tag && tags.includes(tag) && !visibleTags.includes(tag)) visibleTags.push(tag);
   const matching = notes.filter((note) => (!category || (note.category || "Uncategorized") === category)
     && (!tag || note.tags?.includes(tag))
-    && (!query.trim() || `${noteTitle(note)}\n${note.category || ""}\n${(note.tags || []).join(" ")}\n${note.content}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
+    && (!query.trim() || `${noteTitle(note)}\n${note.title || ""}\n${note.category || ""}\n${(note.tags || []).join(" ")}\n${note.content}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
   // Searching filters the list, not the open document.
   const selected = notes.find((note) => note.id === selectedId);
   const hasConversation = Boolean(turns.length || context);
-  const hasFilters = Boolean(query.trim() || category || tag);
-  function clearFilters() { setQuery(""); setCategory(""); setTag(""); }
+  const hasFilters = Boolean(category || tag || query.trim());
+  function clearFilters() { setCategory(""); setTag(""); setQuery(""); }
 
   return <div className={`ask-page${view === "ask" ? " is-asking" : ""}${hasConversation ? " has-conversation" : ""}`}>
     <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p>{view === "notes" ? t("Useful explanations, kept for later. Find a note and pick up where you left off.") : t("Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question.")}</p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" />{t("Ask a question")}<Icon name="arrow" /></a>}</div>
@@ -226,7 +325,7 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
         </article>)}
         {copyStatus && <p className="ask-action-status" role="status">{t(copyStatus)}</p>}
         <div className="ask-composer" aria-busy={busy}>
-          <label className="form-label" htmlFor="ask-input">{hasConversation ? t("Keep the conversation going") : t("What would you like to understand?")}</label>
+          <div className="ask-composer-heading"><span className="ask-composer-mark"><Icon name="ask" /></span><label className="form-label" htmlFor="ask-input">{hasConversation ? t("Keep the conversation going") : t("What would you like to understand?")}</label><span className="assistant-badge">{t("AI Assistant")}</span></div>
           <textarea ref={inputRef} id="ask-input" value={question} readOnly={busy} aria-describedby="ask-shortcut" onChange={(event) => setDiscussion((old) => ({ ...old, question: event.target.value }))}
             onKeyDown={(event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }}
             placeholder={hasConversation ? t("Ask a follow-up. Add an example or tell us what is still unclear…") : t("Type your question here. Add a sentence or an example for context…")} />
@@ -252,44 +351,75 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
       </div>
     </section>
     <section id="ask-panel-notes" aria-label="Saved notes" hidden={view !== "notes"}>
+      {deletedTitle && <div className="ask-note-deleted"><div role="status"><Icon name="check" /><p><strong>{t("Note deleted")}</strong><span>{deletedTitle}</span></p></div><IconButton icon="close" quiet label={t("Dismiss notification")} onClick={() => { setDeletedTitle(""); document.getElementById("ask-notes-all")?.focus(); }} /></div>}
       <div className="ask-library-layout">
         <aside className="ask-notes-index">
-          <div className="ask-library-tools"><div className="ask-library-search"><label className="form-label" htmlFor="ask-notes-search">{t("Search saved notes")}</label><input id="ask-notes-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Search titles, tags or content…")} /></div>
-          <div className="ask-note-filters">
-            <label htmlFor="ask-category">{t("Category")}<select id="ask-category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">{t("All categories")}</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-            <label htmlFor="ask-tag">{t("Tag")}<select id="ask-tag" value={tag} onChange={(event) => setTag(event.target.value)}><option value="">{t("All tags")}</option>{tags.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <div className="ask-library-tools">
+            <div className="ask-library-filter-row">
+              <div className="ask-category-tabs" role="group" aria-label={t("Category")}>
+                <button id="ask-notes-all" className="text-button" aria-pressed={!category} onClick={() => { setCategory(""); setTag(""); }} onBlur={event => event.currentTarget.removeAttribute("data-restored-focus")} onKeyDown={event => event.currentTarget.removeAttribute("data-restored-focus")}>{t("All notes")} <span>{notes.length}</span></button>
+                {categories.map(item => <button key={item} className="text-button" aria-pressed={category === item} onClick={() => { setCategory(category === item ? "" : item); setTag(""); }}>{t(item)} <span>{notes.filter(note => (note.category || "Uncategorized") === item).length}</span></button>)}
+              </div>
+              <div className="ask-library-search"><Icon name="word-lookup" /><label className="sr-only" htmlFor="ask-notes-search">{t("Search notes or topics")}</label><input id="ask-notes-search" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t("Search notes or topics…")} />{query && <IconButton className="ask-search-clear" icon="close" label={t("Clear search")} quiet onClick={() => { setQuery(""); document.getElementById("ask-notes-search")?.focus(); }} />}</div>
+            </div>
+            {tags.length > 0 && <section className="ask-topics-section" aria-labelledby="ask-topics-title">
+              <div className="ask-topics-heading"><h2 id="ask-topics-title"><Icon name="bookmark" />{t("Topics")} <span>({tags.length})</span></h2>{tag && <button type="button" className="text-button" onClick={() => setTag("")}>{t("Clear topic filter")} <strong>#{tag}</strong><Icon name="close" /></button>}</div>
+              <div id="ask-topic-options" className="ask-topic-filters" role="group" aria-label={t("Tag")}>{visibleTags.map(item => <button className="text-button" key={item} aria-pressed={tag === item} onClick={() => setTag(tag === item ? "" : item)}>{t(item)} <span>{categoryNotes.filter(note => note.tags?.includes(item)).length}</span></button>)}</div>
+              {tags.length > 24 && <button type="button" className="text-button ask-topics-toggle" aria-expanded={showAllTopics} aria-controls="ask-topic-options" onClick={() => setShowAllTopics(!showAllTopics)}>{showAllTopics ? t("Show fewer topics") : t("Show all {count} topics", { count: tags.length })}<Icon name="chevron" /></button>}
+            </section>}
           </div>
-          </div>
+          {noteCopyError && !noteOpen && <p className="ask-error" role="alert">{noteCopyError}</p>}
+          <span className="sr-only" role="status">{copiedNote && t("Copied to clipboard")}</span>
           <div className="ask-section-heading ask-library-results"><div className="ask-results-label"><h2>{hasFilters ? "Matching notes" : "All notes"} <span className="ask-note-count">{hasFilters ? `${matching.length} / ${notes.length}` : notes.length}</span></h2>{hasFilters && <button className="text-button" onClick={clearFilters}>{t("Clear filters")}</button>}</div><button className="text-button" aria-label="Refresh saved notes" disabled={notesBusy} onClick={() => void refreshNotes()}>{notesBusy ? "Loading…" : "Refresh"}</button></div>
           <span className="sr-only" role="status">{!notesBusy && !notesError ? `${matching.length} ${matching.length === 1 ? "note" : "notes"}${hasFilters ? ` matching your filters out of ${notes.length}` : " saved"}` : ""}</span>
           {notesBusy && <p role="status" className="ask-pending">{notes.length ? t("Refreshing your notes…") : t("Loading saved notes…")}</p>}
           {notesError && <div role="alert" className="ask-error"><p>{t("Saved notes could not be loaded.")} {notesError}</p><button className="secondary" disabled={notesBusy} onClick={() => void refreshNotes()}>{t("Retry loading notes")}</button></div>}
           {!notesBusy && !notesError && !notes.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="bookmark" /></span><h2>{t("No saved conversations yet")}</h2><p>{t("Save a useful answer in Ask to revisit it here.")}<br />{t("Your saved CLI notes appear here too.")}</p><a className="secondary" href="#ask">Ask your first question<Icon name="arrow" /></a></div>}
-          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="word-lookup" /></span><h2>{t("No notes match these filters")}</h2><p>{t("Try a different word, category or tag.")}</p><button className="secondary" onClick={clearFilters}>{t("Clear filters")}</button></div>}
-          <nav ref={listRef} className="ask-note-list" aria-label="Saved Ask notes" aria-busy={notesBusy}>{matching.map((note) => <button key={note.id} className="ask-note-link" aria-current={note.id === selectedId ? "true" : undefined} aria-haspopup="dialog" aria-controls="ask-note-reader" onClick={() => {
-            setSelectedId(note.id); setNoteOpen(true);
-          }}>
-            <span className="ask-note-card-top"><span className="ask-note-category">{note.category || "Uncategorized"}</span><Icon name="document" /></span>
-            <span className="ask-note-title"><strong title={noteTitle(note)}>{noteTitle(note)}</strong>{note.id === selectedId && <Icon name="check" />}</span>
-            <span className="ask-note-excerpt">{noteExcerpt(note) || "Open this note to read the full explanation."}</span>
-            {Boolean(note.tags?.length) && <span className="ask-note-topics">{note.tags!.map((item) => <span key={item}>#{item}</span>)}</span>}
-            <span className="ask-note-card-footer"><time dateTime={note.modifiedAt} title={`Updated ${dateLabel(note.modifiedAt)}`}>{dateLabel(note.modifiedAt, true)}</time><span>Read note<Icon name="arrow" /></span></span>
-          </button>)}</nav>
+          {!notesBusy && !notesError && notes.length > 0 && !matching.length && <div className="ask-empty ask-library-empty"><span className="ask-empty-icon"><Icon name="word-lookup" /></span><h2>{t("No notes match these filters")}</h2><p>{t("Try a different category or topic.")}</p><button className="secondary" onClick={clearFilters}>{t("Clear filters")}</button></div>}
+          <nav ref={listRef} className="ask-note-list" aria-label="Saved Ask notes" aria-busy={notesBusy}>{matching.map(note => <article key={note.id} className="ask-note-tile">
+            <div className="ask-note-card-top"><span className="ask-note-category">{t(note.category || "Uncategorized")}</span><IconButton className="ask-note-copy" quiet icon={copiedNote === `summary:${note.id}` ? "check" : "copy"} label={copiedNote === `summary:${note.id}` ? t("Copied summary") : `${t("Copy summary")}: ${noteTitle(note)}`} onClick={() => void copyNote(noteExcerpt(note), `summary:${note.id}`)} /></div>
+            <button data-note-id={note.id} className="ask-note-link" aria-current={noteOpen && note.id === selectedId ? "true" : undefined} onBlur={event => event.currentTarget.removeAttribute("data-restored-focus")} onKeyDown={event => event.currentTarget.removeAttribute("data-restored-focus")} aria-haspopup="dialog" aria-controls="ask-note-reader" onClick={() => openNote(note)}>
+              <span className="ask-note-title"><strong title={noteTitle(note)}>{noteTitle(note)}</strong></span>
+              <time dateTime={note.modifiedAt}>{t("Updated")} {dateLabel(note.modifiedAt)}</time>
+              <span className="ask-note-excerpt">{noteExcerpt(note) || t("Open this note to read the full explanation.")}</span>
+            </button>
+            {Boolean(note.tags?.length) && <div className="ask-note-topics">{note.tags!.slice(0, 4).map(item => <button type="button" key={item} aria-pressed={tag === item} onClick={() => setTag(tag === item ? "" : item)}>{t(item)}</button>)}{note.tags!.length > 4 && <span className="ask-note-more-tags" title={note.tags!.slice(4).join(", ")}>+{note.tags!.length - 4}</span>}</div>}
+            <div className="ask-note-card-footer"><time dateTime={note.modifiedAt} title={`${t("Updated")} ${dateLabel(note.modifiedAt)}`}>{dateLabel(note.modifiedAt, true)}</time><button type="button" className="text-button" onClick={() => openNote(note)}>{t("Read note")}<Icon name="arrow" /></button></div>
+          </article>)}</nav>
         </aside>
       </div>
       <dialog ref={dialogRef} className="ask-note-dialog" id="ask-note-reader" style={readerSize ? { "--reader-width": `${readerSize.width}px`, "--reader-height": `${readerSize.height}px` } as CSSProperties : undefined} aria-labelledby="ask-note-title" onKeyDown={(event) => {
         if (event.key !== "Tab") return;
-        const controls = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]')].filter((node) => node.getClientRects().length);
+        const controls = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]')].filter((node) => node.getClientRects().length && !node.closest("[inert]"));
         const first = controls[0], last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        if (!first) { event.preventDefault(); deleteConfirmRef.current?.focus(); }
+        else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-      }} onCancel={(event) => { event.preventDefault(); closeNote(); }} onClick={(event) => { if (event.target === event.currentTarget) { const box = event.currentTarget.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) closeNote(); } }}>
-        <div className="ask-note-dialog-bar"><span className="ask-reader-label"><Icon name="document" />Saved note</span><div className="ask-reader-controls">{readerSize && <button className="text-button ask-reader-reset" onClick={() => setReaderSize(undefined)}>Reset size</button>}<IconButton icon="close" label="Close note" onClick={closeNote} /></div></div>
-        <article className="ask-note-card">
-          {selected && <><header><h2 id="ask-note-title">{noteTitle(selected)}</h2><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><div className="ask-note-metadata" aria-label="Note topics"><button className="secondary" onClick={() => { setCategory(selected.category || "Uncategorized"); closeNote(); }}>{selected.category || "Uncategorized"}</button>{(selected.tags || []).map((item) => <button className="text-button" key={item} onClick={() => { setTag(item); closeNote(); }}>#{item}</button>)}</div></header><Markdown source={noteBody(selected)} /></>}
+      }} onCancel={(event) => { event.preventDefault(); dismissReader(); }} onClick={(event) => { if (event.target === event.currentTarget) { const box = event.currentTarget.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dismissReader(); } }}>
+        <div className="ask-note-dialog-bar"><span className="ask-reader-label"><Icon name="document" />{t("Saved note")}</span><div className="ask-reader-controls">{readerSize && !confirmDelete && <button className="text-button ask-reader-reset" onClick={() => setReaderSize(undefined)}>Reset size</button>}<IconButton icon="close" label={t("Close note")} disabled={deleting} onClick={closeNote} /></div></div>
+        <article className="ask-note-card" inert={confirmDelete}>
+          {selected && <><header><h2 id="ask-note-title">{noteTitle(selected)}</h2><p className="ask-action-status">Updated <time dateTime={selected.modifiedAt}>{dateLabel(selected.modifiedAt)}</time></p><div className="ask-note-metadata" aria-label="Note topics"><button className="secondary" onClick={() => { setCategory(selected.category || "Uncategorized"); closeNote(); }}>{t(selected.category || "Uncategorized")}</button>{(selected.tags || []).map((item) => <button className="text-button" key={item} onClick={() => { setTag(item); closeNote(); }}>{t(item)}</button>)}</div></header><Markdown source={noteBody(selected)} /></>}
         </article>
-        <div className="ask-note-dialog-footer"><span className="sr-only" id="ask-note-discussion-hint">{t("Use this note as context for a new question.")}</span><button className="text-button" aria-describedby="ask-note-discussion-hint" disabled={busy || !selected} onClick={() => selected && start({ turns: [], question: "", context: selected })}>{t("Continue discussion")}<Icon name="arrow" /></button>{busy && <p className="ask-action-status">{t("Wait for your current answer before starting another discussion.")}</p>}</div>
-        <div className="ask-reader-size-bar"><span id="ask-reader-resize-hint">{t("Drag the corner to resize · Arrow keys when focused")}</span><button className="ask-reader-resize" type="button" aria-label="Resize note window" aria-describedby="ask-reader-resize-hint" title="Drag to resize. Use arrow keys when focused; Home resets size."
+        <div className={`ask-note-dialog-footer${confirmDelete ? " is-confirming" : ""}`}>
+          {confirmDelete ? <div ref={deleteConfirmRef} className="ask-note-delete-confirm" tabIndex={-1} role="group" aria-labelledby="ask-note-delete-prompt" aria-describedby="ask-note-delete-description" aria-busy={deleting}>
+            <div className="ask-note-delete-heading"><Icon name="trash" /><h3 id="ask-note-delete-prompt">{t("Delete this note?")}</h3></div>
+            <p className="ask-note-delete-title" title={selected ? noteTitle(selected) : undefined}>{selected && noteTitle(selected)}</p>
+            <p id="ask-note-delete-description">{t("This permanently deletes the saved note. This cannot be undone.")}</p>
+            {deleteError && <p className="ask-error" role="alert">{t(deleteError)}</p>}
+            <div className="ask-note-delete-actions">
+              <button ref={cancelDeleteRef} className="secondary" disabled={deleting} onClick={cancelDeletion}>{t("Keep note")}</button>
+              <button ref={deleteSubmitRef} className="ask-note-delete-submit" disabled={deleting} onClick={() => void deleteNote()}>{deleting ? <span className="loading-spinner" aria-hidden="true" /> : <Icon name="trash" />}{deleting ? t("Deleting…") : deleteError ? t("Retry deletion") : t("Delete permanently")}</button>
+            </div>
+            {deleting && <span className="sr-only" role="status">{t("Deleting…")}</span>}
+          </div> : <>
+            <button ref={deleteButtonRef} className="text-button ask-note-delete" disabled={!selected || deleting} onClick={() => setConfirmDelete(true)}><Icon name="trash" />{t("Delete note")}</button>
+            <span className="sr-only" id="ask-note-discussion-hint">{t("Use this note as context for a new question.")}</span><button className="secondary ask-note-continue" aria-describedby="ask-note-discussion-hint" disabled={busy || !selected || deleting} onClick={() => selected && start({ turns: [], question: "", context: selected })}>{t("Continue discussion")}<Icon name="arrow" /></button>
+            {busy && <p className="ask-action-status">{t("Wait for your current answer before starting another discussion.")}</p>}
+          </>}
+          {!confirmDelete && <button className="text-button ask-copy-full-note" disabled={!selected} onClick={() => selected && void copyNote(noteBody(selected), `full:${selected.id}`)}><Icon name={selected && copiedNote === `full:${selected.id}` ? "check" : "copy"} />{selected && copiedNote === `full:${selected.id}` ? t("Copied content") : t("Copy note content")}</button>}
+          {noteCopyError && <p className="ask-error" role="alert">{noteCopyError}</p>}
+        </div>
+        <div className="ask-reader-size-bar" hidden={confirmDelete}><span id="ask-reader-resize-hint">{t("Drag the corner to resize · Arrow keys when focused")}</span><button className="ask-reader-resize" type="button" aria-label="Resize note window" aria-describedby="ask-reader-resize-hint" title="Drag to resize. Use arrow keys when focused; Home resets size."
           onPointerDown={(event) => {
             if (event.button !== 0) return;
             const box = dialogRef.current!.getBoundingClientRect();

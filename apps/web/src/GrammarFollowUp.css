@@ -1,0 +1,44 @@
+.grammar-follow-up { min-width:0; border:1px solid var(--line); border-radius:1.25rem; background:var(--paper); overflow:hidden; box-shadow:0 .5rem 1rem #10182712; }
+.grammar-follow-up-header { display:flex; align-items:center; flex-wrap:wrap; gap:.875rem; padding:1.5rem; background:var(--ink); color:var(--paper); }
+.follow-up-mark { display:grid; place-items:center; width:2.75rem; height:2.75rem; background:var(--accent); color:var(--ink); border-radius:.875rem; flex-shrink:0; }
+.follow-up-mark .icon { width:1.5rem; height:1.5rem; }
+.follow-up-heading { flex:1; }
+.follow-up-heading h2 { display:flex; align-items:center; flex-wrap:wrap; gap:.625rem; margin:0 0 .25rem; font-size:1.25rem; }
+.follow-up-heading p { margin:0; font-size:.875rem; color:var(--on-dark-muted); }
+.assistant-badge { padding:.375rem .625rem; border:1px solid color-mix(in srgb,var(--accent) 35%,transparent); border-radius:2rem; background:color-mix(in srgb,var(--accent) 15%,transparent); color:var(--accent); font-size:.75rem; white-space:nowrap; }
+.grammar-follow-up-controls label { display:flex; align-items:center; gap:.75rem; font-size:.875rem; color:var(--on-dark-muted); }
+.grammar-follow-up-controls select { width:auto; min-height:2.75rem; background:var(--ink); color:var(--accent); border-color:var(--muted); padding:.5rem .75rem; border-radius:2rem; }
+.follow-up-suggestions { padding:1rem 1.5rem; background:var(--wash); border-bottom:1px solid var(--line); }
+.follow-up-suggestions h3 { font-size:.75rem; text-transform:uppercase; letter-spacing:.035em; color:var(--muted); margin:0 0 .75rem; }
+.follow-up-suggestions > div { display:flex; flex-wrap:wrap; gap:.5rem; }
+.follow-up-suggestions button { display:inline-flex; align-items:center; gap:.5rem; font-size:.875rem; font-weight:400; border-radius:2rem; padding:.375rem .75rem; color:var(--muted); }
+.follow-up-suggestions .icon { width:.875rem; height:.875rem; }
+.follow-up-messages { min-height:11rem; padding:1.5rem; background:color-mix(in srgb,var(--wash) 45%,var(--paper)); }
+.follow-up-welcome { display:flex; align-items:flex-start; gap:.875rem; }
+.follow-up-welcome > span { display:grid; place-items:center; background:var(--ink); color:var(--accent); border-radius:50%; width:2.25rem; height:2.25rem; flex-shrink:0; }
+.follow-up-welcome p { max-width:43rem; padding:1rem; border:1px solid var(--line); border-radius:1.25rem 1.25rem 1.25rem 0; background:var(--paper); margin:0; }
+.grammar-follow-up-turn { padding-block:1.25rem; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.grammar-follow-up-turn:first-child { padding-top:0; }
+.grammar-follow-up-turn h3 { margin:0 0 1rem; font-size:1.125rem; white-space:pre-wrap; }
+.grammar-follow-up-turn .md { max-width:68ch; }
+.grammar-follow-up-turn pre, .grammar-follow-up-turn table { overflow-x:auto; }
+.grammar-follow-up-turn table { display:block; }
+.grammar-follow-up-save { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; margin-top:1rem; }
+.grammar-follow-up-save p { margin:0; }
+.grammar-follow-up-composer { border-top:1px solid var(--line); padding:1rem 1.25rem; }
+.follow-up-input-row { display:flex; align-items:flex-end; gap:.625rem; }
+.grammar-follow-up-composer textarea { flex:1; min-width:0; width:100%; min-height:5rem; height:5rem; max-height:12rem; overflow-y:auto; resize:vertical; margin:0; background:var(--wash); border-color:var(--line); }
+.follow-up-input-row button { flex:0 0 auto; height:var(--action-height); min-height:var(--action-height); }
+.follow-up-composer-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem 1rem; padding-top:.75rem; font-size:.75rem; color:var(--muted); }
+.follow-up-composer-footer p { margin:0; }
+.grammar-follow-up-error { color:var(--danger); font-size:.875rem; overflow-wrap:anywhere; }
+@media (max-width:600px) {
+ .grammar-follow-up-header, .follow-up-suggestions, .follow-up-messages, .grammar-follow-up-composer { padding:1rem; }
+ .follow-up-heading { flex-basis:calc(100% - 4rem); }
+ .follow-up-heading h2 { font-size:1.0625rem; }
+ .grammar-follow-up-controls { width:100%; }
+ .grammar-follow-up-controls label { justify-content:space-between; }
+ .follow-up-input-row { flex-direction:column; align-items:stretch; }
+ .grammar-follow-up-composer textarea { flex:none; }
+ .follow-up-input-row button { width:100%; }
+}
