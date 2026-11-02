@@ -117,6 +117,7 @@ export const beginnerCopy: Record<string, string> = {
   "Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review.": "输入英语单词或中文说法，查看意思、例句和常见搭配。想以后复习，可以保存到单词本。",
   "Try “follow up” or “跟进”": "例如：follow up 或 跟进",
   "Look up": "查词",
+  "Review due words": "复习到期单词",
   "Looking up…": "正在查词…",
   "Try translating a Chinese sentence into English before checking the AI feedback. Use the suggestions to revise your answer and try a new sentence of your own.": "先把题目中的中文翻译成英语，再查看 AI 的建议。修改后，试着用同样的表达另写一句。",
   "Write your translation in English…": "试着用英语翻译上面的句子…",

@@ -293,7 +293,7 @@ function Express() {
         title="Find the right words."
         detail={t("Explore an English version of your Chinese text, or check what an English passage means in Chinese. Compare the wording, then try expressing the idea yourself.")}
       />
-      <Panel title={t("Your text")} icon="translation">
+      <Panel title={t("Your text")} icon="translation" className="express-composer">
         <div className="switches">
           <button
             className={direction === "zh2en" ? "selected" : ""}
@@ -910,6 +910,10 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
         title="Get to know a word."
         detail={t("Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review.")}
       />}
+      {!compact && <div className="actions lookup-learning-actions">
+        <a className="secondary" href="#word-library"><Icon name="word-library" />Saved words</a>
+        <a className="secondary" href="#word-review"><Icon name="word-review" />{t("Review due words")}</a>
+      </div>}
       <Panel title="Word or phrase" icon="word-lookup" className="lookup-form">
         <label className="form-label" htmlFor={compact ? "selection-lookup-input" : "word-lookup-input"}>
           English or Chinese word or phrase
@@ -2453,9 +2457,11 @@ function CopyButton({ value, label, small }: { value: string; label: string; sma
   );
 }
 
-const primaryRoutes: Route[] = ["practice"];
+const primaryRoutes: Route[] = ["word-lookup", "practice", "ask"];
 const learningRoutes: Array<[Route, string]> = [
   ["dashboard", "Overview"],
+  ["word-library", "Saved words"],
+  ["ask", "Saved notes"],
   ["handbook", "Handbook"],
   ["coach", "Coach"],
 ];
@@ -2465,14 +2471,6 @@ const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }>
     routes: [
       ["grammar", "Grammar"],
       ["translation", "Express"],
-    ],
-  },
-  {
-    label: "Vocabulary",
-    routes: [
-      ["word-lookup", "Look up"],
-      ["word-library", "Saved words"],
-      ["word-review", "Review"],
     ],
   },
 ];
@@ -2610,34 +2608,25 @@ export function App() {
               </div>
             </details>
           ))}
-          {items
-            .filter(([key]) => primaryRoutes.includes(key))
-            .map(([key, label]) => (
+          {primaryRoutes.map((key) => (
               <a
                 href={"#" + key}
                 key={key}
-                className={route === key ? "nav-link active" : "nav-link"}
-                aria-current={route === key ? "page" : undefined}
+                className={route === key && !(key === "ask" && askView === "notes") ? "nav-link active" : "nav-link"}
+                aria-current={route === key && !(key === "ask" && askView === "notes") ? "page" : undefined}
               >
-                {label}
+                {items.find(([itemKey]) => itemKey === key)?.[1]}
               </a>
             ))}
           <details className="learning-menu" name="workspace-navigation">
-            <summary className={route === "ask" ? "active" : ""}>Ask<Icon name="chevron" /></summary>
-            <div className="learning-links">
-              <a href="#ask" aria-current={route === "ask" && askView === "ask" ? "page" : undefined}><Icon name="ask" />Ask</a>
-              <a href="#ask?view=notes" aria-current={route === "ask" && askView === "notes" ? "page" : undefined}><Icon name="document" />Saved notes</a>
-            </div>
-          </details>
-          <details className="learning-menu" name="workspace-navigation">
-            <summary className={learningRoutes.some(([key]) => key === route) ? "active" : ""}>
+            <summary className={route === "word-review" || learningRoutes.some(([key]) => key === route && (key !== "ask" || askView === "notes")) ? "active" : ""}>
               My learning
               <Icon name="chevron" />
             </summary>
             <div className="learning-links">
               {learningRoutes.map(([key, label]) => (
-                <a key={key} href={"#" + key} aria-current={route === key ? "page" : undefined}>
-                  <Icon name={key} />
+                <a key={key} href={key === "ask" ? "#ask?view=notes" : "#" + key} aria-current={route === key && (key !== "ask" || askView === "notes") ? "page" : undefined}>
+                  <Icon name={key === "ask" ? "document" : key} />
                   {label}
                 </a>
               ))}

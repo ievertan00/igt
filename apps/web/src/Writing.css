@@ -8,8 +8,9 @@
 .writing-shell .accent-dot { color:var(--success); }
 .writing-shell .accent-dot::before { display:none; }
 .writing-shell .grammar-intro p { max-width:43rem; margin-inline:auto; font-size:1.375rem; line-height:1.5; }
-.writing-shell .grammar-composer { max-width:none; background:var(--paper); padding:var(--panel-padding); border-color:var(--line); border-radius:1.25rem; box-shadow:0 1px 3px #10182708; }
+.writing-shell .grammar-composer { max-width:none; background:var(--paper); padding:var(--panel-padding); border-color:var(--line); border-radius:1.25rem; box-shadow:var(--shadow-floating); }
 .writing-shell .grammar-composer:focus-within { border-color:var(--focus); }
+.panel.express-composer { box-shadow:var(--shadow-floating); }
 .writing-shell .grammar-composer textarea { min-height:7.5rem; font-size:1.375rem; margin-bottom:1rem; }
 .writing-shell .composer-actions { padding-top:1rem; border-top:1px solid var(--line); }
 .writing-shell .composer-actions > span { font-size:.875rem; max-width:44rem; }

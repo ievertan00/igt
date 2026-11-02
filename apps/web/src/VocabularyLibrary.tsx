@@ -126,7 +126,7 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
           <span className="vocabulary-library-mark" aria-hidden="true"><Icon name="handbook" /></span>
           <div><h1>Saved words</h1><p>Your vocabulary, ready to revisit.</p></div>
         </div>
-        <a className="primary" href="#word-review">Review due words<Icon name="arrow" /></a>
+        <a className="primary" href="#word-review">{t("Review due words")}<Icon name="arrow" /></a>
       </header>
       <section className="vocabulary-overview" aria-labelledby="vocabulary-overview-title" aria-busy={loading}>
         <div className="vocabulary-overview-heading">

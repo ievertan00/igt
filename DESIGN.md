@@ -13,8 +13,8 @@ description: 以 Writing 示例图为基准的全站界面与学习交互规范
 
 ClearWrite 是英语学习工作台。写作、词汇、独立练习、解释和学习记录各自保留适合任务的信息结构，共享品牌、导航、颜色、控件和阅读节奏。
 
-- 保留当前 hash 路由：Grammar、Express、Look up、Saved words、Review、Practice、Ask、Saved notes、Overview、Handbook、Coach 和 Model settings。Saved notes 是 Ask 下的视图，不是新业务模块。
-- 顶部主导航保持 Writing、Vocabulary、Practice、Ask、My learning，次级页面通过现有菜单到达。Settings 与引导语言位于导航右侧。
+- 保留当前 hash 路由：Grammar、Express、Vocabulary、Saved words、Review、Practice、Ask、Saved notes、Overview、Handbook、Coach 和 Model settings。Saved notes 是 Ask 下的视图，不是新业务模块。
+- 顶部主导航为 Writing、Vocabulary、Practice、Ask、My learning；Writing 菜单包含 Grammar 和 Express；My learning 菜单包含 Overview、Saved words、Saved notes、Handbook 和 Coach。Review 通过 Saved words 页首的主要操作 Review due words 进入，Vocabulary 页面也提供 Saved words 和 Review due words 快捷入口；复习时 My learning 保持活动态。Vocabulary 与 Ask 直接进入对应工具。Settings 与引导语言位于导航右侧。
 - 保留现有 API、数据来源、显式保存、导出、筛选、排程、练习与学习证据含义。视觉统一不授权修改学习内容或记录策略。
 - 一次纠正、一次正确回答、词汇自评与长期保持是不同证据，不显示未经支持的“已掌握”。Practice 的实际数据库和 Vocabulary Markdown 的权威关系保持不变。
 - 只实现真实存在的功能。示例图中的太阳图标不构成引入暗色模式的要求；现有 Settings 仍打开设置。不要添加无依据的“实时检查”或“AI 解释已验证”承诺。
@@ -68,7 +68,7 @@ ClearWrite 是英语学习工作台。写作、词汇、独立练习、解释和
 
 桌面顶部栏是白色背景和细底边，约 6.125rem 高。左侧是约 54px 的青柠圆角星光图标与 32px ClearWrite 文字标识，中心是浅灰胶囊导航；桌面导航文字约 22px，活动项为白色内层胶囊、深色加粗文字和右侧青柠小圆点。桌面隐藏菜单箭头以贴合导航参考图，原菜单仍可通过点击或键盘展开；移动端保留箭头。Settings 与带地球图标的语言菜单之间使用短竖线分隔，保留可访问名称与原功能。1320px 以下采用紧凑尺寸，960px 以下切换为 Menu。
 
-所有页面共用同一居中流式容器：`--workspace-max: 80rem`，左右由 `--page-gutter` 控制，桌面 3rem、960px 以下 1.25rem、540px 以下 1rem。Grammar、Express、Look up 与 Ask 的输入面板均铺满该容器，不能各自再设置较窄的页面或 composer 宽度。面板共用 `--panel-padding`：桌面 1.75rem、540px 以下 1rem。长解释与 Markdown 正文仍可限制阅读行宽，但不缩窄外层输入、结果面板或整个页面。白色面板与浅灰画布必须保持可辨层次。
+所有页面共用同一居中流式容器：`--workspace-max: 80rem`，左右由 `--page-gutter` 控制，桌面 3rem、960px 以下 1.25rem、540px 以下 1rem。Grammar、Express、Vocabulary 与 Ask 的输入面板均铺满该容器，不能各自再设置较窄的页面或 composer 宽度。面板共用 `--panel-padding`：桌面 1.75rem、540px 以下 1rem。长解释与 Markdown 正文仍可限制阅读行宽，但不缩窄外层输入、结果面板或整个页面。白色面板与浅灰画布必须保持可辨层次。
 
 | 宽度 | 行为 |
 |---|---|
@@ -113,7 +113,7 @@ ClearWrite 是英语学习工作台。写作、词汇、独立练习、解释和
 |---|---|---|
 | Writing / Grammar | 居中标题、宽输入卡、Evaluate / Correction / More natural / Why / Remember 独立反馈面、显式保存条、深色助手标题带 | 原句快照、完整诊断、复制、后续讨论与保存 |
 | Express | 左对齐页眉、白色输入与结果面、浅青柠方向选中态 | 中英方向切换和翻译说明，不混用 Grammar 诊断 |
-| Look up | 白色搜索面与分层词条，淡色语义图标和工具按钮 | 读音、词性、释义、搭配、例句、显式添加 |
+| Vocabulary | 白色搜索面与分层词条，淡色语义图标和工具按钮 | 读音、词性、释义、搭配、例句、显式添加 |
 | Saved words | 青柠页眉标记、白色状态总览、白色词条列表和阅读弹窗 | 状态证据、到期筛选、原有分布、历史与内容权威 |
 | Review | 浅灰画布、白色工作面、浅青柠提示区、清晰进度与分级操作 | 揭示前隐藏答案、typed recall、自评、真实排程 |
 | Practice | 白色配置与练习面、浅青柠选项、轻量说明面、深色主动作 | 原题库、难度/风格/语境、提示、评价、进度与完成状态 |

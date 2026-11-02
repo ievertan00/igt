@@ -137,6 +137,7 @@ p { overflow-wrap: anywhere; }
 .workspace { flex: 1; width: min(calc(100% - var(--page-gutter) - var(--page-gutter)), var(--workspace-max)); margin: 0 auto; padding: 2.5rem 0 4rem; min-width: 0; }
 .workspace:focus { outline: none; }
 .heading { margin-bottom: 2rem; max-width: 48rem; }
+.lookup-learning-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem; }
 .page-kicker { display: inline-flex; align-items: center; padding: .25rem .75rem; margin-bottom: 1rem; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: .75rem; font-weight: 650; letter-spacing: .04em; }
 .heading h1 { margin-bottom: 14px; }
 .heading p { color: var(--muted); font-size: 1.0625rem; max-width: 62ch; margin-bottom: 0; line-height: 1.7; }
@@ -228,6 +229,7 @@ p { overflow-wrap: anywhere; }
 .md th, .md td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
 .md th { background: var(--wash); font-weight: 600; }
 .md hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
+.lookup-form:has(#word-lookup-input) { box-shadow: var(--shadow-floating); }
 .lookup-row { display: flex; gap: 12px; }
 .lookup-row input { flex: 1; min-width: 0; }
 .lookup-row .primary { flex-shrink: 0; }
