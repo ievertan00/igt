@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { IconButton } from "./IconButton";
 import { Icon } from "./Icon";
+import { FloatingAction } from "./FloatingAction";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import { useGuideCopy, type LearnerLanguage } from "./learner-language";
@@ -386,6 +387,7 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
             {Boolean(note.tags?.length) && <div className="ask-note-topics">{note.tags!.slice(0, 4).map(item => <button type="button" key={item} aria-pressed={tag === item} onClick={() => setTag(tag === item ? "" : item)}>{t(item)}</button>)}{note.tags!.length > 4 && <span className="ask-note-more-tags" title={note.tags!.slice(4).join(", ")}>+{note.tags!.length - 4}</span>}</div>}
             <div className="ask-note-card-footer"><time dateTime={note.modifiedAt} title={`${t("Updated")} ${dateLabel(note.modifiedAt)}`}>{dateLabel(note.modifiedAt, true)}</time><button type="button" className="text-button" onClick={() => openNote(note)}>{t("Read note")}<Icon name="arrow" /></button></div>
           </article>)}</nav>
+          <FloatingAction active={active && view === "notes" && notes.length > 0 && !noteOpen} href="#ask" label={t("Ask a question")} icon="ask" />
         </aside>
       </div>
       <dialog ref={dialogRef} className="ask-note-dialog" id="ask-note-reader" style={readerSize ? { "--reader-width": `${readerSize.width}px`, "--reader-height": `${readerSize.height}px` } as CSSProperties : undefined} aria-labelledby="ask-note-title" onKeyDown={(event) => {

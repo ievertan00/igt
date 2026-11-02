@@ -2,6 +2,7 @@ import { useGuideCopy } from "./learner-language";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { webApi } from "./api/client";
 import { Icon } from "./Icon";
+import { FloatingAction } from "./FloatingAction";
 import "./VocabularyLibrary.css";
 
 export type SavedVocabularyEntry = {
@@ -128,6 +129,7 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
         </div>
         <a className="primary" href="#word-review">{t("Review due words")}<Icon name="arrow" /></a>
       </header>
+      <FloatingAction active={Boolean(data?.overview?.due) && !loading && !error && !selected} href="#word-review" label={t("Review due words")} icon="word-review" />
       <section className="vocabulary-overview" aria-labelledby="vocabulary-overview-title" aria-busy={loading}>
         <div className="vocabulary-overview-heading">
           <div><h2 id="vocabulary-overview-title">Vocabulary overview</h2><p>Your vocabulary learning at a glance.</p></div>
