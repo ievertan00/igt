@@ -1,6 +1,8 @@
-type IconName = "globe" | "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
+type IconName = "eye" | "eye-off" | "globe" | "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
 
 const paths: Record<IconName, string> = {
+  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  "eye-off": "M3 3l18 18 M10.6 5.1A12 12 0 0 1 12 5c6.5 0 10 7 10 7a19 19 0 0 1-3 3.8 M6.1 6.1A22 22 0 0 0 2 12s3.5 7 10 7a13 13 0 0 0 5.9-1.9 M9.9 9.9a3 3 0 0 0 4.2 4.2",
   globe: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M3 12h18 M12 3c5 5 5 13 0 18 M12 3c-5 5-5 13 0 18",
   home: "M3 11l9-8 9 8 M5 10v11h14V10 M9 21v-7h6v7",
   dining: "M4 3v6a3 3 0 0 0 6 0V3 M7 3v18 M16 21V3c4 2 4 9 0 10h4",

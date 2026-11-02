@@ -1716,6 +1716,50 @@ function HandbookCopy({ text }: { text: string }) {
   }} /><span role="status">{status}</span></span>;
 }
 
+function HandbookDelete({ disabled, onDelete }: { disabled: boolean; onDelete: () => Promise<void> }) {
+  const { t } = useGuideCopy();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const trigger = useRef<HTMLButtonElement>(null);
+  const cancel = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const inFlight = useRef(false);
+  useEffect(() => {
+    if (!confirming || !dialog.current) return;
+    const element = dialog.current;
+    const overflow = document.body.style.overflow;
+    element.showModal();
+    document.body.style.overflow = "hidden";
+    cancel.current?.focus();
+    return () => { element.close(); document.body.style.overflow = overflow; };
+  }, [confirming]);
+  function dismiss() {
+    if (inFlight.current) return;
+    dialog.current?.close();
+    setConfirming(false); setError("");
+    trigger.current?.focus();
+  }
+  return <span className="handbook-delete">
+    <button ref={trigger} type="button" className="icon-button icon-button-quiet" aria-label={t("Delete saved check")} title={t("Delete saved check")} disabled={disabled || pending} onClick={() => setConfirming(true)}><Icon name="trash" /></button>
+    {confirming && <dialog ref={dialog} className="handbook-delete-confirm" aria-label={t("Confirm deletion")} aria-busy={pending} onCancel={event => { event.preventDefault(); dismiss(); }}>
+      <strong>{t("Delete this check?")}</strong>
+      <span>{t("This cannot be undone.")}</span>
+      {error && <span role="alert">{t(error)}</span>}
+      <span className="handbook-delete-actions">
+        <button ref={cancel} type="button" disabled={pending} onClick={dismiss}>{t("Cancel")}</button>
+        <button type="button" className="handbook-delete-submit" disabled={disabled || pending} onClick={async () => {
+          if (inFlight.current) return;
+          inFlight.current = true; setPending(true); setError("");
+          try { await onDelete(); }
+          catch (cause: any) { setError(cause?.message || "Could not delete this check. Try again."); }
+          finally { inFlight.current = false; setPending(false); }
+        }}>{t(pending ? "Deleting…" : "Delete")}</button>
+      </span>
+    </dialog>}
+  </span>;
+}
+
 function Handbook() {
   const { t } = useGuideCopy();
   const params = new URLSearchParams(location.hash.split("?")[1] || "");
@@ -1729,11 +1773,15 @@ function Handbook() {
   const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
   const [search, setSearch] = useState(appliedSearch);
   const [showNotes, setShowNotes] = useState(true);
+  const [deleteStatus, setDeleteStatus] = useState("");
+  const deleteInFlight = useRef(false);
+  const refreshRef = useRef<HTMLButtonElement>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof webApi.getHandbook>>>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const requestId = useRef(0);
   async function load() {
+    if (deleteInFlight.current) return;
     const id = ++requestId.current;
     setBusy(true);
     setError("");
@@ -1759,10 +1807,29 @@ function Handbook() {
     // Review Log timestamps contain Beijing wall time encoded with a Z suffix.
     return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(value)) + " · Beijing time";
   }
+  async function deleteCheck(id: string) {
+    if (deleteInFlight.current) return;
+    deleteInFlight.current = true;
+    ++requestId.current;
+    setBusy(true);
+    setDeleteStatus("");
+    try {
+      await webApi.deleteHandbookCheck(id);
+      setData(previous => previous && ({ ...previous, entries: previous.entries.filter(entry => entry.entryId !== id) }));
+      setDeleteStatus("Saved check deleted from your Review Log.");
+      deleteInFlight.current = false;
+      if (entryId || (data?.entries.length === 1 && offset > 0)) navigate({ offset: Math.max(0, offset - (data?.pagination.limit || 10)) });
+      else await load();
+      requestAnimationFrame(() => refreshRef.current?.focus({ preventScroll: true }));
+    } finally {
+      deleteInFlight.current = false;
+      setBusy(false);
+    }
+  }
   return <div className="handbook-page">
     <div className="coach-header">
       <Heading eyebrow="HANDBOOK · HISTORY" title="Your saved Grammar checks." detail={t("Review the original sentences, corrections and explanations saved in your Review Log. Refresh to load the latest checks.")} />
-      <button className="secondary" disabled={busy} onClick={() => void load()}><Icon name="word-review" />{busy ? "Loading…" : "Refresh"}</button>
+      <button ref={refreshRef} className="secondary" disabled={busy} onClick={() => void load()}><Icon name="word-review" />{busy ? "Loading…" : "Refresh"}</button>
     </div>
     <form className="handbook-filters" onSubmit={event => { event.preventDefault(); navigate({ search: search.trim() }); }}>
       <label>Time window<select value={days} disabled={busy} onChange={event => navigate({ days: event.target.value })}>
@@ -1783,6 +1850,7 @@ function Handbook() {
         <button className="handbook-clear" type="button" disabled={busy} onClick={() => navigate({ days: 0, search: "", errorType: "", diagnosis: "all" })}>Clear filters</button></div>
       </div>
     </form>
+    {deleteStatus && <p role="status" className="handbook-evidence">{t(deleteStatus)}</p>}
     {error && <div role="alert" className="handbook-empty"><State title="Could not load Handbook" detail={error} />{data && <p>Previously loaded checks remain below.</p>}<button onClick={() => void load()}>Try again</button></div>}
     <div aria-busy={busy}>
       {busy && <p role="status">Loading saved checks…</p>}
@@ -1798,6 +1866,7 @@ function Handbook() {
               </span>
               <span className="handbook-entry-tools">
                 {entry.correction && <HandbookCopy text={entry.correction} />}
+                <HandbookDelete disabled={busy} onDelete={() => deleteCheck(entry.entryId)} />
               </span>
             </header>
             <section className="handbook-comparison" aria-label="Original and correction">
@@ -1819,7 +1888,7 @@ function Handbook() {
     </div>
     {Boolean(data?.entries.length) && <div className="floating-action-dock handbook-notes-dock">
       <button type="button" className="primary floating-action handbook-notes-toggle" title={showNotes ? "Hide explanations & notes" : "Show explanations & notes"} aria-pressed={showNotes} onClick={() => setShowNotes(value => !value)}>
-        <Icon name="document" /><span className="sr-only">{showNotes ? "Hide explanations & notes" : "Show explanations & notes"}</span>
+        <Icon name={showNotes ? "eye-off" : "eye"} /><span className="sr-only">{showNotes ? "Hide explanations & notes" : "Show explanations & notes"}</span>
       </button>
     </div>}
   </div>;

@@ -114,6 +114,7 @@ export const webApi = {
     return requestJson<GrammarHistory>(`/handbook?${params}`);
   },
   explainHandbookRule: (errorType: string, days: number, version: string) => requestJson<{ exampleCount: number; rule: { title: string; content: string; generatedAt?: string; cached?: boolean } }>("/handbook/rule", { method: "POST", body: JSON.stringify({ errorType, days, version }), timeoutMs: 180_000 }),
+  deleteHandbookCheck: (entryId: string) => requestJson<{ deleted: boolean; entryId: string }>("/handbook/delete", { method: "POST", body: JSON.stringify({ entryId }) }),
   listHandbookReports: () => requestJson<{ reports: Array<{ id: string; date: string; provider: string }>; truncated?: boolean }>("/handbook/reports"),
   readHandbookReport: (id: string) => requestJson<{ id: string; html: string; snapshot: { days: number } | null }>(`/handbook/reports/read?${new URLSearchParams({ id })}`),
   compareHandbookReports: (older: string, newer: string) => requestJson<{ available: boolean; reason?: string; note?: string; changes?: Array<{ errorType: string; before: number; after: number; delta: number }> }>(`/handbook/reports/compare?${new URLSearchParams({ older, newer })}`),

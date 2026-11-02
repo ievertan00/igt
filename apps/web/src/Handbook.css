@@ -69,3 +69,12 @@
 .handbook-page .handbook-notes-toggle.primary::after { content: none; }
 .handbook-notes-toggle > .icon:first-child { color: var(--accent); }
 .handbook-notes-toggle > .icon { flex-shrink: 0; }
+.handbook-delete { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.handbook-delete-confirm { position: fixed; inset: 0; margin: auto; display: grid; gap: 1rem; width: min(28rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.5rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-floating); color: var(--ink); font-size: .875rem; line-height: 1.65; }
+.handbook-delete-confirm:not([open]) { display: none; }
+.handbook-delete-confirm::backdrop { background: rgb(16 24 39 / 35%); }
+.handbook-delete-confirm strong { font-size: 1rem; }
+.handbook-delete-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; }
+.handbook-delete-confirm [role="alert"] { color: var(--danger-text); }
+.handbook-delete-actions .handbook-delete-submit { color: var(--danger-text); border-color: var(--danger-text); }
+.handbook-delete > .icon-button { color: var(--danger-text); }
