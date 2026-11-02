@@ -12,6 +12,7 @@ import { useDailyReviewSession } from "./review-session";
 import { reviewExampleParts } from "./review-example";
 import { VocabularyLibrary } from "./VocabularyLibrary";
 import "./Writing.css";
+import "./Handbook.css";
 import { CorrectionText } from "./CorrectionText";
 
 type Route =
@@ -792,10 +793,10 @@ function WordReview() {
                       <p id="review-rating-help" className="sr-only">按本次回忆感受评分；拼写对错单独记录。</p>
                       <div className="review-rating-options">
                         {([
-                          ["again", "Again", "没有记住，需要尽快复习。"],
-                          ["hard", "Hard", "回忆困难。"],
-                          ["good", "Good", "正常回忆成功。"],
-                          ["easy", "Easy", "轻松掌握。"],
+                          ["again", "Again", "未想起。"],
+                          ["hard", "Hard", "费力想起。"],
+                          ["good", "Good", "正常想起。"],
+                          ["easy", "Easy", "轻松想起。"],
                         ] as const).map(([key, label, description]) => {
                           const days = result?.ratings?.[key]?.intervalDays;
                           const selected = (result?.rating || pendingRating) === key;
@@ -1707,6 +1708,14 @@ function HandbookSentence({ original, correction, corrected = false }: { origina
   return <p lang="en">{tokens.slice(0, start).join("")}{middle && (corrected ? <ins>{middle}</ins> : <del>{middle}</del>)}{end ? tokens.slice(-end).join("") : ""}</p>;
 }
 
+function HandbookCopy({ text }: { text: string }) {
+  const [status, setStatus] = useState("");
+  return <span className="handbook-copy"><IconButton quiet icon={status === "Copied" ? "check" : "copy"} label="Copy correction" onClick={async () => {
+    try { await navigator.clipboard.writeText(text); setStatus("Copied"); }
+    catch { setStatus("Could not copy. Select and copy the correction."); }
+  }} /><span role="status">{status}</span></span>;
+}
+
 function Handbook() {
   const { t } = useGuideCopy();
   const params = new URLSearchParams(location.hash.split("?")[1] || "");
@@ -1719,6 +1728,7 @@ function Handbook() {
   const rawOffset = Number(params.get("offset") || 0);
   const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
   const [search, setSearch] = useState(appliedSearch);
+  const [showNotes, setShowNotes] = useState(true);
   const [data, setData] = useState<Awaited<ReturnType<typeof webApi.getHandbook>>>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
@@ -1752,12 +1762,12 @@ function Handbook() {
   return <div className="handbook-page">
     <div className="coach-header">
       <Heading eyebrow="HANDBOOK · HISTORY" title="Your saved Grammar checks." detail={t("Review the original sentences, corrections and explanations saved in your Review Log. Refresh to load the latest checks.")} />
-      <button className="secondary" disabled={busy} onClick={() => void load()}>{busy ? "Loading…" : "Refresh"}</button>
+      <button className="secondary" disabled={busy} onClick={() => void load()}><Icon name="word-review" />{busy ? "Loading…" : "Refresh"}</button>
     </div>
     <form className="handbook-filters" onSubmit={event => { event.preventDefault(); navigate({ search: search.trim() }); }}>
       <label>Time window<select value={days} disabled={busy} onChange={event => navigate({ days: event.target.value })}>
-        {![0, 30, 90].includes(days) && <option value={days}>Last {days} days</option>}
-        <option value={30}>Last 30 days</option><option value={90}>Last 90 days</option><option value={0}>All history</option>
+        {![0, 7, 30, 90].includes(days) && <option value={days}>Last {days} days</option>}
+        <option value={0}>All history</option><option value={7}>Last 7 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option>
       </select></label>
       <label>Search saved checks<input type="search" value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder="Search sentences, corrections or notes" /></label>
       <label>Diagnoses<select value={diagnosis} disabled={busy} onChange={event => navigate({ diagnosis: event.target.value })}>
@@ -1768,28 +1778,38 @@ function Handbook() {
         {errorType && !data?.categories.some(item => item.errorType === errorType) && <option value={errorType}>{errorType}</option>}
         {data?.categories.map(item => <option key={item.errorType} value={item.errorType}>{item.errorType} ({item.checks})</option>)}
       </select></label>
-      <button className="primary" type="submit" disabled={busy}>Search</button>
-      {(appliedSearch || errorType || diagnosis !== "all" || offset > 0 || entryId) && <button type="button" disabled={busy} onClick={() => navigate({ search: "", errorType: "", diagnosis: "all" })}>Clear filters</button>}
+      <div className="handbook-filter-footer">
+        <div className="handbook-filter-actions"><button className="primary" type="submit" disabled={busy}>Search<Icon name="arrow" /></button>
+        <button className="handbook-clear" type="button" disabled={busy} onClick={() => navigate({ days: 0, search: "", errorType: "", diagnosis: "all" })}>Clear filters</button></div>
+      </div>
     </form>
     {error && <div role="alert" className="handbook-empty"><State title="Could not load Handbook" detail={error} />{data && <p>Previously loaded checks remain below.</p>}<button onClick={() => void load()}>Try again</button></div>}
     <div aria-busy={busy}>
       {busy && <p role="status">Loading saved checks…</p>}
       {data && <>
-        <p className="handbook-evidence" role="status">{data.pagination.total} matching saved check{data.pagination.total === 1 ? "" : "s"} · Newest first</p>
-        {(data.coverage.legacyIncluded ?? 0) > 0 && <p className="handbook-evidence">Includes {data.coverage.legacyIncluded} historical check{data.coverage.legacyIncluded === 1 ? "" : "s"} from your Review Log saved before source labels were added.</p>}
         {data.coverage.undated > 0 && days !== 0 && <p className="handbook-evidence">Some records have no usable date and cannot be placed in this time window.</p>}
         {data.diagnosis === "none" && <p className="handbook-evidence">No diagnosed mistakes describes the saved feedback. It does not establish error-free writing or mastery.</p>}
-        <Panel title="Grammar check log">
+        <Panel title="Grammar check log" className="handbook-log">
           {data.entries.length ? data.entries.map(entry => <article className="activity handbook-example" key={entry.entryId} id={`check-${entry.entryId}`}>
-            <header className="handbook-source"><time>{timestampLabel(entry.timestamp)}</time><details><summary>Source details</summary><p>{entry.source === "grammar" ? "Saved Grammar check" : "Historical Review Log check (source not recorded)"}: <code>{entry.entryId}</code></p></details></header>
-            <div><span>Original</span>{entry.correction ? <HandbookSentence original={entry.userInput} correction={entry.correction} /> : <p lang="en">{entry.userInput}</p>}</div>
-            {entry.correction && <div><span>Correction</span><HandbookSentence original={entry.userInput} correction={entry.correction} corrected /></div>}
+            <header className="handbook-source">
+              <span className="handbook-entry-meta"><time><Icon name="word-review" />{timestampLabel(entry.timestamp)}</time>
+                {[...new Set(entry.diagnoses.map(item => item.error_type))].map(type => <span className="handbook-type" key={type}>{type}</span>)}
+                <span className="handbook-origin">{entry.source === "grammar" ? "Writing · Grammar" : "Historical check"}</span>
+              </span>
+              <span className="handbook-entry-tools">
+                {entry.correction && <HandbookCopy text={entry.correction} />}
+              </span>
+            </header>
+            <section className="handbook-comparison" aria-label="Original and correction">
+              <div className="handbook-sentence handbook-original"><span>Original</span>{entry.correction ? <HandbookSentence original={entry.userInput} correction={entry.correction} /> : <p lang="en">{entry.userInput}</p>}</div>
+              {entry.correction && <div className="handbook-sentence handbook-corrected"><span>Correction</span><HandbookSentence original={entry.userInput} correction={entry.correction} corrected /></div>}
+            </section>
             {!entry.diagnoses.length && <p className="handbook-evidence">No diagnosed mistakes in saved feedback.</p>}
-            <details className="handbook-refine"><summary>Saved explanations and notes</summary>
+            {entry.refine && <section className="handbook-natural"><h3><Icon name="spark" />More natural alternative</h3><p lang="en">{entry.refine}</p></section>}
+            <details className="handbook-refine" hidden={!showNotes} open><summary>Saved explanations and notes</summary>
               {entry.evaluate && <p>{entry.evaluate}</p>}
               {entry.diagnoses.map((item, index) => <section className="handbook-diagnosis" key={index}><h3>{item.error_type}</h3><p>{item.explanation}</p>{item.evidence && <p>Evidence: {item.evidence}</p>}{item.suggestion && <p>Suggestion: {item.suggestion}</p>}</section>)}
-              {entry.refine && <section className="handbook-diagnosis"><h3>More natural</h3><p lang="en">{entry.refine}</p></section>}
-              {entry.remember && <section className="handbook-diagnosis"><h3>Remember</h3><p>{Array.isArray(entry.remember) ? entry.remember.join("\n") : entry.remember}</p></section>}
+              {entry.remember && <section className="handbook-remember"><h3><Icon name="idea" />Remember</h3><p>{Array.isArray(entry.remember) ? entry.remember.join("\n") : entry.remember}</p></section>}
               {!entry.evaluate && !entry.diagnoses.length && !entry.refine && !entry.remember && <p>No additional notes were saved.</p>}
             </details>
           </article>) : <div className="handbook-empty"><State title="No saved checks to show." detail={data.coverage.grammar ? "Try another search, clear your filters or return to the first page." : "Save a Grammar check to start your log, or choose a longer time window."} /><a href="#grammar">Check a sentence</a></div>}
@@ -1797,6 +1817,11 @@ function Handbook() {
         {(data.pagination.total > 0 || offset > 0) && <nav className="handbook-pagination" aria-label="Grammar check pages"><span>{data.entries.length ? `${data.pagination.offset + 1}–${data.pagination.offset + data.entries.length} of ${data.pagination.total} checks` : "No checks on this page"}</span><button disabled={busy || offset === 0} onClick={() => navigate({ offset: Math.max(0, offset - data.pagination.limit) })}>Previous</button><button disabled={busy || !data.pagination.hasMore} onClick={() => navigate({ offset: offset + data.pagination.limit })}>Next</button></nav>}
       </>}
     </div>
+    {Boolean(data?.entries.length) && <div className="floating-action-dock handbook-notes-dock">
+      <button type="button" className="primary floating-action handbook-notes-toggle" title={showNotes ? "Hide explanations & notes" : "Show explanations & notes"} aria-pressed={showNotes} onClick={() => setShowNotes(value => !value)}>
+        <Icon name="document" /><span className="sr-only">{showNotes ? "Hide explanations & notes" : "Show explanations & notes"}</span>
+      </button>
+    </div>}
   </div>;
 }
 

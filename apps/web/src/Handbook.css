@@ -1,0 +1,71 @@
+.handbook-page .handbook-filters { gap: 1.25rem; padding: 1.75rem; }
+.handbook-page .handbook-filters > label { font-size: .75rem; font-weight: 600; letter-spacing: .025em; text-transform: uppercase; }
+.handbook-page .handbook-filters input,
+.handbook-page .handbook-filters select { background: var(--learning-bg); border-color: transparent; font-size: .875rem; font-weight: 400; letter-spacing: normal; text-transform: none; min-height: 48px; }
+.handbook-filter-footer { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 1rem 2rem; }
+.handbook-filter-actions { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+.handbook-page .handbook-clear { border-color: transparent; background: transparent; font-size: .875rem; }
+.handbook-page .handbook-filters input[type="search"] { background: var(--learning-bg); border-color: transparent; }
+.handbook-page .handbook-log { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.handbook-page .handbook-log > .panel-heading { margin: 1.75rem .25rem 1.25rem; }
+.handbook-page .handbook-log > .panel-heading h2 { font-size: 1.125rem; }
+.handbook-page .handbook-example { padding: 1.5rem; margin-bottom: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow-surface); scroll-margin-top: 8rem; }
+.handbook-page .handbook-source { align-items: center; margin-bottom: 1rem; gap: .5rem 1rem; }
+.handbook-entry-meta,
+.handbook-entry-tools { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; min-width: 0; }
+.handbook-entry-meta { flex: 1 1 28rem; }
+.handbook-entry-meta time { display: inline-flex; align-items: center; gap: .5rem; }
+.handbook-entry-meta time .icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+.handbook-type,
+.handbook-origin { padding: .125rem .5rem; border-radius: var(--radius-sm); font-size: .75rem; font-weight: 600; }
+.handbook-type { background: var(--learning-bg); color: var(--ink); }
+.handbook-origin { background: var(--accent-soft); color: var(--accent-text); }
+.handbook-entry-tools { justify-content: flex-end; margin-left: auto; }
+.handbook-copy { display: inline-flex; align-items: center; gap: .375rem; }
+.handbook-copy [role="status"] { font-size: .75rem; max-width: 14rem; }
+.handbook-page .handbook-comparison { background: color-mix(in srgb, var(--learning-bg) 65%, var(--paper)); border-radius: var(--radius-control); padding: 1rem; }
+.handbook-page .handbook-sentence { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: baseline; gap: 1rem; }
+.handbook-sentence + .handbook-sentence { margin-top: .75rem; }
+.handbook-page .handbook-sentence > span { font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+.handbook-original > span { color: var(--danger-text); }
+.handbook-corrected > span { color: var(--accent-text); }
+.handbook-sentence p { font-size: 1rem; line-height: 1.75; margin: 0; white-space: pre-wrap; }
+.handbook-page .handbook-example del { background: var(--danger-bg); color: var(--danger-text); border-radius: .25rem; padding-inline: .125rem; text-decoration-thickness: 1px; }
+.handbook-page .handbook-example ins { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+.handbook-natural { margin-top: 1rem; padding: 1rem; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--paper)); border-radius: var(--radius-control); }
+.handbook-natural h3 { display: flex; align-items: center; gap: .5rem; margin: 0 0 .5rem; font-size: .75rem; text-transform: uppercase; color: var(--accent-text); }
+.handbook-natural p { margin: 0; line-height: 1.75; white-space: pre-wrap; }
+.handbook-page .handbook-refine { margin-top: 1rem; padding: .375rem 1rem 1rem; background: var(--learning-bg); }
+.handbook-page .handbook-refine:not([open]) { padding-bottom: .375rem; }
+.handbook-page .handbook-refine summary { font-size: .875rem; font-weight: 600; cursor: pointer; }
+.handbook-refine p { line-height: 1.75; white-space: pre-wrap; margin-bottom: .75rem; }
+.handbook-refine > p { margin-top: .5rem; }
+.handbook-refine .handbook-diagnosis { margin-top: .75rem; }
+.handbook-refine .handbook-diagnosis h3 { font-size: .875rem; margin-bottom: .375rem; }
+.handbook-refine > :last-child > :last-child { margin-bottom: 0; }
+.handbook-remember { display: flex; align-items: baseline; flex-wrap: wrap; gap: .25rem .5rem; background: var(--warning-bg); color: var(--warning-text); border-radius: var(--radius-sm); padding: .5rem .75rem; margin-top: .75rem; }
+.handbook-remember h3 { display: inline-flex; align-items: center; gap: .375rem; font-size: .8125rem; margin: 0; }
+.handbook-remember .icon { width: 1rem; height: 1rem; align-self: center; }
+.handbook-remember p { font-size: .875rem; margin: 0; }
+.handbook-page .handbook-pagination { margin: 2rem .25rem 0; font-variant-numeric: tabular-nums; }
+@media (max-width: 960px) {
+  .handbook-filter-footer { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 600px) {
+  .handbook-page .coach-header { flex-wrap: wrap; gap: 0; margin-bottom: 1.25rem; }
+  .handbook-page .handbook-filters,
+  .handbook-page .handbook-example { padding: 1rem; }
+  .handbook-page .handbook-sentence { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
+  .handbook-entry-meta { flex-basis: 100%; }
+  .handbook-entry-tools { margin-left: 0; justify-content: flex-start; }
+  .handbook-page .handbook-comparison,
+  .handbook-page .handbook-natural { padding: .875rem; }
+  .handbook-filter-actions { flex-wrap: wrap; flex-shrink: 1; }
+}
+.handbook-page .heading { min-width: 0; overflow-wrap: anywhere; }
+.handbook-page:has(.handbook-notes-toggle) { padding-bottom: 5rem; }
+.handbook-page .handbook-notes-dock { right: max(1rem, env(safe-area-inset-right)); }
+.handbook-page .handbook-notes-toggle { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; gap: 0; }
+.handbook-page .handbook-notes-toggle.primary::after { content: none; }
+.handbook-notes-toggle > .icon:first-child { color: var(--accent); }
+.handbook-notes-toggle > .icon { flex-shrink: 0; }

@@ -13,6 +13,7 @@ const entries = Array.from({ length: 13 }, (_, index) => ({
   userInput: index === 0 ? "I read a book." : `I read book ${index}.`, correction: index === 0 ? "I read a book." : `I read a book ${index}.`,
   diagnoses: index === 0 ? [] : [{ error_type: index === 12 ? "Tense" : "Articles", severity: "Minor", explanation: "Use a determiner before a singular countable noun. 根据语境选择冠词。" }],
   remember: "Remember the context.",
+  refine: index === 1 ? "I have been reading a book." : undefined,
 }));
 entries.push({ source: "unknown", entryId: "legacy", timestamp: new Date().toISOString(), userInput: "Legacy text", diagnoses: [] });
 entries.push({ source: "text", entryId: "text-analysis", timestamp: new Date().toISOString(), userInput: "A text analysis", diagnoses: [] });
@@ -69,9 +70,18 @@ try {
   await ready();
   assert.equal(await page.$eval('.handbook-filters select', node => node.value), "0");
   assert.equal(await page.$$(".handbook-example").then(nodes => nodes.length), 10);
-  assert.match(await page.$eval(".handbook-page", node => node.textContent), /Includes 1 historical check/);
+  assert.doesNotMatch(await page.$eval(".handbook-page", node => node.textContent), /matching saved checks|saved before source labels were added/);
   assert.equal(await page.$(".handbook-reports"), null);
   assert.equal(await page.$(".handbook-knowledge"), null);
+  assert.match(await page.$eval(".handbook-natural", node => node.textContent), /I have been reading a book/);
+  assert.equal(await page.$eval(".handbook-refine", node => node.open), true);
+  assert.doesNotMatch(await page.$eval(".handbook-page", node => node.textContent), /Source details/);
+  await page.click(".handbook-notes-toggle");
+  assert.equal(await page.$eval(".handbook-notes-toggle", node => node.getAttribute("aria-pressed")), "false");
+  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.every(node => node.hidden)), true);
+  assert.equal(await page.$eval(".handbook-natural", node => node.getBoundingClientRect().height > 0), true);
+  await page.click(".handbook-notes-toggle");
+  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.every(node => !node.hidden)), true);
   await page.click(".handbook-example .handbook-refine summary");
   await page.click(".handbook-pagination button:last-child");
   await page.waitForFunction(() => location.hash.includes("offset=10"));
@@ -81,7 +91,7 @@ try {
   await page.goBack(); await ready();
   await page.waitForFunction(() => document.querySelectorAll(".handbook-example").length === 10);
   await select("Mistake type", "Articles");
-  await page.waitForFunction(() => document.querySelector(".handbook-page")?.textContent.includes("11 matching saved checks"));
+  await page.waitForFunction(() => document.querySelector(".handbook-pagination")?.textContent.includes("of 11 checks"));
   await select("Diagnoses", "none");
   await page.waitForFunction(() => document.querySelectorAll(".handbook-example").length === 3);
   assert.equal(await page.$eval('.handbook-filters label:last-of-type select', node => node.disabled), true);
@@ -109,7 +119,7 @@ try {
   }
   await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "overflow at 200% text");
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `overflow at 200% text: ${await page.evaluate(() => [...document.querySelectorAll('.handbook-page *')].filter(node => node.getBoundingClientRect().right > innerWidth).map(node => node.className || node.tagName).join(', '))}`);
   await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
   await page.goto(`${base}/#grammar`);
   await page.waitForSelector("textarea");
