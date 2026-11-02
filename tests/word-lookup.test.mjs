@@ -68,6 +68,25 @@ test("valid fenced output is accepted without retry", async () => {
   assert.equal(calls.length, 1);
 });
 
+test("lookup retries generic mention-only filler examples and returns meaningful replacements", async () => {
+  const filler = { ...entry,
+    example2: 'In a practical context, the team used “scrutiny” when discussing the same idea at work.',
+    example3: 'The discussion gave learners another useful context for understanding “scrutiny”.',
+  };
+  const result = await lookup([JSON.stringify(filler), JSON.stringify(entry)]);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.example2, entry.example2);
+  assert.equal(result.body.data.example3, entry.example3);
+  assert.equal(calls.length, 2);
+});
+
+test("lookup rejects repeated examples even when only case and punctuation differ", async () => {
+  const repeated = { ...entry, example2: 'the plan is under scrutiny!' };
+  const result = await lookup([JSON.stringify(repeated), JSON.stringify(repeated)]);
+  assert.equal(result.status, 502);
+  assert.equal(result.body.error.code, "INVALID_LLM_RESPONSE");
+});
+
 test("invalid entry shapes and oversized fields cannot reach the client as dictionary entries", async () => {
   for (const value of [null, [], {}, { ...entry, meaning: {} }, { ...entry, meaning: "x".repeat(5000) }]) {
     const result = await lookup([JSON.stringify(value), JSON.stringify(value)]);

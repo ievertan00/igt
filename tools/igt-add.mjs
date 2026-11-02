@@ -8,6 +8,7 @@ import { resolveVocabularyQuery, isMainlyChinese } from "../lib/shared/add-input
 import { resolveVocabularyPath, findVocabularyBlock } from "../lib/shared/vocabulary-source.mjs";
 import { ui, paint, colors, Spinner, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
 import { beijingDate } from "../lib/shared/timezone.mjs";
+import { VOCABULARY_EXAMPLE_GUIDANCE, hasUsableVocabularyExamples } from "../lib/domain/vocabulary-examples.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,7 +62,7 @@ function findExistingEntry(word) {
 // ── Parse LLM output ─────────────────────────────────────────────────────────
 function parseEntry(raw) {
   const get = (key) => {
-    const m = raw.match(new RegExp(`\\*\\*${key}:\\*\\*\\s*(.+)`));
+    const m = raw.match(new RegExp(`^\\*\\*${key}:\\*\\*[^\\S\\r\\n]*([^\\r\\n]*)`, "m"));
     return m ? m[1].trim() : null;
   };
   const wordMatch = raw.match(/^###?\s*(.+)/m);
@@ -252,8 +253,15 @@ const activeModel = llmManager.getCurrentProvider().getModelName(config, "gramma
 
 startSpinner(`Looking up vocabulary via ${paint(c.cyan, activeProvider)} (${paint(c.gray, activeModel)})…`);
 let raw;
+let fields;
 try {
-  raw = await llmManager.generateWithFallback(word, SYSTEM_PROMPT, { taskType: "grammar" });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const retry = attempt ? "\nThe previous response repeated examples or used generic filler. Write fresh examples demonstrating this word's meaning." : "";
+    raw = await llmManager.generateWithFallback(word, `${SYSTEM_PROMPT}\n${VOCABULARY_EXAMPLE_GUIDANCE}${retry}`, { taskType: "grammar" });
+    fields = parseEntry(raw.trim());
+    if (hasUsableVocabularyExamples([fields.example1 || fields.example, fields.example2, fields.example3])) break;
+    if (attempt === 1) throw new Error("The dictionary service returned repetitive examples. Please try the lookup again.");
+  }
 } catch (err) {
   stopSpinner();
   console.error(`\n  ${paint(c.yellow, "Error:")} ${err.message}\n`);
@@ -261,8 +269,6 @@ try {
   process.exit(1);
 }
 stopSpinner();
-
-const fields = parseEntry(raw.trim());
 
 // If the LLM converted it to the base form, check for duplicates again
 if (fields.word && fields.word.toLowerCase() !== word.toLowerCase()) {
