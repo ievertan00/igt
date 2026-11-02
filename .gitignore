@@ -26,6 +26,7 @@ tests/*
 !tests/handbook-browser-data.test.mjs
 !tests/grammar-history.test.mjs
 !tests/handbook-cli.test.mjs
+!tests/handbook-delete.test.mjs
 !tests/my-learning.test.mjs
 !tests/handbook-evidence.test.mjs
 !tests/handbook-rules.test.mjs
