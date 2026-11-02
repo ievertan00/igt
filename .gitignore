@@ -37,6 +37,7 @@ tests/*
 !tests/ask-language.test.mjs
 !tests/vocabulary-ratings.test.mjs
 !tests/vocabulary-library.test.mjs
+!tests/legacy-coach-storage.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md

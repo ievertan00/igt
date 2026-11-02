@@ -6,12 +6,14 @@ import puppeteer from "puppeteer";
 import { preview } from "vite";
 import { checkVocabularyReview, gradeVocabularyReview } from "../lib/application/vocabulary-review.mjs";
 import { beijingDate } from "../lib/shared/timezone.mjs";
+import { up as removeLegacyCoachStorage } from "../migrations/063_remove_legacy_coach_storage.mjs";
 
 // Isolated in-memory SRS and evidence. No user DB, notes or configuration writes.
 const db = new Database(":memory:");
 for (const file of ["001_initial_schema.sql", "009_practice_attempts.sql", "010_practice_context.sql", "011_learning_plans.sql", "012_practice_task_link.sql", "015_learning_plan_pause.sql"]) {
   db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", file), "utf8"));
 }
+removeLegacyCoachStorage(db);
 db.prepare("INSERT INTO srs_cards (id,source_type,prompt,answer,word,zh,meaning,example,due_date) VALUES (1,'vocab','follow up','follow up','follow up','跟进','to act after an earlier event','She followed up yesterday.','2026-01-01')").run();
 db.prepare("INSERT INTO srs_cards (id,source_type,prompt,answer,word,zh,meaning,due_date) VALUES (2,'vocab','boulder','boulder','boulder','巨石','a very large rock','2026-01-01')").run();
 db.exec("ALTER TABLE srs_cards ADD COLUMN vocab_details TEXT");

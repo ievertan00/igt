@@ -23,7 +23,7 @@ test("profile reads the complete practice window with the same linked counts as 
   const db = new Database(":memory:");
   try {
     db.exec(`CREATE TABLE practice_attempts (id INTEGER PRIMARY KEY, activity_type TEXT,
-      target_error_type TEXT, target_pattern TEXT, context_label TEXT, learning_task_id INTEGER,
+      target_error_type TEXT, target_pattern TEXT, context_label TEXT,
       prompt TEXT, learner_answer TEXT, reference_answer TEXT, score INTEGER, feedback TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP)`);
     const insert = db.prepare("INSERT INTO practice_attempts (activity_type, target_error_type, score, feedback) VALUES ('practice-sentence', ?, ?, ?)");

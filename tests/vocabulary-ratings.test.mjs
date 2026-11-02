@@ -11,6 +11,7 @@ import { registerSrsRoutes } from "../lib/server/routes/srs.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 import { api } from "../lib/cli/api-client.mjs";
 import { runReview } from "../lib/cli/commands/review.mjs";
+import { up as removeLegacyCoachStorage } from "../migrations/063_remove_legacy_coach_storage.mjs";
 
 const fresh = { ease: 2.5, intervalDays: 1, totalReviews: 0, correctStreak: 0 };
 function reviewDb(t) {
@@ -19,6 +20,7 @@ function reviewDb(t) {
   for (const file of ["001_initial_schema.sql", "009_practice_attempts.sql", "010_practice_context.sql", "011_learning_plans.sql", "012_practice_task_link.sql", "015_learning_plan_pause.sql"]) {
     db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", file), "utf8"));
   }
+  removeLegacyCoachStorage(db);
   db.prepare("INSERT INTO srs_cards (source_type,prompt,answer,word,due_date) VALUES ('vocab','follow up','follow up','follow up','2026-01-01')").run();
   return db;
 }

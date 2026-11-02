@@ -14,7 +14,7 @@ db.exec(`CREATE TABLE practice_questions (id TEXT PRIMARY KEY, prompt_zh TEXT, r
   served_count INTEGER DEFAULT 0, active INTEGER DEFAULT 1);
   CREATE TABLE practice_attempts (id INTEGER PRIMARY KEY, activity_type TEXT, target_error_type TEXT,
     target_pattern TEXT, context_label TEXT, prompt TEXT, learner_answer TEXT, reference_answer TEXT,
-    score INTEGER, feedback TEXT, learning_task_id INTEGER, created_at TEXT DEFAULT CURRENT_TIMESTAMP);`);
+    score INTEGER, feedback TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);`);
 const insert = db.prepare("INSERT INTO practice_questions (id,prompt_zh,reference_answer,difficulty,context,practice_fields_json,hint_json,generated_by,active) VALUES (?,?,?,?,?,?,?,?,?)");
 for (const [id, difficulty, point, active] of [["article-easy", "easy", "Articles", 1], ["article-standard", "standard", "Articles", 1], ["article-hidden", "standard", "Articles", 0], ["distractor", "standard", "Word choice", 1]]) {
   insert.run(id, "请买一本书。", "Please buy a book.", difficulty, "shopping", JSON.stringify({ grammar_point: [point], register: ["neutral"] }), "{}", "test", active);
@@ -60,14 +60,12 @@ test("target selection intersects filters and never falls back to a distractor",
   assert.equal(llmCalls, 0);
 });
 
-test("targeted answers persist category and hints without advancing a plan", async () => {
+test("targeted answers persist category and hints without legacy plan storage", async () => {
   const result = await request("/practice/evaluate", { question: { id: "article-standard", target_error_type: "Grammar / Article Usage" }, answer: "Please buy a book.", hints_used: 1 });
   assert.equal(result.status, 200);
   assert.equal(lastAttempt.targetErrorType, "Grammar / Article Usage");
-  assert.equal(lastAttempt.linkToPlan, false);
   assert.equal(lastAttempt.feedback.hints_used, 1);
   assert.equal(lastAttempt.feedback.target_assessment, "not-assessed");
-  assert.equal(db.prepare("SELECT learning_task_id FROM practice_attempts ORDER BY id DESC LIMIT 1").get().learning_task_id, null);
   const evidence = readHandbookPracticeEvidence(db, { days: 0, errorType: "Grammar / Article Usage" });
   assert.equal(evidence.attempts, 1);
   assert.equal(evidence.withoutHints, 0);
