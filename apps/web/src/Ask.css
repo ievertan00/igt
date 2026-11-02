@@ -33,7 +33,7 @@
 .ask-composer .ask-language-control select:focus { border-color: var(--focus); }
 .ask-save-options .ask-language-control { padding: .5rem; }
 .ask-guidance, .ask-action-status, .ask-pending { color: var(--muted); font-size: .875rem; margin: .75rem 0 0; }
-.ask-error { color: var(--danger); font-size: .875rem; margin: .75rem 0 0; overflow-wrap: anywhere; }
+.ask-error { color: var(--danger-text); font-size: .875rem; margin: .75rem 0 0; overflow-wrap: anywhere; }
 .ask-turn { margin-bottom: 2rem; min-width: 0; }
 .ask-question { padding: 1.25rem 1.5rem; background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 1.5rem; overflow-wrap: anywhere; }
 .ask-question p { font-size: 1.125rem; line-height: 1.6; margin: 0; white-space: pre-wrap; }
@@ -55,7 +55,7 @@
 .ask-save-options .ask-save-action > button { width: 100%; justify-content: flex-start; text-align: left; }
 .ask-save-action { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .875rem; }
 .ask-save-action > span { flex-basis: 100%; margin: 0; }
-.ask-save-action .secondary[data-saved="true"] { color: var(--success); background: var(--accent-soft); }
+.ask-save-action .secondary[data-saved="true"] { color: var(--success-text); background: var(--accent-soft); }
 .ask-related { margin-top: 1.5rem; }
 .ask-related h3 { margin: 0 0 .5rem; font-size: .875rem; color: var(--muted); }
 .ask-related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .75rem; }
@@ -152,13 +152,13 @@
 .ask-note-dialog-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; flex-shrink: 0; padding: 1rem 1.5rem; border-top: 1px solid var(--line); }
 .ask-note-dialog-footer button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-size: .875rem; }
 .ask-note-dialog-footer button .icon { width: 1rem; height: 1rem; }
-.ask-note-dialog-footer .ask-note-delete { color: var(--danger); font-weight: 500; padding-inline: .75rem; }
-.ask-note-dialog-footer .ask-note-delete:hover:not(:disabled) { color: var(--danger); background: color-mix(in srgb, var(--danger) 6%, var(--paper)); }
+.ask-note-dialog-footer .ask-note-delete { color: var(--danger-text); font-weight: 500; padding-inline: .75rem; }
+.ask-note-dialog-footer .ask-note-delete:hover:not(:disabled) { color: var(--danger-text); background: color-mix(in srgb, var(--danger) 6%, var(--paper)); }
 .ask-note-dialog-footer > .ask-action-status { flex-basis: 100%; margin: 0; }
 .ask-note-dialog-footer.is-confirming { background: color-mix(in srgb, var(--danger) 4%, var(--paper)); padding: 1.5rem; }
 .ask-note-delete-confirm { width: 100%; min-width: 0; }
 .ask-note-delete-heading { display: flex; align-items: center; gap: .625rem; }
-.ask-note-delete-heading > .icon { width: 1.125rem; height: 1.125rem; color: var(--danger); flex-shrink: 0; }
+.ask-note-delete-heading > .icon { width: 1.125rem; height: 1.125rem; color: var(--danger-text); flex-shrink: 0; }
 .ask-note-delete-heading h3 { margin: 0; font-size: 1rem; line-height: 1.5; font-weight: 600; }
 .ask-note-delete-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; margin: .5rem 0 .25rem; font-size: .875rem; font-weight: 600; }
 #ask-note-delete-description { margin: 0; color: var(--muted); font-size: .875rem; }
@@ -166,13 +166,13 @@
 .ask-note-delete-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
 .ask-note-delete-actions > button { min-height: var(--action-height); padding: .75rem 1rem; }
 .ask-note-delete-actions .secondary { border-color: var(--control); }
-.ask-note-delete-submit { color: var(--paper); background: var(--danger); border-color: var(--danger); font-weight: 600; }
+.ask-note-delete-submit { color: var(--paper); background: var(--danger-text); border-color: var(--danger-text); font-weight: 600; }
 .ask-note-delete-submit:hover:not(:disabled) { color: var(--paper); background: color-mix(in srgb, var(--danger) 88%, var(--ink)); border-color: transparent; }
 .ask-note-delete-submit:active:not(:disabled) { background: color-mix(in srgb, var(--danger) 78%, var(--ink)); }
 .ask-note-delete-submit:disabled { color: var(--muted); background: var(--disabled-bg); border-color: var(--line); }
 .ask-note-deleted { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; margin-bottom: 1.5rem; background: var(--accent-soft); border-radius: var(--radius-control); }
 .ask-note-deleted > div { display: flex; align-items: flex-start; gap: .625rem; min-width: 0; }
-.ask-note-deleted > div > .icon { color: var(--success); flex-shrink: 0; width: 1.125rem; margin-top: .125rem; }
+.ask-note-deleted > div > .icon { color: var(--success-text); flex-shrink: 0; width: 1.125rem; margin-top: .125rem; }
 .ask-note-deleted p { margin: 0; font-size: .875rem; overflow-wrap: anywhere; }
 .ask-note-deleted strong, .ask-note-deleted p span { display: block; }
 .ask-note-deleted p span { color: var(--muted); }
@@ -184,7 +184,7 @@
 .ask-empty { padding-block: 1.5rem; color: var(--muted); font-size: .875rem; }
 .ask-empty h2 { color: var(--ink); font-size: 1rem; }
 .ask-library-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1.5rem; border: 1px dashed var(--line); border-radius: var(--radius); }
-.ask-empty-icon { display: grid; place-items: center; width: 3rem; height: 3rem; margin-bottom: 1rem; border-radius: var(--radius-control); background: var(--accent-soft); color: var(--success); }
+.ask-empty-icon { display: grid; place-items: center; width: 3rem; height: 3rem; margin-bottom: 1rem; border-radius: var(--radius-control); background: var(--accent-soft); color: var(--success-text); }
 .ask-library-empty h2 { margin-bottom: .5rem; font-size: 1.125rem; }
 .ask-library-empty p { max-width: 42ch; margin-bottom: 1.5rem; }
 .ask-library-directory { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .875rem; overflow-wrap: anywhere; }

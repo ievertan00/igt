@@ -7,11 +7,13 @@
   padding: .5rem .75rem;
   font-size: .875rem;
   font-weight: 600;
-  background: var(--accent);
-  border-color: var(--control);
-  border-radius: var(--radius-control);
-  box-shadow: 0 4px 12px rgb(23 23 23 / 12%);
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-floating);
 }
+.selection-lookup-trigger > .icon { color: var(--accent-text); }
 .selection-lookup-trigger:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--focus); }
 .selection-lookup-trigger:active:not(:disabled) { background: var(--accent); }
 .selection-lookup-dialog {

@@ -38,6 +38,6 @@ const paths: Record<IconName, string> = {
 };
 
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
-  return <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
+  return <svg className={`icon${name === "arrow" ? " icon-arrow" : ""} ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
 }
 

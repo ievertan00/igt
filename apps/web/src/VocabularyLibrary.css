@@ -100,7 +100,7 @@
 .saved-word-details .audio-btn:hover:not(:disabled) { --audio-border: #9bbc8f; --audio-surface: #dfeeda; background: transparent; }
 .saved-word-details .audio-btn:active:not(:disabled) { --audio-surface: #d1e5c8; }
 .saved-word-details .audio-btn[aria-busy="true"] { --audio-border: #205539; --audio-surface: #205539; color: var(--paper); cursor: progress; }
-.saved-word-details .audio-btn.audio-err { --audio-border: var(--danger); --audio-surface: #fbefec; color: var(--danger); }
+.saved-word-details .audio-btn.audio-err { --audio-border: var(--danger); --audio-surface: #fbefec; color: var(--danger-text); }
 .saved-word-details .audio-btn .icon, .saved-word-details .audio-btn .loading-spinner { position: relative; }
 .saved-word-details .audio-btn .icon { width: 14px; height: 14px; }
 .saved-word-details .word-heading .audio-btn .icon { width: 16px; height: 16px; }
