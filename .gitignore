@@ -45,6 +45,7 @@ TODOS.md
 .worktrees/
 .DS_Store
 **/.DS_Store
+_assets/
 social-card-igt/
 
 
