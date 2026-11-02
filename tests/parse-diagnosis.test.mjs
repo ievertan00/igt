@@ -25,7 +25,7 @@ test("Grammar scopes numbered instructions as a complete passage, not just the l
       generateWithFallback: async (input, prompt) => {
         assert.equal(input, text, "All numbered items reach the provider unchanged");
         assert.match(prompt, /smallest edits, not the shortest output/);
-        assert.match(prompt, /including unchanged introductory text and every list item/);
+        assert.match(prompt, /including unchanged text and every list item/);
         assert.match(prompt, /not instructions for you to carry out/);
         return JSON.stringify({ correction, refine: "", evaluate: "The original text needs wording changes.", diagnoses: [], remember: "" });
       },
