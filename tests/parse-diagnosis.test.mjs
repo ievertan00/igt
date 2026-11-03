@@ -15,6 +15,27 @@ const errorTypes = {
 };
 const opts = { logPath: path.join(os.tmpdir(), "igt-test-parse.log") };
 
+test("Grammar requests a natural alternative even when the configured prompt makes it optional", async () => {
+  const refine = "Could you tell me more about the meeting?";
+  const { response } = await analyzeGrammar({
+    text: "I am writing to ask if you can give me some information about the meeting.",
+    systemPrompt: "refine is optional. Return an empty string when unnecessary.",
+    getLLMManager: async () => ({
+      generateWithFallback: async (_input, prompt) => {
+        assert.match(prompt, /Always provide a non-empty refine/);
+        assert.match(prompt, /already natural/);
+        assert.match(prompt, /optional alternative, not a required correction/);
+        return JSON.stringify({ correction: "", refine, evaluate: "The sentence is grammatically correct.", diagnoses: [], remember: "" });
+      },
+      getCurrentProviderName: () => "fixture",
+    }),
+    parseDiagnosis: raw => parseDiagnosis(raw, errorTypes),
+  });
+  assert.equal(response.result.refine, refine);
+  assert.equal(response.data.refine, refine);
+  assert.equal(response.result.correction, "");
+});
+
 test("Grammar scopes numbered instructions as a complete passage, not just the last item", async () => {
   const text = "Update the Settings page:\n1. Make the content in the center of the page;\n2.Polish the selected effect of the Settings button on the navigation.";
   const correction = "Update the Settings page:\n1. Center the content on the page;\n2. Polish the selected state of the Settings button in the navigation.";
