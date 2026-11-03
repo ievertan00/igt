@@ -90,7 +90,7 @@ export function SelectionLookup({ renderLookup }: { renderLookup: (text: string)
       onPointerDown={event => event.preventDefault()} onClick={openLookup}>
       <Icon name="word-lookup" /> Look up selection
     </button>}
-    <dialog ref={dialog} id="selection-lookup-dialog" className="selection-lookup-dialog"
+    <dialog ref={dialog} id="selection-lookup-dialog" className="saved-word-dialog selection-lookup-dialog"
       aria-labelledby="selection-lookup-title"
       onClose={() => { setQuery(""); setSelected(null); restoreFocus.current?.focus({ preventScroll: true }); }}
       onClick={event => {
@@ -98,11 +98,11 @@ export function SelectionLookup({ renderLookup }: { renderLookup: (text: string)
         const rect = dialog.current.getBoundingClientRect();
         if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.current.close();
       }}>
-      <header className="selection-lookup-header">
-        <div><h2 id="selection-lookup-title">Selection lookup</h2><p>Chinese or English · keep your place on the page</p></div>
+      <header className="saved-word-dialog-header">
+        <div className="saved-word-dialog-heading"><h2 id="selection-lookup-title">Selection lookup</h2></div>
         <button type="button" className="secondary" onClick={() => dialog.current?.close()} aria-label="Close selection lookup" autoFocus><Icon name="close" />Close</button>
       </header>
-      {query && renderLookup(query)}
+      <div className="saved-word-details">{query && renderLookup(query)}</div>
     </dialog>
   </>;
 }
