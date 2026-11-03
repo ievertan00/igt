@@ -674,6 +674,40 @@ p { overflow-wrap: anywhere; }
 .coach-patterns button { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; text-align: left; white-space: normal; overflow-wrap: anywhere; }
 .coach-patterns button span { font-size: .875rem; color: var(--muted); }
 .coach-patterns button[aria-expanded="true"] { background: var(--selection-surface); border-color: var(--selection-border); }
+.coach-pattern-main { display: flex; align-items: center; gap: .5rem; min-width: 0; flex: 1 1 auto; }
+.coach-priority-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; flex-shrink: 0; }
+.coach-priority-verb-structures { background: #fef2f2; color: #991b1b; }
+.coach-priority-word-forms { background: #fff7ed; color: #9a3412; }
+.coach-priority-agreement---articles { background: #fffbeb; color: #92400e; }
+.coach-priority-word-choice { background: #eff6ff; color: #1e40af; }
+.coach-priority-clause-structure { background: #f0fdf4; color: #166534; }
+.coach-priority-spelling { background: #fdf4ff; color: #86198f; }
+.coach-priority-other { background: var(--wash); color: var(--muted); }
+.coach-key-structure { display: flex; flex-wrap: wrap; align-items: baseline; gap: .75rem; margin: 1.25rem 0; padding: 1rem 1.25rem; background: var(--accent-soft); border-radius: var(--radius-control); border: 1px solid var(--accent); }
+.coach-key-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--accent-text); }
+.coach-key-structure code { font-family: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace; font-size: 1rem; color: var(--ink); background: transparent; padding: 0; word-break: break-word; }
+.coach-drills-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+.coach-drills-section > h3 { font-size: 1.125rem; margin-bottom: .75rem; }
+.coach-drill { margin-top: 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+.coach-drill > summary { list-style: none; cursor: pointer; padding: .875rem 1.125rem; display: flex; align-items: center; gap: .75rem; font-weight: 600; font-size: .9375rem; user-select: none; }
+.coach-drill > summary::-webkit-details-marker { display: none; }
+.coach-drill > summary::before { content: ""; display: inline-block; width: .5rem; height: .5rem; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .2s ease; flex-shrink: 0; margin-right: .25rem; }
+.coach-drill[open] > summary::before { transform: rotate(45deg); }
+.coach-drill > summary:hover { background: var(--wash); }
+.coach-drill-phase { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--ink); color: var(--paper); }
+.coach-drill-body { padding: 0 1.125rem 1.125rem; }
+.coach-drill-item { margin-top: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+.coach-drill-item:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.coach-drill-item > details { margin-top: .5rem; padding: .375rem .75rem; background: var(--wash); border-radius: var(--radius-control); font-size: .875rem; }
+.coach-drill-item > details > summary { list-style: none; cursor: pointer; color: var(--muted); font-size: .8125rem; padding: .25rem 0; }
+.coach-drill-item > details > summary::-webkit-details-marker { display: none; }
+.coach-drill-item > details[open] > summary { color: var(--ink); }
+.coach-drill-prompt { margin: 0; font-size: 1rem; line-height: 1.65; }
+.coach-drill-label { display: block; font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .25rem; }
+.coach-drill-hint { margin: 0; color: var(--muted); font-size: .9375rem; line-height: 1.6; }
+.coach-drill-answer { margin: .5rem 0 0; font-size: 1.0625rem; color: var(--success); line-height: 1.6; }
+.coach-related-list { list-style: none; padding: 0; margin: .75rem 0 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.coach-related-list li { padding: .375rem .875rem; background: var(--wash); border-radius: var(--radius-control); font-size: .875rem; font-family: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace; }
 .learning-explanation { margin-top: 1.5rem; }
 .learning-explanation p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .learning-explanation a { overflow-wrap: anywhere; }

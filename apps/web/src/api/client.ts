@@ -1,4 +1,11 @@
 export type RequestJsonInit = RequestInit & { timeoutMs?: number };
+export type CoachReport = {
+  days: number; language: string; totalChecks: number; duplicateInputs: number; sampled: boolean; truncated: boolean;
+  coverage: GrammarHistory["coverage"]; markdown: string; evidenceIds: string[]; generatedAt: string; cached: boolean;
+  evidence: Array<{ entryId: string; timestamp: string; original: string; correction: string }>;
+  savedId?: string; savedPath?: string; saveError?: string;
+};
+export type CoachReportSummary = Pick<CoachReport, "generatedAt" | "language" | "days" | "totalChecks"> & { savedId: string };
 
 export type GrammarHistory = {
   days: number; search: string; errorType: string; diagnosis: "all" | "with" | "none";
@@ -10,9 +17,15 @@ export type GrammarHistory = {
     diagnoses: Array<{ error_type: string; severity?: string; explanation?: string; evidence?: string; suggestion?: string }> }>;
 };
 
-export type CoachPatterns = { days: number; checks: number; coverage: GrammarHistory["coverage"]; patterns: Array<{ errorType: string; checks: number; observations: number; latest: string; version: string }> };
+export type CoachPatterns = { days: number; checks: number; coverage: GrammarHistory["coverage"]; patterns: Array<{ errorType: string; priorityArea: string; checks: number; observations: number; latest: string; version: string }> };
 export type CoachDetail = { errorType: string; days: number; version: string; sampled: boolean; cached: boolean; generatedAt: string;
-  explanation: { observedPattern: string; principle: string; qualifications: string; possibleCauses: Array<{ hypothesis: string; evidenceIds: string[] }>; examples: Array<{ entryId: string; explanation: string }> };
+  explanation: {
+    observedPattern: string; principle: string; qualifications: string; keyStructure: string;
+    possibleCauses: Array<{ hypothesis: string; evidenceIds: string[] }>;
+    examples: Array<{ entryId: string; explanation: string }>;
+    drills: { phase1_selfCorrect: Array<{ incorrect: string; hint: string; answer: string }>; phase2_transfer: Array<{ prompt: string; structureHint: string; answer: string }>; phase3_delayedRecall: Array<{ intent: string; structureUsed: string }> };
+    relatedStructures: string[];
+  };
   evidence: Array<{ entryId: string; timestamp: string; original: string; correction?: string | null }> };
 export type LearningOverview = { days: number; summary: Array<{ type: string; label: string; count: number }>;
   events: Array<{ source: string; id: string; type: string; timestamp: string; precision?: string; title: string; score?: number; href?: string | null }>;
@@ -94,6 +107,9 @@ export const webApi = {
   listVocabularyWords: (options: { search: string; sort: string; schedule?: string; status?: string; offset: number; limit: number }, signal?: AbortSignal) => requestJson<import("../VocabularyLibrary").VocabularyLibraryResult>(`/vocab/words?${new URLSearchParams({ q: options.search, sort: options.sort, schedule: options.schedule || "all", status: options.status || "all", offset: String(options.offset), limit: String(options.limit) })}`, { signal }),
   vocabularyHistory: (cardId: number, offset: number, signal?: AbortSignal) => requestJson<import("../VocabularyLibrary").VocabularyHistoryResult>(`/vocab/history?${new URLSearchParams({ card_id: String(cardId), offset: String(offset) })}`, { signal }),
   getCoach: (days = 90) => requestJson<CoachPatterns>(`/coach?days=${days}`),
+  listCoachReports: () => requestJson<CoachReportSummary[]>("/coach/reports"),
+  readCoachReport: (savedId: string) => requestJson<CoachReport>(`/coach/reports/${encodeURIComponent(savedId)}`),
+  generateCoachReport: (days: number, language: string, refresh = false) => requestJson<CoachReport>("/coach/report", { method: "POST", body: JSON.stringify({ days, language, refresh }), timeoutMs: 180_000 }),
   explainCoach: (errorType: string, days: number, version: string, refresh = false) => requestJson<CoachDetail>("/coach/explain", { method: "POST", body: JSON.stringify({ errorType, days, version, refresh }), timeoutMs: 180_000 }),
   // Dictionary generation can outlast the generic 30-second deadline,
   // especially when the provider retries or a local model is loading.
