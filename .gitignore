@@ -6,6 +6,9 @@ package-lock.json
 .env
 .qwen/
 .cache/
+.tmp-coach-runtime/
+output/coach-reports/
+!tests/coach-report-store.test.mjs
 *.db
 *.db-wal
 *.db-shm
@@ -17,6 +20,7 @@ assessment_*.md
 docs/
 archive/
 tests/*
+!tests/coach-report.test.mjs
 !tests/learning-workflows.test.mjs
 !tests/practice-question-bank.test.mjs
 !tests/practice-route.test.mjs
