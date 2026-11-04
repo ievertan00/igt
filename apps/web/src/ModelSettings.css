@@ -41,6 +41,52 @@
 .model-config-fields { border: 0; padding: 0; margin: 1.5rem 0 0; min-width: 0; }
 .model-config-fields > .settings-field { margin-bottom: 1.5rem; }
 .llm-settings .llm-form-actions { flex-wrap: wrap; }
+/* ---- Saved model card grid ---- */
+.saved-model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.saved-model-empty { margin: 1.25rem 0 0; color: var(--muted); font-size: .9rem; }
+.model-card { display: flex; flex-direction: column; min-width: 0; padding: 1.125rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow-sm); color: var(--ink); }
+.model-card.is-active { border-color: var(--selection-border); box-shadow: var(--shadow-surface); }
+.model-card-head { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .75rem; }
+.model-card-kind { display: inline-flex; align-items: center; gap: .375rem; align-self: flex-start; color: var(--accent-text); font-size: .75rem; font-weight: 600; }
+.model-card-kind .icon { width: 1rem; height: 1rem; }
+.model-card-default { display: inline-block; margin-left: .375rem; padding: .125rem .5rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: .75rem; font-weight: 600; }
+.model-card-title { margin: 0; font-size: 1rem; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.model-card-facts { display: grid; gap: .125rem 0; margin: 0 0 .875rem; font-size: .875rem; }
+.model-card-facts > div { display: flex; align-items: baseline; gap: .5rem; min-width: 0; }
+.model-card-facts dt { flex: 0 0 auto; color: var(--muted); font-size: .75rem; }
+.model-card-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.model-card-actions { display: flex; gap: .5rem; margin-top: auto; }
+.model-card-actions button { min-height: var(--target-size); padding: .5rem .875rem; font-size: .875rem; }
+.model-card-delete { color: var(--danger) !important; }
+/* ---- Add a new model form ---- */
+.model-add-panel { margin-top: 1.5rem; }
+.model-add-form { display: grid; gap: 1rem; }
+.model-add-form .settings-field { margin: 0; }
+.model-provider-field { border: 0; padding: 0; margin: 0; min-width: 0; }
+.model-provider-field legend { padding: 0; margin-bottom: .5rem; font-weight: 600; font-size: .875rem; }
+.model-provider-options { display: flex; flex-wrap: wrap; gap: .5rem; }
+.model-provider-options label { display: inline-flex; align-items: center; gap: .375rem; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--paper); color: var(--ink); font-size: .875rem; cursor: pointer; }
+.model-provider-options label.is-selected { border-color: var(--selection-border); background: var(--accent-soft); color: var(--ink); }
+.model-provider-options input { accent-color: var(--accent); }
+.model-key-row { display: flex; gap: .5rem; }
+.model-key-row input { flex: 1; min-width: 0; }
+.model-key-toggle { flex: 0 0 auto; min-height: var(--target-size); padding: .5rem .75rem; }
+.model-key-toggle .icon { width: 1.125rem; height: 1.125rem; }
+.model-ollama-note { margin: 0; color: var(--muted); font-size: .875rem; }
+.model-add-actions { display: flex; justify-content: flex-end; gap: .75rem; }
+/* ---- Edit / delete dialogs ---- */
+.model-edit-dialog { width: min(36rem, calc(100% - 2rem)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); color: var(--ink); box-shadow: var(--shadow-floating); padding: 0; }
+.model-edit-dialog::backdrop { background: rgb(23 35 27 / 34%); }
+.model-dialog-body { display: grid; gap: 1rem; padding: 1.25rem 1.5rem 1.5rem; overflow-y: auto; max-height: calc(100dvh - 8rem); }
+.model-dialog-body .settings-field { margin: 0; }
+.model-dialog-actions { display: flex; justify-content: flex-end; gap: .75rem; padding-top: .5rem; }
+@media (max-width: 540px) {
+  .model-add-actions { flex-direction: column; }
+  .model-add-actions > button { width: 100%; }
+  .model-dialog-actions { flex-direction: column-reverse; }
+  .model-dialog-actions > button { width: 100%; }
+  .saved-model-grid { grid-template-columns: 1fr; }
+}
 @media (prefers-reduced-motion: reduce) {
   .model-switcher, .model-switcher > .icon:last-child { transition: none; }
   .model-switcher > .loading-spinner { animation: none; }
