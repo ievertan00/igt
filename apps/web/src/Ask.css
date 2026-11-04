@@ -224,7 +224,7 @@
   .ask-submit-actions .primary { min-width: 0; padding-inline: .875rem; }
   .ask-shortcut { display: none; }
 }
-@media (max-width: 360px) {
+@media (max-width: 600px) {
   .ask-composer .ask-language-control > span { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (max-height: 640px) {

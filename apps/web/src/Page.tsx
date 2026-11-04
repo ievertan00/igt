@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Icon } from "./Icon";
 
-export function Heading({ eyebrow, title, detail }: { eyebrow: string; title: ReactNode; detail: string }) {
+export function Heading({ eyebrow, title, detail }: { eyebrow: string; title: ReactNode; detail: ReactNode }) {
   return <div className="heading"><span className="page-kicker">{eyebrow}</span><h1>{title}</h1><p>{detail}</p></div>;
 }
 export function Panel({ title, children, icon, className = "" }: { title: string; children: ReactNode; icon?: ComponentProps<typeof Icon>["name"]; className?: string }) {

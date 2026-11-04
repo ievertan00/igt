@@ -97,6 +97,9 @@ h4 { font-size: .9rem; font-weight: 600; }
 p { overflow-wrap: anywhere; }
 .icon { width: 20px; height: 20px; flex: 0 0 auto; vertical-align: middle; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.guide-copy { display: inline-grid; max-width: 100%; min-width: 0; vertical-align: top; }
+.guide-copy > span, .guide-copy::after { grid-area: 1 / 1; min-width: 0; }
+.guide-copy::after { content: attr(data-reserve); visibility: hidden; pointer-events: none; user-select: none; }
 .skip-link { position: fixed; top: -100px; left: 16px; z-index: 50; background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 8px; }
 .skip-link:focus { top: 12px; }
 .shell { min-height: 100dvh; display: flex; flex-direction: column; background: var(--canvas); }

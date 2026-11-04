@@ -7,6 +7,29 @@ export const learnerLanguageKey = "clearwrite.learner-language";
 // Only authored interface copy belongs here. Learning content and model output
 // keep their original language, even when they happen to match a UI label.
 export const beginnerCopy: Record<string, string> = {
+  "Model settings": "模型设置",
+  "Model": "模型",
+  "Switch model configuration": "切换模型配置",
+  "Applies to all sections for future requests.": "应用于所有功能的后续请求。",
+  "Current setup": "当前配置",
+  "Loading models…": "正在加载模型…",
+  "Manage models": "管理模型",
+  "Switching model…": "正在切换模型…",
+  "Shared across sections": "所有功能共用",
+  "Retry": "重试",
+  "Saved models": "已保存的模型",
+  "Configuration": "配置",
+  "New configuration": "新建配置",
+  "Configuration name": "配置名称",
+  "e.g. Everyday writing": "例如：日常写作",
+  "Active": "使用中",
+  "Save and use model": "保存并使用模型",
+  "Save as new model": "另存为新模型",
+  "Update selected model": "更新所选模型",
+  "Saving as new keeps your existing models. Updating replaces only the selected configuration.": "另存为新模型会保留已有模型；更新只会替换所选配置。",
+  "Model configuration saved and applied.": "模型配置已保存并应用。",
+  "Grammar, Express, Vocabulary, Practice, and Ask": "语法检查、表达、词汇、练习与提问",
+  "Save a named setup, then switch models from Writing, Vocabulary, Practice, or Coach. Changes apply to all sections for future requests.": "为配置命名并保存后，即可在写作、词汇、练习或学习教练中切换模型。切换将应用于所有功能的后续请求。",
   "Search notes or topics": "搜索笔记或主题",
   "Search notes or topics…": "搜索笔记或主题…",
   "Clear search": "清除搜索",
@@ -499,6 +522,14 @@ export function useGuideCopy() {
   return { language, setLanguage, t };
 }
 
+// Reserve the larger authored copy without duplicating text in the accessibility
+// tree. Both versions wrap naturally at the available width, including zoom.
+export function GuideText({ text }: { text: string }) {
+  const { language, t } = useGuideCopy();
+  const reserve = language === "en" ? beginnerCopy[text] ?? text : text;
+  return <span className="guide-copy" data-reserve={reserve}><span>{t(text)}</span></span>;
+}
+
 export function LearnerLanguageSwitch({ id = "learner-language" }: { id?: string }) {
   const { language, setLanguage } = useGuideCopy();
   const menuRef = useRef<HTMLDetailsElement>(null);
@@ -526,7 +557,7 @@ export function LearnerLanguageSwitch({ id = "learner-language" }: { id?: string
         menuRef.current?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
       }}>
       <Icon name="globe" className="language-menu-icon" />
-      <span lang={language}>{language === "zh-CN" ? "中文引导" : "English"}</span>
+      <span className="guide-copy" data-reserve={language === "zh-CN" ? "English" : "中文引导"} lang={language}><span>{language === "zh-CN" ? "中文引导" : "English"}</span></span>
       <Icon name="chevron" />
     </summary>
     <div className="language-options">

@@ -3,6 +3,7 @@ import { webApi, type CoachDetail, type CoachPatterns, type CoachReport, type Co
 import { Heading, Panel, State } from "./Page";
 import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
+import { ModelSwitcher } from "./model-settings";
 import { useGuideCopy } from "./learner-language";
 
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
@@ -486,6 +487,7 @@ export function Coach() {
     <div className="handbook-filters">
       <WindowSelect days={days} disabled={busy} onChange={days => go("coach", { days })} />
       <label>Report language <select value={language} disabled={busy} onChange={e => setLanguage(e.target.value)}><option value="zh-CN">中文</option><option value="en">English</option></select></label>
+      <ModelSwitcher role="pro" disabled={busy} />
       <button className="primary" disabled={busy} onClick={() => void generate()}>{busy ? "Generating report…" : report ? "Regenerate report" : "Generate learning report"}</button>
       {report && <button className="secondary" onClick={download}>Download Markdown</button>}
     </div>

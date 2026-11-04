@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 import { FloatingAction } from "./FloatingAction";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
-import { useGuideCopy, type LearnerLanguage } from "./learner-language";
+import { GuideText, useGuideCopy, type LearnerLanguage } from "./learner-language";
 import "./Ask.css";
 
 type Turn = { question: string; answer: string; title?: string; related?: string[]; tags?: string[]; category?: string; language?: LearnerLanguage };
@@ -300,7 +300,7 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   function clearFilters() { setCategory(""); setTag(""); setQuery(""); }
 
   return <div className={`ask-page${view === "ask" ? " is-asking" : ""}${hasConversation ? " has-conversation" : ""}`}>
-    <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p>{view === "notes" ? t("Useful explanations, kept for later. Find a note and pick up where you left off.") : t("Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question.")}</p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" />{t("Ask a question")}<Icon name="arrow" /></a>}</div>
+    <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p><GuideText text={view === "notes" ? "Useful explanations, kept for later. Find a note and pick up where you left off." : "Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question."} /></p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" /><GuideText text="Ask a question" /><Icon name="arrow" /></a>}</div>
     {view === "ask" && hasConversation && <div className="ask-view-bar"><button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><Icon name="ask" />{t("New question")}</button></div>}
     <section id="ask-panel-ask" aria-label={t("Ask a question")} hidden={view !== "ask"}>
       <div className="ask-reading-column">
@@ -326,13 +326,13 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
         </article>)}
         {copyStatus && <p className="ask-action-status" role="status">{t(copyStatus)}</p>}
         <div className="ask-composer" aria-busy={busy}>
-          <div className="ask-composer-heading"><span className="ask-composer-mark"><Icon name="ask" /></span><label className="form-label" htmlFor="ask-input">{hasConversation ? t("Keep the conversation going") : t("What would you like to understand?")}</label><span className="assistant-badge">{t("AI Assistant")}</span></div>
+          <div className="ask-composer-heading"><span className="ask-composer-mark"><Icon name="ask" /></span><label className="form-label" htmlFor="ask-input"><GuideText text={hasConversation ? "Keep the conversation going" : "What would you like to understand?"} /></label><span className="assistant-badge"><GuideText text="AI Assistant" /></span></div>
           <textarea ref={inputRef} id="ask-input" value={question} readOnly={busy} aria-describedby="ask-shortcut" onChange={(event) => setDiscussion((old) => ({ ...old, question: event.target.value }))}
             onKeyDown={(event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }}
             placeholder={hasConversation ? t("Ask a follow-up. Add an example or tell us what is still unclear…") : t("Type your question here. Add a sentence or an example for context…")} />
           <div className="ask-composer-actions">
             <label className="ask-language-control" htmlFor="ask-answer-language">
-              <span>{t("Answer language")}</span>
+              <GuideText text="Answer language" />
               <select id="ask-answer-language" aria-describedby="ask-language-hint" title={t("Applies to your next answer. English examples stay in English.")} value={answerLanguage} onChange={event => setAnswerOverride(event.target.value as LearnerLanguage)}>
                 <option value="zh-CN" lang="zh-CN">中文讲解</option>
                 <option value="en" lang="en">English</option>
@@ -340,8 +340,8 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
             </label>
             <span className="sr-only" id="ask-language-hint">{t("Applies to your next answer. English examples stay in English.")}</span>
             <div className="ask-submit-actions">
-              <span className="ask-shortcut" id="ask-shortcut">{t("Ctrl / ⌘ + Enter to send")}</span>
-              <button className="primary" aria-busy={busy} disabled={busy || !question.trim()} onClick={() => void send()}>{busy ? t("Thinking…") : t("Send")}<Icon name="arrow" /></button>
+              <span className="ask-shortcut" id="ask-shortcut"><GuideText text="Ctrl / ⌘ + Enter to send" /></span>
+              <button className="primary" aria-busy={busy} disabled={busy || !question.trim()} onClick={() => void send()}>{busy ? t("Thinking…") : <GuideText text="Send" />}<Icon name="arrow" /></button>
             </div>
           </div>
           {turns.length > 0 && <button type="button" className="text-button ask-back-question" disabled={busy} onClick={() => start({ turns: turns.slice(0, -1), question: turns[turns.length - 1].question, context })}>{t("Back to question")}</button>}

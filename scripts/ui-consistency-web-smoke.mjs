@@ -40,7 +40,7 @@ try {
     requests.push(`${request.method()} ${pathname}`);
     if (pathname === "/dashboard") return json(buildLearningOverview(events, {}, { reviewEntries: historyEntries, coverage: [{ source: "Saved writing", status: "available", note: "UI fixture" }] }));
     if (pathname === "/coach") return json(buildCoachPatterns(historyEntries));
-    if (pathname === "/settings/llm") return json({ provider: "custom", providers: { custom: { baseUrl: "", models: { flash: "", pro: "" } } } });
+    if (pathname === "/settings/llm") return json({ provider: "custom", providers: { custom: { baseUrl: "", models: { flash: "", pro: "" } } }, profiles: [{ id: "current", name: "Current setup", provider: "custom", baseUrl: "https://example.test/v1", models: { flash: "fixture", pro: "fixture" } }], activeProfileId: "current" });
     if (pathname === "/settings/files") return json({ paths: { vocabulary: "", reviewLog: "", askNotesDir: "", handbookReports: "" } });
     if (pathname === "/ask/notes") return json({ directory: "UI fixture", notes: longLists ? notes : [] });
     if (pathname === "/handbook") return json(buildGrammarHistory(historyEntries));

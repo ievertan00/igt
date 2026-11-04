@@ -86,16 +86,27 @@
 .saved-word-dialog-header .secondary { padding: 8px 12px; min-height: 44px; }
 .saved-word-dialog-header .icon { width: 16px; height: 16px; }
 .saved-word-details { min-height: 0; padding: 20px 24px; overflow-y: auto; overscroll-behavior: contain; }
-.saved-word-details .word-details { margin: 0; }
+.saved-word-details .word-details { display: grid; gap: 12px; margin: 0; }
 .saved-word-details .word-heading { gap: 16px; padding: 20px; margin-top: 0; border: 1px solid #d9f99d; border-radius: var(--radius); background: var(--accent-soft); box-shadow: var(--shadow-sm); }
 .saved-word-details .word-pos { padding: 4px 16px; border-radius: 24px; background: #def1df; color: #365e3c; font-size: .75rem; font-weight: 600; letter-spacing: .04em; }
 .saved-word-details .word-phonetic { color: var(--accent-text); }
 .saved-word-details .word-heading h3 { font-size: 32px; margin-top: 8px; }
 .saved-word-details .word-heading-meta { gap: 8px; font-size: 13px; }
-.saved-word-details .word-detail-block { gap: 12px; padding: 14px 0; }
-.saved-word-details .word-detail-block h4 { margin: 1px 0 6px; }
-.saved-word-details .word-detail-pair { gap: 20px; }
-.saved-word-details .word-examples li { gap: 10px; margin: 8px 0; }
+.saved-word-details .word-detail-block { gap: 12px; padding: 16px; border: 0; border-radius: 8px; background: transparent; }
+.saved-word-details .word-note,
+.saved-word-memory { background: #fff9ec; }
+.saved-word-details .word-detail-block h4 { margin: 1px 0 6px; font-weight: 500; }
+.saved-word-details .word-synonyms :is(h4, .word-detail-icon) { color: #315b84; }
+.saved-word-details .word-collocations :is(h4, .word-detail-icon) { color: #655187; }
+.saved-word-details .word-note :is(h4, .word-detail-icon),
+.saved-word-memory h4 { color: #735a30; }
+.saved-word-details .word-detail-pair { gap: 12px; }
+.saved-word-details .word-examples { display: block; position: relative; padding: 0; border: 1px solid #dce5f5; background: var(--paper); }
+.saved-word-details .word-examples > .word-detail-icon { position: absolute; top: 12px; left: 16px; }
+.saved-word-details .word-examples h4 { margin: 0; padding: 12px 16px 12px 52px; border-radius: 8px 8px 0 0; background: #e8effb; }
+.saved-word-details .word-examples ol { padding: 0 16px; }
+.saved-word-details .word-examples li { gap: 10px; margin: 0; padding: 16px 0; }
+.saved-word-details .word-examples li + li { border-top: 1px solid var(--line); }
 /* Preserve the shared circular target while keeping pronunciation controls contextual. */
 .saved-word-details .audio-btn { --audio-border: #c8dcc0; --audio-surface: #edf6e9; position: relative; border: 0; background: transparent; color: #205539; }
 .saved-word-details .audio-btn::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--audio-border); border-radius: 50%; background: var(--audio-surface); pointer-events: none; }
@@ -108,7 +119,7 @@
 .saved-word-details .word-heading .audio-btn .icon { width: 16px; height: 16px; }
 .saved-word-details .word-heading > div { min-width: 0; }
 .saved-word-details .example-controls { align-items: center; gap: 6px; }
-.saved-word-memory { border-top: 1px solid var(--line); padding-top: 12px; }
+.saved-word-memory { margin-top: 12px; padding: 16px; border-radius: var(--radius-control); }
 .saved-word-memory h4 { margin-bottom: 6px; }
 .saved-word-memory p { margin-bottom: 0; }
 .saved-word-date { margin: 12px 0 0; color: var(--muted); font-size: .8125rem; }

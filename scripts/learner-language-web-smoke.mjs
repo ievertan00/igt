@@ -42,9 +42,10 @@ try {
     } else if (url.pathname === "/ask/notes") body = { directory: "", notes: [{ id: "旧笔记.md", title: "旧笔记", content: "Original saved English note with **since**.", bytes: 50, modifiedAt: "2026-10-01T00:00:00Z" }] };
     else if (url.pathname === "/dashboard") body = buildLearningOverview([]);
     else if (url.pathname === "/coach") body = buildCoachPatterns([]);
+    else if (url.pathname === "/coach/reports") body = [];
     else if (url.pathname === "/handbook") body = buildGrammarHistory([]);
     else if (url.pathname === "/vocab/words") body = { words: [], total: 0, totalSaved: 0, sourceAvailable: true, hasMore: false, offset: 0, limit: 25 };
-    else if (url.pathname === "/settings/llm") body = { provider: "custom", providers: { custom: { models: { flash: "fixture", pro: "fixture" } } } };
+    else if (url.pathname === "/settings/llm") body = { provider: "custom", providers: { custom: { models: { flash: "fixture", pro: "fixture" } } }, profiles: [{ id: "current", name: "Current setup", provider: "custom", baseUrl: "https://example.test/v1", models: { flash: "fixture", pro: "fixture" } }], activeProfileId: "current" };
     else if (url.pathname === "/settings/files") body = { paths: {} };
     else if (url.pathname === "/review/due") body = { cards: [] };
     else if (url.pathname === "/status-message") body = { content: "" };
@@ -70,10 +71,44 @@ try {
   await page.waitForSelector("#grammar-input");
   assert.match(await text(), /Refine your tone, catch subtle grammar nuances/);
   await page.type("#grammar-input", "My untouched English draft.");
+  const measureLayout = () => page.evaluate(() => Object.fromEntries([
+    ".topbar", ".nav-primary", ".settings-link", "#learner-language > summary", ".grammar-intro", "#grammar-input", ".grammar-composer", ".composer-actions .primary",
+  ].map(selector => {
+    const rect = document.querySelector(selector)?.getBoundingClientRect();
+    return [selector, rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null];
+  })));
+  const englishLayout = await measureLayout();
   await switchGuide("zh-CN");
+  const chineseLayout = await measureLayout();
+  for (const selector of [".nav-primary", ".settings-link", "#learner-language > summary", "#grammar-input", ".grammar-composer"]) {
+    for (const dimension of ["x", "y", "width", "height"]) assert.ok(Math.abs(englishLayout[selector][dimension] - chineseLayout[selector][dimension]) < 1, `${selector}: ${dimension} shifts when changing language`);
+  }
   assert.match(await text(), /调整语气、发现细微的语法问题/);
   assert.match(await page.$eval("h1", el => el.textContent), /Write with\s*clarity/);
   assert.equal(await page.$eval("#grammar-input", el => el.value), "My untouched English draft.");
+  const layoutShifts = [];
+  for (const value of ["grammar", "translation", "word-lookup", "ask", "practice", "settings"]) {
+    await route(value);
+    const measureFields = () => page.evaluate(() => Object.fromEntries([
+      ...document.querySelectorAll('.topbar, .menu-toggle, .nav-primary, .settings-link, #learner-language > summary, main input:not([type="checkbox"]):not([type="radio"]), main textarea, main select'),
+    ].filter(el => el.getClientRects().length).map((el, index) => {
+      const rect = el.getBoundingClientRect();
+      return [el.id || `${el.className}/${index}`, { x: rect.x, y: rect.y + scrollY, width: rect.width, height: rect.height }];
+    })));
+    for (const width of [1440, 1024, 768, 390, 320]) {
+      await page.setViewport({ width, height: 1000 });
+      await switchGuide("en");
+      const en = await measureFields();
+      await switchGuide("zh-CN");
+      const zh = await measureFields();
+      for (const [selector, rect] of Object.entries(en)) {
+        for (const dimension of ["x", "y", "width", "height"]) if (zh[selector] && Math.abs(rect[dimension] - zh[selector][dimension]) >= 1) layoutShifts.push(`${value}/${width}: ${selector} ${dimension}: ${rect[dimension]} -> ${zh[selector][dimension]}`);
+      }
+    }
+  }
+  assert.deepEqual(layoutShifts, [], "Navigation and input geometry stays stable across guide languages");
+  await page.setViewport({ width: 1440, height: 1000 });
+  await route("grammar");
   await page.screenshot({ path: path.join(artifacts, "grammar-zh-desktop.png"), fullPage: true });
   await page.reload();
   await page.waitForSelector("#grammar-input");
@@ -173,7 +208,7 @@ try {
   assert.equal(await page.$eval("#ask-answer-language", el => el.value), "en");
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, "Open mobile navigation fits");
   assert.deepEqual(errors, []);
-  console.log("Learner language browser QA passed: preserved slogans/content/drafts, preference persistence, both modes on 10 routes at 6 widths, mobile keyboard switching, in-flight request isolation, mixed-language follow-ups, summary variants, verbatim answer save, old-note reader.");
+  console.log("Learner language browser QA passed: stable navigation/input geometry on 6 pages at 5 widths, preserved slogans/content/drafts, preference persistence, both modes on 10 routes at 6 widths, mobile keyboard switching, in-flight request isolation, mixed-language follow-ups, summary variants, verbatim answer save, old-note reader.");
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

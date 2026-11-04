@@ -1,6 +1,6 @@
 import { Dashboard, Coach } from "./LearningPages";
 import { Heading, Panel, State } from "./Page";
-import { useGuideCopy, LearnerLanguageSwitch } from "./learner-language";
+import { useGuideCopy, LearnerLanguageSwitch, GuideText } from "./learner-language";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { IconButton } from "./IconButton";
@@ -14,6 +14,7 @@ import { VocabularyLibrary } from "./VocabularyLibrary";
 import "./Writing.css";
 import "./Handbook.css";
 import { CorrectionText } from "./CorrectionText";
+import { ModelSwitcher, useModelSettings, type ModelProfile } from "./model-settings";
 
 type Route =
   | "dashboard"
@@ -135,11 +136,11 @@ function Grammar() {
   return (
     <div className={`grammar-page${result ? " has-result" : ""}`}>
       <div className="grammar-intro">
-        <span className="writing-badge"><Icon name="spark" />{t("AI-Powered Writing Enhancer")}</span>
+        <span className="writing-badge"><Icon name="spark" /><GuideText text="AI-Powered Writing Enhancer" /></span>
         <h1>
           Write with clarity<span className="accent-dot">.</span>
         </h1>
-        <p>{t("Refine your tone, catch subtle grammar nuances, and learn standard phrasing with contextual feedback.")}</p>
+        <p><GuideText text="Refine your tone, catch subtle grammar nuances, and learn standard phrasing with contextual feedback." /></p>
       </div>
       <form
         className="grammar-composer"
@@ -172,9 +173,10 @@ function Grammar() {
           aria-describedby="grammar-hint"
         />
         <div className="composer-actions">
-          <span id="grammar-hint">
+          <span id="grammar-hint" className="sr-only">
             {busy ? t("Checking grammar and wording…") : t("Try writing it yourself first. Use AI feedback as your continuous learning guide.")}
           </span>
+          <ModelSwitcher disabled={busy || saving} />
           <button className="primary" type="submit" aria-busy={busy} disabled={busy || saving || !text.trim()}>
             {busy ? (
               <>
@@ -183,7 +185,7 @@ function Grammar() {
               </>
             ) : (
               <>
-                {t("Check my English")}
+                <GuideText text="Check my English" />
                 <Icon name="arrow" />
               </>
             )}
@@ -290,7 +292,7 @@ function Express() {
       <Heading
         eyebrow="EXPRESS"
         title="Find the right words."
-        detail={t("Explore an English version of your Chinese text, or check what an English passage means in Chinese. Compare the wording, then try expressing the idea yourself.")}
+        detail={<GuideText text="Explore an English version of your Chinese text, or check what an English passage means in Chinese. Compare the wording, then try expressing the idea yourself." />}
       />
       <Panel title={t("Your text")} icon="translation" className="express-composer">
         <div className="switches">
@@ -300,7 +302,7 @@ function Express() {
             disabled={busy}
             onClick={() => changeDirection("zh2en")}
           >
-            {t("Chinese → English")}
+            <GuideText text="Chinese → English" />
           </button>
           <button
             className={direction === "en2zh" ? "selected" : ""}
@@ -308,11 +310,11 @@ function Express() {
             disabled={busy}
             onClick={() => changeDirection("en2zh")}
           >
-            {t("English → Chinese")}
+            <GuideText text="English → Chinese" />
           </button>
         </div>
         <label className="form-label" htmlFor="translation-input">
-          {toEnglish ? t("What do you want to say?") : t("What do you want to understand?")}
+          <GuideText text={toEnglish ? "What do you want to say?" : "What do you want to understand?"} />
         </label>
         <textarea
           id="translation-input"
@@ -324,6 +326,8 @@ function Express() {
               : t("Paste an English sentence or passage. Include the context if it helps explain the meaning.")
           }
         />
+        <div className="input-bottom-toolbar">
+        <ModelSwitcher disabled={busy} />
         <button className="primary" onClick={submit} aria-busy={busy} disabled={busy || !text.trim()}>
           {busy
             ? toEnglish
@@ -333,6 +337,7 @@ function Express() {
               ? t("Say it in English →")
               : t("Explain in Chinese →")}
         </button>
+        </div>
       </Panel>
       {result?.error && (
         <State title={t("Couldn’t find an expression. Try again.")} detail={result.error} />
@@ -907,17 +912,17 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
       {!compact && <Heading
         eyebrow="WORD LOOKUP"
         title="Get to know a word."
-        detail={t("Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review.")}
+        detail={<GuideText text="Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review." />}
       />}
       {!compact && <div className="actions lookup-learning-actions">
         <a className="secondary" href="#word-library"><Icon name="word-library" />Saved words</a>
-        <a className="secondary" href="#word-review"><Icon name="word-review" />{t("Review due words")}</a>
+        <a className="secondary" href="#word-review"><Icon name="word-review" /><GuideText text="Review due words" /></a>
       </div>}
       <Panel title="Word or phrase" icon="word-lookup" className="lookup-form">
         <label className="form-label" htmlFor={compact ? "selection-lookup-input" : "word-lookup-input"}>
           English or Chinese word or phrase
         </label>
-        <div className="lookup-row">
+        <div className="lookup-row lookup-input-composer">
           <input
             id={compact ? "selection-lookup-input" : "word-lookup-input"}
             value={query}
@@ -925,17 +930,20 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
             onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) void lookup(); }}
             placeholder={t("Try “follow up” or “跟进”")}
           />
+          <div className="input-bottom-toolbar">
+          <ModelSwitcher disabled={busy || saving} id={compact ? "selection-model" : "workspace-model"} />
           <button className={entry && !entry.existing ? "secondary" : "primary"} onClick={lookup} aria-busy={busy} disabled={busy || saving}>
             {busy ? (
               "Looking it up…"
             ) : (
               <>
-                {t("Look up")}
+                <GuideText text="Look up" />
                 <Icon name="arrow" />
               </>
             )}
           </button>
         </div>
+          </div>
       </Panel>
       {entry && (
         <Panel title={entry.word} icon="word-lookup" className="lookup-result">
@@ -1284,7 +1292,7 @@ function Practice() {
       <Heading
         eyebrow="PRACTICE"
         title="Put your English to work."
-        detail={t("Try translating a Chinese sentence into English before checking the AI feedback. Use the suggestions to revise your answer and try a new sentence of your own.")}
+        detail={<GuideText text="Try translating a Chinese sentence into English before checking the AI feedback. Use the suggestions to revise your answer and try a new sentence of your own." />}
       />
       {targetErrorType && <section className="practice-target" aria-label="Handbook learning target">
         <h2>{targetErrorType}</h2>
@@ -1452,6 +1460,8 @@ function Practice() {
                 <span>{categoryName[context]}</span>
               </li>
             </ul>
+            <div className="practice-model-actions">
+            <ModelSwitcher disabled={busy} />
             <button
               className="primary practice-generate"
               onClick={generate}
@@ -1470,6 +1480,7 @@ function Practice() {
                 </>
               )}
             </button>
+            </div>
           </aside>
         </div>
       )}
@@ -1535,6 +1546,7 @@ function Practice() {
           <label className="form-label" htmlFor="practice-input">
             Your translation in English
           </label>
+          <div className="practice-input-composer">
           <textarea
             id="practice-input"
             value={answer}
@@ -1546,6 +1558,8 @@ function Practice() {
             }}
             placeholder={t("Write your translation in English…")}
           />
+          <div className="input-bottom-toolbar">
+          <ModelSwitcher disabled={busy} />
           <button className="primary" onClick={evaluate} aria-busy={busy} disabled={busy || !answer.trim()}>
             {busy ? (
               "Reviewing…"
@@ -1556,6 +1570,8 @@ function Practice() {
               </>
             )}
           </button>
+          </div>
+          </div>
           {evaluation?.error && (
             <State title={t("Could not review this answer. Try again.")} detail={evaluation.error} />
           )}
@@ -1899,6 +1915,9 @@ const providerNames: Record<string, string> = {
 
 function LlmSettings() {
   const { t } = useGuideCopy();
+  const models = useModelSettings();
+  const [profileId, setProfileId] = useState("");
+  const [profileName, setProfileName] = useState("");
   const [settingsTab, setSettingsTab] = useState<"models" | "markdown">("models");
   const [data, setData] = useState<any>();
   const [savedData, setSavedData] = useState<any>();
@@ -1913,20 +1932,35 @@ function LlmSettings() {
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState("");
 
+  function selectProfile(settings: any, profile?: ModelProfile) {
+    const provider = profile?.provider || settings.provider;
+    setData({ ...settings, providers: { ...settings.providers, ...(profile ? { [provider]: profile } : {}) } });
+    setProfileId(profile?.id || "");
+    setProfileName(profile?.name || "Current setup");
+    setActiveProvider(provider);
+    setEditProvider(provider);
+    setApiKeys({});
+    setClearApiKeys({});
+    setShowApiKey(false);
+    setTestStatus("");
+    setError("");
+    setStatus("");
+  }
   useEffect(() => {
-    webApi
-      .getLlmSettings()
-      .then((settings) => {
-        if (!settings?.providers || !settings?.provider) {
-          throw new Error("Settings are unavailable. Restart IGT and try again.");
-        }
-        setData(settings);
-        setSavedData(settings);
-        setActiveProvider(settings.provider);
-        setEditProvider(settings.provider);
-      })
-      .catch((e: any) => setError(e.message || "Could not load model settings"));
-  }, []);
+    if (!models.settings || savedData) return;
+    setSavedData(models.settings);
+    selectProfile(models.settings, models.settings.profiles.find(p => p.id === models.settings?.activeProfileId));
+  }, [models.settings, savedData]);
+
+  function newProfile() {
+    const provider = "custom";
+    selectProfile(savedData);
+    setProfileId("");
+    setProfileName("");
+    setActiveProvider(provider);
+    setEditProvider(provider);
+    setData({ ...savedData, providers: { ...savedData.providers, [provider]: { baseUrl: "", models: { flash: "", pro: "" }, keyConfigured: false, keyMasked: "" } } });
+  }
 
   const providerSettings = data?.providers?.[editProvider];
   const updateModel = (role: "flash" | "pro", value: string) => {
@@ -1951,35 +1985,31 @@ function LlmSettings() {
     }));
   };
 
-  async function save() {
+  async function save(action: "create" | "update" = "create") {
     if (!data) return;
     setBusy(true);
     setError("");
     setStatus("");
     try {
       const saved = await webApi.saveLlmSettings({
+        action,
+        profileId,
+        profileName,
         provider: activeProvider,
         apiKeys,
         clearApiKeys,
-        models: Object.fromEntries(
-          Object.entries(data.providers).map(([name, value]: [string, any]) => [
-            name,
-            value.models,
-          ]),
-        ),
+        models: { [activeProvider]: providerSettings.models },
         baseUrls: {
-          OllamaBaseUrl: data.providers.ollama?.baseUrl,
-          QwenApiBase: data.providers.qwen?.baseUrl,
-          DeepseekApiBase: data.providers.deepseek?.baseUrl,
-          CustomApiBase: data.providers.custom?.baseUrl,
+          [activeProvider === "ollama" ? "OllamaBaseUrl" : "CustomApiBase"]: providerSettings.baseUrl,
         },
       });
-      setData((old: any) => ({ ...old, provider: saved.provider, providers: saved.providers }));
+      models.update(saved);
+      selectProfile(saved, saved.profiles.find((p: ModelProfile) => p.id === saved.activeProfileId));
       setSavedData(saved);
       setApiKeys({});
       setClearApiKeys({});
       setStatus(
-        "Settings saved and applied. Existing keys were kept where the field was left blank.",
+        t("Model configuration saved and applied."),
       );
     } catch (e: any) {
       setError(e.message || "Could not save settings");
@@ -1997,6 +2027,8 @@ function LlmSettings() {
         baseUrl: providerSettings?.baseUrl,
         model: providerSettings?.models?.flash,
         apiKey: apiKeys[editProvider] || "",
+        profileId,
+        clearApiKey: Boolean(clearApiKeys[editProvider]),
       });
       setTestStatus(result.message || "Connection successful");
     } catch (e: any) {
@@ -2007,27 +2039,19 @@ function LlmSettings() {
   }
 
   function reset() {
-    setData(savedData);
-    setActiveProvider(savedData?.provider || "gemini");
-    setEditProvider(savedData?.provider || "gemini");
-    setApiKeys({});
-    setClearApiKeys({});
-    setError("");
-    setStatus("");
-    setTestStatus("");
-    setShowApiKey(false);
+    selectProfile(savedData, savedData.profiles.find((p: ModelProfile) => p.id === profileId));
   }
 
   if (error && !data) return <State title={t("Model settings are unavailable")} detail={error} />;
-  if (!data) return <State title={t("Loading model settings…")} />;
+  if (!data) return models.error ? <><State title={t("Model settings are unavailable")} detail={models.error} /><button className="secondary" onClick={() => void models.refresh()}>{t("Retry")}</button></> : <State title={t("Loading model settings…")} />;
 
   return (
     <div className="llm-settings">
       <div className="heading">
-        <h1>{settingsTab === "models" ? "Model settings" : t("Markdown file settings")}</h1>
-        <p>{settingsTab === "models"
-          ? t("Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services.")
-          : t("Choose where IGT reads and saves your Markdown learning records.")}</p>
+        <h1><GuideText text={settingsTab === "models" ? "Model settings" : "Markdown file settings"} /></h1>
+        <p><GuideText text={settingsTab === "models"
+          ? "Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services."
+          : "Choose where IGT reads and saves your Markdown learning records."} /></p>
       </div>
       <div className="settings-tabs" role="tablist" aria-label={t("Settings sections")} onKeyDown={(event) => {
         if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
@@ -2046,7 +2070,7 @@ function LlmSettings() {
           className={settingsTab === "models" ? "is-active" : ""}
           onClick={() => setSettingsTab("models")}
         >
-          Model settings
+          <GuideText text="Model settings" />
         </button>
         <button
           id="settings-tab-markdown"
@@ -2058,10 +2082,26 @@ function LlmSettings() {
           className={settingsTab === "markdown" ? "is-active" : ""}
           onClick={() => setSettingsTab("markdown")}
         >
-          {t("Markdown files")}
+          <GuideText text="Markdown files" />
         </button>
       </div>
       <div id="settings-panel-models" role="tabpanel" aria-labelledby="settings-tab-models" hidden={settingsTab !== "models"}>
+      <Panel title={t("Saved models")}>
+        <div className="saved-model-controls">
+          <label className="settings-field" htmlFor="saved-model-profile"><span className="form-label">{t("Configuration")}</span>
+            <select id="saved-model-profile" value={profileId} disabled={busy || testing} onChange={event => selectProfile(savedData, savedData.profiles.find((p: ModelProfile) => p.id === event.target.value))}>
+              {!profileId && <option value="" disabled>{t("New configuration")}</option>}
+              {savedData.profiles.map((profile: ModelProfile) => <option key={profile.id} value={profile.id}>{profile.name}{profile.id === savedData.activeProfileId ? ` · ${t("Active")}` : ""}</option>)}
+            </select>
+          </label>
+          <button type="button" className="secondary" disabled={busy || testing} onClick={newProfile}><GuideText text="New configuration" /></button>
+        </div>
+        <p className="saved-model-note"><GuideText text="Save a named setup, then switch models from Writing, Vocabulary, Practice, or Coach. Changes apply to all sections for future requests." /></p>
+      </Panel>
+      <fieldset className="model-config-fields" disabled={busy || testing}>
+      <label className="settings-field" htmlFor="model-profile-name"><span className="form-label">{t("Configuration name")}</span>
+        <input id="model-profile-name" maxLength={80} value={profileName} onChange={event => setProfileName(event.target.value)} placeholder={t("e.g. Everyday writing")} />
+      </label>
       <Panel title="AI Provider" className="llm-provider-panel">
         <label className="sr-only" htmlFor="llm-active-provider">
           AI Provider
@@ -2073,6 +2113,10 @@ function LlmSettings() {
           onChange={(e) => {
             setActiveProvider(e.target.value);
             setEditProvider(e.target.value);
+            const original = savedData.profiles.find((p: ModelProfile) => p.id === profileId && p.provider === e.target.value);
+            setData((old: any) => ({ ...old, providers: { ...old.providers, [e.target.value]: original || { ...old.providers[e.target.value], keyConfigured: false, keyMasked: "" } } }));
+            setApiKeys({});
+            setClearApiKeys({});
             setTestStatus("");
           }}
         >
@@ -2082,7 +2126,7 @@ function LlmSettings() {
             </option>
           ))}
         </select>
-        <small>{t("Used for requests after you save.")}</small>
+        <small><GuideText text="Used for requests after you save." /></small>
       </Panel>
       <Panel title={`Configure: ${providerNames[editProvider]}`} className="llm-config-panel">
         <div className="llm-settings-section">
@@ -2102,9 +2146,9 @@ function LlmSettings() {
                 onChange={(e) => updateBaseUrl(e.target.value)}
               />
               <small>
-                {editProvider === "custom"
-                  ? t("ⓘ API base URL, usually ending in /v1")
-                  : t("API base URL, usually ending in /v1")}
+                <GuideText text={editProvider === "custom"
+                  ? "ⓘ API base URL, usually ending in /v1"
+                  : "API base URL, usually ending in /v1"} />
               </small>
             </div>
           )}
@@ -2129,9 +2173,9 @@ function LlmSettings() {
                 }
               />
               <small>
-                {editProvider === "custom"
-                  ? t("ⓘ Optional for local services. Stored on this device.")
-                  : t("Stored on this device; leave blank to keep the saved key.")}
+                <GuideText text={editProvider === "custom"
+                  ? "ⓘ Optional for local services. Stored on this device."
+                  : "Stored on this device; leave blank to keep the saved key."} />
               </small>
               <div className="llm-key-actions">
                 <button
@@ -2207,7 +2251,7 @@ function LlmSettings() {
                   value={providerSettings?.models?.flash || ""}
                   onChange={(e) => updateModel("flash", e.target.value)}
                 />
-                <small>{t("Grammar, Express, and Ask")}</small>
+                <small><GuideText text="Grammar, Express, Vocabulary, Practice, and Ask" /></small>
               </label>
               <label className="settings-field" htmlFor="llm-pro-model">
                 <span className="form-label">Pro · Complex tasks</span>
@@ -2216,12 +2260,13 @@ function LlmSettings() {
                   value={providerSettings?.models?.pro || ""}
                   onChange={(e) => updateModel("pro", e.target.value)}
                 />
-                <small>{t("Handbook, Coach, and text analysis")}</small>
+                <small><GuideText text="Handbook, Coach, and text analysis" /></small>
               </label>
             </div>
           </div>
         </div>
       </Panel>
+      </fieldset>
       {error && <State title={t("Could not save")} detail={error} />}
       {status && (
         <p className="settings-status" role="status">
@@ -2229,13 +2274,17 @@ function LlmSettings() {
         </p>
       )}
       <div className="llm-form-actions">
-        <button className="primary" aria-busy={busy} disabled={busy} onClick={save}>
-          {busy ? t("Saving…") : "Save changes"}
+        <button className="primary" aria-busy={busy} disabled={busy || testing || !profileName.trim()} onClick={() => void save("create")}>
+          {busy ? t("Saving…") : <GuideText text="Save as new model" />}
         </button>
-        <button className="secondary" disabled={busy} onClick={reset}>
+        {profileId && <button className="secondary model-update" disabled={busy || testing || !profileName.trim()} onClick={() => void save("update")}>
+          <GuideText text="Update selected model" />
+        </button>}
+        <button className="secondary" disabled={busy || testing} onClick={reset}>
           Reset
         </button>
       </div>
+      <p className="saved-model-note"><GuideText text="Saving as new keeps your existing models. Updating replaces only the selected configuration." /></p>
       </div>
       <div id="settings-panel-markdown" role="tabpanel" aria-labelledby="settings-tab-markdown" hidden={settingsTab !== "markdown"}>
         <MarkdownFileSettings />
@@ -2667,7 +2716,7 @@ export function App() {
           onClick={() => setMenuOpen(!menuOpen)}
         >
           <Icon name={menuOpen ? "close" : "menu"} />
-          <span>{t("Menu")}</span>
+          <GuideText text="Menu" />
         </button>
         <nav
           ref={navRef}
