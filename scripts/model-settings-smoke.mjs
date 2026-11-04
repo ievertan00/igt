@@ -148,6 +148,33 @@ try {
   assert.equal(config.CustomFlashModel, "original-flash", "failed persistence keeps live config unchanged");
   loader.updateEnv = write;
   assert.ok(beforeInvalid.includes("# Keep user comments"));
+
+  // setDefault:false registers a saved model without switching the active setup.
+  const beforePassive = await request("GET", "/settings/llm");
+  const passive = await request("POST", "/settings/llm", {
+    profileId: "", profileName: "Passive", provider: "custom",
+    models: { custom: { flash: "passive-flash", pro: "passive-pro" } },
+    baseUrls: { CustomApiBase: `${endpoint}/passive/v1` },
+    setDefault: false,
+  });
+  assert.equal(passive.status, 200);
+  assert.equal(passive.activeProfileId, beforePassive.activeProfileId, "setDefault:false keeps the active setup");
+  assert.ok(passive.profiles.some(p => p.name === "Passive"), "registered profile is listed");
+  const passiveId = passive.profiles.find(p => p.name === "Passive").id;
+  // Deleting a saved model removes it from the pool; deleting a missing one is 404.
+  const deleted = await request("POST", "/settings/llm", { action: "delete", profileId: passiveId });
+  assert.equal(deleted.status, 200);
+  assert.ok(!deleted.profiles.some(p => p.id === passiveId), "saved model is removed");
+  assert.equal((await request("POST", "/settings/llm", { action: "delete", profileId: "missing" })).status, 404);
+  // Deleting the active profile clears the pointer so nothing stays dangling.
+  await activate(cloudId);
+  assert.equal((await request("GET", "/settings/llm")).activeProfileId, cloudId);
+  const removedActive = await request("POST", "/settings/llm", { action: "delete", profileId: cloudId });
+  assert.equal(removedActive.status, 200);
+  assert.notEqual(removedActive.activeProfileId, cloudId, "deleting the active profile resets the default");
+  assert.ok(!removedActive.profiles.some(p => p.id === cloudId));
+  await activate("current");
+
   // Existing native provider setups migrate using their active endpoint and key,
   // even if another compatible connection was saved earlier.
   loader.updateEnv({ IGT_LLM_PROFILES: "", IGT_LLM_ACTIVE_PROFILE: "", IGT_LLM_PROVIDER: "qwen", IGT_QWEN_API_BASE: `${endpoint}/legacy/v1`, DASHSCOPE_API_KEYS: "legacy-secret", IGT_QWEN_FLASH_MODEL: "legacy-flash", IGT_QWEN_PRO_MODEL: "legacy-pro" });
