@@ -67,35 +67,58 @@ try {
   });
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(`${base}/#settings`, { waitUntil: "networkidle0" });
-  await page.waitForSelector("#model-profile-name");
-  assert.equal(await page.$eval("#model-profile-name", e => e.value), "Current setup");
-  assert.equal(await page.$eval("#llm-api-key", e => e.value), "");
+  await page.waitForSelector(".model-card");
+  assert.equal(await page.$$eval(".model-card", es => es.length), 1, "fresh settings shows only the live current setup card");
+  assert.equal(await page.$eval(".model-card-title", e => e.childNodes[0].textContent.trim()), "Current setup", "card title is the profile name, default badge lives next to it");
+  assert.equal(await page.$eval("#add-model-name", e => e.value), "");
+  assert.equal(await page.$eval("#add-model-key", e => e.value), "");
   assert.ok(!(await page.content()).includes("fixture-secret"));
-  await page.click(".saved-model-controls button");
-  for (const [selector, value] of [["#model-profile-name", "Local studio"], ["#llm-endpoint", "http://localhost:1234/v1"], ["#llm-flash-model", "local-fast"], ["#llm-pro-model", "local-pro"]]) await page.type(selector, value);
-  await page.click(".llm-form-actions .primary");
+  // Add a new single-model configuration through the inline form.
+  await page.type("#add-model-name", "Local studio");
+  await page.type("#add-model-id", "local-fast");
+  await page.type("#add-model-base-url", "http://localhost:1234/v1");
+  await page.click(".model-add-actions .primary");
   await page.waitForFunction(() => document.querySelector(".settings-status")?.textContent.includes("saved and applied"));
-  const localId = await page.$eval("#saved-model-profile", e => e.value);
+  const localId = await page.$eval(".model-card.is-active", e => e.dataset.profileId);
   assert.ok(localId && localId !== "current");
-  assert.equal(await page.$$eval("#saved-model-profile option", es => es.length), 2);
+  assert.equal(await page.$$eval(".model-card", es => es.length), 2);
+  assert.equal(manager.config.CustomFlashModel, "local-fast", "saving applies the new single model");
+  assert.equal(manager.config.CustomProModel, "local-fast", "single model mirror fills the pro slot");
   await page.reload({ waitUntil: "networkidle0" });
-  await page.waitForSelector("#model-profile-name");
-  assert.equal(await page.$eval("#saved-model-profile", e => e.value), localId);
-  assert.equal(await page.$eval("#llm-api-key", e => e.placeholder), "Enter API key", "new setup retains no other profile's credentials");
-  await page.$eval("#llm-flash-model", e => { const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set; setter.call(e, "local-v2-fast"); e.dispatchEvent(new Event("input", { bubbles: true })); });
-  await page.click(".llm-form-actions .primary");
+  await page.waitForSelector(".model-card");
+  assert.equal(await page.$eval(".model-card.is-active", e => e.dataset.profileId), localId, "saved model stays active after reload");
+  assert.equal(await page.$eval("#add-model-key", e => e.placeholder), "Enter API key", "new setup retains no other profile's credentials");
+  // Saving another model must not overwrite the first configuration.
+  await page.type("#add-model-name", "Local studio variant");
+  await page.type("#add-model-id", "local-v2-fast");
+  await page.type("#add-model-base-url", "http://localhost:1234/v1");
+  await page.click(".model-add-actions .primary");
   await page.waitForFunction(() => document.querySelector(".settings-status")?.textContent.includes("saved and applied"));
-  const variantId = await page.$eval("#saved-model-profile", e => e.value);
+  const variantId = await page.$eval(".model-card.is-active", e => e.dataset.profileId);
   assert.notEqual(variantId, localId, "saving a new model from an existing configuration must not overwrite it");
-  assert.equal(await page.$$eval("#saved-model-profile option", es => es.length), 3);
-  await page.select("#saved-model-profile", localId);
-  assert.equal(await page.$eval("#llm-flash-model", e => e.value), "local-fast", "previous model remains selectable and unchanged");
-  await page.select("#saved-model-profile", "current");
-  assert.equal(manager.config.CustomFlashModel, "local-v2-fast", "editing another profile does not activate it");
-  assert.equal(await page.$eval("#llm-flash-model", e => e.value), "writing-fast");
-  await page.click(".llm-form-actions .model-update");
+  assert.equal(await page.$$eval(".model-card", es => es.length), 3);
+  // Editing another card keeps its model and does not switch the active setup.
+  await page.click(`.model-card[data-profile-id="${localId}"] .model-card-actions .secondary`);
+  await page.waitForSelector("#edit-model-id");
+  assert.equal(await page.$eval("#edit-model-id", e => e.value), "local-fast", "previous model remains selectable and unchanged");
+  await page.click("#edit-model-cancel");
+  await page.waitForFunction(() => !document.querySelector(".model-edit-dialog"));
+  // Re-edit the base current card and make it the default again. Editing without
+  // the default checkbox must not activate the card.
+  await page.click(`.model-card[data-profile-id="current"] .model-card-actions .secondary`);
+  await page.waitForSelector("#edit-model-id");
+  assert.equal(await page.$eval("#edit-model-id", e => e.value), "writing-fast");
+  assert.equal(await page.$eval("#edit-model-default", e => e.checked), false, "editing a non-default model does not activate it");
+  await page.click("#edit-model-default");
+  await page.click("#edit-model-save");
   await page.waitForFunction(() => document.querySelector(".settings-status")?.textContent.includes("saved and applied"));
+  assert.equal(await page.$eval(".model-card.is-active", e => e.dataset.profileId), "current", "setting the default re-activates the base setup");
   assert.equal(manager.config.CustomFlashModel, "writing-fast");
+  // Delete the variant from the pool; the active card survives.
+  await page.click(`.model-card[data-profile-id="${variantId}"] .model-card-delete`);
+  await page.waitForSelector(".handbook-delete-confirm");
+  await page.click(".handbook-delete-confirm .handbook-delete-submit");
+  await page.waitForFunction(() => document.querySelectorAll(".model-card").length === 2 && !document.querySelector(".handbook-delete-confirm"));
 
   await page.goto(`${base}/#grammar`, { waitUntil: "networkidle0" });
   await page.type("#grammar-input", "Keep this unfinished sentence.");
@@ -142,7 +165,7 @@ try {
   await page.click("#workspace-model");
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
-  await page.waitForSelector("#saved-model-profile");
+  await page.waitForSelector("#add-model-name");
   assert.equal(new URL(page.url()).hash, "#settings", "menu footer opens model settings");
 
   for (const width of [1440, 1024, 768, 390, 320]) {
@@ -150,7 +173,7 @@ try {
     for (const route of ["settings", "grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "coach"]) {
       await page.goto(`${base}/#${route}`, { waitUntil: "networkidle0" });
       const hasModel = !["settings", "word-review", "word-library"].includes(route);
-      await page.waitForSelector(route === "settings" ? "#saved-model-profile" : hasModel ? "#workspace-model" : "main h1");
+      await page.waitForSelector(route === "settings" ? "#add-model-name" : hasModel ? "#workspace-model" : "main h1");
       await page.screenshot({ path: path.join(output, `${route}-${width}.png`), fullPage: true });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${route}/${width}: overflow`);
       assert.equal(await page.$(".model-toolbar"), null, "no external model toolbar remains");
@@ -185,7 +208,7 @@ try {
     await selectModel(localId);
     await page.waitForFunction(() => document.querySelector("#workspace-model").value !== "current" && !document.querySelector("#workspace-model").disabled);
     assert.equal(config.CustomFlashModel, "local-fast");
-    assert.equal(config.CustomProModel, "local-pro");
+    assert.equal(config.CustomProModel, "local-fast");
     await selectModel("current");
     await page.waitForFunction(() => document.querySelector("#workspace-model").value === "current" && !document.querySelector("#workspace-model").disabled);
   }
