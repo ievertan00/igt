@@ -178,6 +178,25 @@ test("short model source labels resolve to saved records and unused listed sourc
   assert.match(result.markdown, /\[3\]/);
   assert.deepEqual(result.evidenceIds, ["3", "4"]);
 });
+test("Chinese citation repair keeps the requested language explicit at the end of both prompts", async () => {
+  let calls = 0;
+  const deps = { now, loadData: () => ({ entries: [entry(806)] }), getLLMManager: async () => ({
+    config: {}, getCurrentProviderName: () => "ollama", generateWithFallback: async (input, system) => {
+      calls++;
+      const data = JSON.parse(input);
+      assert.match(data.outputRequirements, /简体中文/);
+      assert.match(data.outputRequirements, /\[S1\]/);
+      assert.ok(system.endsWith(data.outputRequirements), "language and citation instructions must follow all repair feedback");
+      if (calls === 1) return diagnostic("根据原始输入，单数可数名词前缺少限定词。来源 S1。");
+      assert.match(system, /COACH_REPORT_INVALID_EVIDENCE/);
+      return diagnostic("根据原始输入，单数可数名词前缺少限定词。[S1]");
+    },
+  }) };
+  const report = await generateCoachReport({ language: "zh-CN", refresh: true }, deps);
+  assert.equal(calls, 2);
+  assert.deepEqual(report.evidenceIds, ["806"]);
+});
+
 test("Chinese reports retry English-only output with explicit language instructions", async () => {
   let calls = 0;
   const llm = { config: {}, getCurrentProviderName: () => "custom", generateWithFallback: async (input, system) => {

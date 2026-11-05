@@ -70,7 +70,7 @@ try {
     } catch { if (!request.isInterceptResolutionHandled()) await request.abort(); }
   });
   const ready = async () => {
-    try { await page.waitForFunction(() => !document.querySelector('.coach-page > p[role="status"]') && (document.querySelector(".coach-report") || document.querySelector('.coach-page [role="alert"]'))); }
+    try { await page.waitForFunction(() => !document.querySelector('.coach-progress') && (document.querySelector(".coach-report") || document.querySelector('.coach-page [role="alert"]'))); }
     catch (error) { console.error("Coach state:", await page.$eval(".coach-page", node => node.textContent), "Model calls:", calls, "Page errors:", errors); throw error; }
     assert.equal(await page.$eval(".coach-page", node => node.querySelector('[role="alert"]')?.textContent || ""), "");
   };
@@ -94,12 +94,35 @@ try {
   assert.match(text, /1 Grammar checks · 1 Practice records/);
   assert.match(text, /Individual patterns and rule mapping/);
   assert.doesNotMatch(text, /private-grammar-id|practice-log-[a-f0-9]/);
-  await page.click(".coach-report details summary");
-  assert.match(await page.$eval(".coach-report details", node => node.textContent), /Hints used: 2/);
-  assert.equal((await page.$$(".coach-report details a")).length, 1, "Practice must not link to a nonexistent Handbook record");
-  for (const width of [1440, 390]) {
+  assert.doesNotMatch(text, /\[S\d+\]|Source records cited in this report/);
+  assert.equal(await page.$$eval(".coach-report th", cells => cells.some(cell => cell.textContent === "Evidence")), false);
+  assert.equal(await page.$(".coach-report details"), null);
+  const download = await page.evaluate(async () => {
+    const originalUrl = URL.createObjectURL, originalClick = HTMLAnchorElement.prototype.click;
+    let content;
+    URL.createObjectURL = blob => { content = blob.text(); return "blob:coach-download-test"; };
+    HTMLAnchorElement.prototype.click = () => {};
+    try {
+      [...document.querySelectorAll(".coach-page button")].find(button => button.textContent === "Download Markdown").click();
+      return await content;
+    } finally { URL.createObjectURL = originalUrl; HTMLAnchorElement.prototype.click = originalClick; }
+  });
+  assert.match(download, /Individual patterns and rule mapping/);
+  assert.doesNotMatch(download, /\[S\d+\]|private-grammar-id|practice-log-[a-f0-9]|## Source records|Hints used:/);
+  await page.waitForSelector('.coach-history-item[aria-current="true"]');
+  for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewport({ width, height: 1000 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `overflow at ${width}`);
+    const layout = await page.evaluate(() => {
+      const history = document.querySelector('.coach-history').getBoundingClientRect();
+      const reading = document.querySelector('.coach-reading').getBoundingClientRect();
+      return { sideBySide: history.right < reading.left, stacked: history.bottom <= reading.top };
+    });
+    assert.equal(width > 760 ? layout.sideBySide : layout.stacked, true, `report layout at ${width}`);
+    if (width === 1440) {
+      const toolbar = await page.evaluate(() => [...document.querySelectorAll('.coach-toolbar > div, .coach-toolbar > label')].map(node => node.getBoundingClientRect().bottom));
+      assert.ok(Math.max(...toolbar) - Math.min(...toolbar) < 8, 'desktop controls share one horizontal row');
+    }
     await page.screenshot({ path: path.join(output, `coach-${width}.png`), fullPage: true });
   }
   failGeneration = true; await generate();
@@ -112,11 +135,21 @@ try {
   await generate(); await ready();
   assert.match(await page.$eval(".coach-report .md", node => node.textContent), /Executive Summary/);
   await page.reload(); await page.waitForSelector(".coach-page");
-  await page.click(".coach-page > details > summary");
-  await page.waitForSelector(".coach-page > details li button");
-  await page.click(".coach-page > details li button"); await ready();
+  await page.waitForSelector(".coach-history-item");
+  await page.click(".coach-history-item"); await ready();
+  assert.notEqual(await page.$('.coach-history-item[aria-current="true"]'), null);
+  assert.doesNotMatch(await page.$eval(".coach-report", node => node.textContent), /\[S\d+\]|Source records cited in this report/);
+  // Coach adds shared icons; make sure neighboring pages still render at both sizes.
+  for (const route of ['grammar', 'ask']) {
+    await page.goto(`${base}/#${route}`);
+    await page.waitForSelector('h1');
+    for (const width of [1440, 390]) {
+      await page.setViewport({ width, height: 1000 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${route} overflow at ${width}`);
+    }
+  }
   assert.deepEqual(errors, []);
-  console.log("Coach: five sections, integrated patterns, Grammar/Practice citations, saved reports, language, retry, and desktop/mobile layout passed.");
+  console.log("Coach: citation-free report display/download, hidden source records, saved reports, language, retry, and desktop/mobile layout passed.");
 } finally {
   await browser?.close(); await server?.close(); await new Promise(resolve => api.close(resolve));
   fs.rmSync(reportDirectory, { recursive: true, force: true });
