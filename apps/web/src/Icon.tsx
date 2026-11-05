@@ -1,6 +1,11 @@
 type IconName = "eye" | "eye-off" | "globe" | "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
 
-const paths: Record<IconName, string> = {
+type CoachIconName = "calendar" | "layers" | "download" | "refresh";
+const paths: Record<IconName | CoachIconName, string> = {
+  calendar: "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
+  layers: "m12 3 10 5-10 5L2 8l10-5z M2 12l10 5 10-5 M2 16l10 5 10-5",
+  download: "M12 3v12 M7 10l5 5 5-5 M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5",
+  refresh: "M21 11a9 9 0 1 0-2.6 7.4 M21 3v8h-8",
   eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   "eye-off": "M3 3l18 18 M10.6 5.1A12 12 0 0 1 12 5c6.5 0 10 7 10 7a19 19 0 0 1-3 3.8 M6.1 6.1A22 22 0 0 0 2 12s3.5 7 10 7a13 13 0 0 0 5.9-1.9 M9.9 9.9a3 3 0 0 0 4.2 4.2",
   globe: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M3 12h18 M12 3c5 5 5 13 0 18 M12 3c-5 5-5 13 0 18",
@@ -39,7 +44,7 @@ const paths: Record<IconName, string> = {
   copy: "M9 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
 };
 
-export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
+export function Icon({ name, className = "" }: { name: IconName | CoachIconName; className?: string }) {
   return <svg className={`icon${name === "arrow" ? " icon-arrow" : ""} ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
 }
 

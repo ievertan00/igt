@@ -5,6 +5,8 @@ import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
 import { ModelSwitcher } from "./model-settings";
 import { useGuideCopy } from "./learner-language";
+import { coachReportDisplayMarkdown } from "../../../lib/domain/coach-report-display.mjs";
+import "./Coach.css";
 
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
 function windowDays(fallback: number) {
@@ -443,11 +445,12 @@ export function Coach() {
   const [error, setError] = useState("");
   const [savedReports, setSavedReports] = useState<CoachReportSummary[]>([]);
   const [historyError, setHistoryError] = useState("");
-  const sourceLabels = new Map(report?.evidence.map((item, index) => [item.entryId, `S${index + 1}`]));
-  const reportMarkdown = report?.evidence.reduce((text, item) => text.replaceAll(item.entryId, sourceLabels.get(item.entryId)!), report.markdown) || "";
+  const [selectedReportId, setSelectedReportId] = useState("");
+  const visibleReports = savedReports.filter(item => item.days === days && item.language === language);
+  const reportMarkdown = report ? coachReportDisplayMarkdown(report) : "";
   const request = useRef(0);
   useEffect(() => {
-    request.current++; setReport(undefined); setBusy(false); setError("");
+    request.current++; setReport(undefined); setSelectedReportId(""); setBusy(false); setError("");
     return () => { request.current++; };
   }, [days, language]);
   async function loadSavedReports() {
@@ -460,7 +463,7 @@ export function Coach() {
     setBusy(true); setError("");
     try {
       const result = await webApi.readCoachReport(savedId);
-      if (id === request.current) setReport(result);
+      if (id === request.current) { setReport(result); setSelectedReportId(savedId); }
     } catch { if (id === request.current) setError("The saved report could not be opened. Refresh the list and try again."); }
     finally { if (id === request.current) setBusy(false); }
   }
@@ -469,52 +472,68 @@ export function Coach() {
     setBusy(true); setError("");
     try {
       const result = await webApi.generateCoachReport(days, language, Boolean(report));
-      if (id === request.current) { setReport(result); void loadSavedReports(); }
+      if (id === request.current) { setReport(result); setSelectedReportId(result.savedId || ""); void loadSavedReports(); }
     } catch (err) {
       if (id === request.current) setError(err instanceof Error ? err.message : "Could not generate the report. Please try again.");
     } finally { if (id === request.current) setBusy(false); }
   }
   function download() {
     if (!report) return;
-    const text = `# English proficiency diagnostic report\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved records; ${report.evidence.length} records supplied for analysis.\n\n${reportMarkdown}\n\n## Source records\n\n${report.evidence.filter(e => report.evidenceIds.includes(e.entryId)).map(e => `### ${sourceLabels.get(e.entryId)} · ${e.timestamp}\n\nSource: ${e.source === "practice" ? "02_Practice_Log" : "Grammar"}\n\nOriginal: ${e.original}\n\n${e.practice ? `Prompt: ${e.practice.prompt}\n\nHints used: ${e.practice.hintsUsed ?? "Unknown"}\n\nReference answer (unverified): ${e.practice.referenceAnswer}\n\nFeedback (unverified): ${e.practice.feedback}` : `Saved correction (unverified): ${e.correction}${e.refine ? `\n\nSaved refinement (unverified): ${e.refine}` : ""}`}`).join("\n\n")}`;
+    const text = `# English proficiency diagnostic report\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved records; ${report.evidence.length} records supplied for analysis.\n\n${reportMarkdown}`;
     const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
     const link = document.createElement("a"); link.href = url; link.download = "english-proficiency-report.md"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <div className="coach-page">
-    <Heading eyebrow="COACH" title="Your English proficiency report" detail="Understand your strengths, recurring language patterns, and the knowledge behind them in one evidence-based report." />
-    <div className="handbook-filters">
-      <WindowSelect days={days} disabled={busy} onChange={days => go("coach", { days })} />
-      <label>Report language <select value={language} disabled={busy} onChange={e => setLanguage(e.target.value)}><option value="zh-CN">中文</option><option value="en">English</option></select></label>
-      <ModelSwitcher role="pro" disabled={busy} />
-      <button className="primary" disabled={busy} onClick={() => void generate()}>{busy ? "Generating report…" : report ? "Regenerate report" : "Generate diagnostic report"}</button>
-      {report && <button className="secondary" onClick={download}>Download Markdown</button>}
+    <div className="coach-hero">
+      <Heading eyebrow="COACH" title="Your English proficiency report" detail="Understand your strengths, recurring language patterns, and the knowledge behind them in one evidence-based report to guide your next steps." />
+      <div className="coach-illustration" aria-hidden="true">
+        <div className="coach-illustration-back"><i /><i /></div>
+        <div className="coach-illustration-front"><i /><i /><div className="coach-illustration-chart"><b /><b /><b /></div></div>
+        <span className="coach-illustration-check"><Icon name="check" /></span>
+        <svg viewBox="0 0 40 40" className="coach-illustration-rays"><path d="M9 14 12 3 M19 20 29 10 M24 29 36 26" /></svg>
+      </div>
+    </div>
+    <div className="handbook-filters coach-toolbar">
+      <div className="coach-window"><WindowSelect days={days} disabled={busy} onChange={days => go("coach", { days })} /><Icon name="calendar" /></div>
+      <label className="coach-language">Report language <span className="coach-select"><Icon name="globe" /><select value={language} disabled={busy} onChange={e => setLanguage(e.target.value)}><option value="zh-CN">中文</option><option value="en">English</option></select></span></label>
+      <div className="coach-model"><span id="coach-model-label">Model</span><ModelSwitcher role="pro" disabled={busy} /></div>
+      <div className="coach-actions">
+        <button className="primary" disabled={busy} aria-busy={busy} onClick={() => void generate()}>{busy ? "Generating report…" : report ? "Regenerate report" : "Generate diagnostic report"}<Icon name="arrow" /></button>
+        <button className="secondary" disabled={!report} onClick={download}><Icon name="download" />Download Markdown</button>
+      </div>
     </div>
     {error && <p role="alert">{error}</p>}
-    <details><summary>Saved reports</summary>
-      <button className="secondary" disabled={busy} onClick={() => void loadSavedReports()}>Refresh saved reports</button>
-      {historyError && <p role="alert">{historyError}</p>}
-      {!historyError && !savedReports.filter(item => item.days === days && item.language === language).length && <p>No saved reports for this language and time window yet.</p>}
-      <ul>{savedReports.filter(item => item.days === days && item.language === language).map(item => <li key={item.savedId}><button className="secondary" disabled={busy} onClick={() => void openSaved(item.savedId)}>{new Date(item.generatedAt).toLocaleString()} · {item.totalChecks} records</button></li>)}</ul>
-    </details>
-    {busy && <p role="status">Reviewing saved sentences and feedback. This may take a few minutes.</p>}
+    <div className="coach-workspace">
+      <aside className="coach-history" aria-labelledby="coach-history-title">
+        <h2 id="coach-history-title"><Icon name="layers" /><span>Saved reports <span className="coach-history-count">({visibleReports.length})</span></span></h2>
+        {historyError && <p role="alert">{historyError}</p>}
+        {!historyError && !visibleReports.length && <p className="coach-history-empty">No saved reports for this language and time window yet.</p>}
+        <ul>{visibleReports.map(item => <li key={item.savedId}><button className="coach-history-item" aria-current={selectedReportId === item.savedId ? "true" : undefined} disabled={busy} onClick={() => void openSaved(item.savedId)}><time dateTime={item.generatedAt}>{new Date(item.generatedAt).toLocaleString()}</time><span>{item.totalChecks} records</span></button></li>)}</ul>
+        <button className="secondary coach-history-refresh" disabled={busy} onClick={() => void loadSavedReports()}><Icon name="refresh" />Refresh saved reports</button>
+      </aside>
+      <div className="coach-reading">
+    {busy && <p className="coach-progress" role="status">Reviewing saved sentences and feedback. This may take a few minutes.</p>}
     {!report && !busy && <State title="A report grounded in your Grammar and Practice records" detail="Review your proficiency, individual error patterns, underlying knowledge gaps and personalized improvement directions using saved Grammar checks and 02_Practice_Log. Only abilities supported by your writing are assessed; AI corrections and assisted answers do not establish mastery." />}
-    {report && <Panel title="English proficiency diagnostic report" className="coach-report">
-      {report.savedPath && <p className="handbook-evidence">Saved locally: {report.savedPath}</p>}
+    {report && <Panel title="English proficiency diagnostic report" icon="document" className="coach-report">
+      <div className="coach-report-meta">
+        <span><Icon name="calendar" />{report.cached ? "Cached report" : "Generated on"} {new Date(report.generatedAt).toLocaleString()}</span>
+        <span><Icon name="layers" />{report.sourceCounts?.grammar ?? report.totalChecks} grammar checks</span>
+        <span><Icon name="ask" />{report.sourceCounts?.practice ?? 0} practice records</span>
+        <span><Icon name="info" />{report.coverage.unclassified} unknown sources</span>
+      </div>
+      <div className="coach-report-provenance">
+      {report.savedPath && <p className="handbook-evidence coach-saved-path"><strong>Saved locally:</strong> <span>{report.savedPath}</span></p>}
       {report.saveError && <p role="alert">{report.saveError}</p>}
-      <p className="handbook-evidence">{report.sourceCounts ? `${report.sourceCounts.grammar} Grammar checks · ${report.sourceCounts.practice} Practice records` : `${report.totalChecks} saved Grammar checks`} · {report.evidence.length} records supplied to the model · {report.sampled ? "Chronological sample" : "All records in this window"} · {report.duplicateInputs} repeated inputs · {report.cached ? "Cached report" : "Generated"} {new Date(report.generatedAt).toLocaleString()}</p>
+      <p className="handbook-evidence"><strong>Data:</strong> {report.sourceCounts ? `${report.sourceCounts.grammar} Grammar checks · ${report.sourceCounts.practice} Practice records` : `${report.totalChecks} saved Grammar checks`} · {report.evidence.length} records supplied to the model · {report.duplicateInputs} repeated inputs</p>
       {report.sourceStatus && report.sourceStatus.practice !== "available" && <p className="handbook-evidence">Practice log: {report.sourceStatus.practice}. Practice evidence was not available for this report.</p>}
       {report.sourceStatus?.grammar === "unavailable" && <p className="handbook-evidence">Grammar records could not be read. This report uses available Practice evidence.</p>}
-      <p className="handbook-evidence">{report.coverage.unclassified} records with unknown sources and {report.coverage.excludedOtherSources} full-text records excluded; {report.coverage.undated} records have no usable date. Suggestions and possible causes need validation through practice.</p>
-      <Markdown source={reportMarkdown} />
+      <p className="handbook-evidence"><strong>Notes:</strong> {report.sampled ? "Chronological sample" : "All records in this window"}. {report.coverage.unclassified} records with unknown sources and {report.coverage.excludedOtherSources} full-text records excluded; {report.coverage.undated} records have no usable date. Suggestions and possible causes need validation through practice.</p>
       {report.truncated && <p className="handbook-evidence">Long records and feedback were shortened for analysis. Open the saved checks to read the full records.</p>}
-      <details><summary>Source records cited in this report</summary>{report.evidence.filter(e => report.evidenceIds.includes(e.entryId)).map(e => <section key={e.entryId}>
-        <h3>{sourceLabels.get(e.entryId)} · {e.timestamp}</h3><p>Source: {e.source === "practice" ? "02_Practice_Log" : "Grammar"}</p><p>{e.original}</p>
-        {e.practice ? <><p>Prompt: {e.practice.prompt}</p><p>Hints used: {e.practice.hintsUsed ?? "Unknown"}</p><p>Reference answer (unverified): {e.practice.referenceAnswer}</p><p>Feedback (unverified): {e.practice.feedback}</p></> : <>
-          <p>Saved correction (unverified): {e.correction || "None"}</p>{e.refine && <p>Saved refinement (unverified): {e.refine}</p>}
-          <a href={`#handbook?entry=${encodeURIComponent(e.entryId)}&days=${days}`}>Open saved check</a>
-        </>}
-      </section>)}</details>
+      </div>
+      <Markdown source={reportMarkdown} />
     </Panel>}
+      </div>
+    </div>
   </div>;
 }
