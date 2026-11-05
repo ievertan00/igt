@@ -21,11 +21,12 @@ const manager = initializeLLMProviders(config);
 registerLlmSettingsRoutes({ config, loader, getLLMManager: async () => manager });
 const server = await preview({ configFile: "apps/web/vite.config.ts", preview: { host: "127.0.0.1", port: 0 } });
 let browser;
-let failSwitch = false;
-let delaySwitch;
+const aiRequests = [];
+let settingsWrites = 0;
 try {
   browser = await puppeteer.launch({ headless: true, executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, args: ["--no-sandbox"] });
   const page = await browser.newPage();
+  page.on("dialog", dialog => dialog.accept());
   async function selectModel(profileId) {
     await page.click("#workspace-model");
     await page.waitForSelector(".model-menu");
@@ -43,10 +44,7 @@ try {
       const json = (data, status = 200) => request.respond({ status, contentType: "application/json", body: JSON.stringify(data) });
       if (url.pathname === "/settings/llm") {
         const body = request.postData() || "{}";
-        if (JSON.parse(body).action === "activate") {
-          if (delaySwitch) await delaySwitch;
-          if (failSwitch) return json({ error: { message: "Could not switch models", code: "INTERNAL_ERROR" } }, 500);
-        }
+        if (request.method() === "POST") settingsWrites++;
         let status = 200;
         let response;
         await dispatch({ method: request.method(), url: url.pathname, on(event, cb) { if (event === "data") cb(body); if (event === "end") cb(); } }, {
@@ -55,6 +53,9 @@ try {
         return json(response, status);
       }
       const fixtures = {
+        "/ask": { data: { question: "Why?", answer: "A useful explanation.", title: "A useful explanation", related: [], tags: [] } },
+        "/ask/notes": { notes: [] },
+        "/grammar": { result: { originalText: "Keep this unfinished sentence.", correction: "Keep this unfinished sentence.", diagnoses: [], refine: "Keep this sentence." } },
         "/review/due": { cards: [] },
         "/vocab/words": { words: [], total: 0, totalSaved: 0, sourceAvailable: true, hasMore: false },
         "/coach": { days: 90, checks: 0, patterns: [], coverage: { grammar: 0, excludedOtherSources: 0, unclassified: 0, undated: 0 } },
@@ -62,6 +63,7 @@ try {
         "/coach/reports": [],
         "/practice/generate": { data: { questions: [{ id: "fixture-only", prompt_zh: "我每天练习英语。", reference_answer: "I practise English every day.", difficulty: "standard", context: "home", style: "neutral" }] } },
       };
+      if (["/ask", "/grammar", "/practice/evaluate"].includes(url.pathname)) aiRequests.push({ path: url.pathname, profileId: request.headers()["x-igt-model-profile"] });
       return json(fixtures[url.pathname] || {});
     } catch (e) { errors.push(e.message); await request.abort(); }
   });
@@ -122,23 +124,31 @@ try {
 
   await page.goto(`${base}/#grammar`, { waitUntil: "networkidle0" });
   await page.type("#grammar-input", "Keep this unfinished sentence.");
-  let release;
-  delaySwitch = new Promise(resolve => { release = resolve; });
+  const writesBeforeSwitch = settingsWrites;
   await selectModel(localId);
-  await page.waitForFunction(() => document.querySelector("#workspace-model").disabled);
-  release();
-  delaySwitch = undefined;
-  await page.waitForFunction(() => !document.querySelector("#workspace-model").disabled);
+  await page.waitForFunction(id => document.querySelector("#workspace-model").value === id, {}, localId);
   assert.equal(await page.$eval("#grammar-input", e => e.value), "Keep this unfinished sentence.");
-  assert.equal(config.CustomFlashModel, "local-fast");
-  failSwitch = true;
+  assert.equal(config.CustomFlashModel, "writing-fast", "page choice leaves the runtime default unchanged");
+  await page.click(".grammar-composer .primary");
+  await page.waitForFunction(() => document.querySelector(".grammar-page.has-result"));
+  assert.equal(aiRequests.at(-1).profileId, localId);
+  await page.goto(`${base}/#ask`, { waitUntil: "networkidle0" });
+  await page.waitForSelector("#ask-input");
+  assert.equal(await page.$eval("#workspace-model", e => e.value), "current", "Ask is independent of Writing");
+  assert.equal(await page.$eval("#workspace-model", e => Boolean(e.closest(".ask-composer-actions"))), true);
+  await page.type("#ask-input", "Why?");
+  await selectModel(localId);
+  assert.equal(await page.$eval("#ask-input", e => e.value), "Why?");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.querySelector("#workspace-model") && !document.querySelector("#workspace-model").disabled);
+  assert.equal(await page.$eval("#workspace-model", e => e.value), localId, "Ask choice persists across reload");
   await selectModel("current");
-  await page.waitForSelector(".model-switch-error");
-  assert.equal(await page.$eval("#workspace-model", e => e.value), localId, "failed switch retains actual selection");
-  assert.equal(config.CustomFlashModel, "local-fast");
-  failSwitch = false;
-  await page.click(".model-switch-error button");
-  await page.waitForFunction(() => !document.querySelector(".model-switch-error"));
+  await page.type("#ask-input", "Why?");
+  await page.click(".ask-submit-actions .primary");
+  await page.waitForSelector(".ask-answer");
+  assert.equal(aiRequests.at(-1).profileId, "current", "Ask sends its own choice to the API");
+  await page.goto(`${base}/#grammar`, { waitUntil: "networkidle0" });
+  assert.equal(await page.$eval("#workspace-model", e => e.value), localId, "changing Ask leaves Writing unchanged");
   await selectModel("current");
   await page.waitForFunction(() => document.querySelector("#workspace-model").value === "current" && !document.querySelector("#workspace-model").disabled);
   assert.equal(config.CustomFlashModel, "writing-fast");
@@ -148,7 +158,7 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   await page.waitForFunction(() => document.querySelector("#workspace-model").value !== "current" && !document.querySelector("#workspace-model").disabled);
-  assert.equal(config.CustomFlashModel, "local-fast", "menu supports keyboard switching");
+  assert.equal(await page.$eval("#workspace-model", e => e.value), localId, "menu supports keyboard switching");
   assert.equal(await page.evaluate(() => document.activeElement?.id), "workspace-model", "focus returns after keyboard switch");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Home");
@@ -170,7 +180,7 @@ try {
 
   for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewport({ width, height: 1000 });
-    for (const route of ["settings", "grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "coach"]) {
+    for (const route of ["settings", "grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "coach", "ask"]) {
       await page.goto(`${base}/#${route}`, { waitUntil: "networkidle0" });
       const hasModel = !["settings", "word-review", "word-library"].includes(route);
       await page.waitForSelector(route === "settings" ? "#add-model-name" : hasModel ? "#workspace-model" : "main h1");
@@ -202,16 +212,21 @@ try {
     }
   }
   // Verify actual switching in every requested section, including Pro on Coach.
-  for (const route of ["grammar", "translation", "word-lookup", "practice", "coach"]) {
+  for (const route of ["grammar", "translation", "word-lookup", "practice", "coach", "ask"]) {
     await page.goto(`${base}/#${route}`, { waitUntil: "networkidle0" });
     await page.waitForFunction(() => document.querySelector("#workspace-model") && !document.querySelector("#workspace-model").disabled);
     await selectModel(localId);
     await page.waitForFunction(() => document.querySelector("#workspace-model").value !== "current" && !document.querySelector("#workspace-model").disabled);
-    assert.equal(config.CustomFlashModel, "local-fast");
-    assert.equal(config.CustomProModel, "local-fast");
+    assert.equal(config.CustomFlashModel, "writing-fast");
+    assert.equal(config.CustomProModel, "writing-pro");
+    await page.goto(`${base}/#${route === "ask" ? "grammar" : "ask"}`, { waitUntil: "networkidle0" });
+    assert.equal(await page.$eval("#workspace-model", e => e.value), "current", `${route} choice does not affect another page`);
+    await page.goto(`${base}/#${route}`, { waitUntil: "networkidle0" });
+    assert.equal(await page.$eval("#workspace-model", e => e.value), localId, `${route} retains its own choice`);
     await selectModel("current");
     await page.waitForFunction(() => document.querySelector("#workspace-model").value === "current" && !document.querySelector("#workspace-model").disabled);
   }
+  assert.equal(settingsWrites, writesBeforeSwitch, "page switches never activate a global model");
   await page.goto(`${base}/#practice`, { waitUntil: "networkidle0" });
   await page.click(".practice-generate");
   await page.waitForSelector("#practice-input");
@@ -231,7 +246,7 @@ try {
   assert.equal(await page.$eval("h1", e => e.textContent), "模型设置");
   assert.equal(await page.$eval("#settings-tab-models", e => e.textContent.trim()), "模型设置");
   assert.deepEqual(errors, []);
-  console.log(`Model Settings browser checks passed: save/reload/edit, masked credentials, pending/failed switches, preserved writing input, all requested sections and five viewport widths. Screenshots: ${output}`);
+  console.log(`Model Settings browser checks passed: save/edit, Ask toolbar, independent page choices, reload persistence, per-request profile headers, preserved input, keyboard menus and five viewport widths. Screenshots: ${output}`);
 } finally {
   await browser?.close();
   await server.close();

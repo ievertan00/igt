@@ -41,10 +41,10 @@
 .model-config-fields { border: 0; padding: 0; margin: 1.5rem 0 0; min-width: 0; }
 .model-config-fields > .settings-field { margin-bottom: 1.5rem; }
 .llm-settings .llm-form-actions { flex-wrap: wrap; }
-/* ---- Saved model card grid ---- */
-.saved-model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+/* ---- Saved model card grid (horizontal scroll strip) ---- */
+.saved-model-grid { display: flex; align-items: stretch; gap: 1rem; margin-top: 1rem; overflow-x: auto; overscroll-behavior-x: contain; padding: .25rem .25rem .5rem; scrollbar-width: thin; scrollbar-color: var(--control) transparent; }
+.model-card { flex: 0 0 min(17rem, 85vw); display: flex; flex-direction: column; padding: 1.125rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow-sm); color: var(--ink); }
 .saved-model-empty { margin: 1.25rem 0 0; color: var(--muted); font-size: .9rem; }
-.model-card { display: flex; flex-direction: column; min-width: 0; padding: 1.125rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow-sm); color: var(--ink); }
 .model-card.is-active { border-color: var(--selection-border); box-shadow: var(--shadow-surface); }
 .model-card-head { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .75rem; }
 .model-card-kind { display: inline-flex; align-items: center; gap: .375rem; align-self: flex-start; color: var(--accent-text); font-size: .75rem; font-weight: 600; }
@@ -85,7 +85,6 @@
   .model-add-actions > button { width: 100%; }
   .model-dialog-actions { flex-direction: column-reverse; }
   .model-dialog-actions > button { width: 100%; }
-  .saved-model-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   .model-switcher, .model-switcher > .icon:last-child { transition: none; }

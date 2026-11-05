@@ -2147,7 +2147,7 @@ function LlmSettings() {
       </div>
       <div id="settings-panel-models" role="tabpanel" aria-labelledby="settings-tab-models" hidden={settingsTab !== "models"}>
       <Panel title={t("Saved models")}>
-        <p className="saved-model-note"><GuideText text="Save a named model setup here, then pick the active model from any section. The default below is the backup choice; a selection on the page wins." /></p>
+        <p className="saved-model-note"><GuideText text="Save model configurations here. Each page remembers its own model choice in this browser. The default is used when a page has no saved choice." /></p>
         {profiles.length === 0
           ? <p className="saved-model-empty">{t("No saved models yet. Add one below.")}</p>
           : <div className="saved-model-grid">
