@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Icon } from "./Icon";
 
 /** Repeat an existing destination after the page-header action scrolls away. */
-export function FloatingAction({ active, href, label, icon }: {
-  active: boolean; href: string; label: string; icon: "ask" | "word-review";
+export function FloatingAction({ active, href, label, icon, compact = false }: {
+  active: boolean; href: string; label: string; icon: "ask" | "word-review"; compact?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -15,9 +15,9 @@ export function FloatingAction({ active, href, label, icon }: {
   }, [active]);
 
   if (!active || !visible) return null;
-  return <div className="floating-action-dock">
-    <a className="primary floating-action" href={href}>
-      <Icon name={icon} /><span>{label}</span><Icon name="arrow" />
+  return <div className={`floating-action-dock${compact ? " floating-action-dock-compact" : ""}`}>
+    <a className={`primary floating-action${compact ? " floating-action-compact" : ""}`} href={href} aria-label={compact ? label : undefined} title={compact ? label : undefined}>
+      <Icon name={icon} />{!compact && <><span>{label}</span><Icon name="arrow" /></>}
     </a>
   </div>;
 }

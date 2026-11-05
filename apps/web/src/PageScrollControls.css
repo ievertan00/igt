@@ -1,0 +1,45 @@
+.page-scroll-controls {
+  position: fixed;
+  right: max(8px, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 8;
+  display: grid;
+  gap: 8px;
+}
+
+/* Reserve a slim rail when the normal page gutter cannot fit the controls.
+   Keep this stable even on short pages so loading content never shifts sideways. */
+.has-scroll-navigation .workspace,
+.has-scroll-navigation .site-footer {
+  width: min(calc(100% - var(--page-gutter) - max(var(--page-gutter), calc(4rem + env(safe-area-inset-right)))), var(--workspace-max));
+  margin-inline-start: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2));
+  margin-inline-end: auto;
+}
+
+.page-scroll-controls .icon-button {
+  width: 48px;
+  height: 48px;
+  color: var(--ink);
+  box-shadow: var(--shadow-floating);
+}
+
+.page-scroll-controls .icon-button[aria-disabled="true"] {
+  color: var(--muted);
+  background: var(--wash);
+  border-color: var(--line);
+  cursor: default;
+}
+
+/* Compact learning actions sit above the scroll controls in the same gutter. */
+.shell:has(.page-scroll-controls) :is(.floating-action-dock-compact, .handbook-notes-dock) {
+  right: max(8px, env(safe-area-inset-right));
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 112px);
+}
+
+.shell:has(.page-scroll-controls) .floating-action-dock:not(.floating-action-dock-compact, .handbook-notes-dock) {
+  right: max(4rem, calc(4rem + env(safe-area-inset-right)));
+}
+
+@media (max-width: 540px) {
+  .shell:has(.page-scroll-controls) .site-footer { padding-bottom: max(5rem, env(safe-area-inset-bottom)); }
+}

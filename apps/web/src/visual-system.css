@@ -935,10 +935,11 @@ p { overflow-wrap: anywhere; }
   .count-options label { padding: 9px; }
 }
 /* Long-list shortcuts reuse existing routes; their dock leaves the final row clear. */
-.floating-action-dock { position: fixed; right: max(var(--page-gutter), calc((100vw - var(--workspace-max)) / 2)); bottom: max(2rem, env(safe-area-inset-bottom)); z-index: 8; max-width: calc(100% - var(--page-gutter) - var(--page-gutter)); display: flex; justify-content: flex-end; pointer-events: none; }
-.vocabulary-library:has(.floating-action-dock), .ask-notes-index:has(.floating-action-dock) { padding-bottom: 5rem; }
-.shell:has(.floating-action-dock) .site-footer { padding-bottom: calc(6.25rem + env(safe-area-inset-bottom)); }
+.floating-action-dock { position: fixed; right: max(var(--page-gutter), calc((100vw - var(--workspace-max)) / 2)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 8; max-width: calc(100% - var(--page-gutter) - var(--page-gutter)); display: flex; justify-content: flex-end; pointer-events: none; }
+.shell:has(.floating-action-dock) .site-footer { padding-bottom: max(5rem, env(safe-area-inset-bottom)); }
 .floating-action { pointer-events: auto; min-height: 52px; max-width: 100%; padding: 0 1.5rem; border-radius: 999px; box-shadow: var(--shadow-floating); animation: fab-enter 250ms var(--ease-out); }
+.floating-action.floating-action-compact { width: 48px; height: 48px; min-height: 48px; padding: 0; }
+.floating-action.floating-action-compact::after { content: none; }
 .floating-action > span { min-width: 0; overflow-wrap: anywhere; }
 .floating-action:hover:not(:disabled) { box-shadow: 0 16px 36px -4px rgb(16 24 39 / 18%); }
 .floating-action:active:not(:disabled) { transform: scale(.97); }

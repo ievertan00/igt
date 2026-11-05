@@ -1,7 +1,10 @@
 type IconName = "eye" | "eye-off" | "globe" | "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
 
 type CoachIconName = "calendar" | "layers" | "download" | "refresh";
-const paths: Record<IconName | CoachIconName, string> = {
+type ScrollIconName = "scroll-top" | "scroll-bottom";
+const paths: Record<IconName | CoachIconName | ScrollIconName, string> = {
+  "scroll-top": "M5 4h14 M12 20V8 M7 13l5-5 5 5",
+  "scroll-bottom": "M5 20h14 M12 4v12 M7 11l5 5 5-5",
   calendar: "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
   layers: "m12 3 10 5-10 5L2 8l10-5z M2 12l10 5 10-5 M2 16l10 5 10-5",
   download: "M12 3v12 M7 10l5 5 5-5 M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5",
@@ -44,7 +47,7 @@ const paths: Record<IconName | CoachIconName, string> = {
   copy: "M9 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
 };
 
-export function Icon({ name, className = "" }: { name: IconName | CoachIconName; className?: string }) {
+export function Icon({ name, className = "" }: { name: IconName | CoachIconName | ScrollIconName; className?: string }) {
   return <svg className={`icon${name === "arrow" ? " icon-arrow" : ""} ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
 }
 

@@ -7,6 +7,9 @@ export const learnerLanguageKey = "clearwrite.learner-language";
 // Only authored interface copy belongs here. Learning content and model output
 // keep their original language, even when they happen to match a UI label.
 export const beginnerCopy: Record<string, string> = {
+  "Page scrolling": "页面滚动",
+  "Scroll to top": "回到顶部",
+  "Scroll to bottom": "滚动到底部",
   "Save model configurations here. Each page remembers its own model choice in this browser. The default is used when a page has no saved choice.": "在这里保存模型配置。各页面会在此浏览器中分别记住所选模型；页面尚未选择时使用默认模型。",
   "Model settings": "模型设置",
   "Model": "模型",

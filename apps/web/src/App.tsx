@@ -11,6 +11,7 @@ import { webApi } from "./api/client";
 import { useDailyReviewSession } from "./review-session";
 import { reviewExampleParts } from "./review-example";
 import { VocabularyLibrary } from "./VocabularyLibrary";
+import { PageScrollControls } from "./PageScrollControls";
 import "./Writing.css";
 import "./Handbook.css";
 import { CorrectionText } from "./CorrectionText";
@@ -2672,6 +2673,7 @@ export function App() {
     };
   }, []);
   const askView = new URLSearchParams(routeHash.split("?")[1]).get("view") === "notes" ? "notes" : "ask";
+  const hasScrollNavigation = route === "word-library" || route === "coach" || route === "handbook" || (route === "ask" && askView === "notes");
   const title =
     route === "ask" && askView === "notes" ? "Saved notes" : route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
   useEffect(() => {
@@ -2693,7 +2695,7 @@ export function App() {
     settings: <LlmSettings />,
   };
   return (
-    <div className={`shell${route === "grammar" ? " writing-shell" : ""}`}>
+    <div className={`shell${route === "grammar" ? " writing-shell" : ""}${hasScrollNavigation ? " has-scroll-navigation" : ""}`}>
       <a className="skip-link" href="#main-content">
         {t("Skip to content")}
       </a>
@@ -2806,6 +2808,7 @@ export function App() {
         {pages[route]}
         <div hidden={route !== "ask"}>{askVisited.current && <Ask active={route === "ask"} view={askView} />}</div>
       </main>
+      {hasScrollNavigation && <PageScrollControls key={`scroll-${routeHash}`} />}
       <SelectionLookup key={routeHash} renderLookup={(text) => <WordLookup initialQuery={text} compact />} />
       <footer className="site-footer">
         <span className="site-footer-motto">A tool for practice. Keep reading, listening, and using English beyond it.</span>
