@@ -11,7 +11,7 @@ fs.mkdirSync(parent, { recursive: true });
 const fixture = fs.mkdtempSync(path.join(parent, "word-web-"));
 const file = path.join(fixture, "Vocabulary.md");
 const calls = [], lookups = [], saves = [];
-const entry = { status: "found", suggestions: "", word: "follow up", pos: "phrasal verb", phonetic: "/ˈfɒləʊ ʌp/", meaning: "To take further action after an earlier event.", zh: "跟进", synonyms: "check back", collocations: "follow up on a request", example: "I will follow up tomorrow.", example2: "Please follow up on the request.", example3: "We followed up after the meeting.", note: "Use on before the subject of your follow-up." };
+const entry = { status: "found", suggestions: "", word: "follow up", pos: "phrasal verb", phonetic: "/ˈfɒləʊ ʌp/", meaning: "To take further action after an earlier event.", zh: "跟进", synonyms: "check back", collocations: "follow up on a request", verbForms: "follow up · followed up · followed up", plural: "", example: "I will follow up tomorrow.", example2: "Please follow up on the request.", example3: "We followed up after the meeting.", note: "Use on before the subject of your follow-up." };
 registerWordRoutes({ getConfig: () => ({ VocabularyPath: file }), getLLMManager: async () => ({ generateWithFallback: async (input, _prompt, options) => {
   calls.push([input, options.taskType]);
   if (options.taskType === "translation") return input === "错误" ? "无法转换" : 'English counterpart: "follow up"';

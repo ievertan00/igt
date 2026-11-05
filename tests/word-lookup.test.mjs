@@ -5,7 +5,7 @@ import path from "node:path";
 import { registerWordRoutes } from "../lib/server/routes/word.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 
-const entry = { status: "found", word: "scrutiny", pos: "noun", phonetic: "/ˈskruːtəni/", meaning: "Careful examination.", zh: "仔细审查", synonyms: "inspection", collocations: "under scrutiny", example: "The plan is under scrutiny.", example2: "Her work faced scrutiny.", example3: "The report deserves scrutiny.", note: "Usually uncountable.", suggestions: "" };
+const entry = { status: "found", word: "scrutiny", pos: "noun", phonetic: "/ˈskruːtəni/", meaning: "Careful examination.", zh: "仔细审查", synonyms: "inspection", collocations: "under scrutiny", verbForms: "", plural: "", example: "The plan is under scrutiny.", example2: "Her work faced scrutiny.", example3: "The report deserves scrutiny.", note: "Usually uncountable.", suggestions: "" };
 let outputs = [];
 let calls = [];
 const parent = path.join(process.cwd(), ".cache");
@@ -66,6 +66,18 @@ test("valid fenced output is accepted without retry", async () => {
   assert.equal(result.status, 200);
   assert.equal(result.body.data.requested, "scrutiny");
   assert.equal(calls.length, 1);
+});
+
+test("verb tense forms and noun plural survive lookup and Markdown saving", async () => {
+  const verb = { ...entry, word: "enhance", pos: "verb", phonetic: "/ɪnˈhɑːns/", meaning: "To improve the quality of something.", zh: "增强", verbForms: "enhance · enhanced · enhanced", plural: "", synonyms: "improve, boost", collocations: "enhance the quality", example: "Good lighting enhances the room.", example2: "This course enhances your skills.", example3: "The update enhanced performance.", note: "Transitive.", suggestions: "" };
+  const result = await lookup([JSON.stringify(verb)]);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.verbForms, "enhance · enhanced · enhanced");
+  assert.equal(result.body.data.plural, "");
+  const noun = { ...entry, word: "leaf", pos: "noun", phonetic: "/liːf/", meaning: "A flat green part of a plant.", zh: "叶子", verbForms: "", plural: "leaves", example: "A leaf fell.", example2: "The tree has many leaves.", example3: "She pressed a leaf.", note: "Irregular plural.", suggestions: "" };
+  const saved = await lookup([JSON.stringify(noun)]);
+  assert.equal(saved.body.data.plural, "leaves");
+  assert.equal(saved.body.data.verbForms, "");
 });
 
 test("lookup retries generic mention-only filler examples and returns meaningful replacements", async () => {
@@ -133,13 +145,15 @@ test("Chinese translation failures preserve provider errors and do not generate 
 });
 
 test("saved vocabulary wins before lookup and after canonicalization", async () => {
-  const content = "# Vocabulary\n\n### scrutiny\n**PoS:** noun · /saved/\n**Meaning:** My saved meaning.\n**中文:** 仔细审查\n**Example:** Saved example.\n**Note:**\n**Memory:** my memory hook\n";
+  const content = "# Vocabulary\n\n### scrutiny\n**PoS:** noun · /saved/\n**Meaning:** My saved meaning.\n**中文:** 仔细审查\n**Verb forms:**\n**Plural:** scrutinies\n**Example:** Saved example.\n**Note:**\n**Memory:** my memory hook\n";
   fs.writeFileSync(vocabularyFile, content);
   try {
     const direct = await lookup([], "SCRUTINY");
     assert.equal(direct.body.data.meaning, "My saved meaning.");
     assert.equal(direct.body.data.phonetic, "/saved/");
     assert.equal(direct.body.data.note, "", "an empty field must not consume the next Markdown line");
+    assert.equal(direct.body.data.verbForms, "", "an empty verb forms field must parse as empty");
+    assert.equal(direct.body.data.plural, "scrutinies");
     assert.equal(direct.body.data.existing, true);
     assert.equal(calls.length, 0);
     const chinese = await lookup(["scrutiny"], "仔细审查");

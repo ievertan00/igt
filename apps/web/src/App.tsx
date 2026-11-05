@@ -455,7 +455,8 @@ function WordReview() {
   const feedbackLabel = feedbackState === "correct" ? "Correct!" : feedbackState === "incorrect" ? "Not quite" : "Answer revealed";
   const exploreExamples = examples.filter(Boolean);
   const hasMoreDetails = Boolean(
-    exploreExamples.length > 0 || details?.synonyms || details?.collocations || details?.note || card?.note,
+    exploreExamples.length > 0 || details?.synonyms || details?.collocations || details?.note || card?.note
+      || details?.verbForms || details?.plural,
   );
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -776,6 +777,8 @@ function WordReview() {
                       )}
                       <dl>
                         {[
+                          ["Verb forms", details?.verbForms],
+                          ["Plural", details?.plural],
                           ["Synonyms", details?.synonyms],
                           ["Collocations", details?.collocations],
                           ["Usage note", details?.note || card.note],
@@ -988,6 +991,32 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
             <p>{entry.meaning}</p>
           </div>
         </section>
+      )}
+      {(entry.verbForms || entry.plural) && (
+        <div className="word-detail-pair">
+          {entry.verbForms && (
+            <section className="word-detail-block word-verb-forms">
+              <div className="word-detail-icon">
+                <Icon name="grammar" />
+              </div>
+              <div>
+                <h4>Verb forms</h4>
+                <p>{entry.verbForms}</p>
+              </div>
+            </section>
+          )}
+          {entry.plural && (
+            <section className="word-detail-block word-plural">
+              <div className="word-detail-icon">
+                <Icon name="word-library" />
+              </div>
+              <div>
+                <h4>Plural</h4>
+                <p>{entry.plural}</p>
+              </div>
+            </section>
+          )}
+        </div>
       )}
       <div className="word-detail-pair">
         {entry.zh && (

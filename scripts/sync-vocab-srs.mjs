@@ -43,7 +43,7 @@ function parseEntries(content) {
       word,
       key: normalizeWord(word),
       pos: field("PoS").split(" · ")[0],
-      vocabDetails: { phonetic: field("PoS").split(" · ").slice(1).join(" · "), synonyms: field("Synonyms"), collocations: field("Collocations"), examples, note: field("Note") },
+      vocabDetails: { phonetic: field("PoS").split(" · ").slice(1).join(" · "), synonyms: field("Synonyms"), collocations: field("Collocations"), verbForms: field("Verb forms"), plural: field("Plural"), examples, note: field("Note") },
       zh: field("中文"),
       meaning: field("Meaning"),
       example: field("Example 1") || field("Example"),

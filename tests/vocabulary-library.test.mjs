@@ -26,6 +26,8 @@ const entry = (word, date = "2026-10-20") => `### ${word}
 **中文:** 保存的词汇
 **Synonyms:**
 **Collocations:** useful expression
+**Verb forms:** go · went · gone
+**Plural:** saved expressions
 **Example 1:** First example for ${word}.
 **Example 2:** Second example for ${word}.
 **Example 3:** Third example for ${word}.
@@ -46,6 +48,8 @@ test("library reads every Markdown entry without depending on the SRS deck", t =
   assert.equal(result.words[0].example3, "Third example for apple.");
   assert.equal(result.words[0].memory, "A useful memory cue.");
   assert.equal(result.words[0].phonetic, "/test/");
+  assert.equal(result.words[0].verbForms, "go · went · gone");
+  assert.equal(result.words[0].plural, "saved expressions");
   assert.equal(fs.readFileSync(file, "utf8"), input, "browsing never rewrites the vocabulary file");
   assert.equal(JSON.stringify(result).includes(file), false);
 });
@@ -55,6 +59,7 @@ test("library searches Chinese, examples and notes, sorts and paginates consiste
   assert.deepEqual(listSavedVocabulary({ config, sort: "newest" }).words.map(word => word.word), ["apple", "zebra", "banana"]);
   assert.equal(listSavedVocabulary({ config, search: "保存" }).total, 3);
   assert.equal(listSavedVocabulary({ config, search: "SECOND EXAMPLE FOR APPLE" }).total, 1);
+  assert.equal(listSavedVocabulary({ config, search: "went" }).total, 3, "verb forms join the search fields");
   assert.equal(listSavedVocabulary({ config, search: "memory cue" }).total, 3);
   const page = listSavedVocabulary({ config, limit: 1, offset: 1 });
   assert.equal(page.words[0].word, "banana"); assert.equal(page.hasMore, true);

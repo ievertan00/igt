@@ -7,7 +7,7 @@ import "./VocabularyLibrary.css";
 
 export type SavedVocabularyEntry = {
   id: string; word: string; pos: string; phonetic: string; meaning: string; zh: string;
-  synonyms: string; collocations: string; example: string; example2: string; example3: string;
+  synonyms: string; collocations: string; verbForms?: string; plural?: string; example: string; example2: string; example3: string;
   note: string; memory: string; added: string | null;
   srs?: { id: number; due_date: string | null; total_reviews: number; last_reviewed: string | null; interval_days: number } | null;
   learningStatus?: string; recordedReviews?: number;
