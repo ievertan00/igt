@@ -6,6 +6,7 @@ import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import { GuideText, useGuideCopy, type LearnerLanguage } from "./learner-language";
 import "./Ask.css";
+import { ModelSwitcher } from "./model-settings";
 
 type Turn = { question: string; answer: string; title?: string; related?: string[]; tags?: string[]; category?: string; language?: LearnerLanguage };
 type Note = { id: string; modifiedAt: string; bytes: number; content: string; title?: string; tags?: string[]; category?: string };
@@ -331,6 +332,7 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
             onKeyDown={(event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }}
             placeholder={hasConversation ? t("Ask a follow-up. Add an example or tell us what is still unclear…") : t("Type your question here. Add a sentence or an example for context…")} />
           <div className="ask-composer-actions">
+            <ModelSwitcher page="ask" disabled={busy} id={active && view === "ask" ? "workspace-model" : "ask-hidden-model"} />
             <label className="ask-language-control" htmlFor="ask-answer-language">
               <GuideText text="Answer language" />
               <select id="ask-answer-language" aria-describedby="ask-language-hint" title={t("Applies to your next answer. English examples stay in English.")} value={answerLanguage} onChange={event => setAnswerOverride(event.target.value as LearnerLanguage)}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { webApi, type CoachDetail, type CoachPatterns, type CoachReport, type CoachReportSummary, type LearningOverview } from "./api/client";
+import { webApi, type CoachReport, type CoachReportSummary, type LearningOverview } from "./api/client";
 import { Heading, Panel, State } from "./Page";
 import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
@@ -441,7 +441,6 @@ export function Coach() {
   const [report, setReport] = useState<CoachReport>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [patterns, setPatterns] = useState(false);
   const [savedReports, setSavedReports] = useState<CoachReportSummary[]>([]);
   const [historyError, setHistoryError] = useState("");
   const sourceLabels = new Map(report?.evidence.map((item, index) => [item.entryId, `S${index + 1}`]));
@@ -477,18 +476,18 @@ export function Coach() {
   }
   function download() {
     if (!report) return;
-    const text = `# Learning report\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved checks; ${report.evidence.length} sampled records.\n\n${reportMarkdown}\n\n## Source records\n\n${report.evidence.filter(e => report.evidenceIds.includes(e.entryId)).map(e => `### ${sourceLabels.get(e.entryId)} · ${e.timestamp}\n\nOriginal: ${e.original}\n\nSaved correction (unverified): ${e.correction}`).join("\n\n")}`;
+    const text = `# English proficiency diagnostic report\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved records; ${report.evidence.length} records supplied for analysis.\n\n${reportMarkdown}\n\n## Source records\n\n${report.evidence.filter(e => report.evidenceIds.includes(e.entryId)).map(e => `### ${sourceLabels.get(e.entryId)} · ${e.timestamp}\n\nSource: ${e.source === "practice" ? "02_Practice_Log" : "Grammar"}\n\nOriginal: ${e.original}\n\n${e.practice ? `Prompt: ${e.practice.prompt}\n\nHints used: ${e.practice.hintsUsed ?? "Unknown"}\n\nReference answer (unverified): ${e.practice.referenceAnswer}\n\nFeedback (unverified): ${e.practice.feedback}` : `Saved correction (unverified): ${e.correction}${e.refine ? `\n\nSaved refinement (unverified): ${e.refine}` : ""}`}`).join("\n\n")}`;
     const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
-    const link = document.createElement("a"); link.href = url; link.download = "learning-report.md"; link.click();
+    const link = document.createElement("a"); link.href = url; link.download = "english-proficiency-report.md"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <div className="coach-page">
-    <Heading eyebrow="COACH" title="Your learning report" detail="Understand the patterns in your writing, review the evidence, and choose what to practise next." />
+    <Heading eyebrow="COACH" title="Your English proficiency report" detail="Understand your strengths, recurring language patterns, and the knowledge behind them in one evidence-based report." />
     <div className="handbook-filters">
       <WindowSelect days={days} disabled={busy} onChange={days => go("coach", { days })} />
       <label>Report language <select value={language} disabled={busy} onChange={e => setLanguage(e.target.value)}><option value="zh-CN">中文</option><option value="en">English</option></select></label>
       <ModelSwitcher role="pro" disabled={busy} />
-      <button className="primary" disabled={busy} onClick={() => void generate()}>{busy ? "Generating report…" : report ? "Regenerate report" : "Generate learning report"}</button>
+      <button className="primary" disabled={busy} onClick={() => void generate()}>{busy ? "Generating report…" : report ? "Regenerate report" : "Generate diagnostic report"}</button>
       {report && <button className="secondary" onClick={download}>Download Markdown</button>}
     </div>
     {error && <p role="alert">{error}</p>}
@@ -496,388 +495,26 @@ export function Coach() {
       <button className="secondary" disabled={busy} onClick={() => void loadSavedReports()}>Refresh saved reports</button>
       {historyError && <p role="alert">{historyError}</p>}
       {!historyError && !savedReports.filter(item => item.days === days && item.language === language).length && <p>No saved reports for this language and time window yet.</p>}
-      <ul>{savedReports.filter(item => item.days === days && item.language === language).map(item => <li key={item.savedId}><button className="secondary" disabled={busy} onClick={() => void openSaved(item.savedId)}>{new Date(item.generatedAt).toLocaleString()} · {item.totalChecks} checks</button></li>)}</ul>
+      <ul>{savedReports.filter(item => item.days === days && item.language === language).map(item => <li key={item.savedId}><button className="secondary" disabled={busy} onClick={() => void openSaved(item.savedId)}>{new Date(item.generatedAt).toLocaleString()} · {item.totalChecks} records</button></li>)}</ul>
     </details>
     {busy && <p role="status">Reviewing saved sentences and feedback. This may take a few minutes.</p>}
-    {!report && !busy && <State title="A report grounded in your saved Grammar checks" detail="Generate an analysis of recurring mechanisms, possible causes, feedback quality and a suggested study sequence. Saved corrections are reviewed as evidence, not treated as standard answers." />}
-    {report && <Panel title="Learning report" className="coach-report">
+    {!report && !busy && <State title="A report grounded in your Grammar and Practice records" detail="Review your proficiency, individual error patterns, underlying knowledge gaps and personalized improvement directions using saved Grammar checks and 02_Practice_Log. Only abilities supported by your writing are assessed; AI corrections and assisted answers do not establish mastery." />}
+    {report && <Panel title="English proficiency diagnostic report" className="coach-report">
       {report.savedPath && <p className="handbook-evidence">Saved locally: {report.savedPath}</p>}
       {report.saveError && <p role="alert">{report.saveError}</p>}
-      <p className="handbook-evidence">{report.totalChecks} saved Grammar checks · {report.evidence.length} records supplied to the model · {report.sampled ? "Chronological sample" : "All checks in this window"} · {report.duplicateInputs} repeated inputs · {report.cached ? "Cached report" : "Generated"} {new Date(report.generatedAt).toLocaleString()}</p>
+      <p className="handbook-evidence">{report.sourceCounts ? `${report.sourceCounts.grammar} Grammar checks · ${report.sourceCounts.practice} Practice records` : `${report.totalChecks} saved Grammar checks`} · {report.evidence.length} records supplied to the model · {report.sampled ? "Chronological sample" : "All records in this window"} · {report.duplicateInputs} repeated inputs · {report.cached ? "Cached report" : "Generated"} {new Date(report.generatedAt).toLocaleString()}</p>
+      {report.sourceStatus && report.sourceStatus.practice !== "available" && <p className="handbook-evidence">Practice log: {report.sourceStatus.practice}. Practice evidence was not available for this report.</p>}
+      {report.sourceStatus?.grammar === "unavailable" && <p className="handbook-evidence">Grammar records could not be read. This report uses available Practice evidence.</p>}
       <p className="handbook-evidence">{report.coverage.unclassified} records with unknown sources and {report.coverage.excludedOtherSources} full-text records excluded; {report.coverage.undated} records have no usable date. Suggestions and possible causes need validation through practice.</p>
       <Markdown source={reportMarkdown} />
       {report.truncated && <p className="handbook-evidence">Long records and feedback were shortened for analysis. Open the saved checks to read the full records.</p>}
-      <details><summary>Source records cited in this report</summary>{report.evidence.filter(e => report.evidenceIds.includes(e.entryId)).map(e => <section key={e.entryId}><h3>{sourceLabels.get(e.entryId)} · {e.timestamp}</h3><p>{e.original}</p><p>Saved correction (unverified): {e.correction || "None"}</p><a href={`#handbook?entry=${encodeURIComponent(e.entryId)}&days=${days}`}>Open saved check</a></section>)}</details>
+      <details><summary>Source records cited in this report</summary>{report.evidence.filter(e => report.evidenceIds.includes(e.entryId)).map(e => <section key={e.entryId}>
+        <h3>{sourceLabels.get(e.entryId)} · {e.timestamp}</h3><p>Source: {e.source === "practice" ? "02_Practice_Log" : "Grammar"}</p><p>{e.original}</p>
+        {e.practice ? <><p>Prompt: {e.practice.prompt}</p><p>Hints used: {e.practice.hintsUsed ?? "Unknown"}</p><p>Reference answer (unverified): {e.practice.referenceAnswer}</p><p>Feedback (unverified): {e.practice.feedback}</p></> : <>
+          <p>Saved correction (unverified): {e.correction || "None"}</p>{e.refine && <p>Saved refinement (unverified): {e.refine}</p>}
+          <a href={`#handbook?entry=${encodeURIComponent(e.entryId)}&days=${days}`}>Open saved check</a>
+        </>}
+      </section>)}</details>
     </Panel>}
-    <button className="secondary" aria-expanded={patterns} onClick={() => setPatterns(!patterns)}>{patterns ? "Hide pattern explorer" : "Explore individual patterns"}</button>
-    {patterns && <CoachPatternsView />}
   </div>;
-}
-
-function CoachPatternsView() {
-  const { t } = useGuideCopy();
-  const days = windowDays(90),
-    selected = params().get("errorType") || "";
-  const [data, setData] = useState<CoachPatterns>();
-  const [detail, setDetail] = useState<CoachDetail>();
-  const [busy, setBusy] = useState(true),
-    [explaining, setExplaining] = useState(false);
-  const [error, setError] = useState(""),
-    [detailError, setDetailError] = useState("");
-  const listRequest = useRef(0),
-    detailRequest = useRef(0);
-  async function load() {
-    const id = ++listRequest.current;
-    setBusy(true);
-    setError("");
-    try {
-      const result = await webApi.getCoach(days);
-      if (id === listRequest.current) setData(result);
-    } catch {
-      if (id === listRequest.current)
-        setError("Your saved Grammar checks could not be analysed. Please try again.");
-    } finally {
-      if (id === listRequest.current) setBusy(false);
-    }
-  }
-  const pattern =
-    data?.days === days ? data.patterns.find((item) => item.errorType === selected) : undefined;
-  async function explain(refresh = false) {
-    if (!pattern) return;
-    const id = ++detailRequest.current;
-    setExplaining(true);
-    setDetailError("");
-    try {
-      const result = await webApi.explainCoach(selected, days, pattern.version, refresh);
-      if (id === detailRequest.current) setDetail(result);
-    } catch (error) {
-      if (id === detailRequest.current)
-        setDetailError(
-          error instanceof Error ? error.message : "The explanation could not be generated.",
-        );
-    } finally {
-      if (id === detailRequest.current) setExplaining(false);
-    }
-  }
-  useEffect(() => {
-    void load();
-    return () => {
-      listRequest.current++;
-    };
-  }, [days]);
-  useEffect(() => {
-    setDetail(undefined);
-    setDetailError("");
-    setExplaining(false);
-    if (pattern) void explain();
-    return () => {
-      detailRequest.current++;
-    };
-  }, [days, selected, pattern?.version]);
-  return (
-    <div className="coach-page">
-      <div className="coach-header">
-        <Heading
-          eyebrow="COACH"
-          title="Understand your recurring mistakes."
-          detail={t(
-            "Find patterns in your saved Grammar checks, explore possible causes, and learn the grammar principles behind the corrections.",
-          )}
-        />
-        <button className="secondary" disabled={busy || explaining} onClick={() => void load()}>
-          {busy ? t("Loading…") : t("Refresh patterns")}
-        </button>
-      </div>
-      <div className="handbook-filters">
-        <WindowSelect days={days} disabled={busy} onChange={(days) => go("coach", { days })} />
-      </div>
-      {error && (
-        <div role="alert">
-          <State title={t("Coach is unavailable")} detail={error} />
-          <button onClick={() => void load()}>{t("Try again")}</button>
-        </div>
-      )}
-      <div aria-busy={busy}>
-        {busy && <p role="status">{t("Reading saved checks…")}</p>}
-        {data && (
-          <>
-            <p className="handbook-evidence">
-              {t(
-                "Based on {checks} saved Grammar check(s) {window}. A recurring pattern needs at least two distinct checks.",
-                {
-                  checks: data.checks,
-                  window: data.days
-                    ? t("in the last {days} days", { days: data.days })
-                    : t("across all history"),
-                },
-              )}
-            </p>
-            {data.coverage.unclassified > 0 && (
-              <p className="handbook-evidence">
-                {t(
-                  "{count} historical record(s) have no identified source and are excluded. Your original records are preserved.",
-                  { count: data.coverage.unclassified },
-                )}
-              </p>
-            )}
-            {data.patterns.length ? (
-              <Panel title={t("Recurring mistakes")}>
-                <div className="coach-patterns">
-                  {data.patterns.map((item) => (
-                    <button
-                      key={item.errorType}
-                      aria-expanded={selected === item.errorType}
-                      aria-controls="coach-explanation"
-                      disabled={busy}
-                      onClick={() =>
-                        go("coach", {
-                          days,
-                          errorType: selected === item.errorType ? "" : item.errorType,
-                        })
-                      }
-                    >
-                      <div className="coach-pattern-main">
-                        <span
-                          className={`coach-priority-badge coach-priority-${item.priorityArea?.toLowerCase().replace(/\s+/g, "-") || "other"}`}
-                        >
-                          {item.priorityArea || "Other"}
-                        </span>
-                        <strong>{item.errorType}</strong>
-                      </div>
-                      <span>
-                        {t("{checks} affected checks", { checks: item.checks })} ·{" "}
-                        {t("{observations} observations", { observations: item.observations })}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </Panel>
-            ) : (
-              <Panel title={t("No recurring pattern yet.")}>
-                <p>
-                  {t(
-                    "Keep saving Grammar checks. A single correction does not establish a recurring difficulty.",
-                  )}
-                </p>
-                <a href="#handbook">{t("Browse saved checks")}</a>
-              </Panel>
-            )}
-            {selected && !pattern && !busy && (
-              <State
-                title={t("This pattern is not available in the selected window.")}
-                detail={t("Choose a listed pattern or a longer time window.")}
-              />
-            )}
-            {selected && pattern && (
-              <section
-                id="coach-explanation"
-                className="panel"
-                aria-busy={explaining}
-                aria-label={`${selected} explanation`}
-              >
-                <div className="panel-heading">
-                  <h2>{selected}</h2>
-                </div>
-                {explaining && (
-                  <p role="status">{t("Generating an explanation from your saved checks…")}</p>
-                )}
-                {detailError && (
-                  <div role="alert">
-                    <p>{detailError}</p>
-                    <button disabled={explaining} onClick={() => void explain()}>
-                      {t("Try explanation again")}
-                    </button>
-                  </div>
-                )}
-                {detail && detail.errorType === selected && detail.days === days && (
-                  <>
-                    <Markdown source={detail.explanation.observedPattern} />
-                    {detail.explanation.keyStructure && (
-                      <div className="coach-key-structure">
-                        <span className="coach-key-label">{t("Key structure")}</span>
-                        <code>{detail.explanation.keyStructure}</code>
-                      </div>
-                    )}
-                    <section className="learning-explanation">
-                      <h3>{t("Possible causes")}</h3>
-                      <p className="handbook-evidence">
-                        {t(
-                          "These are hypotheses based on your records, not confirmed psychological causes.",
-                        )}
-                      </p>
-                      {detail.explanation.possibleCauses.map((cause, index) => (
-                        <div key={index}>
-                          <Markdown source={cause.hypothesis} />
-                          <p className="handbook-evidence">
-                            {t("Supporting checks:")}{" "}
-                            {cause.evidenceIds.map((id) => (
-                              <a key={id} href={`#handbook?days=0&entry=${encodeURIComponent(id)}`}>
-                                {id}{" "}
-                              </a>
-                            ))}
-                          </p>
-                        </div>
-                      ))}
-                    </section>
-                    <section className="learning-explanation">
-                      <h3>{t("Grammar principle")}</h3>
-                      <Markdown source={detail.explanation.principle} />
-                      <h4>{t("Context and exceptions")}</h4>
-                      <Markdown source={detail.explanation.qualifications} />
-                    </section>
-                    <section className="learning-explanation">
-                      <h3>{t("From your saved checks")}</h3>
-                      {detail.explanation.examples.map((example, index) => {
-                        const evidence = detail.evidence.find(
-                          (item) => item.entryId === example.entryId,
-                        );
-                        return (
-                          <article key={index} className="handbook-example">
-                            <p lang="en">
-                              {t("Original:")} {evidence?.original}
-                            </p>
-                            <p lang="en">
-                              {t("Correction:")} {evidence?.correction || t("No correction saved")}
-                            </p>
-                            <Markdown source={example.explanation} />
-                            <a
-                              href={`#handbook?days=0&entry=${encodeURIComponent(example.entryId)}`}
-                            >
-                              {t("Open saved check")}
-                            </a>
-                          </article>
-                        );
-                      })}
-                    </section>
-                    {detail.explanation.relatedStructures?.length > 0 && (
-                      <section className="learning-explanation">
-                        <h3>{t("Practise together")}</h3>
-                        <Markdown
-                          source={t(
-                            "These structures are worth practising alongside this one — learning to distinguish them builds more durable knowledge.",
-                          )}
-                        />
-                        <ul className="coach-related-list">
-                          {detail.explanation.relatedStructures.map((s, i) => (
-                            <li key={i}>{s}</li>
-                          ))}
-                        </ul>
-                      </section>
-                    )}
-                    {detail.explanation.drills && (
-                      <section className="coach-drills-section">
-                        <h3>{t("Practice drills")}</h3>
-                        <Markdown
-                          source={t(
-                            "Three-phase practice: self-correct → transfer to new context → recall tomorrow. Work through each phase without looking ahead.",
-                          )}
-                        />
-                        {detail.explanation.drills.phase1_selfCorrect?.length > 0 && (
-                          <details className="coach-drill">
-                            <summary>
-                              <span className="coach-drill-phase">{t("Phase 1")}</span>{" "}
-                              {t("Self-correct ({count} items)", {
-                                count: detail.explanation.drills.phase1_selfCorrect.length,
-                              })}
-                            </summary>
-                            <div className="coach-drill-body">
-                              {detail.explanation.drills.phase1_selfCorrect.map((item, i) => (
-                                <div key={i} className="coach-drill-item">
-                                  <Markdown source={item.incorrect} />
-                                  <details>
-                                    <summary>{t("Reveal hint")}</summary>
-                                    <Markdown source={item.hint} />
-                                  </details>
-                                  <details>
-                                    <summary>{t("Reveal answer")}</summary>
-                                    <Markdown source={item.answer} />
-                                  </details>
-                                </div>
-                              ))}
-                            </div>
-                          </details>
-                        )}
-                        {detail.explanation.drills.phase2_transfer?.length > 0 && (
-                          <details className="coach-drill">
-                            <summary>
-                              <span className="coach-drill-phase">{t("Phase 2")}</span>{" "}
-                              {t("New context ({count} items)", {
-                                count: detail.explanation.drills.phase2_transfer.length,
-                              })}
-                            </summary>
-                            <div className="coach-drill-body">
-                              {detail.explanation.drills.phase2_transfer.map((item, i) => (
-                                <div key={i} className="coach-drill-item">
-                                  <Markdown source={item.prompt} />
-                                  <details>
-                                    <summary>{t("Structure hint")}</summary>
-                                    <Markdown source={item.structureHint} />
-                                  </details>
-                                  <details>
-                                    <summary>{t("Reveal answer")}</summary>
-                                    <Markdown source={item.answer} />
-                                  </details>
-                                </div>
-                              ))}
-                            </div>
-                          </details>
-                        )}
-                        {detail.explanation.drills.phase3_delayedRecall?.length > 0 && (
-                          <details className="coach-drill">
-                            <summary>
-                              <span className="coach-drill-phase">{t("Phase 3")}</span>{" "}
-                              {t("Recall tomorrow ({count} intents)", {
-                                count: detail.explanation.drills.phase3_delayedRecall.length,
-                              })}
-                            </summary>
-                            <div className="coach-drill-body">
-                              {detail.explanation.drills.phase3_delayedRecall.map((item, i) => (
-                                <div key={i} className="coach-drill-item">
-                                  <Markdown source={item.intent} />
-                                  <Markdown source={`Use: ${item.structureUsed}`} />
-                                </div>
-                              ))}
-                            </div>
-                            <Markdown
-                              source={t(
-                                "No answers — try these tomorrow without looking back at today's work.",
-                              )}
-                            />
-                          </details>
-                        )}
-                      </section>
-                    )}
-                    {detail.sampled && (
-                      <p className="handbook-evidence">
-                        {t("This explanation uses a sample of the pattern's saved checks.")}
-                      </p>
-                    )}
-                    <p className="handbook-evidence">
-                      {t("Generated explanation")} ·{" "}
-                      {detail.cached
-                        ? t("Reused from matching evidence")
-                        : t("Generated on request")}
-                      . {t("Saved feedback is unchanged.")}
-                    </p>
-                    <button
-                      className="secondary"
-                      disabled={explaining}
-                      onClick={() => void explain(true)}
-                    >
-                      {t("Regenerate explanation")}
-                    </button>
-                  </>
-                )}
-              </section>
-            )}
-            <p className="handbook-evidence">
-              {t(
-                "Mistake frequency and generated explanations do not establish durable mastery or overall English ability.",
-              )}
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
 }

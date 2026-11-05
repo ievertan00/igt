@@ -22,6 +22,11 @@
 .ask-composer textarea:focus { outline: none; }
 .ask-composer-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1rem; margin-top: 1rem; padding-top: .875rem; border-top: 1px solid var(--line); }
 .ask-submit-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; margin-left: auto; }
+.ask-composer-actions > .model-control { flex: 0 1 auto; min-width: 0; }
+@media (max-width: 600px) {
+  .ask-composer-actions > .model-control { flex-basis: 100%; }
+  .ask-composer-actions > .model-control .model-switcher { max-width: 100%; }
+}
 .ask-submit-actions .primary { min-width: 6.5rem; }
 .ask-shortcut { color: var(--muted); font-size: .75rem; }
 .ask-back-question { margin-top: .5rem; }

@@ -64,31 +64,13 @@ try {
     } catch { if (!request.isInterceptResolutionHandled()) await request.abort(); }
   });
   const ready = async () => { await page.waitForNetworkIdle({ idleTime: 120 }); await page.waitForFunction(() => ![...document.querySelectorAll('[aria-busy]')].some(node => node.getAttribute("aria-busy") === "true")); };
-  const choose = async type => { await page.evaluate(type => [...document.querySelectorAll(".coach-patterns button")].find(button => button.textContent.includes(type)).click(), type); };
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(`${base}/#coach?days=0`); await ready();
-  assert.equal(calls, 0); assert.equal((await page.$$(".coach-patterns button")).length, 2);
-  await choose("Articles"); await ready(); assert.equal(calls, 1);
-  assert.match(await page.$eval("#coach-explanation", node => node.textContent), /Possible causes.*Grammar principle/s);
-  await page.click('#coach-explanation .handbook-example a'); await ready();
-  assert.equal((await page.$$(".handbook-example")).length, 1);
-  assert.match(page.url(), /entry=saved-7/);
-  await page.goBack(); await ready(); assert.equal(calls, 1);
-  failGeneration = true;
-  await page.click("#coach-explanation button.secondary"); await ready();
-  assert.notEqual(await page.$('#coach-explanation [role="alert"]'), null);
-  failGeneration = false;
-  await page.click('#coach-explanation [role="alert"] button'); await ready();
-  assert.equal(await page.$('#coach-explanation [role="alert"]'), null);
-  clearGrammarCoachCache(); holdType = "Articles";
-  await page.click("#coach-explanation button.secondary");
-  await page.waitForFunction(() => document.querySelector('#coach-explanation [role="status"]'));
-  // Change the selected pattern while the old request is still running.
-  await choose("Tense");
-  await page.waitForFunction(() => document.querySelector("#coach-explanation")?.textContent.includes("Tense grammar principle"));
-  release(); holdType = ""; await ready();
-  assert.doesNotMatch(await page.$eval("#coach-explanation", node => node.textContent), /Articles grammar principle/);
-  const output = path.join(process.cwd(), "artifacts", "my-learning-qa"); fs.mkdirSync(output, { recursive: true });
+  assert.equal(calls, 0);
+  assert.equal(await page.$(".coach-patterns"), null);
+  assert.match(await page.$eval(".coach-page", node => node.textContent), /Generate diagnostic report/);
+  // Full report generation, citations and persistence are covered by coach-report-web-smoke.mjs.
+  const output = path.join(process.cwd(), ".tmp", "my-learning-qa"); fs.mkdirSync(output, { recursive: true });
   for (const route of ["dashboard", "coach"]) {
     await page.goto(`${base}/#${route}?days=0${route === "coach" ? "&errorType=Tense" : ""}`); await ready();
     for (const width of [1440, 768, 390, 320]) {
@@ -139,5 +121,5 @@ try {
   assert.equal(await page.$eval(".learning-timeline details p", node => node.textContent), events[0].title);
   await page.goto(`${base}/#grammar`); await page.waitForSelector("textarea");
   assert.deepEqual(errors, []);
-  console.log("My Learning: real route contracts, on-demand explanation/cache, stale evidence, retry, stale selection, evidence links, mixed timeline, pagination, back navigation and responsive layouts passed.");
+  console.log("My Learning: real route contracts, report-only Coach entry, pattern API compatibility, mixed timeline, pagination, back navigation and responsive layouts passed.");
 } finally { release?.(); await browser?.close(); await server?.close(); await new Promise(resolve => api.close(resolve)); }

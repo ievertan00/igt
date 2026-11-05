@@ -677,6 +677,10 @@ p { overflow-wrap: anywhere; }
 .overview-coverage p { font-size: 12px; color: var(--muted); margin: 0; max-width: 72ch; line-height: 1.6; }
 .overview-notice { padding: 12px 16px; background: var(--warning-bg); border: 1px solid var(--warning); border-radius: var(--radius-control); color: var(--warning-text); font-size: 14px; margin-bottom: 24px; }
 .coach-patterns { display: grid; gap: .75rem; }
+.coach-report { min-width: 0; }
+.coach-report .md { min-width: 0; }
+.coach-report .md table { display: block; max-width: 100%; overflow-x: auto; }
+.coach-report .md th, .coach-report .md td { min-width: 8rem; overflow-wrap: anywhere; }
 .coach-patterns button { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; text-align: left; white-space: normal; overflow-wrap: anywhere; }
 .coach-patterns button span { font-size: .875rem; color: var(--muted); }
 .coach-patterns button[aria-expanded="true"] { background: var(--selection-surface); border-color: var(--selection-border); }

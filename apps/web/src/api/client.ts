@@ -1,8 +1,13 @@
+import { requestModelProfile } from "./model-selection";
+
 export type RequestJsonInit = RequestInit & { timeoutMs?: number };
 export type CoachReport = {
   days: number; language: string; totalChecks: number; duplicateInputs: number; sampled: boolean; truncated: boolean;
   coverage: GrammarHistory["coverage"]; markdown: string; evidenceIds: string[]; generatedAt: string; cached: boolean;
-  evidence: Array<{ entryId: string; timestamp: string; original: string; correction: string }>;
+  sourceCounts?: { grammar: number; practice: number };
+  sourceStatus?: { grammar: string; practice: string };
+  evidence: Array<{ entryId: string; timestamp: string; original: string; correction: string; refine?: string; source?: "grammar" | "practice";
+    practice?: { mode: string; context: string; prompt: string; referenceAnswer: string; feedback: string; hintsUsed: number | null } }>;
   savedId?: string; savedPath?: string; saveError?: string;
 };
 export type CoachReportSummary = Pick<CoachReport, "generatedAt" | "language" | "days" | "totalChecks"> & { savedId: string };
@@ -55,9 +60,10 @@ export async function requestJson<T>(url: string, init: RequestJsonInit = {}): P
     controller.abort();
   }, timeoutMs) : undefined;
   try {
+    const profile = url.startsWith("/settings/") ? undefined : requestModelProfile();
     const response = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...(requestInit.headers || {}) },
       ...requestInit,
+      headers: { "Content-Type": "application/json", ...(profile ? { "X-IGT-Model-Profile": profile } : {}), ...(requestInit.headers || {}) },
       signal: controller.signal,
     });
     const payload = await response.json().catch(() => ({}));
@@ -109,7 +115,8 @@ export const webApi = {
   getCoach: (days = 90) => requestJson<CoachPatterns>(`/coach?days=${days}`),
   listCoachReports: () => requestJson<CoachReportSummary[]>("/coach/reports"),
   readCoachReport: (savedId: string) => requestJson<CoachReport>(`/coach/reports/${encodeURIComponent(savedId)}`),
-  generateCoachReport: (days: number, language: string, refresh = false) => requestJson<CoachReport>("/coach/report", { method: "POST", body: JSON.stringify({ days, language, refresh }), timeoutMs: 180_000 }),
+  // Coach owns the configurable generation deadline, including its validation retry.
+  generateCoachReport: (days: number, language: string, refresh = false) => requestJson<CoachReport>("/coach/report", { method: "POST", body: JSON.stringify({ days, language, refresh }), timeoutMs: 0 }),
   explainCoach: (errorType: string, days: number, version: string, refresh = false) => requestJson<CoachDetail>("/coach/explain", { method: "POST", body: JSON.stringify({ errorType, days, version, refresh }), timeoutMs: 180_000 }),
   // Dictionary generation can outlast the generic 30-second deadline,
   // especially when the provider retries or a local model is loading.
