@@ -21,6 +21,7 @@ docs/
 archive/
 tests/*
 !tests/coach-report.test.mjs
+!tests/coach-sources.test.mjs
 !tests/learning-workflows.test.mjs
 !tests/practice-question-bank.test.mjs
 !tests/practice-route.test.mjs
