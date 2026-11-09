@@ -2,7 +2,13 @@ type IconName = "eye" | "eye-off" | "globe" | "dashboard" | "grammar" | "transla
 
 type CoachIconName = "calendar" | "layers" | "download" | "refresh";
 type ScrollIconName = "scroll-top" | "scroll-bottom";
-const paths: Record<IconName | CoachIconName | ScrollIconName, string> = {
+type FileIconName = "folder" | "folder-open" | "file-tree";
+type BrandIconName = "wand";
+const paths: Record<IconName | CoachIconName | ScrollIconName | FileIconName | BrandIconName, string> = {
+  wand: "m5 16 10-10a2 2 0 0 1 3 3L8 19a2 2 0 0 1-3-3z M12 9l3 3 M6 5v4 M4 7h4 M18 15v4 M16 17h4 M20 3v2 M19 4h2",
+  folder: "M3 6a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+  "folder-open": "M3 18V6a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v2 M3 18l3-7h16l-3 8H4a1 1 0 0 1-1-1z",
+  "file-tree": "M3 4v14h7 M3 8h7 M13 5h3l2 2h3v5h-8z M13 15h3l2 2h3v5h-8z",
   "scroll-top": "M5 4h14 M12 20V8 M7 13l5-5 5 5",
   "scroll-bottom": "M5 20h14 M12 4v12 M7 11l5 5 5-5",
   calendar: "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
@@ -47,7 +53,7 @@ const paths: Record<IconName | CoachIconName | ScrollIconName, string> = {
   copy: "M9 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
 };
 
-export function Icon({ name, className = "" }: { name: IconName | CoachIconName | ScrollIconName; className?: string }) {
+export function Icon({ name, className = "" }: { name: keyof typeof paths; className?: string }) {
   return <svg className={`icon${name === "arrow" ? " icon-arrow" : ""} ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
 }
 

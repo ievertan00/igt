@@ -911,20 +911,29 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
   const examples = [entry?.example || entry?.example1, entry?.example2, entry?.example3].filter(
     Boolean,
   );
+  const compactResult = !compact && Boolean(entry);
+  const learningActions = !compact && (
+    <div className="lookup-learning-actions">
+      <a className="secondary" href="#word-library"><Icon name="word-library" />Saved words</a>
+      <a className="secondary" href="#word-review"><Icon name="word-review" /><GuideText text="Review due words" /></a>
+    </div>
+  );
   return (
-    <div className="word-page">
-      {!compact && <Heading
-        eyebrow="WORD LOOKUP"
-        title="Get to know a word."
-        detail={<GuideText text="Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review." />}
-      />}
-      {!compact && <div className="actions lookup-learning-actions">
-        <a className="secondary" href="#word-library"><Icon name="word-library" />Saved words</a>
-        <a className="secondary" href="#word-review"><Icon name="word-review" /><GuideText text="Review due words" /></a>
-      </div>}
-      <Panel title="Word or phrase" icon="word-lookup" className="lookup-form">
+    <div className={compactResult ? "word-page word-lookup-page" : "word-page"}>
+      {compactResult ? <header className="lookup-header">
+        <h1>{t("Word lookup")}</h1>
+        {learningActions}
+      </header> : !compact && <>
+        <Heading
+          eyebrow="WORD LOOKUP"
+          title="Get to know a word."
+          detail={<GuideText text="Enter an English word or a Chinese expression. Find its English meaning, examples, and common combinations, then save it for review." />}
+        />
+        {learningActions}
+      </>}
+      <Panel title={compactResult ? undefined : "Word or phrase"} icon="word-lookup" className="lookup-form">
         <label className="form-label" htmlFor={compact ? "selection-lookup-input" : "word-lookup-input"}>
-          English or Chinese word or phrase
+          {compactResult ? t("English or Chinese word or phrase") : "English or Chinese word or phrase"}
         </label>
         <div className="lookup-row lookup-input-composer">
           <input
@@ -935,24 +944,17 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
             placeholder={t("Try “follow up” or “跟进”")}
           />
           <div className="input-bottom-toolbar">
-          <ModelSwitcher disabled={busy || saving} id={compact ? "selection-model" : "workspace-model"} />
-          <button className={entry && !entry.existing ? "secondary" : "primary"} onClick={lookup} aria-busy={busy} disabled={busy || saving}>
-            {busy ? (
-              "Looking it up…"
-            ) : (
-              <>
-                <GuideText text="Look up" />
-                <Icon name="arrow" />
-              </>
-            )}
-          </button>
-        </div>
+            <ModelSwitcher disabled={busy || saving} id={compact ? "selection-model" : "workspace-model"} />
+            <button className={entry && !entry.existing ? "secondary" : "primary"} onClick={lookup} aria-busy={busy} disabled={busy || saving}>
+              {busy ? "Looking it up…" : <><GuideText text="Look up" /><Icon name="arrow" /></>}
+            </button>
+          </div>
           </div>
       </Panel>
       {entry && (
         <Panel title={entry.word} icon="word-lookup" className="lookup-result">
           {entry.translated && <p className="status" role="status">English expression for “{entry.requested}”: <strong>{entry.lookup}</strong></p>}
-          <WordDetails entry={entry} examples={examples} />
+          <WordDetails entry={entry} examples={examples} showWord={compact} />
           <button className="primary" onClick={add} aria-busy={saving} disabled={saving || entry.existing}>
             <Icon name="handbook" />
             {saving ? t("Saving…") : entry.existing ? "Already in your vocabulary" : "Save to vocabulary"}
@@ -969,7 +971,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
   );
 }
 
-function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
+function WordDetails({ entry, examples, showWord = true }: { entry: any; examples: string[]; showWord?: boolean }) {
   return (
     <div className="word-details">
       <div className="word-heading">
@@ -978,7 +980,7 @@ function WordDetails({ entry, examples }: { entry: any; examples: string[] }) {
             {entry.pos && <span className="word-pos">{entry.pos}</span>}
             {entry.phonetic && <span className="word-phonetic">{entry.phonetic}</span>}
           </div>
-          <h3>{entry.word}</h3>
+          {showWord && <h3>{entry.word}</h3>}
         </div>
         <AudioButton text={entry.word} />
       </div>
@@ -1407,13 +1409,6 @@ function Practice() {
                     </label>
                   ))}
                 </div>
-                <p className="practice-mode-hint">
-                  <Icon name="info" />
-                  <span>
-                    Easy uses one familiar idea; Standard adds a realistic choice; Challenge asks
-                    for more precise, connected English.
-                  </span>
-                </p>
               </fieldset>
             </div>
             <div className="practice-config-lower">
@@ -2103,16 +2098,30 @@ function LlmSettings() {
     }
   }
 
-  if (error && !savedData) return <State title={t("Model settings are unavailable")} detail={error} />;
-  if (!savedData) return models.error ? <><State title={t("Model settings are unavailable")} detail={models.error} /><button className="secondary" onClick={() => void models.refresh()}>{t("Retry")}</button></> : <State title={t("Loading model settings…")} />;
-
   return (
     <div className="llm-settings">
-      <div className="heading">
-        <h1><GuideText text={settingsTab === "models" ? "Model settings" : "Markdown file settings"} /></h1>
-        <p><GuideText text={settingsTab === "models"
-          ? "Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services."
-          : "Choose where IGT reads and saves your Markdown learning records."} /></p>
+      <div className="settings-header" data-section={settingsTab}>
+        <div className="settings-header-copy">
+          <div aria-hidden={settingsTab !== "models"}>
+            <Heading eyebrow={t("Settings")} title={t("Model settings")} detail={t("Connect Google Gemini, Qwen, DeepSeek, LM Studio, vLLM, and other OpenAI-compatible services.")} />
+          </div>
+          <div aria-hidden={settingsTab !== "markdown"}>
+            <Heading eyebrow={t("Settings")} title={t("Markdown file settings")} detail={t("Choose where ClearWrite reads and saves your Markdown learning records.")} />
+          </div>
+        </div>
+          <svg className="settings-art" viewBox="0 0 248 184" aria-hidden="true" focusable="false">
+            <rect x="53" y="35" width="74" height="44" rx="12" fill="var(--accent-hover)" transform="rotate(2 53 35)" />
+            <g transform="rotate(2 114 102)">
+              <rect x="33" y="52" width="163" height="101" rx="21" fill="var(--accent)" />
+              <path d="M53 108V96l6 7 6-7v12m9-12v12m-4-4 4 4 4-4" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <text x="86" y="108" fill="white" fontSize="15" fontWeight="700">Markdown</text>
+            </g>
+            <g transform="rotate(12 165 59)">
+              <rect x="123" y="12" width="81" height="102" rx="14" fill="var(--paper)" />
+              <rect x="135" y="23" width="40" height="9" rx="4.5" fill="var(--accent)" />
+              <path d="M137 42h57m-57 10h49m-49 10h35" fill="none" stroke="var(--line-hover)" strokeWidth="5" strokeLinecap="round" />
+            </g>
+          </svg>
       </div>
       <div className="settings-tabs" role="tablist" aria-label={t("Settings sections")} onKeyDown={(event) => {
         if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
@@ -2131,7 +2140,7 @@ function LlmSettings() {
           className={settingsTab === "models" ? "is-active" : ""}
           onClick={() => setSettingsTab("models")}
         >
-          <GuideText text="Model settings" />
+          <Icon name="settings" /><GuideText text="Model settings" />
         </button>
         <button
           id="settings-tab-markdown"
@@ -2143,10 +2152,15 @@ function LlmSettings() {
           className={settingsTab === "markdown" ? "is-active" : ""}
           onClick={() => setSettingsTab("markdown")}
         >
-          <GuideText text="Markdown files" />
+          <Icon name="folder" /><GuideText text="Markdown files" />
         </button>
       </div>
       <div id="settings-panel-models" role="tabpanel" aria-labelledby="settings-tab-models" hidden={settingsTab !== "models"}>
+      {!savedData ? (
+        error || models.error
+          ? <><State title={t("Model settings are unavailable")} detail={error || models.error} /><button className="secondary" onClick={() => void models.refresh()}>{t("Retry")}</button></>
+          : <State title={t("Loading model settings…")} />
+      ) : <>
       <Panel title={t("Saved models")}>
         <p className="saved-model-note"><GuideText text="Save model configurations here. Each page remembers its own model choice in this browser. The default is used when a page has no saved choice." /></p>
         {profiles.length === 0
@@ -2297,6 +2311,7 @@ function LlmSettings() {
           </span>
         </dialog>
       )}
+      </>}
       </div>
       <div id="settings-panel-markdown" role="tabpanel" aria-labelledby="settings-tab-markdown" hidden={settingsTab !== "markdown"}>
         <MarkdownFileSettings />
@@ -2318,7 +2333,8 @@ function MarkdownFileSettings() {
   const { t } = useGuideCopy();
   const [paths, setPaths] = useState<MarkdownPaths>();
   const [savedPaths, setSavedPaths] = useState<MarkdownPaths>();
-  const [busy, setBusy] = useState(false);
+  const [operation, setOperation] = useState<"browse" | "save">();
+  const busy = operation !== undefined;
   const [error, setError] = useState("");
   const [errorTitle, setErrorTitle] = useState("Could not save file locations");
   const [status, setStatus] = useState("");
@@ -2340,7 +2356,7 @@ function MarkdownFileSettings() {
   async function choosePath(field: keyof MarkdownPaths, kind: "file" | "folder") {
     setError("");
     setStatus("");
-    setBusy(true);
+    setOperation("browse");
     try {
       const result = await webApi.pickFileSetting(kind);
       if (result.path) updatePath(field, result.path);
@@ -2353,7 +2369,7 @@ function MarkdownFileSettings() {
         setError(e.message || "Could not open the path picker");
       }
     } finally {
-      setBusy(false);
+      setOperation(undefined);
     }
   }
 
@@ -2367,7 +2383,7 @@ function MarkdownFileSettings() {
       return;
     }
 
-    setBusy(true);
+    setOperation("save");
     setError("");
     setErrorTitle("Could not save file locations");
     setStatus("");
@@ -2379,7 +2395,7 @@ function MarkdownFileSettings() {
     } catch (e: any) {
       setError(e.message || "Could not save Markdown file locations");
     } finally {
-      setBusy(false);
+      setOperation(undefined);
     }
   }
 
@@ -2400,54 +2416,63 @@ function MarkdownFileSettings() {
       : <State title={t("Loading Markdown file settings…")} />;
   }
 
+  const locationStatus = status || (savedPaths && Object.entries(paths).every(
+    ([field, path]) => path.trim() && path === savedPaths[field as keyof MarkdownPaths],
+  ) ? "All locations are configured." : "");
+
   return (
-    <>
-      <Panel title="Markdown file locations" className="llm-config-panel markdown-settings-panel">
-        <p className="markdown-settings-intro">
-          {t("Choose where IGT reads and saves its Markdown learning records. Paths are stored locally.")}
-        </p>
+      <Panel title={t("Markdown file locations")} icon="file-tree" className="markdown-settings-panel" detail={t("Choose the local folders and files that ClearWrite uses to read and save your learning records.")}>
         {[{ title: "Folders", kind: "folder" as const, fields: folderFields }, { title: "Files", kind: "file" as const, fields: fileFields }].map(({ title, kind, fields }) => (
-          <section className="markdown-path-group" key={kind} aria-label={title}>
-            <h3>{title}</h3>
-            <div className="settings-grid markdown-path-grid">
+          <section className="markdown-path-group" key={kind} aria-labelledby={`markdown-group-${kind}`}>
+            <h3 id={`markdown-group-${kind}`}><Icon name={kind === "folder" ? "folder" : "document"} />{t(title)}</h3>
+            <div className="markdown-path-grid">
               {fields.map(({ key, label, help }) => (
                 <div className="settings-field" key={key}>
-                  <label className="form-label" htmlFor={`markdown-path-${key}`}>{label}</label>
+                  <div>
+                    <label className="form-label" id={`markdown-path-${key}-label`} htmlFor={`markdown-path-${key}`}>{t(label)}</label>
+                    <small id={`markdown-path-help-${key}`}>{t(help)}</small>
+                  </div>
                   <div className="markdown-path-control">
-                    <input
-                      id={`markdown-path-${key}`}
-                      type="text"
-                      value={paths[key]}
-                      title={paths[key]}
-                      onChange={(event) => updatePath(key, event.target.value)}
-                    />
-                    <button type="button" className="secondary" disabled={busy} onClick={() => choosePath(key, kind)}>
-                      Choose…
+                    <div className="markdown-path-input">
+                      <Icon name={kind === "folder" ? "folder" : "document"} />
+                      <input
+                        id={`markdown-path-${key}`}
+                        type="text"
+                        dir="ltr"
+                        spellCheck={false}
+                        aria-describedby={`markdown-path-help-${key}`}
+                        readOnly={busy}
+                        value={paths[key]}
+                        title={paths[key]}
+                        onChange={(event) => { updatePath(key, event.target.value); setStatus(""); setError(""); }}
+                      />
+                    </div>
+                    <button type="button" className="secondary" aria-describedby={`markdown-path-${key}-label`} disabled={busy} onClick={() => choosePath(key, kind)}>
+                      <Icon name="folder-open" />{t("Browse…")}
                     </button>
                   </div>
-                  <small>{help}</small>
                 </div>
               ))}
             </div>
           </section>
         ))}
+        <footer className="markdown-settings-footer">
+          {error && <div className="markdown-settings-error" role="alert"><State title={t(errorTitle)} detail={t(error)} /></div>}
+          <div className="llm-form-actions">
+            <button className="primary" aria-busy={operation === "save"} disabled={busy} onClick={savePaths}>{t(operation === "save" ? "Saving…" : "Save file locations")}</button>
+            <button className="secondary" disabled={busy} onClick={() => {
+              setPaths(savedPaths);
+              setError("");
+              setStatus("");
+            }}>{t("Reset")}</button>
+          </div>
+          <div className="markdown-settings-status" role="status">
+            {!error && locationStatus && (
+              <span><Icon name="check" />{t(locationStatus)}</span>
+            )}
+          </div>
+        </footer>
       </Panel>
-      {error && <State title={errorTitle} detail={error} />}
-      {status && <p className="settings-status" role="status">{status}</p>}
-      <div className="llm-form-actions">
-        <button className="primary" aria-busy={busy} disabled={busy} onClick={savePaths}>
-          {busy ? t("Saving…") : "Save file locations"}
-        </button>
-        <button className="secondary" disabled={busy} onClick={() => {
-          setPaths(savedPaths);
-          setError("");
-          setErrorTitle("Could not save file locations");
-          setStatus("");
-        }}>
-          Reset
-        </button>
-      </div>
-    </>
   );
 }
 
@@ -2716,9 +2741,9 @@ export function App() {
       >
         <a className="brand" href="#grammar" aria-label={t("ClearWrite home")}>
           <span className="brand-mark">
-            <Icon name="spark" />
+            <Icon name="wand" />
           </span>
-          <span className="brand-wordmark">Clear<span>Write</span></span>
+          <span className="brand-wordmark">ClearWrite</span>
         </a>
         <button
           ref={menuRef}

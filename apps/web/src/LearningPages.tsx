@@ -523,13 +523,9 @@ export function Coach() {
         <span><Icon name="info" />{report.coverage.unclassified} unknown sources</span>
       </div>
       <div className="coach-report-provenance">
-      {report.savedPath && <p className="handbook-evidence coach-saved-path"><strong>Saved locally:</strong> <span>{report.savedPath}</span></p>}
       {report.saveError && <p role="alert">{report.saveError}</p>}
-      <p className="handbook-evidence"><strong>Data:</strong> {report.sourceCounts ? `${report.sourceCounts.grammar} Grammar checks · ${report.sourceCounts.practice} Practice records` : `${report.totalChecks} saved Grammar checks`} · {report.evidence.length} records supplied to the model · {report.duplicateInputs} repeated inputs</p>
       {report.sourceStatus && report.sourceStatus.practice !== "available" && <p className="handbook-evidence">Practice log: {report.sourceStatus.practice}. Practice evidence was not available for this report.</p>}
       {report.sourceStatus?.grammar === "unavailable" && <p className="handbook-evidence">Grammar records could not be read. This report uses available Practice evidence.</p>}
-      <p className="handbook-evidence"><strong>Notes:</strong> {report.sampled ? "Chronological sample" : "All records in this window"}. {report.coverage.unclassified} records with unknown sources and {report.coverage.excludedOtherSources} full-text records excluded; {report.coverage.undated} records have no usable date. Suggestions and possible causes need validation through practice.</p>
-      {report.truncated && <p className="handbook-evidence">Long records and feedback were shortened for analysis. Open the saved checks to read the full records.</p>}
       </div>
       <Markdown source={reportMarkdown} />
     </Panel>}

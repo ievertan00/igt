@@ -91,7 +91,9 @@ try {
   assert.equal(calls, 1);
   assert.equal((await page.$$(".coach-report .md > h3")).length, 5);
   const text = await page.$eval(".coach-report", node => node.textContent);
-  assert.match(text, /1 Grammar checks · 1 Practice records/);
+  assert.match(text, /1 grammar checks/);
+  assert.match(text, /1 practice records/);
+  assert.doesNotMatch(text, /repeated inputs|need validation through practice|shortened for analysis|Saved locally/);
   assert.match(text, /Individual patterns and rule mapping/);
   assert.doesNotMatch(text, /private-grammar-id|practice-log-[a-f0-9]/);
   assert.doesNotMatch(text, /\[S\d+\]|Source records cited in this report/);

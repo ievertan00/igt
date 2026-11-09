@@ -4,8 +4,8 @@ import { Icon } from "./Icon";
 export function Heading({ eyebrow, title, detail }: { eyebrow: string; title: ReactNode; detail: ReactNode }) {
   return <div className="heading"><span className="page-kicker">{eyebrow}</span><h1>{title}</h1><p>{detail}</p></div>;
 }
-export function Panel({ title, children, icon, className = "" }: { title: string; children: ReactNode; icon?: ComponentProps<typeof Icon>["name"]; className?: string }) {
-  return <section className={`panel ${className}`}><div className="panel-heading">{icon && <Icon name={icon} />}<h2>{title}</h2></div>{children}</section>;
+export function Panel({ title, children, icon, detail, className = "" }: { title?: string; children: ReactNode; icon?: ComponentProps<typeof Icon>["name"]; detail?: ReactNode; className?: string }) {
+  return <section className={`panel ${className}`}>{title && <div className="panel-heading">{icon && <Icon name={icon} />}{detail ? <div><h2>{title}</h2><p>{detail}</p></div> : <h2>{title}</h2>}</div>}{children}</section>;
 }
 export function State({ title, detail }: { title: string; detail?: string }) {
   return <div className="state"><strong>{title}</strong>{detail && <p>{detail}</p>}</div>;

@@ -28,6 +28,11 @@
 .input-bottom-toolbar > button { flex: 0 0 auto; margin: 0; }
 .lookup-row.lookup-input-composer { display: block; }
 .lookup-input-composer > input { margin-bottom: 0; }
+.word-lookup-page .input-bottom-toolbar { margin-top: .625rem; padding-top: 0; border-top: 0; }
+@media (min-width: 641px) {
+  .word-lookup-page .lookup-input-composer { display: grid; grid-template-columns: minmax(0, 1fr) fit-content(60%); align-items: center; }
+  .word-lookup-page .input-bottom-toolbar { margin-top: 0; }
+}
 .practice-model-actions { display: flex; align-items: center; gap: .75rem; min-width: 0; }
 .practice-model-actions .model-switcher { max-width: 100%; }
 .writing-shell .grammar-composer .composer-actions { flex-direction: row; align-items: center; }
