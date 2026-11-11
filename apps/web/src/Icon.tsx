@@ -1,10 +1,13 @@
 type IconName = "eye" | "eye-off" | "globe" | "dashboard" | "grammar" | "translation" | "word-lookup" | "word-review" | "word-library" | "practice" | "ask" | "handbook" | "coach" | "settings" | "chevron" | "menu" | "close" | "arrow" | "document" | "check" | "spark" | "info" | "idea" | "bookmark" | "volume" | "copy" | "trash" | "home" | "dining" | "shopping" | "entertainment" | "health" | "work" | "transit" | "travel" | "services";
 
-type CoachIconName = "calendar" | "layers" | "download" | "refresh";
+type CoachIconName = "calendar" | "layers" | "download" | "refresh" | "trend" | "clock" | "target";
 type ScrollIconName = "scroll-top" | "scroll-bottom";
 type FileIconName = "folder" | "folder-open" | "file-tree";
 type BrandIconName = "wand";
 const paths: Record<IconName | CoachIconName | ScrollIconName | FileIconName | BrandIconName, string> = {
+  trend: "m3 17 6-6 4 4 8-8 M15 7h6v6",
+  clock: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M12 7v5l3 2",
+  target: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M17 12a5 5 0 1 1-10 0 5 5 0 0 1 10 0 M13 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0",
   wand: "m5 16 10-10a2 2 0 0 1 3 3L8 19a2 2 0 0 1-3-3z M12 9l3 3 M6 5v4 M4 7h4 M18 15v4 M16 17h4 M20 3v2 M19 4h2",
   folder: "M3 6a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
   "folder-open": "M3 18V6a2 2 0 0 1 2-2h4l3 3h7a2 2 0 0 1 2 2v2 M3 18l3-7h16l-3 8H4a1 1 0 0 1-1-1z",

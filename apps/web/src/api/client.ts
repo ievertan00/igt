@@ -33,6 +33,7 @@ export type CoachDetail = { errorType: string; days: number; version: string; sa
   };
   evidence: Array<{ entryId: string; timestamp: string; original: string; correction?: string | null }> };
 export type LearningOverview = { days: number; summary: Array<{ type: string; label: string; count: number }>;
+  savedMaterial?: { grammar: number | null; ask: number | null };
   events: Array<{ source: string; id: string; type: string; timestamp: string; precision?: string; title: string; score?: number; href?: string | null }>;
   pagination: GrammarHistory["pagination"]; coverage: Array<{ source: string; status: string; count?: number; note: string }>;
   undated: number; patterns: Array<{ errorType: string; checks: number }>;
@@ -95,6 +96,7 @@ export const webApi = {
   saveFileSettings: (settings: unknown) => requestJson<any>("/settings/files", { method: "POST", body: JSON.stringify(settings) }),
   pickFileSetting: (kind: "file" | "folder") => requestJson<{ path: string }>("/settings/files/pick", { method: "POST", body: JSON.stringify({ kind }), timeoutMs: 0 }),
   getDashboard: (options: { days?: number; offset?: number; limit?: number } = {}) => requestJson<LearningOverview>(`/dashboard?${new URLSearchParams({ days: String(options.days ?? 30), offset: String(options.offset ?? 0), limit: String(options.limit ?? 10) })}`),
+  getOverviewPracticeLog: (summary = false) => requestJson<{ count: number; markdown?: string }>(summary ? "/dashboard/practice-log?summary=1" : "/dashboard/practice-log"),
   checkGrammar: (text: string) => requestJson<any>("/grammar", { method: "POST", body: JSON.stringify({ text }) }),
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
   translate: (text: string, direction: string) => requestJson<any>("/translation", { method: "POST", body: JSON.stringify({ text, direction }) }),

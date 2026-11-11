@@ -57,6 +57,7 @@ test("Overview keeps source identities, separate measures, dates and pagination"
   ];
   const result = buildLearningOverview(events, { days: 30, limit: 1 }, { now });
   assert.deepEqual(result.summary.map(item => [item.type, item.count]), [["grammar", 1]]);
+  assert.deepEqual(result.savedMaterial, { grammar: 1, ask: 1 });
   assert.equal(result.pagination.total, 1); assert.equal(result.pagination.hasMore, false); assert.equal(result.undated, 1);
   assert.equal(result.events[0].source, "log");
   assert.equal(buildLearningOverview(events, { days: 0 }, { now }).pagination.total, 2);
@@ -75,6 +76,7 @@ test("activity adapters preserve usable sources on failure and never reconstruct
   assert.equal(result.coverage.find(item => item.source === "Saved Ask notes").status, "unavailable");
   assert.equal(result.events.find(item => item.type === "grammar").timestamp, "2026-10-29T12:00:00+08:00");
   const data = await getLearningOverview({ days: 0 }, { now, loadActivity: async () => result });
+  assert.deepEqual(data.savedMaterial, { grammar: 3, ask: null });
   assert.equal(data.patterns[0].errorType, "Articles"); assert.equal(data.undated, 1);
 });
 

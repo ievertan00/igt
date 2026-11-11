@@ -5,7 +5,7 @@ import { Icon } from "./Icon";
 import { Markdown } from "./Markdown";
 import { ModelSwitcher } from "./model-settings";
 import { useGuideCopy } from "./learner-language";
-import { coachReportDisplayMarkdown } from "../../../lib/domain/coach-report-display.mjs";
+import { coachReportDisplayMarkdown, coachReportTitle } from "../../../lib/domain/coach-report-display.mjs";
 import "./Coach.css";
 
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
@@ -100,7 +100,13 @@ function EffortTrend({ effort }: { effort: LearningOverview["effort"] }) {
           }).format(new Date(`${item.start}T00:00:00Z`)),
           count: item.count,
         }));
-  const max = Math.max(1, ...series.map((day) => day.count));
+  const step = Math.max(1, Math.ceil(Math.max(0, ...series.map((day) => day.count)) / 4));
+  const ticks = [4, 3, 2, 1, 0].map((value) => value * step);
+  const points = series.map((day, index) => ({
+    x: ((index + .5) / series.length) * 100,
+    y: 100 - (day.count / ticks[0]) * 100,
+  }));
+  const coordinates = points.map(({ x, y }) => `${x},${y}`).join(" ");
   const momentum = effort.momentum;
   const periodLabel =
     period === "daily"
@@ -110,8 +116,11 @@ function EffortTrend({ effort }: { effort: LearningOverview["effort"] }) {
         : t("Last 6 months");
   return (
     <section className="overview-effort" aria-labelledby="effort-title">
-      <div className="panel-heading">
-        <h2 id="effort-title">{t("Effort trend")}</h2>
+      <div className="overview-section-header">
+        <div className="panel-heading">
+          <Icon name="trend" />
+          <div><h2 id="effort-title">{t("Effort trend")}</h2><p>{t("Your sentence work over time.")}</p></div>
+        </div>
         <div className="overview-chart-controls" role="group" aria-label="Effort period">
           {(
             [
@@ -126,56 +135,71 @@ function EffortTrend({ effort }: { effort: LearningOverview["effort"] }) {
           ))}
         </div>
       </div>
-      <p className="overview-chart-caption">
-        <span>{periodLabel}</span>
-        <span>{t("Sentences · zero baseline")}</span>
-      </p>
-      <ol className="overview-daily" aria-label={`${period} sentence totals`}>
-        {series.map((day, index) => (
-          <li key={day.date} className={index === series.length - 1 ? "is-current" : ""}>
-            <span className="overview-chart-value">
-              {day.count}
-              <span className="sr-only"> sentences</span>
-            </span>
-            <span className="overview-bar" aria-hidden="true">
-              <span style={{ height: `${(day.count / max) * 100}%` }} />
-            </span>
-            <time dateTime={day.date} title={day.date}>
-              {period === "daily" ? (
-                <>
-                  <span>
-                    {index === series.length - 1 ? t("Today") : day.label.split(" ").at(-1)}
+      <div className="overview-effort-body">
+        <div>
+          <p className="overview-chart-caption">
+            <span>{periodLabel}</span>
+            <span>{t("Sentences · zero baseline")}</span>
+          </p>
+          <div className="overview-chart">
+            <div className="overview-chart-scale" aria-hidden="true">{ticks.map((tick) => <span key={tick}>{tick}</span>)}</div>
+            <div className="overview-chart-plot" aria-hidden="true">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+                {points.length > 0 && <polygon points={`${points[0].x},100 ${coordinates} ${points.at(-1)!.x},100`} />}
+                <polyline points={coordinates} vectorEffect="non-scaling-stroke" />
+              </svg>
+              {points.map(({ x, y }, index) => <span key={series[index].date} style={{ left: `${x}%`, top: `${y}%` }} />)}
+            </div>
+            <ol className="overview-daily" aria-label={`${period} sentence totals`}>
+              {series.map((day, index) => (
+                <li key={day.date} className={index === series.length - 1 ? "is-current" : ""}>
+                  <span className="overview-chart-value">
+                    {day.count}
+                    <span className="sr-only"> sentences</span>
                   </span>
-                  <span className="overview-chart-date">{day.date.slice(5).replace("-", "/")}</span>
-                </>
-              ) : (
-                <>
-                  <span>{day.label}</span>
-                  {index === series.length - 1 && (
-                    <span className="overview-chart-date">{t("Current")}</span>
-                  )}
-                </>
-              )}
-            </time>
-          </li>
-        ))}
-      </ol>
-      <p className="overview-momentum">
-        <strong>
-          {t("Weekly momentum:")}{" "}
-          {momentum.percent == null
-            ? momentum.current
-              ? t("No previous-week baseline")
-              : t("No activity in either week")
-            : `${momentum.percent > 0 ? "+" : ""}${momentum.percent}%`}
-        </strong>
-        <span>
-          {t("{current} sentences in the last 7 days vs {previous} in the previous 7 days.", {
-            current: momentum.current,
-            previous: momentum.previous,
-          })}
-        </span>
-      </p>
+                  <time dateTime={day.date} title={day.date}>
+                    {period === "daily" ? (
+                      <>
+                        <span>
+                          {index === series.length - 1 ? t("Today") : day.label.split(" ").at(-1)}
+                        </span>
+                        <span className="overview-chart-date">{day.date.slice(5).replace("-", "/")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{day.label}</span>
+                        {index === series.length - 1 && (
+                          <span className="overview-chart-date">{t("Current")}</span>
+                        )}
+                      </>
+                    )}
+                  </time>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+        <p className="overview-momentum">
+          <span>{t("Weekly momentum:")}</span>
+          <strong>
+            {momentum.percent == null
+              ? momentum.current
+                ? t("No previous-week baseline")
+                : t("No activity in either week")
+              : `${momentum.percent > 0 ? "+" : ""}${momentum.percent}%`}
+          </strong>
+          <span>
+            {t("{current} sentences in the last 7 days vs {previous} in the previous 7 days.", {
+              current: momentum.current,
+              previous: momentum.previous,
+            })}
+          </span>
+        </p>
+      </div>
+      <details className="overview-counting">
+        <summary><Icon name="info" />{t("How effort is counted")}<Icon name="chevron" /></summary>
+        <p>{t("Beijing dates. Weeks start Monday; current week and month are partial. Saved Grammar/Text sentences and Sentence Practice attempts count as effort. Repeat work counts again; vocabulary reviews do not count.")}</p>
+      </details>
     </section>
   );
 }
@@ -196,6 +220,23 @@ export function Dashboard() {
     setError("");
     try {
       const result = await webApi.getDashboard({ days, offset, limit: 5 });
+      if (id !== request.current) return;
+      // Older runtimes omit these fields. The library endpoints can also recover a missing count.
+      const savedMaterial = result.savedMaterial;
+      if (savedMaterial?.grammar == null || savedMaterial?.ask == null) {
+        const [handbook, askNotes] = await Promise.allSettled([
+          savedMaterial?.grammar == null ? webApi.getHandbook("", { days: 0, limit: 1 }) : undefined,
+          savedMaterial?.ask == null ? webApi.listAskNotes() : undefined,
+        ]);
+        const grammarCoverage = handbook.status === "fulfilled" ? handbook.value?.coverage : undefined;
+        const notes = askNotes.status === "fulfilled" ? askNotes.value?.notes : undefined;
+        result.savedMaterial = {
+          grammar: savedMaterial?.grammar ?? (typeof grammarCoverage?.grammar === "number"
+            ? grammarCoverage.grammar - (grammarCoverage.legacyIncluded ?? 0)
+            : null),
+          ask: savedMaterial?.ask ?? (Array.isArray(notes) ? notes.length : null),
+        };
+      }
       if (id === request.current) {
         setData(result);
         setNow(Date.now());
@@ -215,35 +256,45 @@ export function Dashboard() {
   }, [days, offset]);
   const inventory = data?.coverage.find((source) => source.status === "inventory");
   const unavailable = data?.coverage.filter((source) => source.status === "unavailable") || [];
-  const amount = (value: number, singular: string, plural = `${singular}s`) =>
-    `${value} ${value === 1 ? singular : plural}`;
+  const countLabel = (count: number | null | undefined, singular: string, plural: string) =>
+    count == null ? t("Count unavailable") : t(count === 1 ? singular : plural, { count });
 
   const quickLinks = [
     {
       href: "#word-library",
+      icon: "word-library",
       label: t("Saved words"),
-      detail: inventory?.count != null ? amount(inventory.count, "word") : t("Browse your library"),
+      action: t("View all words"),
+      detail: countLabel(inventory?.count, "{count} word", "{count} words"),
     },
     {
       href: `#handbook?days=0`,
+      icon: "grammar",
       label: t("Grammar corrections"),
-      detail: t("Your saved sentences and feedback"),
+      action: t("Browse corrections"),
+      detail: countLabel(data?.savedMaterial?.grammar, "{count} saved Grammar check", "{count} saved Grammar checks"),
     },
-    { href: "#ask?view=notes", label: t("Ask notes"), detail: t("Explanations you kept") },
-  ];
+    { href: "#ask?view=notes", icon: "ask", label: t("Ask notes"), detail: countLabel(data?.savedMaterial?.ask, "{count} saved note", "{count} saved notes"), action: t("Explore notes") },
+    { href: "#coach", icon: "coach", label: t("Learning reports"), detail: t("See your strengths, recurring mistakes, and what to practice next."), action: t("Open reports") },
+  ] as const;
 
   return (
     <div className="overview-page">
       <div className="overview-header">
         <div className="overview-header-main">
           <Heading
-            eyebrow="OVERVIEW"
-            title="Your effort. Your next focus."
+            eyebrow={t("Overview")}
+            title={t("Your effort. Your next focus.")}
             detail={t(
               "See your sentence work over time and the mistakes to give attention to next.",
             )}
           />
+          <div className="overview-hero-art" aria-hidden="true">
+            <Icon name="document" />
+            <Icon name="folder" />
+          </div>
           <button className="secondary" disabled={busy} onClick={() => void load()}>
+            <Icon name="refresh" />
             {busy ? t("Loading…") : t("Refresh")}
           </button>
         </div>
@@ -267,159 +318,148 @@ export function Dashboard() {
               </p>
             )}
 
-            <div className="overview-insights">
-              <EffortTrend effort={data.effort} />
-              <section className="overview-priorities" aria-labelledby="priorities-title">
+            <Panel title={t("Your saved material")} icon="layers" className="overview-quick">
+              <div className="overview-quick-links">
+                {quickLinks.map((link) => (
+                  <a key={link.href} href={link.href} className="overview-quick-link">
+                    <Icon name={link.icon} />
+                    <span className="overview-link-copy"><strong>{link.label}</strong>{link.detail && <span>{link.detail}</span>}</span>
+                    <span className="overview-link-action">{link.action}<Icon name="arrow" /></span>
+                  </a>
+                ))}
+              </div>
+            </Panel>
+            <EffortTrend effort={data.effort} />
+            <section className="overview-priorities" aria-labelledby="priorities-title">
+              <div className="overview-section-header">
                 <div className="panel-heading">
-                  <h2 id="priorities-title">{t("Top 3 priorities")}</h2>
-                  <span className="overview-timeline-range">{t("Last 30 days")}</span>
-                </div>
-                <p className="handbook-evidence">
-                  {t(
-                    "Most frequent error types in saved Grammar and Text feedback. Each diagnosis counts as one hit.",
-                  )}
-                </p>
-                {unavailable.some((source) => source.source === "Saved writing") ? (
-                  <State
-                    title={t("Priorities unavailable")}
-                    detail={t("Saved writing could not be read. Refresh to try again.")}
-                  />
-                ) : data.priorities.length ? (
-                  <ol className="overview-priority-list">
-                    {data.priorities.map((item) => (
-                      <li key={item.errorType}>
-                        <div>
-                          <h3>{item.errorType}</h3>
-                          <span>
-                            {item.hits} {item.hits === 1 ? "hit" : "hits"}
-                          </span>
-                        </div>
-                        {item.habit && <p>Habit: {item.habit}</p>}
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <div className="overview-priority-empty">
-                    <Icon name="coach" />
-                    <State
-                      title={t("No error types recorded in the last 30 days.")}
-                      detail={t(
-                        "Save feedback from Grammar or Text analysis to see what needs attention.",
-                      )}
-                    />
+                  <Icon name="target" />
+                  <div>
+                    <h2 id="priorities-title">{t("Top 3 priorities")}</h2>
+                    <p>{t("Most frequent errors in saved Grammar and Text feedback. One hit per diagnosis.")}</p>
                   </div>
-                )}
-                <a className="primary" href="#practice">
-                  {t("Practise sentences")}
-                  <Icon name="arrow" />
-                </a>
-              </section>
-            </div>
+                </div>
+                <span className="overview-priority-window">{t("Last 30 days")}</span>
+              </div>
+              {unavailable.some((source) => source.source === "Saved writing") ? (
+                <State
+                  title={t("Priorities unavailable")}
+                  detail={t("Saved writing could not be read. Refresh to try again.")}
+                />
+              ) : data.priorities.length ? (
+                <ol className="overview-priority-list">
+                  {data.priorities.map((item, index) => (
+                    <li key={item.errorType}>
+                      <span className="overview-priority-rank" aria-hidden="true">{index + 1}</span>
+                      <h3>{item.errorType}</h3>
+                      <span className="overview-priority-count">
+                        {t(item.hits === 1 ? "{count} hit" : "{count} hits", { count: item.hits })}
+                      </span>
+                      {item.habit && <p>{t("Habit: {habit}", { habit: item.habit })}</p>}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <div className="overview-priority-empty">
+                  <Icon name="coach" />
+                  <State
+                    title={t("No error types recorded in the last 30 days.")}
+                    detail={t(
+                      "Save feedback from Grammar or Text analysis to see what needs attention.",
+                    )}
+                  />
+                </div>
+              )}
+            </section>
 
-            <div className="overview-library-grid">
-              <section className="overview-timeline" aria-label={t("Recent activity")}>
-                <div className="panel-heading overview-history-heading">
-                  <h2>{t("Recent activity")}</h2>
+            <section className="overview-timeline" aria-label={t("Recent activity")}>
+              <div className="overview-section-header overview-history-heading">
+                <div className="panel-heading">
+                  <Icon name="clock" />
+                  <div><h2>{t("Recent activity")}</h2><p>{t("Your latest learning actions and results.")}</p></div>
+                </div>
+                <div className="overview-history-actions">
+                  <a className="overview-link-action" href="#dashboard?view=practice-log">{t("Open practice log")}<Icon name="arrow" /></a>
                   <WindowSelect
                     days={days}
                     disabled={busy}
                     onChange={(days) => go("dashboard", { days, offset: 0 })}
                   />
                 </div>
-                {data.events.length ? (
-                  <ol className="learning-timeline">
-                    {data.events.map((event) => (
-                      <li key={`${event.source}:${event.id}`}>
-                        <span className={`learning-badge learning-badge-${event.type}`}>
-                          {activityBadge[event.type] || "Record"}
-                        </span>
-                        <div className="learning-event-body">
-                          {event.title.length > 160 ? (
-                            <details>
-                              <summary>{event.title.slice(0, 140)}…</summary>
-                              <p>{event.title}</p>
-                              {event.href && <a href={event.href}>{t("Open record")}</a>}
-                            </details>
-                          ) : (
-                            <p>
-                              {event.href ? <a href={event.href}>{event.title}</a> : event.title}
-                            </p>
-                          )}
-                          <time dateTime={event.timestamp}>
-                            {relativeTime(event.timestamp, now, t)}
-                          </time>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <State
-                    title={
-                      offset > 0
-                        ? t("No records on this page.")
-                        : t("No recent activity in this window.")
-                    }
-                    detail={
-                      offset > 0
-                        ? t("Go to the previous page to see earlier records.")
-                        : t("Complete a practice or save some feedback — it will appear here.")
-                    }
-                  />
-                )}
-                {(data.pagination.total > 0 || offset > 0) && (
-                  <nav className="handbook-pagination" aria-label={t("Activity pages")}>
-                    <span>
-                      {data.events.length
-                        ? t("{start}–{end} of {total}", {
-                            start: offset + 1,
-                            end: offset + data.events.length,
-                            total: data.pagination.total,
-                          })
-                        : t("{total} records", { total: data.pagination.total })}
-                    </span>
-                    <button
-                      disabled={busy || offset === 0}
-                      onClick={() =>
-                        go("dashboard", {
-                          days,
-                          offset: Math.max(0, offset - data.pagination.limit),
-                        })
-                      }
-                    >
-                      {t("Previous")}
-                    </button>
-                    <button
-                      disabled={busy || !data.pagination.hasMore}
-                      onClick={() =>
-                        go("dashboard", { days, offset: offset + data.pagination.limit })
-                      }
-                    >
-                      {t("Next")}
-                    </button>
-                  </nav>
-                )}
-              </section>
-
-              <section className="overview-quick" aria-label="Saved material">
-                <div className="panel-heading">
-                  <h2>{t("Your saved material")}</h2>
-                </div>
-                <div className="overview-quick-links">
-                  {quickLinks.map((link, index) => (
-                    <a key={link.href} href={link.href} className="overview-quick-link">
-                      <Icon
-                        name={index === 0 ? "word-library" : index === 1 ? "grammar" : "bookmark"}
-                      />
-                      <span className="overview-link-copy">
-                        <strong>{link.label}</strong>
-                        <span>{link.detail}</span>
+              </div>
+              {data.events.length ? (
+                <ol className="learning-timeline">
+                  {data.events.map((event) => (
+                    <li key={`${event.source}:${event.id}`}>
+                      <time dateTime={event.timestamp} title={dateLabel(event.timestamp, t, event.precision)}>
+                        {event.precision === "day" ? dateLabel(event.timestamp, t, event.precision) : relativeTime(event.timestamp, now, t) || dateLabel(event.timestamp, t)}
+                      </time>
+                      <span className={`learning-badge learning-badge-${event.type}`}>
+                        {activityBadge[event.type] || "Record"}
                       </span>
-                      <Icon name="arrow" />
-                    </a>
+                      <div className="learning-event-body">
+                        {event.title.length > 160 ? (
+                          <details>
+                            <summary>{event.title.slice(0, 140)}…</summary>
+                            <p>{event.title}</p>
+                            {event.href && <a href={event.href}>{t("Open record")}</a>}
+                          </details>
+                        ) : (
+                          <p>
+                            {event.href ? <a href={event.href}>{event.title}</a> : event.title}
+                          </p>
+                        )}
+                      </div>
+                    </li>
                   ))}
-                </div>
-              </section>
-            </div>
+                </ol>
+              ) : (
+                <State
+                  title={
+                    offset > 0
+                      ? t("No records on this page.")
+                      : t("No recent activity in this window.")
+                  }
+                  detail={
+                    offset > 0
+                      ? t("Go to the previous page to see earlier records.")
+                      : t("Complete a practice or save some feedback — it will appear here.")
+                  }
+                />
+              )}
+              {(data.pagination.total > 0 || offset > 0) && (
+                <nav className="handbook-pagination" aria-label={t("Activity pages")}>
+                  <button
+                    disabled={busy || offset === 0}
+                    onClick={() =>
+                      go("dashboard", {
+                        days,
+                        offset: Math.max(0, offset - data.pagination.limit),
+                      })
+                    }
+                  >
+                    {t("Previous")}
+                  </button>
+                  <span>
+                    {data.events.length
+                      ? t("{start}–{end} of {total}", {
+                          start: offset + 1,
+                          end: offset + data.events.length,
+                          total: data.pagination.total,
+                        })
+                      : t("{total} records", { total: data.pagination.total })}
+                  </span>
+                  <button
+                    disabled={busy || !data.pagination.hasMore}
+                    onClick={() =>
+                      go("dashboard", { days, offset: offset + data.pagination.limit })
+                    }
+                  >
+                    {t("Next")}
+                  </button>
+                </nav>
+              )}
+            </section>
 
             <footer className="overview-coverage">
               <p>
@@ -427,12 +467,41 @@ export function Dashboard() {
                   "Recorded effort and error frequency do not establish mastery. Unsaved tool use is not included. Vocabulary review history is excluded.",
                 )}{" "}
                 {data.undated > 0 &&
-                  t("{count} undated record(s) excluded.", { count: data.undated })}
+                  t("{count} undated record(s) omitted from recent activity.", { count: data.undated })}
               </p>
             </footer>
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+export function PracticeLog() {
+  const { t } = useGuideCopy();
+  const [markdown, setMarkdown] = useState<string>();
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void webApi.getOverviewPracticeLog().then(
+      (result) => {
+        if (!active) return;
+        if (typeof result.markdown === "string") setMarkdown(result.markdown);
+        else setError(true);
+      },
+      () => { if (active) setError(true); },
+    );
+    return () => { active = false; };
+  }, []);
+  return (
+    <div>
+      <Heading eyebrow={t("Overview")} title={t("Practice log")} detail={<a href="#dashboard">{t("Back to Overview")}</a>} />
+      <Panel className="practice-log-panel">
+        {error ? <div role="alert"><State title={t("Practice log is unavailable")} /></div>
+          : markdown === undefined ? <p role="status">{t("Loading…")}</p>
+            : markdown.trim() ? <Markdown source={markdown} />
+              : <State title={t("No saved practice entries yet")} />}
+      </Panel>
     </div>
   );
 }
@@ -479,14 +548,14 @@ export function Coach() {
   }
   function download() {
     if (!report) return;
-    const text = `# English proficiency diagnostic report\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved records; ${report.evidence.length} records supplied for analysis.\n\n${reportMarkdown}`;
+    const text = `# ${coachReportTitle}\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved records; ${report.evidence.length} records supplied for analysis.\n\n${reportMarkdown}`;
     const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
     const link = document.createElement("a"); link.href = url; link.download = "english-proficiency-report.md"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <div className="coach-page">
     <div className="coach-hero">
-      <Heading eyebrow="COACH" title="Your English proficiency report" detail="Understand your strengths, recurring language patterns, and the knowledge behind them in one evidence-based report to guide your next steps." />
+      <Heading eyebrow="Learning reports" title={coachReportTitle} detail="Understand your strengths, recurring language patterns, and the knowledge behind them in one evidence-based report to guide your next steps." />
       <div className="coach-illustration" aria-hidden="true">
         <div className="coach-illustration-back"><i /><i /></div>
         <div className="coach-illustration-front"><i /><i /><div className="coach-illustration-chart"><b /><b /><b /></div></div>
@@ -499,7 +568,7 @@ export function Coach() {
       <label className="coach-language">Report language <span className="coach-select"><Icon name="globe" /><select value={language} disabled={busy} onChange={e => setLanguage(e.target.value)}><option value="zh-CN">中文</option><option value="en">English</option></select></span></label>
       <div className="coach-model"><span id="coach-model-label">Model</span><ModelSwitcher role="pro" disabled={busy} /></div>
       <div className="coach-actions">
-        <button className="primary" disabled={busy} aria-busy={busy} onClick={() => void generate()}>{busy ? "Generating report…" : report ? "Regenerate report" : "Generate diagnostic report"}<Icon name="arrow" /></button>
+        <button className="primary" disabled={busy} aria-busy={busy} onClick={() => void generate()}>{busy ? "Generating report…" : "Generate report"}<Icon name="arrow" /></button>
         <button className="secondary" disabled={!report} onClick={download}><Icon name="download" />Download Markdown</button>
       </div>
     </div>
@@ -515,7 +584,7 @@ export function Coach() {
       <div className="coach-reading">
     {busy && <p className="coach-progress" role="status">Reviewing saved sentences and feedback. This may take a few minutes.</p>}
     {!report && !busy && <State title="A report grounded in your Grammar and Practice records" detail="Review your proficiency, individual error patterns, underlying knowledge gaps and personalized improvement directions using saved Grammar checks and 02_Practice_Log. Only abilities supported by your writing are assessed; AI corrections and assisted answers do not establish mastery." />}
-    {report && <Panel title="English proficiency diagnostic report" icon="document" className="coach-report">
+    {report && <Panel title={coachReportTitle} icon="document" className="coach-report">
       <div className="coach-report-meta">
         <span><Icon name="calendar" />{report.cached ? "Cached report" : "Generated on"} {new Date(report.generatedAt).toLocaleString()}</span>
         <span><Icon name="layers" />{report.sourceCounts?.grammar ?? report.totalChecks} grammar checks</span>

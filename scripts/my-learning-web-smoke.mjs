@@ -9,7 +9,7 @@ import { registerCoachRoutes } from "../lib/server/routes/coach.mjs";
 import { registerDashboardRoutes } from "../lib/server/routes/dashboard.mjs";
 import { registerHandbookRoutes } from "../lib/server/routes/handbook.mjs";
 import { buildGrammarHistory } from "../lib/application/grammar-history.mjs";
-import { buildLearningOverview } from "../lib/application/learning-overview.mjs";
+import { buildLearningOverview, getOverviewPracticeLog } from "../lib/application/learning-overview.mjs";
 import { buildCoachPatterns, clearGrammarCoachCache } from "../lib/application/grammar-coach.mjs";
 
 const entries = Array.from({ length: 14 }, (_, index) => ({ source: "grammar", entryId: `saved-${index}`, timestamp: new Date(Date.now() - index * 86400000).toISOString(),
@@ -17,6 +17,7 @@ const entries = Array.from({ length: 14 }, (_, index) => ({ source: "grammar", e
   diagnoses: [{ error_type: index < 12 ? "Articles" : "Tense", explanation: "Consider the context.", severity: "Minor" }] }));
 entries.push({ source: "unknown", entryId: "legacy", timestamp: new Date().toISOString(), userInput: "Preserved legacy", diagnoses: [] });
 let calls = 0, failGeneration = false, failOverview = false, overviewState = "normal", holdType = "", release;
+let legacyOverview = false;
 const llm = { config: {}, getCurrentProviderName: () => "custom", generateWithFallback: async input => {
   calls++;
   const { errorType, examples } = JSON.parse(input);
@@ -27,14 +28,17 @@ const llm = { config: {}, getCurrentProviderName: () => "custom", generateWithFa
 } };
 const loadData = () => ({ entries });
 registerCoachRoutes({ loadData, getLLMManager: async () => llm });
-registerHandbookRoutes({ loadHistory: options => buildGrammarHistory(entries, options) });
+registerHandbookRoutes({ loadHistory: options => buildGrammarHistory(entries, { ...options, includeLegacy: true }) });
 const events = entries.map(item => ({ source: "review-log", id: item.entryId, type: item.source === "grammar" ? "grammar" : "writing", timestamp: item.timestamp, title: item.userInput, href: item.source === "grammar" ? `#handbook?days=0&entry=${item.entryId}` : null }));
 events.push({ source: "attempts", id: "1", type: "review", timestamp: new Date().toISOString(), title: "book", score: 100 });
 events.push({ source: "vocab", id: "book", type: "vocabulary", timestamp: new Date().toISOString(), title: "book", precision: "day", href: "#word-library" });
-registerDashboardRoutes({ loadOverview: options => {
+const practiceMarkdown = "## Practice · 2026-11-08T10:00:00Z\n- Prompt: Translate the sentence.\n- Your answer: This is a saved practice entry.\n";
+registerDashboardRoutes({ loadPracticeLog: (config, options) => getOverviewPracticeLog(config, { ...options, readFile: () => practiceMarkdown }), loadOverview: options => {
   if (failOverview) throw Object.assign(new Error("Fixture unavailable"), { status: 503 });
-  return buildLearningOverview(overviewState === "empty" ? [] : overviewState === "partial" ? events.filter(event => event.source !== "review-log") : events, options, { reviewEntries: overviewState === "normal" ? entries : [], patterns: overviewState === "normal" ? buildCoachPatterns(entries, options).patterns : [],
+  const data = buildLearningOverview(overviewState === "empty" ? [] : overviewState === "partial" ? events.filter(event => event.source !== "review-log") : events, options, { reviewEntries: overviewState === "normal" ? entries : [], patterns: overviewState === "normal" ? buildCoachPatterns(entries, options).patterns : [],
     coverage: [{ source: "Saved writing", status: overviewState === "partial" ? "unavailable" : "available", note: "Saved records only." }, { source: "Vocabulary inventory", status: "inventory", count: 1, note: "Inventory is separate from activity." }, { source: "Translation, listening and conversation", status: "not-recorded", note: "Unsaved interactions are not counted." }] });
+  if (legacyOverview) delete data.savedMaterial;
+  return data;
 } });
 const api = http.createServer(dispatch);
 await new Promise(resolve => api.listen(0, "127.0.0.1", resolve));
@@ -56,9 +60,11 @@ try {
   page.on("request", async request => {
     try {
       const url = new URL(request.url());
-      if (url.origin === base && ["/coach", "/coach/explain", "/dashboard", "/handbook"].includes(url.pathname)) {
+      if (url.origin === base && ["/coach", "/coach/explain", "/dashboard", "/dashboard/practice-log", "/handbook"].includes(url.pathname)) {
         const response = await fetch(`${apiBase}${url.pathname}${url.search}`, { method: request.method(), ...(request.postData() ? { body: request.postData(), headers: { "Content-Type": "application/json" } } : {}) });
         await request.respond({ status: response.status, contentType: "application/json", body: await response.text() });
+      } else if (url.origin === base && url.pathname === "/ask/notes") {
+        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ notes: [{ id: "fixture.md" }] }) });
       } else if (url.origin === base && url.pathname === "/runtime") await request.respond({ status: 200, contentType: "application/json", body: "{}" });
       else await request.continue();
     } catch { if (!request.isInterceptResolutionHandled()) await request.abort(); }
@@ -68,7 +74,8 @@ try {
   await page.goto(`${base}/#coach?days=0`); await ready();
   assert.equal(calls, 0);
   assert.equal(await page.$(".coach-patterns"), null);
-  assert.match(await page.$eval(".coach-page", node => node.textContent), /Generate diagnostic report/);
+  assert.equal(await page.$eval(".coach-page h1", node => node.textContent), "English skills report");
+  assert.equal(await page.$eval(".coach-actions .primary", node => node.textContent), "Generate report");
   // Full report generation, citations and persistence are covered by coach-report-web-smoke.mjs.
   const output = path.join(process.cwd(), ".tmp", "my-learning-qa"); fs.mkdirSync(output, { recursive: true });
   for (const route of ["dashboard", "coach"]) {
@@ -84,6 +91,25 @@ try {
   }
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(`${base}/#dashboard?days=0`); await ready();
+  assert.deepEqual(
+    await page.$$eval(".overview-quick, .overview-effort, .overview-priorities, .overview-timeline", sections =>
+      sections.map(section => section.querySelector("h2").textContent)),
+    ["Your saved material", "Effort trend", "Top 3 priorities", "Recent activity"],
+  );
+  assert.match(await page.$eval('.overview-quick-link[href^="#handbook"]', node => node.textContent), /14 saved Grammar checks/);
+  assert.match(await page.$eval('.overview-quick-link[href^="#ask"]', node => node.textContent), /0 saved notes/);
+  const coachCard = '.overview-quick-link[href="#coach"]';
+  assert.equal((await page.$$(".overview-quick-link")).length, 4);
+  assert.equal(await page.$eval('#workspace-nav a[href="#coach"]', node => node.textContent), "Learning reports");
+  assert.equal(await page.$eval(coachCard + " strong", node => node.textContent), "Learning reports");
+  assert.equal(await page.$eval(coachCard + " .overview-link-copy > span", node => node.textContent), "See your strengths, recurring mistakes, and what to practice next.");
+  await page.click(coachCard);
+  await page.waitForSelector(".coach-page");
+  await page.goBack(); await ready();
+  await page.click('.overview-history-actions a[href="#dashboard?view=practice-log"]');
+  await page.waitForSelector(".practice-log-panel .md");
+  assert.match(await page.$eval(".practice-log-panel", node => node.textContent), /This is a saved practice entry/);
+  await page.goBack(); await ready();
   assert.equal((await page.$$(".learning-timeline li")).length, 5);
   assert.equal((await page.$$(".overview-daily li")).length, 7);
   for (const [period, count] of [["Weekly", 4], ["Monthly", 6], ["Daily", 7]]) {
@@ -101,8 +127,6 @@ try {
   assert.doesNotMatch(await page.$eval(".learning-timeline", node => node.textContent), /100\/100/);
   await page.select(".overview-history-heading select", "90"); await ready();
   assert.match(await page.$eval(".overview-priorities", node => node.textContent), /Last 30 days/);
-  await page.click(".overview-priorities .primary"); await ready(); assert.match(page.url(), /#practice/);
-  await page.goBack(); await ready();
   await page.click(".handbook-pagination button:last-child"); await ready(); assert.equal((await page.$$(".learning-timeline li")).length, 5);
   assert.match(await page.$eval(".handbook-pagination", node => node.textContent), /6–10 of 16/);
   await page.goBack(); await ready(); assert.equal((await page.$$(".learning-timeline li")).length, 5);
@@ -119,6 +143,10 @@ try {
   overviewState = "normal"; await page.click(".overview-header button"); await ready();
   await page.click(".learning-timeline details summary");
   assert.equal(await page.$eval(".learning-timeline details p", node => node.textContent), events[0].title);
+  legacyOverview = true;
+  await page.click(".overview-header button"); await ready();
+  assert.match(await page.$eval('.overview-quick-link[href^="#handbook"]', node => node.textContent), /14 saved Grammar checks/);
+  assert.match(await page.$eval('.overview-quick-link[href^="#ask"]', node => node.textContent), /1 saved note/);
   await page.goto(`${base}/#grammar`); await page.waitForSelector("textarea");
   assert.deepEqual(errors, []);
   console.log("My Learning: real route contracts, report-only Coach entry, pattern API compatibility, mixed timeline, pagination, back navigation and responsive layouts passed.");

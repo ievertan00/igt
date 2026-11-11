@@ -1,4 +1,4 @@
-import { Dashboard, Coach } from "./LearningPages";
+import { Dashboard, Coach, PracticeLog } from "./LearningPages";
 import { Heading, Panel, State } from "./Page";
 import { useGuideCopy, LearnerLanguageSwitch, GuideText } from "./learner-language";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -38,7 +38,7 @@ const items: Array<[Route, string]> = [
   ["practice", "Practice"],
   ["ask", "Ask"],
   ["handbook", "Handbook"],
-  ["coach", "Coach"],
+  ["coach", "Learning reports"],
   ["settings", "Model settings"],
 ];
 
@@ -2636,13 +2636,13 @@ function CopyButton({ value, label, small }: { value: string; label: string; sma
 }
 
 const primaryRoutes: Route[] = ["word-lookup", "practice", "ask"];
-const learningRoutes: Array<[Route, string]> = [
-  ["dashboard", "Overview"],
-  ["word-library", "Saved words"],
-  ["ask", "Saved notes"],
-  ["handbook", "Handbook"],
-  ["coach", "Coach"],
-];
+const learningRoutes = [
+  ["dashboard", "Overview", "dashboard"],
+  ["word-library", "Saved words", "bookmark"],
+  ["ask", "Saved notes", "document"],
+  ["handbook", "Handbook", "handbook"],
+  ["coach", "Learning reports", "trend"],
+] as const;
 const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }> = [
   {
     label: "Writing",
@@ -2698,9 +2698,10 @@ export function App() {
     };
   }, []);
   const askView = new URLSearchParams(routeHash.split("?")[1]).get("view") === "notes" ? "notes" : "ask";
+  const practiceLogView = route === "dashboard" && new URLSearchParams(routeHash.split("?")[1]).get("view") === "practice-log";
   const hasScrollNavigation = route === "word-library" || route === "coach" || route === "handbook" || (route === "ask" && askView === "notes");
   const title =
-    route === "ask" && askView === "notes" ? "Saved notes" : route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
+    practiceLogView ? "Practice log" : route === "ask" && askView === "notes" ? "Saved notes" : route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
   useEffect(() => {
     document.title = title + " · ClearWrite";
   }, [title]);
@@ -2708,7 +2709,7 @@ export function App() {
   if (route === "ask") askVisited.current = true;
   const pages: Record<Route, React.ReactNode> = {
     grammar: <Grammar />,
-    dashboard: <Dashboard />,
+    dashboard: practiceLogView ? <PracticeLog /> : <Dashboard />,
     translation: <Express />,
     ask: null,
     "word-review": <WordReview />,
@@ -2797,15 +2798,15 @@ export function App() {
                 {items.find(([itemKey]) => itemKey === key)?.[1]}
               </a>
             ))}
-          <details className="learning-menu" name="workspace-navigation">
+          <details className="learning-menu my-learning-menu" name="workspace-navigation">
             <summary className={route === "word-review" || learningRoutes.some(([key]) => key === route && (key !== "ask" || askView === "notes")) ? "active" : ""}>
               My learning
               <Icon name="chevron" />
             </summary>
             <div className="learning-links">
-              {learningRoutes.map(([key, label]) => (
+              {learningRoutes.map(([key, label, icon]) => (
                 <a key={key} href={key === "ask" ? "#ask?view=notes" : "#" + key} aria-current={route === key && (key !== "ask" || askView === "notes") ? "page" : undefined}>
-                  <Icon name={key === "ask" ? "document" : key} />
+                  <Icon name={icon} />
                   {label}
                 </a>
               ))}
