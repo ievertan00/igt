@@ -456,8 +456,7 @@ function WordReview() {
   const feedbackLabel = feedbackState === "correct" ? "Correct!" : feedbackState === "incorrect" ? "Not quite" : "Answer revealed";
   const exploreExamples = examples.filter(Boolean);
   const hasMoreDetails = Boolean(
-    exploreExamples.length > 0 || details?.synonyms || details?.collocations || details?.note || card?.note
-      || details?.verbForms || details?.plural,
+    exploreExamples.length > 0 || details?.synonyms || details?.collocations || details?.note || card?.note,
   );
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -732,15 +731,29 @@ function WordReview() {
                     </span>
                   </div>
                   <div className="review-expression">
-                    <div className="review-expression-title">
-                      <h2 lang="en">{targetWord}</h2>
-                      <AudioButton text={targetWord} />
+                    <div className="review-expression-word">
+                      <div className="review-expression-title">
+                        <h2 lang="en">{targetWord}</h2>
+                        <AudioButton text={targetWord} />
+                      </div>
+                      <div className="review-word-meta">
+                        {(partOfSpeech || pronunciation) && (
+                          <p lang="en">{[partOfSpeech, pronunciation].filter(Boolean).join(" · ")}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="review-word-meta">
-                      {(partOfSpeech || pronunciation) && (
-                        <p lang="en">{[partOfSpeech, pronunciation].filter(Boolean).join(" · ")}</p>
-                      )}
-                    </div>
+                    {(details?.verbForms || details?.plural) && (
+                      <dl className="review-word-forms">
+                        {[["Verb forms", details?.verbForms], ["Plural", details?.plural]]
+                          .filter(([, value]) => value)
+                          .map(([label, value]) => (
+                            <div key={label}>
+                              <dt>{label}</dt>
+                              <dd lang="en">{value}</dd>
+                            </div>
+                          ))}
+                      </dl>
+                    )}
                   </div>
                   {submittedAnswer?.trim() && (
                     <p className="review-your-answer">
@@ -778,8 +791,6 @@ function WordReview() {
                       )}
                       <dl>
                         {[
-                          ["Verb forms", details?.verbForms],
-                          ["Plural", details?.plural],
                           ["Synonyms", details?.synonyms],
                           ["Collocations", details?.collocations],
                           ["Usage note", details?.note || card.note],
@@ -984,17 +995,6 @@ function WordDetails({ entry, examples, showWord = true }: { entry: any; example
         </div>
         <AudioButton text={entry.word} />
       </div>
-      {entry.meaning && (
-        <section className="word-detail-block word-meaning">
-          <div className="word-detail-icon">
-            <Icon name="handbook" />
-          </div>
-          <div>
-            <h4>Meaning</h4>
-            <p>{entry.meaning}</p>
-          </div>
-        </section>
-      )}
       {(entry.verbForms || entry.plural) && (
         <div className="word-detail-pair">
           {entry.verbForms && (
@@ -1020,6 +1020,17 @@ function WordDetails({ entry, examples, showWord = true }: { entry: any; example
             </section>
           )}
         </div>
+      )}
+      {entry.meaning && (
+        <section className="word-detail-block word-meaning">
+          <div className="word-detail-icon">
+            <Icon name="handbook" />
+          </div>
+          <div>
+            <h4>Meaning</h4>
+            <p>{entry.meaning}</p>
+          </div>
+        </section>
       )}
       <div className="word-detail-pair">
         {entry.zh && (
