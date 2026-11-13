@@ -111,7 +111,7 @@ try {
   await page.goBack(); await ready();
   await page.waitForFunction(() => document.querySelectorAll(".handbook-example").length === 3);
   failure = true;
-  await page.click(".coach-header button");
+  await page.click(".handbook-filters button.primary");
   await page.waitForSelector('[role="alert"]');
   assert.equal((await page.$$(".handbook-example")).length, 3);
   failure = false;
@@ -184,7 +184,10 @@ try {
   await page.goto(`${base}/#grammar`);
   await page.waitForSelector("textarea");
   await page.goto(`${base}/#coach`);
-  await page.waitForFunction(() => document.querySelector("h1")?.textContent.includes("Understand your recurring mistakes"));
+  // The reports tab opens on its own controls, so no page title repeats what the tab already says.
+  await page.waitForSelector(".coach-toolbar .coach-language");
+  assert.match(await page.$eval(".coach-toolbar .coach-language", node => node.textContent), /Report language/);
+  assert.equal(await page.$("h1"), null, "unexpected title on #coach");
   assert.deepEqual(errors, []);
   console.log("Handbook history: HTTP validation, filters, pagination, retry, confirmed deletion/cancel/failure/reload, visibility toggle, 320/390/768/1440px, 200% text and reduced motion passed.");
 } finally {

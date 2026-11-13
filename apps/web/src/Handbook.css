@@ -52,7 +52,6 @@
   .handbook-filter-footer { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 600px) {
-  .handbook-page .coach-header { flex-wrap: wrap; gap: 0; margin-bottom: 1.25rem; }
   .handbook-page .handbook-filters,
   .handbook-page .handbook-example { padding: 1rem; }
   .handbook-page .handbook-sentence { grid-template-columns: minmax(0, 1fr); gap: .25rem; }

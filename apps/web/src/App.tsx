@@ -1,4 +1,6 @@
-import { Dashboard, Coach, PracticeLog } from "./LearningPages";
+import { Coach, PracticeLog } from "./LearningPages";
+import { Dashboard } from "./LearningDashboard";
+import { MyLearningNavigation, myLearningRoutes } from "./MyLearning";
 import { Heading, Panel, State } from "./Page";
 import { useGuideCopy, LearnerLanguageSwitch, GuideText } from "./learner-language";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -1825,7 +1827,7 @@ function Handbook() {
   const [showNotes, setShowNotes] = useState(true);
   const [deleteStatus, setDeleteStatus] = useState("");
   const deleteInFlight = useRef(false);
-  const refreshRef = useRef<HTMLButtonElement>(null);
+  const filterSubmitRef = useRef<HTMLButtonElement>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof webApi.getHandbook>>>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
@@ -1870,17 +1872,13 @@ function Handbook() {
       deleteInFlight.current = false;
       if (entryId || (data?.entries.length === 1 && offset > 0)) navigate({ offset: Math.max(0, offset - (data?.pagination.limit || 10)) });
       else await load();
-      requestAnimationFrame(() => refreshRef.current?.focus({ preventScroll: true }));
+      requestAnimationFrame(() => filterSubmitRef.current?.focus({ preventScroll: true }));
     } finally {
       deleteInFlight.current = false;
       setBusy(false);
     }
   }
   return <div className="handbook-page">
-    <div className="coach-header">
-      <Heading eyebrow="HANDBOOK · HISTORY" title="Your saved Grammar checks." detail={t("Review the original sentences, corrections and explanations saved in your Review Log. Refresh to load the latest checks.")} />
-      <button ref={refreshRef} className="secondary" disabled={busy} onClick={() => void load()}><Icon name="word-review" />{busy ? t("Loading…") : t("Refresh")}</button>
-    </div>
     <form className="handbook-filters" onSubmit={event => { event.preventDefault(); navigate({ search: search.trim() }); }}>
       <label>{t("Time window")}<select value={days} disabled={busy} onChange={event => navigate({ days: event.target.value })}>
         {![0, 7, 30, 90].includes(days) && <option value={days}>{t("Last {days} days", { days })}</option>}
@@ -1896,7 +1894,7 @@ function Handbook() {
         {data?.categories.map(item => <option key={item.errorType} value={item.errorType}>{item.errorType} ({item.checks})</option>)}
       </select></label>
       <div className="handbook-filter-footer">
-        <div className="handbook-filter-actions"><button className="primary" type="submit" disabled={busy}>{t("Search")}<Icon name="arrow" /></button>
+        <div className="handbook-filter-actions"><button ref={filterSubmitRef} className="primary" type="submit" disabled={busy}>{t("Search")}<Icon name="arrow" /></button>
         <button className="handbook-clear" type="button" disabled={busy} onClick={() => navigate({ days: 0, search: "", errorType: "", diagnosis: "all" })}>{t("Clear filters")}</button></div>
       </div>
     </form>
@@ -2647,13 +2645,6 @@ function CopyButton({ value, label, small }: { value: string; label: string; sma
 }
 
 const primaryRoutes: Route[] = ["word-lookup", "practice", "ask"];
-const learningRoutes = [
-  ["dashboard", "Overview", "dashboard"],
-  ["word-library", "Saved words", "bookmark"],
-  ["ask", "Saved notes", "document"],
-  ["handbook", "Handbook", "handbook"],
-  ["coach", "Learning reports", "trend"],
-] as const;
 const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }> = [
   {
     label: "Writing",
@@ -2709,6 +2700,7 @@ export function App() {
     };
   }, []);
   const askView = new URLSearchParams(routeHash.split("?")[1]).get("view") === "notes" ? "notes" : "ask";
+  const isMyLearning = route === "word-review" || myLearningRoutes.some(([key]) => key === route && (key !== "ask" || askView === "notes"));
   const practiceLogView = route === "dashboard" && new URLSearchParams(routeHash.split("?")[1]).get("view") === "practice-log";
   const hasScrollNavigation = route === "word-library" || route === "coach" || route === "handbook" || (route === "ask" && askView === "notes");
   const title =
@@ -2732,7 +2724,7 @@ export function App() {
     settings: <LlmSettings />,
   };
   return (
-    <div className={`shell${route === "grammar" ? " writing-shell" : ""}${hasScrollNavigation ? " has-scroll-navigation" : ""}`}>
+    <div className={`shell${route === "grammar" ? " writing-shell" : ""}${hasScrollNavigation ? " has-scroll-navigation" : ""}${isMyLearning ? " my-learning-shell" : ""}`}>
       <a className="skip-link" href="#main-content">
         {t("Skip to content")}
       </a>
@@ -2809,20 +2801,7 @@ export function App() {
                 {items.find(([itemKey]) => itemKey === key)?.[1]}
               </a>
             ))}
-          <details className="learning-menu my-learning-menu" name="workspace-navigation">
-            <summary className={route === "word-review" || learningRoutes.some(([key]) => key === route && (key !== "ask" || askView === "notes")) ? "active" : ""}>
-              My learning
-              <Icon name="chevron" />
-            </summary>
-            <div className="learning-links">
-              {learningRoutes.map(([key, label, icon]) => (
-                <a key={key} href={key === "ask" ? "#ask?view=notes" : "#" + key} aria-current={route === key && (key !== "ask" || askView === "notes") ? "page" : undefined}>
-                  <Icon name={icon} />
-                  {label}
-                </a>
-              ))}
-            </div>
-          </details>
+          <a className={isMyLearning ? "nav-link active" : "nav-link"} href="#dashboard" aria-current={isMyLearning ? "page" : undefined}>My learning</a>
           </div>
           <a
             className="settings-link"
@@ -2836,11 +2815,13 @@ export function App() {
           <LearnerLanguageSwitch />
         </nav>
       </header>
+      {isMyLearning && <MyLearningNavigation route={route} />}
       <main
         ref={mainRef}
         id="main-content"
         tabIndex={-1}
-        className={`workspace workspace-${route}${route === "grammar" ? " grammar-workspace" : ""}`}
+        aria-label={isMyLearning ? t(title) : undefined}
+        className={`workspace workspace-${route}${route === "grammar" ? " grammar-workspace" : ""}${isMyLearning ? " my-learning-workspace" : ""}`}
       >
         {pages[route]}
         <div hidden={route !== "ask"}>{askVisited.current && <Ask active={route === "ask"} view={askView} />}</div>

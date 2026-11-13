@@ -1,4 +1,5 @@
 import { requestModelProfile } from "./model-selection";
+import type { GrowthDetail, GrowthFilters, GrowthOverview, GrowthRecords } from "./learning-growth";
 
 export type RequestJsonInit = RequestInit & { timeoutMs?: number };
 export type CoachReport = {
@@ -88,6 +89,9 @@ export async function requestJson<T>(url: string, init: RequestJsonInit = {}): P
 }
 
 export const webApi = {
+  getLearningGrowth: (filters: Partial<GrowthFilters> & { days?: number } = {}, signal?: AbortSignal) => requestJson<GrowthOverview>(`/dashboard/growth?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)]))}`, { signal }),
+  getLearningRecords: (filters: Partial<GrowthFilters> & { group?: string; diagnosis?: string; offset?: number; limit?: number } = {}, signal?: AbortSignal) => requestJson<GrowthRecords>(`/dashboard/records?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)]))}`, { signal }),
+  getLearningRecord: (key: string, historyOffset = 0, signal?: AbortSignal) => requestJson<GrowthDetail>(`/dashboard/record?${new URLSearchParams({ key, historyOffset: String(historyOffset) })}`, { signal }),
   getRuntime: () => requestJson<any>("/runtime"),
   getLlmSettings: () => requestJson<any>("/settings/llm"),
   saveLlmSettings: (settings: unknown) => requestJson<any>("/settings/llm", { method: "POST", body: JSON.stringify(settings) }),

@@ -122,13 +122,6 @@ export function VocabularyLibrary({ renderDetails }: { renderDetails: (entry: Sa
   const filterStatus = (value: string) => { setStatus(value); setOffset(0); };
   return (
     <div className="vocabulary-library">
-      <header className="vocabulary-library-header">
-        <div className="vocabulary-library-title">
-          <span className="vocabulary-library-mark" aria-hidden="true"><Icon name="handbook" /></span>
-          <div><h1>Saved words</h1><p>Your vocabulary, ready to revisit.</p></div>
-        </div>
-        <a className="primary" href="#word-review">{t("Review due words")}<Icon name="arrow" /></a>
-      </header>
       <FloatingAction compact active={Boolean(data?.overview?.due) && !loading && !error && !selected} href="#word-review" label={t("Review due words")} icon="word-review" />
       <section className="vocabulary-overview" aria-labelledby="vocabulary-overview-title" aria-busy={loading}>
         <div className="vocabulary-overview-heading">

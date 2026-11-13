@@ -1,0 +1,259 @@
+.learning-dashboard { min-width: 0; color: var(--ink); }
+.learning-dashboard .growth-trend-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1rem; margin-bottom: 1rem; }
+.learning-dashboard .growth-periods { display: inline-flex; gap: .125rem; background: var(--wash); border-radius: .625rem; padding: .1875rem; }
+.learning-dashboard .growth-periods button { min-height: 36px; padding: .375rem .75rem; border: 0; border-radius: .5rem; background: transparent; color: var(--muted); font-size: .75rem; font-weight: 550; box-shadow: none; white-space: nowrap; }
+.learning-dashboard .growth-periods button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm); }
+.learning-dashboard .growth-date-range { display: flex; align-items: center; flex-wrap: wrap; gap: .4375rem; font-size: .75rem; color: var(--muted); }
+.learning-dashboard .growth-date-range label { display: block; }
+.learning-dashboard .growth-date-range input { width: 8.125rem; max-width: 100%; min-height: 36px; border: 1px solid var(--line); border-radius: .5rem; background: var(--paper); padding: .375rem .4375rem; font-size: .75rem; color: var(--ink); }
+.learning-dashboard :is(.growth-section-title, .growth-compare-selectors, .growth-detail-status) select { min-height: 36px; padding: .4375rem 2rem .4375rem .625rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .75rem; background-color: var(--paper); color: var(--ink); width: auto; max-width: 100%; }
+.learning-dashboard .growth-text-button { padding: .5rem .125rem; min-height: 36px; border: 0; background: transparent; box-shadow: none; color: var(--accent-text); font-size: .75rem; font-weight: 550; text-align: left; }
+.learning-dashboard .growth-text-button:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: .2em; }
+.learning-dashboard .growth-section-title { display: flex; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1.125rem; }
+/* Headings stay deep ink; the hue lives on the figures, not on the title. */
+.learning-dashboard .growth-section-title h2 { margin: 0; font-size: 1rem; line-height: 1.5; letter-spacing: -.015em; color: var(--ink); }
+.learning-dashboard .growth-section-title p { margin: .3125rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.7; }
+.learning-dashboard .growth-section-title > .icon { color: var(--accent-text); }
+/* Saved material reads as a data summary of the local library: the total leads, the period and the last saved date explain it, and opening the source stays a quiet action. */
+.learning-dashboard .growth-saved-section { margin: 0 0 1.5rem; }
+.learning-dashboard .growth-saved-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: .375rem .75rem; margin: 0 0 .75rem; }
+.learning-dashboard .growth-saved-heading h2 { margin: 0; font-size: 1rem; font-weight: 650; letter-spacing: -.02em; }
+.learning-dashboard .growth-saved-heading p { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.6; }
+.learning-dashboard .growth-saved-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+/* Semantic type colour: each source owns one hue for its label and total; body copy and notes stay neutral. */
+.learning-dashboard .growth-saved-card:nth-child(1) { --card-ink: var(--accent-text); }
+.learning-dashboard .growth-saved-card:nth-child(2) { --card-ink: var(--info); }
+.learning-dashboard .growth-saved-card:nth-child(3) { --card-ink: var(--warning-text); }
+.learning-dashboard .growth-saved-card:nth-child(4) { --card-ink: var(--success-text); }
+.learning-dashboard .growth-saved-card { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 1.125rem 1.25rem 2.625rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--paper); color: var(--ink); text-decoration: none; transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
+/* A near-white hover is invisible on a white card; the shared soft green gives every card a real material response. */
+.learning-dashboard .growth-saved-card:hover { border-color: var(--accent-border); background: var(--accent-soft); }
+.learning-dashboard .growth-saved-card:focus-visible { outline: 2px solid var(--focus-ring, var(--accent)); outline-offset: 2px; }
+.learning-dashboard .growth-saved-card > span:first-child { display: flex; align-items: center; gap: .5rem; min-width: 0; color: var(--card-ink, var(--muted)); font-size: .75rem; font-weight: 550; line-height: 1.4; }
+.learning-dashboard .growth-saved-card .icon { width: 15px; height: 15px; flex-shrink: 0; }
+.learning-dashboard .growth-saved-card strong { margin: .5rem 0 .1875rem; color: var(--card-ink, var(--ink)); font-size: clamp(1.75rem, 2.6vw, 2.125rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-saved-meta { display: flex; flex-direction: column; gap: .125rem; color: var(--muted); font-size: .75rem; line-height: 1.6; font-weight: 400; overflow-wrap: break-word; }
+.learning-dashboard .growth-saved-meta b { color: var(--accent-text); font-weight: 650; font-variant-numeric: tabular-nums; }
+/* A date is one value, so it should never be split across lines by CJK line breaking. */
+.learning-dashboard .growth-saved-date { white-space: nowrap; }
+.learning-dashboard .growth-saved-card-action { position: absolute; right: 1.25rem; bottom: 1rem; display: inline-flex; align-items: center; gap: .375rem; color: var(--muted); font-size: .75rem; font-weight: 600; }
+.learning-dashboard .growth-saved-card:hover .growth-saved-card-action { color: var(--accent-text); }
+.learning-dashboard .growth-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 0 0 1.5rem; }
+.learning-dashboard .growth-metric-card:nth-child(1) { --metric-ink: var(--accent-text); }
+.learning-dashboard .growth-metric-card:nth-child(2) { --metric-ink: var(--info); }
+.learning-dashboard .growth-metric-card:nth-child(3) { --metric-ink: var(--warning-text); }
+.learning-dashboard .growth-metric-card:nth-child(4) { --metric-ink: var(--success-text); }
+.learning-dashboard .growth-metric-card { text-align: left; min-width: 0; padding: 1.125rem 1.25rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--paper); box-shadow: none; color: var(--ink); transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
+.learning-dashboard .growth-metric-card:hover { border-color: var(--accent-border); background: var(--accent-soft); }
+.learning-dashboard .growth-metric-card > span { display: block; font-size: .75rem; font-weight: 550; color: color-mix(in srgb, var(--metric-ink, var(--muted)) 62%, var(--muted)); line-height: 1.65; }
+.learning-dashboard .growth-metric-card > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: .5rem; margin: .4375rem 0 .375rem; }
+.learning-dashboard .growth-metric-card strong { color: var(--metric-ink, var(--ink)); font-size: clamp(1.5rem, 2.3vw, 1.875rem); font-weight: 750; letter-spacing: -.035em; font-variant-numeric: tabular-nums; line-height: 1.5; }
+.learning-dashboard .growth-metric-card strong small { font-size: .875rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.learning-dashboard .growth-metric-card > small { display: block; color: var(--muted); font-size: .75rem; line-height: 1.8; }
+/* A change in a learning metric reads as progress or regression, not as a stock tick. */
+.learning-dashboard .growth-delta { color: #526476; font-size: .75rem; font-variant-numeric: tabular-nums; font-weight: 500; }
+.learning-dashboard .growth-delta.is-up { color: var(--success-text); font-weight: 650; }
+.learning-dashboard .growth-delta.is-down { color: var(--danger-text); font-weight: 650; }
+.learning-dashboard .growth-delta.is-flat, .learning-dashboard .growth-delta.is-unknown { color: var(--muted); }
+.learning-dashboard .growth-analysis-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 1.25rem; }
+.learning-dashboard .growth-panel { padding: 1.375rem; background: var(--paper); border: 1px solid var(--line); border-radius: 1rem; min-width: 0; }
+.learning-dashboard .growth-chart { width: 100%; height: auto; min-height: 13.75rem; display: block; overflow: visible; }
+.learning-dashboard .growth-chart text { fill: var(--muted); font: 12px 'DM Sans', system-ui, sans-serif; }
+.learning-dashboard .growth-chart line { stroke: var(--line); stroke-dasharray: 3 5; }
+.learning-dashboard .growth-series path { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+.learning-dashboard .growth-series circle { fill: var(--accent); stroke: var(--paper); stroke-width: 1.5; }
+.learning-dashboard .growth-series.is-previous path { stroke: #a0abb7; stroke-dasharray: 5 5; stroke-width: 2; }
+.learning-dashboard .growth-series.is-previous circle { fill: #a0abb7; }
+.learning-dashboard .growth-series .growth-point-hit { fill: transparent; stroke: none; }
+.learning-dashboard .growth-series [role="button"] { cursor: pointer; }
+.learning-dashboard .growth-series [role="button"]:focus-visible { outline: none; }
+.learning-dashboard .growth-series [role="button"]:focus-visible circle:last-child { stroke: var(--accent-text); stroke-width: 3; }
+.learning-dashboard .growth-chart-legend { display: flex; gap: 1.25rem; font-size: .75rem; color: var(--muted); margin: .5rem 0 0; }
+.learning-dashboard .growth-chart-legend span { display: inline-flex; align-items: center; gap: .375rem; }
+.learning-dashboard .growth-chart-legend span:first-child { color: var(--accent-text); font-weight: 550; }
+.learning-dashboard .growth-chart-legend i { width: 1rem; height: 3px; background: var(--accent); border-radius: 2px; }
+.learning-dashboard .growth-chart-legend i.is-previous { background: #a0abb7; }
+.learning-dashboard .growth-evidence-footer summary { cursor: pointer; padding: .4375rem 0; color: var(--muted); font-size: .75rem; }
+.learning-dashboard .growth-table-scroll { overflow-x: auto; max-width: 100%; }
+.learning-dashboard .growth-table-scroll table { width: 100%; border-collapse: collapse; font-size: .75rem; font-variant-numeric: tabular-nums; text-align: left; }
+.learning-dashboard .growth-table-scroll th, .learning-dashboard .growth-table-scroll td { padding: .75rem .625rem; border-bottom: 1px solid var(--line); line-height: 1.8; vertical-align: top; min-width: 4rem; }
+.learning-dashboard .growth-table-scroll th { color: var(--muted); font-weight: 550; background: #f8fafc; }
+.learning-dashboard .growth-table-scroll tr:last-child td { border-bottom: 0; }
+.learning-dashboard .growth-table-scroll .growth-text-button { font-size: inherit; min-height: 0; padding: 0; }
+.learning-dashboard .growth-panel-note { color: var(--muted); font-size: .75rem; line-height: 1.85; margin: 1rem 0 0; }
+/* The period control lives in this panel, so its scope is stated in the panel's own voice. */
+.learning-dashboard .growth-trend-scope { color: var(--info); background: var(--info-bg); border-radius: .5rem; padding: .5rem .625rem; }
+.learning-dashboard .growth-tag { display: inline-flex; align-items: center; padding: .25rem .5rem; background: var(--info-bg); border-radius: .375rem; font-size: .75rem; color: var(--info); white-space: nowrap; }
+.learning-dashboard .growth-priority-count { color: var(--accent-text); background: var(--accent-soft); font-weight: 650; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-bar-list { display: grid; gap: 1.25rem; margin-top: 1.875rem; }
+.learning-dashboard .growth-bar-row { --bar-ink: var(--accent-text); display: grid; grid-template-columns: 5.375rem minmax(0, 1fr) 1.5rem; align-items: center; gap: .75rem; width: 100%; border: 0; padding: .25rem 0; text-align: left; background: transparent; box-shadow: none; color: var(--ink); font-size: .75rem; }
+.learning-dashboard .growth-bar-row > span:first-child { color: var(--bar-ink); font-weight: 550; }
+.learning-dashboard .growth-category-1 { --bar-ink: var(--info); }
+.learning-dashboard .growth-category-2 { --bar-ink: var(--warning-text); }
+.learning-dashboard .growth-category-3 { --bar-ink: #6b4f9c; }
+.learning-dashboard .growth-category-4 { --bar-ink: #3f6a80; }
+.learning-dashboard .growth-bar-row:hover { color: var(--accent-text); }
+.learning-dashboard .growth-bar-track { display: block; height: .5rem; border-radius: .375rem; background: var(--wash); overflow: hidden; }
+.learning-dashboard .growth-bar-track i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.learning-dashboard .growth-category-1 .growth-bar-track i { background: #4c9cb9; }
+.learning-dashboard .growth-category-2 .growth-bar-track i { background: #c89a49; }
+.learning-dashboard .growth-category-3 .growth-bar-track i { background: #9380b6; }
+.learning-dashboard .growth-category-4 .growth-bar-track i { background: #7899ac; }
+.learning-dashboard .growth-bar-row b { color: var(--bar-ink); text-align: right; font-size: .75rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-secondary-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.25rem; margin-top: 1.25rem; }
+.learning-dashboard .growth-status-stack { display: flex; height: .6875rem; border-radius: .375rem; background: var(--wash); overflow: hidden; margin: 1.25rem 0; }
+.learning-dashboard .growth-status-stack i { height: 100%; }
+.learning-dashboard .growth-status-new { background: var(--learning-status-new); }
+.learning-dashboard .growth-status-learning { background: var(--learning-status-learning); }
+.learning-dashboard .growth-status-needs-reinforcement { background: var(--learning-status-needs-reinforcement); }
+.learning-dashboard .growth-status-retained { background: var(--learning-status-retained); }
+.learning-dashboard .growth-status-well-retained { background: var(--learning-status-well-retained); }
+.learning-dashboard .growth-status-insufficient-history { background: var(--learning-status-insufficient-history); }
+.learning-dashboard .growth-status-unavailable { background: var(--learning-status-unavailable); }
+.learning-dashboard .growth-status-list { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem 1.5rem; }
+.learning-dashboard .growth-status-list button { display: flex; align-items: center; gap: .5rem; padding: .3125rem 0; border: 0; background: none; box-shadow: none; text-align: left; color: var(--ink); font-size: .75rem; min-width: 0; }
+.learning-dashboard .growth-status-list button:hover { color: var(--accent-text); }
+.learning-dashboard .growth-status-list i { width: .4375rem; height: .4375rem; border-radius: 50%; flex-shrink: 0; }
+/* Each state name repeats its dot's hue, so the legend and the stacked bar read as one scale. */
+.learning-dashboard .growth-status-list .growth-status-learning + span { color: var(--info); }
+.learning-dashboard .growth-status-list .growth-status-needs-reinforcement + span { color: var(--warning-text); }
+.learning-dashboard .growth-status-list .growth-status-retained + span { color: var(--success-text); }
+.learning-dashboard .growth-status-list .growth-status-well-retained + span { color: var(--accent-text); }
+.learning-dashboard .growth-status-list b { margin-left: auto; font-size: .75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-diagnosis { background: #f1faf4; border-color: var(--accent-border); }
+.learning-dashboard .growth-diagnosis h2 { color: #235d38; }
+.learning-dashboard .growth-diagnosis > p { font-size: .8125rem; line-height: 1.9; color: #3f5f4b; margin: .75rem 0; }
+.learning-dashboard .growth-diagnosis > small { display: block; font-size: .75rem; line-height: 1.8; color: #526c5b; }
+.learning-dashboard .growth-inline-link { display: inline-flex; align-items: center; justify-content: start; gap: .375rem; padding: .375rem 0; background: none; border: 0; box-shadow: none; color: var(--accent-text); font-size: .75rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.learning-dashboard .growth-inline-link:hover { text-decoration: underline; text-underline-offset: .2em; }
+.learning-dashboard .growth-inline-link .icon { width: 14px; height: 14px; }
+.learning-dashboard .growth-diagnosis > .growth-inline-link { margin-top: .75rem; }
+.learning-dashboard .growth-priorities ol { list-style: none; padding: 0; margin: 0; }
+.learning-dashboard .growth-priorities li + li { border-top: 1px solid var(--line); }
+.learning-dashboard .growth-priorities .growth-activity-row { grid-template-columns: 1.875rem minmax(0, 1fr) 1rem; padding: .8125rem 0; }
+.learning-dashboard .growth-priorities li:first-child .growth-activity-row { padding-top: .125rem; }
+.learning-dashboard .growth-activity-icon.growth-rank { color: var(--accent-text); background: var(--accent-soft); font-size: .75rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-priorities li:nth-child(n+4) .growth-activity-icon.growth-rank { color: var(--info); background: var(--info-bg); }
+.learning-dashboard .growth-activity-list { min-width: 0; }
+.learning-dashboard .growth-activity-row { display: grid; grid-template-columns: 1.875rem minmax(0, 1fr) auto 1rem; width: 100%; align-items: center; text-align: left; gap: .625rem; padding: .8125rem 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; box-shadow: none; color: var(--ink); }
+.learning-dashboard .growth-activity-row:first-child { border-top: 0; padding-top: .125rem; }
+.learning-dashboard .growth-activity-row:hover .growth-activity-copy strong { color: var(--accent-text); }
+.learning-dashboard .growth-activity-icon { display: grid; place-items: center; width: 1.875rem; height: 1.875rem; color: #708196; background: var(--wash); border-radius: .5rem; }
+.learning-dashboard .growth-activity-icon .icon { width: 16px; height: 16px; }
+.learning-dashboard .growth-activity-copy { min-width: 0; }
+.learning-dashboard .growth-activity-copy strong { display: block; font-size: .75rem; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.8; }
+.learning-dashboard .growth-activity-copy small { display: block; color: var(--muted); font-size: .75rem; margin-top: .1875rem; line-height: 1.8; }
+.learning-dashboard .growth-activity-row time { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+.learning-dashboard .growth-activity-row > .icon { width: 14px; height: 14px; color: var(--control); }
+.learning-dashboard .growth-practice-log { margin-top: .5rem; }
+.learning-dashboard .growth-comparison { margin-top: 1.5rem; }
+.learning-dashboard .growth-comparison > summary { color: var(--muted); padding: .75rem 0; cursor: pointer; font-size: .8125rem; font-weight: 550; }
+.learning-dashboard .growth-comparison-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; }
+.learning-dashboard .growth-comparison-tabs button { min-height: 40px; padding: .5rem .875rem; border: 1px solid var(--line); border-radius: .625rem; background: var(--paper); color: var(--muted); font-size: .75rem; box-shadow: none; }
+.learning-dashboard .growth-comparison-tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent-border); }
+.learning-dashboard .growth-compare-selectors { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
+.learning-dashboard .growth-compare-selectors label { display: grid; gap: .4375rem; font-size: .75rem; color: var(--muted); flex: 1 1 0; min-width: 0; max-width: 24rem; }
+.learning-dashboard .growth-evidence-footer { margin: 1rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.8; }
+.learning-dashboard .growth-evidence-footer > p { margin-bottom: .5rem; }
+.learning-dashboard .growth-coverage-row { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding: .625rem 0; font-size: .75rem; }
+.learning-dashboard .growth-loading { font-size: .75rem; color: var(--muted); }
+.learning-dashboard .growth-notice { padding: .75rem 1rem; border-radius: .75rem; background: var(--warning-bg); color: var(--warning-text); font-size: .75rem; line-height: 1.8; }
+.learning-dashboard .growth-error { background: var(--danger-bg); color: var(--danger-text); border-radius: .75rem; padding: 1rem; font-size: .8125rem; line-height: 1.7; margin-bottom: 1rem; }
+.learning-dashboard .growth-error p { margin: .5rem 0; }
+.learning-dashboard :is(button, a, input, select, summary):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+.learning-dashboard .growth-drawer { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(43rem, 100%); max-width: 100%; height: 100dvh; max-height: 100dvh; padding: 0; background: var(--paper); color: var(--ink); border: 0; border-radius: 1.25rem 0 0 1.25rem; box-shadow: var(--shadow-floating); overflow: hidden; }
+.learning-dashboard .growth-drawer[open] { display: flex; flex-direction: column; }
+.learning-dashboard .growth-drawer::backdrop { background: rgb(16 24 39 / 42%); }
+.learning-dashboard .growth-drawer-heading { display: flex; align-items: center; justify-content: space-between; min-height: 4rem; padding: .625rem 1.5rem; gap: 1rem; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.learning-dashboard .growth-drawer-heading > div > span { color: var(--muted); font-size: .8125rem; }
+.learning-dashboard .growth-icon-button { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; box-shadow: none; color: var(--muted); flex-shrink: 0; }
+.learning-dashboard .growth-icon-button:hover { background: var(--wash); }
+.learning-dashboard .growth-drawer-content { overflow-y: auto; overscroll-behavior: contain; padding: 1.75rem; min-height: 0; }
+.learning-dashboard .growth-drawer-content > h2 { font-size: 1.5rem; line-height: 1.5; letter-spacing: -.025em; overflow-wrap: anywhere; margin: 0 0 1rem; }
+.learning-dashboard .growth-record-meta { color: var(--muted); font-size: .75rem; line-height: 1.8; overflow-wrap: anywhere; }
+.learning-dashboard .growth-detail-field { margin: 1.5rem 0; }
+.learning-dashboard .growth-detail-field h3 { color: var(--muted); font-size: .75rem; font-weight: 500; margin: 0 0 .5rem; }
+.learning-dashboard .growth-detail-field > div { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1rem; background: var(--wash); border-radius: .625rem; font-size: .875rem; line-height: 1.85; }
+.learning-dashboard .growth-detail-field.is-corrected > div { background: var(--accent-soft); color: var(--accent-text); }
+.learning-dashboard .growth-detail-diagnoses { margin: 1.5rem 0; }
+.learning-dashboard .growth-detail-diagnoses h3 { font-size: .9375rem; }
+.learning-dashboard .growth-detail-diagnoses > div { padding: 1rem 0; border-bottom: 1px solid var(--line); font-size: .8125rem; line-height: 1.8; }
+.learning-dashboard .growth-detail-diagnoses strong { margin-right: .625rem; }
+.learning-dashboard .growth-detail-diagnoses p { overflow-wrap: anywhere; margin: .75rem 0 0; }
+.learning-dashboard .growth-word-history h3 { margin-bottom: .5rem; font-size: 1rem; }
+.learning-dashboard .growth-word-history > details { border-bottom: 1px solid var(--line); padding: .75rem 0; }
+.learning-dashboard .growth-word-history summary { cursor: pointer; font-size: .75rem; line-height: 1.8; color: var(--muted); }
+.learning-dashboard .growth-original-record { margin-top: 1.5rem; }
+.learning-dashboard .growth-original-record summary { color: var(--muted); font-size: .75rem; cursor: pointer; padding: .5rem 0; }
+.learning-dashboard .growth-original-record pre { padding: 1rem; border-radius: .75rem; font-size: .75rem; line-height: 1.8; background: var(--wash); white-space: pre-wrap; overflow-wrap: anywhere; }
+.learning-dashboard .growth-pagination { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.learning-dashboard .growth-pagination button { min-height: 40px; font-size: .75rem; padding: .5rem .875rem; }
+.learning-dashboard .growth-pagination > span { font-size: .75rem; color: var(--muted); }
+.learning-dashboard .growth-detail-status { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; font-size: .8125rem; color: var(--muted); }
+.learning-dashboard .growth-detail-markdown { min-width: 0; overflow-wrap: anywhere; font-size: .875rem; }
+.learning-dashboard .growth-detail-markdown table { display: block; overflow-x: auto; max-width: 100%; }
+@media (max-width: 1120px) {
+  .learning-dashboard .growth-metric-grid { gap: .75rem; }
+  .learning-dashboard .growth-metric-card { padding: 1rem; }
+  .learning-dashboard .growth-analysis-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  .learning-dashboard .growth-secondary-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .learning-dashboard .growth-activity-row time { display: none; }
+  .learning-dashboard .growth-activity-row { grid-template-columns: 1.875rem minmax(0, 1fr) 1rem; }
+}
+@media (max-width: 880px) {
+  .learning-dashboard .growth-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .learning-dashboard .growth-saved-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .learning-dashboard .growth-analysis-grid, .learning-dashboard .growth-secondary-grid { grid-template-columns: 1fr; }
+  .learning-dashboard .growth-bar-list { margin-top: 1rem; gap: .875rem; }
+  .learning-dashboard .growth-section-title select { max-width: 12rem; }
+}
+@media (max-width: 560px) {
+  .learning-dashboard .growth-periods { width: 100%; justify-content: space-between; }
+  .learning-dashboard .growth-periods button { padding-inline: .5rem; }
+  .learning-dashboard .growth-date-range { gap: .375rem; width: 100%; }
+  .learning-dashboard .growth-date-range label { min-width: 0; flex: 1; }
+  .learning-dashboard .growth-date-range input { width: 100%; padding-inline: .3125rem; }
+  .learning-dashboard .growth-date-range button { flex: 1 0 100%; padding-block: .125rem; min-height: 30px; }
+  .learning-dashboard .growth-metric-card { padding: .875rem; }
+  /* One cramped column per source reads worse than a row, so narrow screens give each source the full width. */
+  .learning-dashboard .growth-saved-grid { grid-template-columns: 1fr; gap: .625rem; }
+  .learning-dashboard .growth-saved-card { flex-flow: row wrap; align-items: baseline; gap: .25rem .75rem; padding: .875rem 1rem; }
+  .learning-dashboard .growth-saved-card > span:first-child { flex: 1 1 100%; }
+  .learning-dashboard .growth-saved-card strong { margin: 0; font-size: 1.625rem; }
+  .learning-dashboard .growth-saved-meta { flex: 1 1 100%; order: 2; }
+  .learning-dashboard .growth-saved-card-action { position: static; margin-inline-start: auto; order: 1; }
+  .learning-dashboard .growth-metric-card strong { font-size: 1.625rem; }
+  .learning-dashboard .growth-metric-card strong small { font-size: .75rem; }
+  .learning-dashboard .growth-metric-card > div { gap: .1875rem .5rem; }
+  .learning-dashboard .growth-panel { padding: 1rem; }
+  .learning-dashboard .growth-section-title { gap: .75rem; flex-wrap: wrap; }
+  .learning-dashboard .growth-section-title h2 { font-size: .9375rem; }
+  .learning-dashboard .growth-section-title select { max-width: 100%; }
+  /* A select keeps the width of its longest option, so the label has to be allowed to shrink. */
+  .learning-dashboard .growth-section-title > label { min-width: 0; flex: 1 1 auto; }
+  .learning-dashboard .growth-section-title > label > select { width: 100%; }
+  .learning-dashboard .growth-chart-legend { flex-wrap: wrap; gap: .5rem 1.25rem; }
+  .learning-dashboard .growth-inline-link { white-space: normal; }
+  .learning-dashboard .growth-chart { min-height: 11.25rem; }
+  .learning-dashboard .growth-status-list { gap: .4375rem 1rem; }
+  .learning-dashboard .growth-drawer { width: 100%; border-radius: 0; }
+  .learning-dashboard .growth-drawer-heading { padding-inline: 1rem; }
+  .learning-dashboard .growth-drawer-content { padding: 1.25rem 1rem; }
+  .learning-dashboard .growth-drawer-content > h2 { font-size: 1.25rem; }
+  .learning-dashboard .growth-compare-selectors { gap: .75rem; }
+  .learning-dashboard .growth-compare-selectors select { width: 100%; }
+}
+@media (max-width: 350px) {
+  .learning-dashboard .growth-metric-grid { gap: .5rem; }
+  .learning-dashboard .growth-metric-card { padding: .75rem; }
+  .learning-dashboard .growth-status-list { grid-template-columns: 1fr; }
+  /* Four nowrap period buttons cannot share one row this narrow, so they stack two by two. */
+  .learning-dashboard .growth-periods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .learning-dashboard .growth-periods button { padding-inline: .25rem; }
+  /* The category name and its count need the full row once the text is enlarged, so the bar drops below them. */
+  .learning-dashboard .growth-bar-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: .375rem; }
+  .learning-dashboard .growth-bar-row > .growth-bar-track { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .learning-dashboard *, .my-learning-navigation * { transition: none !important; scroll-behavior: auto !important; }
+}

@@ -1,153 +1,183 @@
-import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
-import http from "node:http";
-import puppeteer from "puppeteer";
-import { preview } from "vite";
-import { dispatch } from "../lib/server/router.mjs";
-import { registerCoachRoutes } from "../lib/server/routes/coach.mjs";
-import { registerDashboardRoutes } from "../lib/server/routes/dashboard.mjs";
-import { registerHandbookRoutes } from "../lib/server/routes/handbook.mjs";
-import { buildGrammarHistory } from "../lib/application/grammar-history.mjs";
-import { buildLearningOverview, getOverviewPracticeLog } from "../lib/application/learning-overview.mjs";
-import { buildCoachPatterns, clearGrammarCoachCache } from "../lib/application/grammar-coach.mjs";
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import puppeteer from 'puppeteer';
+import { preview } from 'vite';
+import { getGrowthOverview, getGrowthRecords, getGrowthRecord } from '../lib/application/learning-growth.mjs';
+import { buildGrammarHistory } from '../lib/application/grammar-history.mjs';
+import { getErrorTypesByCategory } from '../lib/domain/error-types.mjs';
 
-const entries = Array.from({ length: 14 }, (_, index) => ({ source: "grammar", entryId: `saved-${index}`, timestamp: new Date(Date.now() - index * 86400000).toISOString(),
-  userInput: index < 12 ? "I read book." : "Yesterday she goes.", correction: index < 12 ? "I read a book." : "Yesterday she went.",
-  diagnoses: [{ error_type: index < 12 ? "Articles" : "Tense", explanation: "Consider the context.", severity: "Minor" }] }));
-entries.push({ source: "unknown", entryId: "legacy", timestamp: new Date().toISOString(), userInput: "Preserved legacy", diagnoses: [] });
-let calls = 0, failGeneration = false, failOverview = false, overviewState = "normal", holdType = "", release;
-let legacyOverview = false;
-const llm = { config: {}, getCurrentProviderName: () => "custom", generateWithFallback: async input => {
-  calls++;
-  const { errorType, examples } = JSON.parse(input);
-  if (holdType === errorType) await new Promise(resolve => { release = resolve; });
-  if (failGeneration) throw new Error("Fixture unavailable");
-  return JSON.stringify({ observedPattern: `${errorType}: a recurring pattern in your writing.`, principle: `${errorType} grammar principle explained in context.`, qualifications: "The context determines which form fits. Fixed expressions may differ.",
-    possibleCauses: [{ hypothesis: "You may be overlooking the relevant context.", evidenceIds: [examples[0].entryId] }], examples: [{ entryId: examples.at(-1).entryId, explanation: "This saved correction fits its context." }] });
-} };
-const loadData = () => ({ entries });
-registerCoachRoutes({ loadData, getLLMManager: async () => llm });
-registerHandbookRoutes({ loadHistory: options => buildGrammarHistory(entries, { ...options, includeLegacy: true }) });
-const events = entries.map(item => ({ source: "review-log", id: item.entryId, type: item.source === "grammar" ? "grammar" : "writing", timestamp: item.timestamp, title: item.userInput, href: item.source === "grammar" ? `#handbook?days=0&entry=${item.entryId}` : null }));
-events.push({ source: "attempts", id: "1", type: "review", timestamp: new Date().toISOString(), title: "book", score: 100 });
-events.push({ source: "vocab", id: "book", type: "vocabulary", timestamp: new Date().toISOString(), title: "book", precision: "day", href: "#word-library" });
-const practiceMarkdown = "## Practice · 2026-11-08T10:00:00Z\n- Prompt: Translate the sentence.\n- Your answer: This is a saved practice entry.\n";
-registerDashboardRoutes({ loadPracticeLog: (config, options) => getOverviewPracticeLog(config, { ...options, readFile: () => practiceMarkdown }), loadOverview: options => {
-  if (failOverview) throw Object.assign(new Error("Fixture unavailable"), { status: 503 });
-  const data = buildLearningOverview(overviewState === "empty" ? [] : overviewState === "partial" ? events.filter(event => event.source !== "review-log") : events, options, { reviewEntries: overviewState === "normal" ? entries : [], patterns: overviewState === "normal" ? buildCoachPatterns(entries, options).patterns : [],
-    coverage: [{ source: "Saved writing", status: overviewState === "partial" ? "unavailable" : "available", note: "Saved records only." }, { source: "Vocabulary inventory", status: "inventory", count: 1, note: "Inventory is separate from activity." }, { source: "Translation, listening and conversation", status: "not-recorded", note: "Unsaved interactions are not counted." }] });
-  if (legacyOverview) delete data.savedMaterial;
-  return data;
-} });
-const api = http.createServer(dispatch);
-await new Promise(resolve => api.listen(0, "127.0.0.1", resolve));
-const apiBase = `http://127.0.0.1:${api.address().port}`;
-let server, browser;
+// Synthetic data only; never start the Local Runtime, migrate a DB or call a model.
+const now = Date.now(), HOUR = 3600000;
+const stamp = delta => new Date(now - delta).toISOString();
+const wall = delta => new Date(now - delta + 8 * HOUR).toISOString();
+const reviews = Array.from({ length: 24 }, (_, i) => ({ source: 'grammar', entryId: `check-${i}`, formatSupported: true,
+  timestamp: wall((i + 1) * HOUR), userInput: `I bought book ${i}.`, correction: `I bought a book ${i}.`,
+  diagnoses: [{ error_type: ['Verb Tense', 'Article Usage', 'Subject-Verb Agreement', 'Word Choice', 'Sentence Structure', 'Preposition Usage'][i % 6], severity: 'Minor', explanation: 'Inspect the original context.' }] }));
+const words = ['steady', 'durable', 'new'].map((word, i) => ({ id: word, word, pos: 'adjective', phonetic: '/demo/', meaning: `The meaning of ${word}.`, zh: '演示词条',
+  synonyms: '', collocations: '', verbForms: '', plural: '', example: `A ${word} example.`, example2: '', example3: '', note: '', memory: '', added: '2025-01-01',
+  learningStatus: ['retained', 'well-retained', 'new'][i], recordedReviews: i < 2 ? 4 : 0,
+  srs: { id: i + 7, due_date: stamp(0).slice(0, 10), total_reviews: i < 2 ? 4 : 0, last_reviewed: null, interval_days: 7 } }));
+const attempts = Array.from({ length: 8 }, (_, i) => ({ id: i, activity_type: 'review-vocabulary', target_pattern: i % 2 ? 'steady' : 'durable',
+  prompt: 'word', learner_answer: i % 2 ? 'steady' : 'durable', reference_answer: i % 2 ? 'steady' : 'durable', score: i === 0 ? 0 : 100,
+  feedback: JSON.stringify({ correct: i !== 0, audioPlayed: false, cardId: i % 2 ? 7 : 8, rating: 'good', result: { next: { intervalDays: 7 } } }), created_at: stamp((i + 1) * HOUR) }));
+attempts.push(...[100, 101].map(id => ({ id, activity_type: 'practice-sentence', prompt: '我昨天买了一本书。', learner_answer: 'I buy a book yesterday.', reference_answer: 'I bought a book yesterday.', target_pattern: 'Past tense', score: 80,
+  feedback: JSON.stringify({ hints_used: 0, corrected_answer: 'I bought a book yesterday.', feedback_zh: '注意过去时。' }), created_at: stamp(HOUR) })));
+const notes = [{ id: '中文笔记.md', title: 'Chinese note', category: 'Grammar', tags: ['grammar'], content: `**Date**: ${wall(0).slice(0, 16).replace('T', ' ')}\n\n# 笔记\n\nObserve article usage.`, modifiedAt: stamp(0) }];
+const snapshot = { format: 'clearwrite-growth', version: 1, exportedAt: stamp(0), taxonomy: getErrorTypesByCategory(),
+  coverage: ['Grammar corrections', 'Practice & vocabulary reviews', 'Vocabulary schedules', 'Saved words', 'Ask notes', 'Coach reports', 'Practice Markdown', 'Live Practice targets'].map(source => ({ source, status: 'available' })),
+  reviews, words, cards: [], attempts, notes, reports: [], practiceLog: [], practiceTargets: { 100: ['Verb Tense'], 101: ['Verb Tense'] } };
+const deps = { now, loadData: async () => snapshot };
+let failRecords = false, failHistory = false, browser, server;
 try {
-  const list = await fetch(`${apiBase}/coach?days=0`).then(response => response.json());
-  assert.equal(list.patterns.length, 2); assert.equal(calls, 0);
-  assert.equal((await fetch(`${apiBase}/coach/unknown`)).status, 404);
-  assert.equal((await fetch(`${apiBase}/coach?days=-1`)).status, 400);
-  assert.equal((await fetch(`${apiBase}/coach/explain`, { method: "POST", body: JSON.stringify({ errorType: "Articles", version: "outdated" }) })).status, 409);
-  assert.equal((await fetch(`${apiBase}/dashboard?limit=0`)).status, 400);
-  server = await preview({ configFile: "apps/web/vite.config.ts", preview: { host: "127.0.0.1", port: 0, open: false } });
+  server = await preview({ configFile: 'apps/web/vite.config.ts', preview: { host: '127.0.0.1', port: 0, open: false } });
   const base = `http://127.0.0.1:${server.httpServer.address().port}`;
-  browser = await puppeteer.launch({ headless: true, executablePath: process.env.PUPPETEER_EXECUTABLE_PATH });
+  browser = await puppeteer.launch({ headless: true, ...(process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage(), errors = [];
-  page.on("pageerror", error => errors.push(error.message));
+  page.on('pageerror', error => errors.push(error.message));
   await page.setRequestInterception(true);
-  page.on("request", async request => {
+  page.on('request', async request => {
     try {
-      const url = new URL(request.url());
-      if (url.origin === base && ["/coach", "/coach/explain", "/dashboard", "/dashboard/practice-log", "/handbook"].includes(url.pathname)) {
-        const response = await fetch(`${apiBase}${url.pathname}${url.search}`, { method: request.method(), ...(request.postData() ? { body: request.postData(), headers: { "Content-Type": "application/json" } } : {}) });
-        await request.respond({ status: response.status, contentType: "application/json", body: await response.text() });
-      } else if (url.origin === base && url.pathname === "/ask/notes") {
-        await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ notes: [{ id: "fixture.md" }] }) });
-      } else if (url.origin === base && url.pathname === "/runtime") await request.respond({ status: 200, contentType: "application/json", body: "{}" });
+      const url = new URL(request.url()), options = Object.fromEntries(url.searchParams);
+      if (url.origin !== base) { await request.abort(); return; }
+      const json = body => request.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+      if (url.pathname === '/dashboard/growth') await json(await getGrowthOverview(options, deps));
+      else if (url.pathname === '/dashboard/records') { if (failRecords) throw Error('Synthetic record failure'); await json(await getGrowthRecords(options, deps)); }
+      else if (url.pathname === '/dashboard/record') { if (failHistory) throw Error('Synthetic history failure'); await json(await getGrowthRecord(options, deps)); }
+      else if (url.pathname === '/handbook') await json(buildGrammarHistory(reviews, options, now));
+      else if (url.pathname === '/vocab/words') {
+        const selected = words.filter(word => !options.status || options.status === 'all' || word.learningStatus === options.status);
+        await json({ words: selected, total: selected.length, totalSaved: words.length, sourceAvailable: true, limit: 25, offset: 0, hasMore: false, overview: { due: 3, overdue: 0, dueToday: 3, retained: 1, wellRetained: 1, distribution: { retained: 1, 'well-retained': 1, new: 1 } }, today: stamp(0).slice(0, 10) });
+      } else if (url.pathname === '/vocab/history') await json({ records: [], total: 0, offset: 0, hasMore: false });
+      else if (url.pathname === '/ask/notes') await json({ notes });
+      else if (url.pathname === '/coach/reports') await json([]);
+      else if (url.pathname === '/runtime') await json({ runtime: 'local', storage: { database: 'sqlite', assets: 'markdown' } });
+      else if (url.pathname === '/status-message') await json({ content: '' });
+      else if (url.pathname === '/handbook/reports') await json({ reports: [] });
+      else if (url.pathname === '/dashboard/practice-log') await json({ count: 1, markdown: '## Saved practice\n\nA fixture entry.' });
+      else if (url.pathname.startsWith('/settings/')) await request.respond({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Fixture model unavailable' }) });
       else await request.continue();
-    } catch { if (!request.isInterceptResolutionHandled()) await request.abort(); }
+    } catch (error) { if (!request.isInterceptResolutionHandled()) await request.respond({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: error.message }) }); }
   });
-  const ready = async () => { await page.waitForNetworkIdle({ idleTime: 120 }); await page.waitForFunction(() => ![...document.querySelectorAll('[aria-busy]')].some(node => node.getAttribute("aria-busy") === "true")); };
+  const ready = async () => { await page.waitForNetworkIdle({ idleTime: 100 }); await page.waitForFunction(() => ![...document.querySelectorAll('[aria-busy]')].some(node => node.getAttribute('aria-busy') === 'true')); };
   await page.setViewport({ width: 1440, height: 1000 });
-  await page.goto(`${base}/#coach?days=0`); await ready();
-  assert.equal(calls, 0);
-  assert.equal(await page.$(".coach-patterns"), null);
-  assert.equal(await page.$eval(".coach-page h1", node => node.textContent), "English skills report");
-  assert.equal(await page.$eval(".coach-actions .primary", node => node.textContent), "Generate report");
-  // Full report generation, citations and persistence are covered by coach-report-web-smoke.mjs.
-  const output = path.join(process.cwd(), ".tmp", "my-learning-qa"); fs.mkdirSync(output, { recursive: true });
-  for (const route of ["dashboard", "coach"]) {
-    await page.goto(`${base}/#${route}?days=0${route === "coach" ? "&errorType=Tense" : ""}`); await ready();
+  await page.goto(`${base}/#dashboard?days=30`); await ready();
+  assert.equal(await page.$$eval('.my-learning-tabs a', nodes => nodes.length), 5);
+  assert.equal(await page.$('#workspace-nav .my-learning-menu'), null);
+  assert.equal(await page.$eval('#workspace-nav a[href="#dashboard"]', node => node.textContent), 'My learning');
+  // The tab track is a control: deep enough to read on a low-gamut screen, edged with its own stroke, and exactly as wide as the content below.
+  const track = await page.$eval('.my-learning-tabs', node => {
+    const style = getComputedStyle(node), rect = node.getBoundingClientRect();
+    return { background: style.backgroundColor, shadow: style.boxShadow, left: rect.left, width: rect.width };
+  });
+  const workspace = await page.$eval('main.workspace', node => { const rect = node.getBoundingClientRect(); return { left: rect.left, width: rect.width }; });
+  assert.equal(track.background, 'rgb(232, 239, 247)', 'track keeps its deeper #e8eff7 ground');
+  assert.match(track.shadow, /227, 234, 243/, 'track keeps the 1px #e3eaf3 outline');
+  assert.match(track.shadow, /inset/, 'track outline is inset so tabs stay 40px tall');
+  assert.ok(Math.abs(track.left - workspace.left) < 1.5, 'track and content share the workspace left edge');
+  assert.ok(Math.abs(track.width - workspace.width) < 1.5, 'track and content share the workspace width');
+  assert.ok(Math.abs(track.left + track.width - workspace.left - workspace.width) < 1.5, 'track and content share the workspace right edge');
+  // Labels stay at their natural width; the unused right side of the track is blank space, not stretched chips.
+  assert.equal(await page.$$eval('.my-learning-tabs a', nodes => nodes.every(node => getComputedStyle(node).flexGrow === '0')), true, 'tabs keep their natural width');
+  const labelBounds = await page.$$eval('.my-learning-tabs a', nodes => ({ first: nodes[0].getBoundingClientRect().left, last: nodes[nodes.length - 1].getBoundingClientRect().right }));
+  assert.ok(labelBounds.first - track.left < 16, 'tabs start at the track inset');
+  assert.ok(track.left + track.width - labelBounds.last > 40, 'the right side of the track is left blank');
+  assert.equal(await page.$eval('.my-learning-tabs a[aria-current="page"]', node => getComputedStyle(node).backgroundColor), 'rgb(255, 255, 255)');
+  // Only the primary header sticks; the tab strip must travel with the page.
+  const navTop = await page.$eval('.my-learning-navigation', node => node.getBoundingClientRect().top);
+  const scrolled = await page.evaluate(() => { window.scrollTo(0, 500); return window.scrollY; });
+  assert.ok(scrolled > 0, 'the overview page is scrollable');
+  const navScrolledTop = await page.$eval('.my-learning-navigation', node => node.getBoundingClientRect().top);
+  assert.ok(Math.abs(navScrolledTop - (navTop - scrolled)) < 2, 'the tab strip scrolls with the page instead of sticking');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  assert.equal(await page.$$eval('.growth-saved-card', nodes => nodes.length), 4);
+  assert.equal(await page.$$eval('.growth-metric-card', nodes => nodes.length), 4);
+  // Type colour is semantic, not decorative: each data family owns a readable hue.
+  assert.equal(new Set(await page.$$eval('.growth-metric-card strong', nodes => nodes.map(node => getComputedStyle(node).color))).size, 4, 'metric values carry four semantic hues');
+  assert.equal(new Set(await page.$$eval('.growth-saved-card strong', nodes => nodes.map(node => getComputedStyle(node).color))).size, 4, 'saved-material totals carry four semantic hues');
+  assert.equal(await page.$$eval('.growth-bar-row', nodes => nodes.length), 5);
+  assert.equal(await page.$eval('.growth-priorities h2', node => node.textContent), 'Top priorities');
+  assert.equal(await page.$$eval('.growth-priorities .growth-activity-row', nodes => nodes.length), 5);
+  // The title no longer promises a fixed five: the tag states how many types actually occurred in the window.
+  assert.equal(await page.$eval('.growth-priorities .growth-priority-count', node => node.textContent), '5 / 5');
+  await page.click('.growth-priorities .growth-activity-row'); await ready();
+  assert.ok(await page.$('.growth-drawer .growth-activity-row'));
+  await page.keyboard.press('Escape');
+  await page.focus('select[aria-label="Metric"]'); await page.select('select[aria-label="Metric"]', 'score');
+  assert.equal(await page.$eval('select[aria-label="Metric"]', node => node === document.activeElement), true);
+  assert.equal(await page.$('.growth-filters'), null);
+  assert.equal(await page.$('.growth-data-table'), null);
+  // The period control is scoped to the trend panel: the chart window changes, every other figure and the page URL stay put.
+  const pageFigures = '.growth-metric-card, .growth-saved-card, .growth-bar-row, .growth-priorities .growth-activity-row';
+  const figuresBefore = await page.$$eval(pageFigures, nodes => nodes.map(node => node.textContent));
+  const defaultWindow = await page.$eval('.growth-trend .growth-section-title p', node => node.textContent);
+  await page.click('.growth-trend .growth-periods button:first-child'); await ready();
+  assert.equal(await page.$eval('.growth-trend .growth-periods button:first-child', node => node.getAttribute('aria-pressed')), 'true');
+  const weekWindow = await page.$eval('.growth-trend .growth-section-title p', node => node.textContent);
+  assert.notEqual(weekWindow, defaultWindow, 'the chart window follows the period control');
+  const [weekStart, weekEnd] = weekWindow.split(' — ').map(value => Date.parse(value));
+  assert.equal(Math.round((weekEnd - weekStart) / 86400000), 6, 'the chart window spans seven days');
+  assert.equal(new URLSearchParams((await page.evaluate(() => location.hash)).split('?')[1]).get('days'), '30', 'the page keeps its opening window');
+  assert.deepEqual(await page.$$eval(pageFigures, nodes => nodes.map(node => node.textContent)), figuresBefore, 'the rest of the page is unchanged');
+  await page.click('.growth-trend .growth-periods button:nth-child(2)'); await ready();
+  await page.click('.growth-metric-card:nth-child(4)'); await ready();
+  assert.deepEqual(new Set(await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent))), new Set(['steady', 'durable']));
+  await page.click('.growth-drawer .growth-activity-row'); await ready();
+  assert.ok(await page.$('.growth-word-history'));
+  await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('.growth-metric-card:nth-child(4)', node => node === document.activeElement), true);
+  await page.click('.growth-recent .growth-section-title button'); await ready();
+  const oldTitles = await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent));
+  failRecords = true;
+  await page.click('.growth-drawer .growth-pagination button:last-child'); await ready();
+  assert.equal(await page.$$eval('.growth-drawer .growth-activity-row', nodes => nodes.length), 0);
+  assert.match(await page.$eval('.growth-drawer [role="alert"]', node => node.textContent), /Synthetic record failure/);
+  failRecords = false; await page.click('.growth-drawer [role="alert"] button'); await ready();
+  assert.notDeepEqual(await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent)), oldTitles);
+  await page.keyboard.press('Escape');
+  await page.click('.growth-status-list button:first-child'); await ready();
+  failRecords = true; await page.select('.growth-detail-status select', 'well-retained'); await ready();
+  assert.equal(await page.$$eval('.growth-drawer .growth-activity-row', nodes => nodes.length), 0);
+  failRecords = false; await page.click('.growth-drawer [role="alert"] button'); await ready();
+  assert.deepEqual(await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent)), ['durable']);
+  await page.keyboard.press('Escape');
+  await page.click('.growth-comparison > summary'); await page.click('.growth-comparison-tabs button:nth-child(2)');
+  assert.equal(await page.$$eval('.growth-compare-selectors select', nodes => nodes.length), 2);
+  await page.click('.growth-comparison-tabs button:nth-child(3)');
+  assert.equal(await page.$eval('.growth-compare-selectors select', node => node.options.length), 28);
+  const output = path.resolve('.tmp/my-learning-integration-qa'); fs.mkdirSync(output, { recursive: true });
+  for (const route of ['dashboard', 'word-library', 'ask?view=notes', 'handbook', 'coach']) {
+    await page.goto(`${base}/#${route}`); await ready();
+    assert.equal(await page.$$eval('.my-learning-tabs a[aria-current="page"]', nodes => nodes.length), 1);
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewport({ width, height: 1000 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${route} overflow at ${width}`);
-      if (width === 1440 || width === 390) await page.screenshot({ path: path.join(output, `${route}-${width}.png`), fullPage: true });
+      // The strip shares both workspace edges at every width, including pages that reserve a right rail for the scroll controls.
+      const edges = await page.evaluate(() => {
+        const track = document.querySelector('.my-learning-tabs').getBoundingClientRect();
+        const workspace = document.querySelector('main.workspace').getBoundingClientRect();
+        return { left: track.left - workspace.left, right: track.right - workspace.right };
+      });
+      assert.ok(Math.abs(edges.left) < 1.5 && Math.abs(edges.right) < 1.5, `${route} tab track edges match content at ${width}`);
+      // A responsive resize must not leave the current page's label outside the scrolling track.
+      await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+      const clipped = await page.$eval('.my-learning-tabs a[aria-current="page"]', node => {
+        const tab = node.getBoundingClientRect(), track = node.parentElement.getBoundingClientRect();
+        return tab.left < track.left - 1 || tab.right > track.right + 1;
+      });
+      assert.equal(clipped, false, `${route} active tab clipped at ${width}`);
+      if (route === 'dashboard' && [1440, 390].includes(width)) await page.screenshot({ path: path.join(output, `overview-${width}.png`), fullPage: true });
+      if (process.env.IGT_MY_LEARNING_SHOTS === 'top' && [1440, 768, 390].includes(width)) await page.screenshot({ path: path.join(output, `top-${route.replace('?', '-')}-${width}.png`) });
     }
-    await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${route} overflow at 200% text`);
-    await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
+    await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+    for (const width of [1440, 320]) {
+      await page.setViewport({ width, height: 1000 });
+      // The top nav keeps its own desktop text-zoom behaviour, so only the page content is asserted here.
+      assert.equal(await page.evaluate(() => document.querySelector('.workspace').scrollWidth <= innerWidth), true, `${route} content overflow at ${width} with 200% text`);
+      if (width === 320) assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${route} overflow at 320 with 200% text`);
+    }
+    await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
   }
-  await page.setViewport({ width: 1440, height: 1000 });
-  await page.goto(`${base}/#dashboard?days=0`); await ready();
-  assert.deepEqual(
-    await page.$$eval(".overview-quick, .overview-effort, .overview-priorities, .overview-timeline", sections =>
-      sections.map(section => section.querySelector("h2").textContent)),
-    ["Your saved material", "Effort trend", "Top 3 priorities", "Recent activity"],
-  );
-  assert.match(await page.$eval('.overview-quick-link[href^="#handbook"]', node => node.textContent), /14 saved Grammar checks/);
-  assert.match(await page.$eval('.overview-quick-link[href^="#ask"]', node => node.textContent), /0 saved notes/);
-  const coachCard = '.overview-quick-link[href="#coach"]';
-  assert.equal((await page.$$(".overview-quick-link")).length, 4);
-  assert.equal(await page.$eval('#workspace-nav a[href="#coach"]', node => node.textContent), "Learning reports");
-  assert.equal(await page.$eval(coachCard + " strong", node => node.textContent), "Learning reports");
-  assert.equal(await page.$eval(coachCard + " .overview-link-copy > span", node => node.textContent), "See your strengths, recurring mistakes, and what to practice next.");
-  await page.click(coachCard);
-  await page.waitForSelector(".coach-page");
-  await page.goBack(); await ready();
-  await page.click('.overview-history-actions a[href="#dashboard?view=practice-log"]');
-  await page.waitForSelector(".practice-log-panel .md");
-  assert.match(await page.$eval(".practice-log-panel", node => node.textContent), /This is a saved practice entry/);
-  await page.goBack(); await ready();
-  assert.equal((await page.$$(".learning-timeline li")).length, 5);
-  assert.equal((await page.$$(".overview-daily li")).length, 7);
-  for (const [period, count] of [["Weekly", 4], ["Monthly", 6], ["Daily", 7]]) {
-    await page.evaluate(label => [...document.querySelectorAll('.overview-chart-controls button')].find(button => button.textContent === label).click(), period);
-    assert.equal((await page.$$(".overview-daily li")).length, count);
-    assert.equal(await page.$eval('.overview-chart-controls button[aria-pressed="true"]', node => node.textContent), period);
-    assert.doesNotMatch(await page.$eval('.overview-daily', node => node.textContent), /Invalid Date|NaN/);
-  }
-  await page.click('.overview-counting summary');
-  assert.equal(await page.$eval('.overview-counting', node => node.open), true);
-  await page.click('.overview-counting summary');
-  assert.equal((await page.$$(".overview-priority-list li")).length, 2);
-  assert.match(await page.$eval(".overview-priority-list", node => node.textContent), /Articles12 hits/);
-  assert.equal(await page.$(".learning-badge-review"), null);
-  assert.doesNotMatch(await page.$eval(".learning-timeline", node => node.textContent), /100\/100/);
-  await page.select(".overview-history-heading select", "90"); await ready();
-  assert.match(await page.$eval(".overview-priorities", node => node.textContent), /Last 30 days/);
-  await page.click(".handbook-pagination button:last-child"); await ready(); assert.equal((await page.$$(".learning-timeline li")).length, 5);
-  assert.match(await page.$eval(".handbook-pagination", node => node.textContent), /6–10 of 16/);
-  await page.goBack(); await ready(); assert.equal((await page.$$(".learning-timeline li")).length, 5);
-  failOverview = true; await page.click(".overview-header button"); await ready(); assert.notEqual(await page.$('[role="alert"]'), null);
-  failOverview = false; await page.click('[role="alert"] button'); await ready(); assert.equal(await page.$('[role="alert"]'), null);
-  overviewState = "empty"; await page.click(".overview-header button"); await ready();
-  assert.match(await page.$eval(".overview-priorities", node => node.textContent), /No error types recorded/);
-  assert.match(await page.$eval(".overview-momentum", node => node.textContent), /No activity in either week/);
-  assert.match(await page.$eval(".overview-page", node => node.textContent), /No recent activity in this window/);
-  overviewState = "partial"; await page.click(".overview-header button"); await ready();
-  assert.match(await page.$eval(".overview-notice", node => node.textContent), /Saved writing/);
-  assert.match(await page.$eval(".overview-priorities", node => node.textContent), /Priorities unavailable/);
-  events.unshift({ source: "long-record", id: "long", type: "text", timestamp: new Date().toISOString(), title: "A long saved text. ".repeat(50), href: "#ask?view=notes" });
-  overviewState = "normal"; await page.click(".overview-header button"); await ready();
-  await page.click(".learning-timeline details summary");
-  assert.equal(await page.$eval(".learning-timeline details p", node => node.textContent), events[0].title);
-  legacyOverview = true;
-  await page.click(".overview-header button"); await ready();
-  assert.match(await page.$eval('.overview-quick-link[href^="#handbook"]', node => node.textContent), /14 saved Grammar checks/);
-  assert.match(await page.$eval('.overview-quick-link[href^="#ask"]', node => node.textContent), /1 saved note/);
-  await page.goto(`${base}/#grammar`); await page.waitForSelector("textarea");
   assert.deepEqual(errors, []);
-  console.log("My Learning: real route contracts, report-only Coach entry, pattern API compatibility, mixed timeline, pagination, back navigation and responsive layouts passed.");
-} finally { release?.(); await browser?.close(); await server?.close(); await new Promise(resolve => api.close(resolve)); }
+  console.log('My learning integration web smoke passed (synthetic read-only data).');
+} finally { await browser?.close(); await server?.close(); }

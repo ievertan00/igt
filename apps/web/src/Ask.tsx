@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { IconButton } from "./IconButton";
 import { Icon } from "./Icon";
 import { FloatingAction } from "./FloatingAction";
+import { Heading } from "./Page";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import { GuideText, useGuideCopy, type LearnerLanguage } from "./learner-language";
@@ -301,7 +302,7 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   function clearFilters() { setCategory(""); setTag(""); setQuery(""); }
 
   return <div className={`ask-page${view === "ask" ? " is-asking" : ""}${hasConversation ? " has-conversation" : ""}`}>
-    <div className={`heading${view === "notes" ? " ask-library-heading" : ""}`}><div><h1>{view === "notes" ? "Saved notes" : "Ask about your English."}</h1><p><GuideText text={view === "notes" ? "Useful explanations, kept for later. Find a note and pick up where you left off." : "Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question."} /></p></div>{view === "notes" && <a className="secondary" href="#ask"><Icon name="ask" /><GuideText text="Ask a question" /><Icon name="arrow" /></a>}</div>
+    {view === "ask" && <Heading eyebrow="ASK" title="Ask about your English." detail={<GuideText text="Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question." />} />}
     {view === "ask" && hasConversation && <div className="ask-view-bar"><button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><Icon name="ask" />{t("New question")}</button></div>}
     <section id="ask-panel-ask" aria-label={t("Ask a question")} hidden={view !== "ask"}>
       <div className="ask-reading-column">

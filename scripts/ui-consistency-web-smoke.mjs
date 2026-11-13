@@ -86,7 +86,11 @@ try {
   async function route(name) {
     await page.setViewport({ width: 1440, height: 1000 });
     await page.goto(`${base}/#${name}`, { waitUntil: "networkidle0" });
-    await page.waitForSelector("main h1");
+    // My Learning sub-pages carry no visible title, so their accessible page name is the contract there.
+    await page.waitForFunction(() => {
+      const main = document.querySelector("main");
+      return Boolean(main.querySelector("h1") || main.getAttribute("aria-label")?.trim());
+    });
   }
   for (const name of ["grammar", "translation", "word-lookup", "word-review", "word-library", "practice", "ask", "ask?view=notes", "dashboard", "handbook", "coach", "settings"]) {
     await route(name);

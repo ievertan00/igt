@@ -73,10 +73,6 @@
 .ask-previous summary { min-height: 44px; padding-block: .75rem; cursor: pointer; }
 .ask-previous button { display: block; text-align: left; width: 100%; max-width: 100%; overflow-wrap: anywhere; }
 .ask-library-layout, .ask-notes-index { min-width: 0; }
-.ask-page > .ask-library-heading { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; max-width: none; margin-bottom: 2rem; }
-.ask-library-heading > div { min-width: 0; }
-.ask-library-heading > .secondary { flex-shrink: 0; }
-.ask-library-heading p { max-width: 56ch; }
 .ask-library-tools { display: grid; gap: 1.25rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow-surface); }
 .ask-library-filter-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; min-width: 0; }
 .ask-category-tabs, .ask-topic-filters { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; min-width: 0; }
@@ -118,7 +114,7 @@
 .ask-note-tile:hover { border-color: var(--line-hover); box-shadow: var(--shadow-card-hover); }
 .ask-note-tile:has(.ask-note-link[aria-current="true"]) { border-color: var(--success); }
 .ask-note-card-top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.ask-note-category { padding: .25rem .625rem; border-radius: .375rem; background: var(--wash); color: var(--muted); font-size: .6875rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
+.ask-note-category { padding: .25rem .625rem; border-radius: .375rem; background: var(--wash); color: var(--muted); font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
 .ask-note-copy { border-radius: .625rem; }
 .ask-note-copy:hover:not(:disabled) { background: var(--wash); border-color: transparent; color: var(--ink); }
 .ask-note-link { display: flex; flex-direction: column; align-items: stretch; gap: .75rem; width: 100%; min-width: 0; padding: 0; border: 0; border-radius: .25rem; text-align: left; background: transparent; color: var(--ink); }
@@ -196,10 +192,9 @@
 .ask-library-directory summary { padding-block: .625rem; min-height: 44px; cursor: pointer; }
 .ask-library-directory p { margin: .75rem 0 0; }
 @media (max-width: 760px) {
-  .ask-page { padding-top: .5rem; }
+  .ask-page:not(.is-asking) { padding-top: .5rem; }
   .ask-library-tools { padding: 1rem; gap: 1rem; }
   .ask-library-search { flex-basis: 100%; width: 100%; }
-  .ask-page > .ask-library-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
   .ask-note-dialog { width: calc(100% - 1.5rem); height: auto; max-height: calc(100dvh - 1.5rem); }
   .ask-reader-size-bar, .ask-reader-reset { display: none; }
   .ask-note-card { padding: 1rem; }
@@ -213,6 +208,7 @@
   .ask-note-delete-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; margin-top: 1rem; }
   .ask-note-list { grid-template-columns: minmax(0, 1fr); }
   .ask-library-tools { padding: 1rem; }
+  .ask-category-tabs button { white-space: normal; text-align: start; flex-wrap: wrap; }
   .ask-note-filters { grid-template-columns: minmax(0, 1fr); }
   .ask-note-card-footer { padding-top: .875rem; }
   .ask-page > .heading { margin-bottom: 1.5rem; }

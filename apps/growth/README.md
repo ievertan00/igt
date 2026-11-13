@@ -2,6 +2,16 @@
 
 独立的 Sites 静态工作台，沿用 ClearWrite 设计规范和现有数据结构。
 
+## 主 Web 整合入口
+
+主 Web 的 **My learning** 现在是直接入口，内部通过 Overview、Saved words、Saved notes、Handbook、Learning reports 五个 Tabs 切换，保留原有 hash 路由。
+
+整合后的 Overview 直接通过 Local Runtime 的只读 `/dashboard/growth`、`/dashboard/records` 和 `/dashboard/record` 接口读取当前配置的数据，无需导入快照。四张资料卡片为完整库存；四张表现卡片注明所选时段或当前保留状态。趋势支持指标切换、数据表、时段对比和证据下钻。
+
+主 Web 使用 `npm run web:dev` 或构建后 `npm run web:start` 启动。下文的独立 HTML 与快照导入方式仍作为独立入口保留。
+
+整合验证：主 Web 类型检查与生产构建、数据与路由测试均已通过。浏览器渲染和交互验收因当前环境拒绝本地端口连接而未完成；`npm run test:my-learning-web` 已更新为覆盖新版导航、八张卡片、证据下钻、失败恢复和响应式布局的合成数据检查。
+
 也可直接用浏览器打开 `clearwrite-growth.html`，点击“导入记录”选择导出的 JSON，无需启动本地服务。此离线文件与 Sites 使用同一实现，默认不含学习数据。修改源码后运行 `node scripts/build-growth.mjs` 重新生成。
 
 ## 本地运行

@@ -34,6 +34,7 @@ tests/*
 !tests/handbook-cli.test.mjs
 !tests/handbook-delete.test.mjs
 !tests/my-learning.test.mjs
+!tests/learning-growth.test.mjs
 !tests/handbook-evidence.test.mjs
 !tests/handbook-rules.test.mjs
 !tests/handbook-practice.test.mjs

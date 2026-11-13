@@ -1,0 +1,29 @@
+/* The strip is the only name a sub-page carries, so it works as a real control: a recessed track with a raised active chip instead of a text-colour hint. */
+/* Only the primary header sticks, so anchors need no extra offset for a second sticky band. */
+html:has(.my-learning-shell) { --learning-topbar-height: 5.25rem; --learning-tab-height: 56px; --learning-tab-gap: 24px; --learning-content-gap: 1.5rem; scroll-padding-top: var(--learning-topbar-height, 5.25rem); }
+/* Narrow screens keep the anchor offset in sync with the shorter wrapped header. */
+@media (max-width: 960px) { html:has(.my-learning-shell) { --learning-topbar-height: 77px; --learning-tab-gap: 16px; } }
+/* The strip scrolls away with the page. It wears the page's own ground, so the tabs sit on the workspace rather than on a second header band; the gap keeps that band clear of the main navigation. */
+.my-learning-navigation { display: flex; align-items: flex-end; width: 100%; height: calc(var(--learning-tab-height) + var(--learning-tab-gap)); flex: 0 0 calc(var(--learning-tab-height) + var(--learning-tab-gap)); min-width: 0; box-sizing: border-box; padding-inline: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2)); background: var(--canvas); }
+/* Pages with floating scroll controls reserve a right rail on the workspace; the strip reserves the same rail so both right edges still line up and the right side stays blank. */
+.has-scroll-navigation .my-learning-navigation { padding-inline-end: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2), calc(4rem + env(safe-area-inset-right))); }
+/* The strip is as wide as the workspace below it (its parent already carries the workspace padding), so both edges line up with the content panels. Tabs keep their natural width and stay left-aligned; the unused right side of the track is deliberately left blank rather than distributed across the labels. The outline is inset so 8px padding still yields 40px tabs. */
+.my-learning-tabs { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; width: 100%; min-width: 0; height: var(--learning-tab-height); margin: 0; padding: 8px; box-sizing: border-box; border-radius: 14px; background: var(--wash-sunken); box-shadow: inset 0 0 0 1px var(--tab-track-line), var(--shadow-sm); overflow-x: auto; scrollbar-width: none; }
+.my-learning-tabs::-webkit-scrollbar { display: none; }
+.my-learning-tab-divider { flex: 0 0 1px; width: 1px; height: 20px; background: var(--control); }
+.my-learning-tabs a { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; height: 40px; padding: 0 12px; box-sizing: border-box; border: 1px solid transparent; border-radius: 10px; color: #334155; font-size: 14px; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap; transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.my-learning-tabs a > .icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--muted); }
+.my-learning-tabs a:hover { color: var(--ink); background: rgb(255 255 255 / 82%); }
+.my-learning-tabs a:hover > .icon { color: inherit; }
+.my-learning-tabs a[aria-current="page"] { color: var(--accent-active-text); background: var(--paper); border-color: var(--accent-outline); box-shadow: var(--shadow-sm); font-weight: 600; }
+.my-learning-tabs a[aria-current="page"] > .icon { color: var(--accent-outline); }
+.my-learning-tabs a:focus-visible { outline: 2px solid var(--focus-ring, var(--accent-hover)); outline-offset: 2px; }
+/* Below the workspace width the full labels stop fitting, so the track scrolls instead of dropping icons or shortening labels. A thin thumb signals that more tabs exist; it stays hidden while everything fits. */
+@media (max-width: 960px) {
+  .my-learning-tabs { scrollbar-width: thin; scrollbar-color: var(--control) transparent; padding-bottom: 4px; }
+  .my-learning-tabs::-webkit-scrollbar { display: block; height: 4px; }
+  .my-learning-tabs::-webkit-scrollbar-thumb { background: var(--control); border-radius: 2px; }
+}
+
+/* Each sub-page opens on its own content; the strip names the page and no floating action row repeats it. The gap matches the page-colour band above the track. */
+.workspace.my-learning-workspace { padding-top: var(--learning-content-gap, 1.5rem); }

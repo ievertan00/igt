@@ -163,11 +163,11 @@ try {
   await page.waitForFunction(() => !document.querySelector('#saved-word-dialog').open);
   assert.equal(await page.$eval('.saved-word-row', el => document.activeElement === el), true);
   assert.equal(await page.$eval('.saved-word-row', el => getComputedStyle(el).outlineStyle), 'none', 'Escape restores list position without leaving an outline');
+  assert.equal(await page.evaluate(() => scrollY), scrollBefore);
   await page.keyboard.press('Tab');
   assert.equal(await page.$('.saved-word-row[data-restored-focus="true"]'), null, 'keyboard navigation clears focus suppression');
   assert.equal(await page.evaluate(() => document.activeElement.matches('.saved-word-row:focus-visible') && getComputedStyle(document.activeElement).outlineStyle !== 'none'), true, 'the next word retains visible keyboard focus');
 
-  assert.equal(await page.evaluate(() => scrollY), scrollBefore);
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   await page.click('.saved-word-row');
   await page.waitForFunction(() => document.querySelector('#saved-word-dialog').open);
@@ -220,8 +220,8 @@ try {
   await page.goto(`${base}/#word-library`);
   await page.waitForFunction(() => document.body.textContent.includes("Your vocabulary starts here"));
   await capture("empty");
-  await page.click(".vocabulary-library-header a");
-  await page.waitForSelector(".word-review-page");
+  await page.click(".vocabulary-library-empty a.primary");
+  await page.waitForSelector("#word-lookup-input");
   await page.goto(`${base}/#word-lookup`); await page.waitForSelector("#word-lookup-input");
   assert.deepEqual(writes, []);
   assert.deepEqual(errors, []);

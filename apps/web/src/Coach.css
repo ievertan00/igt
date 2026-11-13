@@ -1,22 +1,4 @@
 /* Coach report workspace: keep the controls and saved reports beside the reading task. */
-.coach-hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin: 0 1.75rem 1.75rem; }
-.coach-hero .heading { max-width: 54rem; margin: 0; }
-.coach-hero h1 { font-size: clamp(2rem, 3.1vw, 2.75rem); letter-spacing: -.035em; margin: .5rem 0 .625rem; line-height: 1.2; }
-.coach-hero .heading p { max-width: 76ch; font-size: .9375rem; line-height: 1.6; }
-.coach-illustration { position: relative; flex: 0 0 13rem; height: 9.5rem; color: var(--accent-hover); }
-.coach-illustration-back, .coach-illustration-front { position: absolute; border: 1px solid var(--accent-hover); border-radius: 1rem; background: var(--paper); }
-.coach-illustration-back { width: 6rem; height: 5.75rem; left: .5rem; top: 3rem; transform: rotate(-3deg); background: var(--accent-soft); }
-.coach-illustration-front { width: 7.5rem; height: 7.5rem; left: 3.25rem; top: 1rem; transform: rotate(8deg); padding: 1.25rem 1rem; }
-.coach-illustration i { display: block; width: 100%; height: .35rem; border-radius: 1rem; background: color-mix(in srgb, var(--accent-text) 20%, var(--paper)); margin-bottom: .65rem; }
-.coach-illustration i + i { width: 60%; }
-.coach-illustration-back i { width: 1.75rem; margin: 1.5rem 0 0 .8rem; }
-.coach-illustration-back i + i { width: 1rem; margin-top: .65rem; }
-.coach-illustration-chart { display: flex; align-items: end; gap: .375rem; height: 2.5rem; margin-top: 1rem; }
-.coach-illustration-chart b { width: .625rem; height: 40%; border-radius: 1px; background: color-mix(in srgb, var(--accent) 45%, var(--paper)); }
-.coach-illustration-chart b:nth-child(2) { height: 65%; }
-.coach-illustration-chart b:nth-child(3) { height: 90%; }
-.coach-illustration-check { position: absolute; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; left: 8rem; top: 6rem; border-radius: 50%; background: var(--accent-hover); color: var(--paper); box-shadow: var(--shadow-sm); }
-.coach-illustration-rays { position: absolute; right: 0; top: 0; width: 2.5rem; height: 2.5rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .coach-page .handbook-filters.coach-toolbar { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; align-items: end; gap: 1.75rem; padding: 1rem 1.75rem 1.25rem; border-radius: 1rem; }
 .coach-toolbar label, .coach-model { gap: .35rem; font-size: .8125rem; }
 .coach-model { display: grid; min-width: 0; color: var(--muted); }
@@ -29,7 +11,7 @@
 .coach-select select { padding-left: 3rem; }
 .coach-model .model-switcher { width: 100%; max-width: 100%; height: 44px; font-weight: 500; }
 .coach-actions { display: flex; align-items: center; gap: 1.25rem; padding-left: 1.75rem; border-left: 1px solid var(--line); }
-.coach-page .coach-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .75rem; min-height: 44px; padding: .625rem 1.25rem; font-size: .875rem; white-space: nowrap; }
+.coach-page .coach-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .75rem; min-height: 44px; padding: .625rem 1.25rem; font-size: .875rem; white-space: nowrap; overflow-wrap: normal; }
 .coach-actions .primary { background: color-mix(in srgb, var(--accent-text) 65%, var(--ink)); color: var(--on-dark); }
 .coach-actions .primary:hover:not(:disabled) { background: var(--accent-text); }
 .coach-actions .primary:disabled { background: var(--disabled-bg); color: var(--disabled-text); }
@@ -72,9 +54,6 @@
   .coach-workspace { grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
-  .coach-hero { margin: 0 0 1.5rem; gap: 1rem; }
-  .coach-illustration { display: none; }
-  .coach-hero h1 { font-size: 2rem; }
   .coach-page .handbook-filters.coach-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 1rem; }
   .coach-model { grid-column: 1 / -1; }
   .coach-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
@@ -89,6 +68,6 @@
   .coach-report .md > p, .coach-report .md > ul, .coach-report .md > ol { margin-left: 0; }
   .coach-report .md > h3 { font-size: 1.125rem; }
 }
-@media (max-width: 380px) {
+@media (max-width: 560px) {
   .coach-page .handbook-filters.coach-toolbar, .coach-actions { grid-template-columns: minmax(0, 1fr); }
 }
