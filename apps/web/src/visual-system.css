@@ -4,12 +4,13 @@
 :root {
   color-scheme: light;
   --paper: #ffffff;
-  --canvas: #f7f9fc;
+  /* Calmer, slightly cooler ground from the layout-optimisation reference: white surfaces read as quiet cards rather than stripes. */
+  --canvas: #f6f8fb;
   --ink: #101827;
   --muted: #64748b;
   --wash: #f1f5f9;
-  /* One step deeper than the old #eef3f9: the sub-nav track stays legible on low-gamut screens. */
-  --wash-sunken: #e8eff7;
+  /* The sub-nav track is a white surface, not a recessed blue-grey band: one less full-width colour block per page. */
+  --tab-track-surface: #ffffff;
   --tab-track-line: #e3eaf3;
   --topbar-line: #e7ecf3;
   --line: #e5ecf4;

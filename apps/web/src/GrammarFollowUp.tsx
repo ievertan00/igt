@@ -117,7 +117,7 @@ export function GrammarFollowUp({ context }: { context: string }) {
         </button>
       </div>
       {error && <p role="alert" className="grammar-follow-up-error">{t("Could not answer. Your question is kept; try again.")} {error}</p>}
-      <div className="follow-up-composer-footer"><p>{t("AI explanations may need checking. Save useful answers to revisit them.")}</p><span>{t("Ctrl / ⌘ + Enter to send")}</span></div>
+      <div className="follow-up-composer-footer"><span>{t("Ctrl / ⌘ + Enter to send")}</span></div>
     </form>
   </section>;
 }

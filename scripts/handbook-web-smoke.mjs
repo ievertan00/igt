@@ -82,14 +82,19 @@ try {
   assert.equal(await page.$(".handbook-reports"), null);
   assert.equal(await page.$(".handbook-knowledge"), null);
   assert.match(await page.$eval(".handbook-natural", node => node.textContent), /I have been reading a book/);
+  assert.match(await page.$eval(".handbook-natural h3", node => node.textContent.trim()), /^More natural$/);
+  assert.doesNotMatch(await page.$eval(".handbook-page", node => node.textContent), /More natural alternative/);
+  // Notes are collapsed by default; only the newest entry stays open as a state example.
   assert.equal(await page.$eval(".handbook-refine", node => node.open), true);
+  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.filter(node => node.open).length), 1);
+  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.every(node => !node.hidden)), true);
   assert.doesNotMatch(await page.$eval(".handbook-page", node => node.textContent), /Source details/);
   await page.click(".handbook-notes-toggle");
-  assert.equal(await page.$eval(".handbook-notes-toggle", node => node.getAttribute("aria-pressed")), "false");
-  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.every(node => node.hidden)), true);
+  assert.equal(await page.$eval(".handbook-notes-toggle", node => node.getAttribute("aria-pressed")), "true");
+  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.every(node => node.open)), true, "the dock expands every note at once");
   assert.equal(await page.$eval(".handbook-natural", node => node.getBoundingClientRect().height > 0), true);
   await page.click(".handbook-notes-toggle");
-  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.every(node => !node.hidden)), true);
+  assert.equal(await page.$$eval(".handbook-refine", nodes => nodes.filter(node => node.open).length), 1, "collapsing returns to the newest-only state");
   await page.click(".handbook-example .handbook-refine summary");
   await page.click(".handbook-pagination button:last-child");
   await page.waitForFunction(() => location.hash.includes("offset=10"));
@@ -104,7 +109,8 @@ try {
   await page.waitForFunction(() => document.querySelectorAll(".handbook-example").length === 3);
   assert.equal(await page.$eval('.handbook-filters label:last-of-type select', node => node.disabled), true);
   assert.equal(new URLSearchParams(new URL(page.url()).hash.split("?")[1]).has("errorType"), false);
-  assert.match(await page.$eval(".handbook-page", node => node.textContent), /does not establish error-free writing/);
+  assert.doesNotMatch(await page.$eval(".handbook-page", node => node.textContent), /does not establish error-free writing|One correction is not evidence of mastery|Every saved check, with the reasoning|Across all saved checks|Narrow the log to one mistake type/);
+  assert.equal(await page.$(".handbook-rail-tip"), null, "right-rail evidence tip is removed");
   await page.focus('input[type="search"]'); await page.type('input[type="search"]', "not found"); await page.keyboard.press("Enter");
   await page.waitForFunction(() => location.hash.includes("not+found")); await ready();
   assert.equal((await page.$$(".handbook-example")).length, 0);
@@ -184,10 +190,11 @@ try {
   await page.goto(`${base}/#grammar`);
   await page.waitForSelector("textarea");
   await page.goto(`${base}/#coach`);
-  // The reports tab opens on its own controls, so no page title repeats what the tab already says.
+  // The sub-nav names the sub-page, so the reports page keeps its toolbar without a second in-content title.
   await page.waitForSelector(".coach-toolbar .coach-language");
   assert.match(await page.$eval(".coach-toolbar .coach-language", node => node.textContent), /Report language/);
-  assert.equal(await page.$("h1"), null, "unexpected title on #coach");
+  assert.equal(await page.$eval("h1", node => node.textContent), "Learning reports", "the sub-nav supplies the page title");
+  assert.equal(await page.$$eval("h1", nodes => nodes.length), 1, "the title is not repeated in the content");
   assert.deepEqual(errors, []);
   console.log("Handbook history: HTTP validation, filters, pagination, retry, confirmed deletion/cancel/failure/reload, visibility toggle, 320/390/768/1440px, 200% text and reduced motion passed.");
 } finally {

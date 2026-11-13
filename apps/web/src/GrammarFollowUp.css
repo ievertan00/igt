@@ -29,8 +29,7 @@
 .follow-up-input-row { display:flex; align-items:flex-end; gap:.625rem; }
 .grammar-follow-up-composer textarea { flex:1; min-width:0; width:100%; min-height:5rem; height:5rem; max-height:12rem; overflow-y:auto; resize:vertical; margin:0; background:var(--wash); border-color:var(--line); }
 .follow-up-input-row button { flex:0 0 auto; height:var(--action-height); min-height:var(--action-height); }
-.follow-up-composer-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem 1rem; padding-top:.75rem; font-size:.75rem; color:var(--muted); }
-.follow-up-composer-footer p { margin:0; }
+.follow-up-composer-footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:.5rem 1rem; padding-top:.75rem; font-size:.75rem; color:var(--muted); }
 .grammar-follow-up-error { color:var(--danger); font-size:.875rem; overflow-wrap:anywhere; }
 @media (max-width:600px) {
  .grammar-follow-up-header, .follow-up-suggestions, .follow-up-messages, .grammar-follow-up-composer { padding:1rem; }

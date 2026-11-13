@@ -63,15 +63,19 @@ try {
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(`${base}/#dashboard?days=30`); await ready();
   assert.equal(await page.$$eval('.my-learning-tabs a', nodes => nodes.length), 5);
+  // The strip names the sub-page, so the title is no longer replaced by the tabs.
+  assert.equal(await page.$eval('.my-learning-navigation-title', node => node.textContent), 'Overview');
+  assert.equal(await page.$eval('.my-learning-navigation-kicker', node => node.textContent), 'My learning');
+  assert.equal(await page.$$eval('h1', nodes => nodes.length), 1, 'exactly one page title on the sub-page');
   assert.equal(await page.$('#workspace-nav .my-learning-menu'), null);
   assert.equal(await page.$eval('#workspace-nav a[href="#dashboard"]', node => node.textContent), 'My learning');
-  // The tab track is a control: deep enough to read on a low-gamut screen, edged with its own stroke, and exactly as wide as the content below.
+  // The tab track is a control: a white surface edged with its own stroke (no recessed blue-grey band), and exactly as wide as the content below.
   const track = await page.$eval('.my-learning-tabs', node => {
     const style = getComputedStyle(node), rect = node.getBoundingClientRect();
     return { background: style.backgroundColor, shadow: style.boxShadow, left: rect.left, width: rect.width };
   });
   const workspace = await page.$eval('main.workspace', node => { const rect = node.getBoundingClientRect(); return { left: rect.left, width: rect.width }; });
-  assert.equal(track.background, 'rgb(232, 239, 247)', 'track keeps its deeper #e8eff7 ground');
+  assert.equal(track.background, 'rgb(255, 255, 255)', 'track uses the calm white surface');
   assert.match(track.shadow, /227, 234, 243/, 'track keeps the 1px #e3eaf3 outline');
   assert.match(track.shadow, /inset/, 'track outline is inset so tabs stay 40px tall');
   assert.ok(Math.abs(track.left - workspace.left) < 1.5, 'track and content share the workspace left edge');
@@ -82,7 +86,8 @@ try {
   const labelBounds = await page.$$eval('.my-learning-tabs a', nodes => ({ first: nodes[0].getBoundingClientRect().left, last: nodes[nodes.length - 1].getBoundingClientRect().right }));
   assert.ok(labelBounds.first - track.left < 16, 'tabs start at the track inset');
   assert.ok(track.left + track.width - labelBounds.last > 40, 'the right side of the track is left blank');
-  assert.equal(await page.$eval('.my-learning-tabs a[aria-current="page"]', node => getComputedStyle(node).backgroundColor), 'rgb(255, 255, 255)');
+  assert.equal(await page.$eval('.my-learning-tabs a[aria-current="page"]', node => getComputedStyle(node).backgroundColor), 'rgb(237, 251, 242)', 'the active chip is the single green accent in the strip');
+  assert.equal(await page.$eval('.my-learning-navigation', node => getComputedStyle(node).backgroundColor), 'rgb(246, 248, 251)', 'the strip and the page share the new calm canvas ground');
   // Only the primary header sticks; the tab strip must travel with the page.
   const navTop = await page.$eval('.my-learning-navigation', node => node.getBoundingClientRect().top);
   const scrolled = await page.evaluate(() => { window.scrollTo(0, 500); return window.scrollY; });
@@ -107,6 +112,19 @@ try {
   assert.equal(await page.$eval('select[aria-label="Metric"]', node => node === document.activeElement), true);
   assert.equal(await page.$('.growth-filters'), null);
   assert.equal(await page.$('.growth-data-table'), null);
+  // Trend controls: one full-width period row, compact date inputs, and no descriptive footnotes.
+  const trendLayout = await page.evaluate(() => {
+    const panel = document.querySelector('.growth-trend');
+    const style = getComputedStyle(panel);
+    const contentWidth = panel.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const periodsWidth = panel.querySelector('.growth-periods').getBoundingClientRect().width;
+    const dateInputs = [...panel.querySelectorAll('.growth-date-range input[type="date"]')].map(node => node.getBoundingClientRect().height);
+    return { contentWidth, periodsWidth, dateInputs, notes: panel.querySelectorAll('.growth-panel-note').length };
+  });
+  assert.ok(Math.abs(trendLayout.periodsWidth - trendLayout.contentWidth) < 1.5, 'period buttons fill the panel width');
+  assert.equal(trendLayout.dateInputs.length, 2);
+  assert.ok(trendLayout.dateInputs.every(height => height <= 34), 'date inputs stay compact');
+  assert.equal(trendLayout.notes, 0, 'trend panel carries no descriptive notes');
   // The period control is scoped to the trend panel: the chart window changes, every other figure and the page URL stay put.
   const pageFigures = '.growth-metric-card, .growth-saved-card, .growth-bar-row, .growth-priorities .growth-activity-row';
   const figuresBefore = await page.$$eval(pageFigures, nodes => nodes.map(node => node.textContent));
@@ -141,10 +159,13 @@ try {
   failRecords = false; await page.click('.growth-drawer [role="alert"] button'); await ready();
   assert.deepEqual(await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent)), ['durable']);
   await page.keyboard.press('Escape');
-  await page.click('.growth-comparison > summary'); await page.click('.growth-comparison-tabs button:nth-child(2)');
-  assert.equal(await page.$$eval('.growth-compare-selectors select', nodes => nodes.length), 2);
-  await page.click('.growth-comparison-tabs button:nth-child(3)');
-  assert.equal(await page.$eval('.growth-compare-selectors select', node => node.options.length), 28);
+  // Overview carries no folded disclosure panels, no explanatory notes, and no page footer evidence copy.
+  assert.equal(await page.$('.growth-comparison'), null, 'Compare evidence panel is removed');
+  assert.equal(await page.$('.growth-evidence-footer'), null, 'Overview page footer is removed');
+  assert.equal(await page.$$eval('.growth-panel-note', nodes => nodes.length), 0, 'explanatory panel notes are removed');
+  assert.equal(await page.$('.growth-distribution .growth-tag'), null, 'Error distribution n= badge is removed');
+  assert.equal(await page.$$eval('.growth-section-title p', nodes => nodes.length), 1, 'only the trend date range remains as a section detail');
+  assert.doesNotMatch(await page.$eval('.learning-dashboard', node => node.textContent), /Compare evidence|Sources and evidence boundaries|counted once per category|Based on locally saved records|do not prove mastery|independent of the time filter|Click a bar to inspect/);
   const output = path.resolve('.tmp/my-learning-integration-qa'); fs.mkdirSync(output, { recursive: true });
   for (const route of ['dashboard', 'word-library', 'ask?view=notes', 'handbook', 'coach']) {
     await page.goto(`${base}/#${route}`); await ready();

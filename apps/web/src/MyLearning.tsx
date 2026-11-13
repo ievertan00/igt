@@ -17,6 +17,8 @@ const groupStarts = new Set<string>(['word-library', 'coach']);
 export function MyLearningNavigation({ route }: { route: string }) {
   const { t, language } = useGuideCopy();
   const current = route === 'word-review' ? 'word-library' : route;
+  // The strip names the sub-page as well as switching between them; the active tab supplies the title.
+  const activeLabel = (myLearningRoutes.find(([key]) => key === current) ?? myLearningRoutes[0])[1];
   const tabsRef = useRef<HTMLElement>(null);
   // A compact track can clip the active label on narrow screens when a sub-page is opened directly.
   // Only the track scrolls: scrollIntoView would also move the whole page, which the reader may have scrolled.
@@ -45,6 +47,10 @@ export function MyLearningNavigation({ route }: { route: string }) {
     tabs[next]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   return <div className="my-learning-navigation">
+    <div className="my-learning-navigation-head">
+      <span className="my-learning-navigation-kicker">{t('My learning')}</span>
+      <h1 className="my-learning-navigation-title">{t(activeLabel)}</h1>
+    </div>
     <nav ref={tabsRef} className="my-learning-tabs" aria-label={language === 'zh-CN' ? 'My learning 页面' : 'My learning pages'} onKeyDown={moveFocus}>
       {myLearningRoutes.map(([key, label, icon, href]) => <Fragment key={key}>
         {groupStarts.has(key) && <span className="my-learning-tab-divider" aria-hidden="true" />}

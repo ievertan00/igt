@@ -71,9 +71,7 @@ function StatusGuide() {
         <button ref={closeRef} type="button" className="secondary" onClick={() => dialogRef.current?.close()}><Icon name="close" />Close</button>
       </header>
       <div className="vocabulary-status-guide-body">
-        <p>{t("Learning statuses describe recorded recall evidence, not complete mastery. Review schedules are tracked separately.")}</p>
         <dl>{learningStatuses.map(key => <div key={key} data-learning-status={key}><dt className="word-learning-label"><i aria-hidden="true" />{statusLabels[key]}</dt><dd>{t(statusHelp[key])}</dd></div>)}</dl>
-        <p>{t("Classification depends on available history. Ratings and scheduled intervals alone do not establish retention.")}</p>
       </div>
     </dialog>
   </>;

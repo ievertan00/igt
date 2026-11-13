@@ -1824,7 +1824,8 @@ function Handbook() {
   const rawOffset = Number(params.get("offset") || 0);
   const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
   const [search, setSearch] = useState(appliedSearch);
-  const [showNotes, setShowNotes] = useState(true);
+  // Notes collapse to one line by default; the newest check stays open as a state example. The dock expands every entry at once.
+  const [notesOpen, setNotesOpen] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState("");
   const deleteInFlight = useRef(false);
   const filterSubmitRef = useRef<HTMLButtonElement>(null);
@@ -1880,15 +1881,15 @@ function Handbook() {
   }
   return <div className="handbook-page">
     <form className="handbook-filters" onSubmit={event => { event.preventDefault(); navigate({ search: search.trim() }); }}>
-      <label>{t("Time window")}<select value={days} disabled={busy} onChange={event => navigate({ days: event.target.value })}>
+      <label><span className="sr-only">{t("Time window")}</span><select value={days} disabled={busy} onChange={event => navigate({ days: event.target.value })}>
         {![0, 7, 30, 90].includes(days) && <option value={days}>{t("Last {days} days", { days })}</option>}
         <option value={0}>{t("All history")}</option><option value={7}>Last 7 days</option><option value={30}>{t("Last 30 days")}</option><option value={90}>Last 90 days</option>
       </select></label>
-      <label>{t("Search saved checks")}<input type="search" value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder={t("Search sentences, corrections or notes")} /></label>
-      <label>{t("Diagnoses")}<select value={diagnosis} disabled={busy} onChange={event => navigate({ diagnosis: event.target.value })}>
+      <label><span className="sr-only">{t("Search saved checks")}</span><input type="search" value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder={t("Search sentences, corrections or notes")} /></label>
+      <label><span className="sr-only">{t("Diagnoses")}</span><select value={diagnosis} disabled={busy} onChange={event => navigate({ diagnosis: event.target.value })}>
         <option value="all">{t("All checks")}</option><option value="with">{t("With diagnosed mistakes")}</option><option value="none">{t("No diagnosed mistakes")}</option>
       </select></label>
-      <label>{t("Mistake type")}<select value={errorType} disabled={busy || diagnosis === "none"} onChange={event => navigate({ errorType: event.target.value })}>
+      <label><span className="sr-only">{t("Mistake type")}</span><select value={errorType} disabled={busy || diagnosis === "none"} onChange={event => navigate({ errorType: event.target.value })}>
         <option value="">{t("All mistake types")}</option>
         {errorType && !data?.categories.some(item => item.errorType === errorType) && <option value={errorType}>{errorType}</option>}
         {data?.categories.map(item => <option key={item.errorType} value={item.errorType}>{item.errorType} ({item.checks})</option>)}
@@ -1904,39 +1905,72 @@ function Handbook() {
       {busy && <p role="status">{t("Loading saved checks…")}</p>}
       {data && <>
         {data.coverage.undated > 0 && days !== 0 && <p className="handbook-evidence">{t("Some records have no usable date and cannot be placed in this time window.")}</p>}
-        {data.diagnosis === "none" && <p className="handbook-evidence">{t("No diagnosed mistakes describes the saved feedback. It does not establish error-free writing or mastery.")}</p>}
-        <Panel title={t("Grammar check log")} className="handbook-log">
-          {data.entries.length ? data.entries.map(entry => <article className="activity handbook-example" key={entry.entryId} id={`check-${entry.entryId}`}>
-            <header className="handbook-source">
-              <span className="handbook-entry-meta"><time><Icon name="word-review" />{timestampLabel(entry.timestamp)}</time>
-                {[...new Set(entry.diagnoses.map(item => item.error_type))].map(type => <span className="handbook-type" key={type}>{type}</span>)}
-                <span className="handbook-origin">{entry.source === "grammar" ? t("Writing · Grammar") : t("Historical check")}</span>
-              </span>
-              <span className="handbook-entry-tools">
-                {entry.correction && <HandbookCopy text={entry.correction} />}
-                <HandbookDelete disabled={busy} onDelete={() => deleteCheck(entry.entryId)} />
-              </span>
-            </header>
-            <section className="handbook-comparison" aria-label="Original and correction">
-              <div className="handbook-sentence handbook-original"><span>{t("Original")}</span>{entry.correction ? <HandbookSentence original={entry.userInput} correction={entry.correction} /> : <p lang="en">{entry.userInput}</p>}</div>
-              {entry.correction && <div className="handbook-sentence handbook-corrected"><span>{t("Correction")}</span><HandbookSentence original={entry.userInput} correction={entry.correction} corrected /></div>}
+        <div className="handbook-log-layout">
+          <div className="handbook-log-main">
+            <Panel title={t("Grammar check log")} className="handbook-log">
+              {data.entries.length ? data.entries.map((entry, index) => <article className="activity handbook-example" key={entry.entryId} id={`check-${entry.entryId}`}>
+                <header className="handbook-source">
+                  <span className="handbook-entry-meta"><time><Icon name="word-review" />{timestampLabel(entry.timestamp)}</time>
+                    {[...new Set(entry.diagnoses.map(item => item.error_type))].map(type => <span className="handbook-type" key={type}>{type}</span>)}
+                    <span className="handbook-origin">{entry.source === "grammar" ? t("Writing · Grammar") : t("Historical check")}</span>
+                  </span>
+                  <span className="handbook-entry-tools">
+                    {entry.correction && <HandbookCopy text={entry.correction} />}
+                    <HandbookDelete disabled={busy} onDelete={() => deleteCheck(entry.entryId)} />
+                  </span>
+                </header>
+                <section className="handbook-comparison" aria-label="Original and correction">
+                  <div className="handbook-sentence handbook-original"><span>{t("Original")}</span>{entry.correction ? <HandbookSentence original={entry.userInput} correction={entry.correction} /> : <p lang="en">{entry.userInput}</p>}</div>
+                  {entry.correction && <div className="handbook-sentence handbook-corrected"><span>{t("Correction")}</span><HandbookSentence original={entry.userInput} correction={entry.correction} corrected /></div>}
+                </section>
+                {!entry.diagnoses.length && <p className="handbook-evidence">{t("No diagnosed mistakes in saved feedback.")}</p>}
+                {entry.refine && <section className="handbook-natural"><h3><Icon name="spark" />{t("More natural")}</h3><p lang="en">{entry.refine}</p></section>}
+                <details className="handbook-refine" key={`notes-${entry.entryId}-${notesOpen}`} open={notesOpen || index === 0}><summary>{t("Saved explanations and notes")}</summary>
+                  {entry.evaluate && <p>{entry.evaluate}</p>}
+                  {entry.diagnoses.map((item, index) => <section className="handbook-diagnosis" key={index}><h3>{item.error_type}</h3><p>{item.explanation}</p>{item.evidence && <p>Evidence: {item.evidence}</p>}{item.suggestion && <p>Suggestion: {item.suggestion}</p>}</section>)}
+                  {entry.remember && <section className="handbook-remember"><h3><Icon name="idea" />Remember</h3><p>{Array.isArray(entry.remember) ? entry.remember.join("\n") : entry.remember}</p></section>}
+                  {!entry.evaluate && !entry.diagnoses.length && !entry.refine && !entry.remember && <p>{t("No additional notes were saved.")}</p>}
+                </details>
+              </article>) : <div className="handbook-empty"><State title={t("No saved checks to show.")} detail={data.coverage.grammar ? t("Try another search, clear your filters or return to the first page.") : t("Save a Grammar check to start your log, or choose a longer time window.")} /><a href="#grammar">{t("Check a sentence")}</a></div>}
+            </Panel>
+            {(data.pagination.total > 0 || offset > 0) && <nav className="handbook-pagination" aria-label="Grammar check pages"><span>{data.entries.length ? `${data.pagination.offset + 1}–${data.pagination.offset + data.entries.length} of ${data.pagination.total} checks` : t("No checks on this page")}</span><button disabled={busy || offset === 0} onClick={() => navigate({ offset: Math.max(0, offset - data.pagination.limit) })}>{t("Previous")}</button><button disabled={busy || !data.pagination.hasMore} onClick={() => navigate({ offset: offset + data.pagination.limit })}>{t("Next")}</button></nav>}
+          </div>
+          <aside className="handbook-rail" aria-label={t("Log summary")}>
+            <section className="handbook-rail-card">
+              <h3>{t("At a glance")}</h3>
+              <p className="handbook-rail-figure">{data.pagination.total}</p>
+              <p className="handbook-rail-caption">{t("Saved checks")}</p>
+              <dl className="handbook-rail-stats">
+                <div><dt>{t("Checks in view")}</dt><dd>{data.entries.length}</dd></div>
+                <div><dt>{t("Mistake types")}</dt><dd>{data.categories.length}</dd></div>
+              </dl>
             </section>
-            {!entry.diagnoses.length && <p className="handbook-evidence">{t("No diagnosed mistakes in saved feedback.")}</p>}
-            {entry.refine && <section className="handbook-natural"><h3><Icon name="spark" />{t("More natural alternative")}</h3><p lang="en">{entry.refine}</p></section>}
-            <details className="handbook-refine" hidden={!showNotes} open><summary>{t("Saved explanations and notes")}</summary>
-              {entry.evaluate && <p>{entry.evaluate}</p>}
-              {entry.diagnoses.map((item, index) => <section className="handbook-diagnosis" key={index}><h3>{item.error_type}</h3><p>{item.explanation}</p>{item.evidence && <p>Evidence: {item.evidence}</p>}{item.suggestion && <p>Suggestion: {item.suggestion}</p>}</section>)}
-              {entry.remember && <section className="handbook-remember"><h3><Icon name="idea" />Remember</h3><p>{Array.isArray(entry.remember) ? entry.remember.join("\n") : entry.remember}</p></section>}
-              {!entry.evaluate && !entry.diagnoses.length && !entry.refine && !entry.remember && <p>{t("No additional notes were saved.")}</p>}
-            </details>
-          </article>) : <div className="handbook-empty"><State title={t("No saved checks to show.")} detail={data.coverage.grammar ? t("Try another search, clear your filters or return to the first page.") : t("Save a Grammar check to start your log, or choose a longer time window.")} /><a href="#grammar">{t("Check a sentence")}</a></div>}
-        </Panel>
-        {(data.pagination.total > 0 || offset > 0) && <nav className="handbook-pagination" aria-label="Grammar check pages"><span>{data.entries.length ? `${data.pagination.offset + 1}–${data.pagination.offset + data.entries.length} of ${data.pagination.total} checks` : t("No checks on this page")}</span><button disabled={busy || offset === 0} onClick={() => navigate({ offset: Math.max(0, offset - data.pagination.limit) })}>{t("Previous")}</button><button disabled={busy || !data.pagination.hasMore} onClick={() => navigate({ offset: offset + data.pagination.limit })}>{t("Next")}</button></nav>}
+            {data.categories.length > 0 && <section className="handbook-rail-card">
+              <h3>{t("Most common mistake types")}</h3>
+              <ul className="handbook-rail-bars">
+                {[...data.categories].sort((a, b) => b.checks - a.checks).slice(0, 4).map(item => {
+                  const max = Math.max(...data.categories.map(category => category.checks), 1);
+                  return <li key={item.errorType}>
+                    <span className="handbook-rail-bar-label">{item.errorType}</span><span className="handbook-rail-bar-value">{item.checks}</span>
+                    <span className="handbook-rail-bar-track"><span style={{ width: `${Math.max(6, Math.round(item.checks / max * 100))}%` }} /></span>
+                  </li>;
+                })}
+              </ul>
+            </section>}
+            <section className="handbook-rail-card">
+              <h3>{t("Browse by tag")}</h3>
+              <div className="handbook-rail-chips">
+                {data.categories.slice(0, 6).map(item => <button type="button" key={item.errorType} aria-pressed={errorType === item.errorType} onClick={() => navigate({ errorType: errorType === item.errorType ? "" : item.errorType })}>{item.errorType}<span>{item.checks}</span></button>)}
+                {!data.categories.length && <p className="handbook-rail-caption">{t("No mistake types yet")}</p>}
+              </div>
+            </section>
+          </aside>
+        </div>
       </>}
     </div>
     {Boolean(data?.entries.length) && <div className="floating-action-dock handbook-notes-dock">
-      <button type="button" className="primary floating-action handbook-notes-toggle" title={showNotes ? t("Hide explanations & notes") : t("Show explanations & notes")} aria-pressed={showNotes} onClick={() => setShowNotes(value => !value)}>
-        <Icon name={showNotes ? "eye-off" : "eye"} /><span className="sr-only">{showNotes ? t("Hide explanations & notes") : t("Show explanations & notes")}</span>
+      <button type="button" className="primary floating-action handbook-notes-toggle" title={notesOpen ? t("Hide explanations & notes") : t("Show explanations & notes")} aria-pressed={notesOpen} onClick={() => setNotesOpen(value => !value)}>
+        <Icon name={notesOpen ? "eye-off" : "eye"} /><span className="sr-only">{notesOpen ? t("Hide explanations & notes") : t("Show explanations & notes")}</span>
       </button>
     </div>}
   </div>;

@@ -13,9 +13,9 @@
 .vocabulary-status-guide-trigger .icon { width: 16px; height: 16px; }
 .vocabulary-status-guide-dialog { width: min(680px, calc(100% - 48px)); }
 .vocabulary-status-guide-body { min-height: 0; padding: 20px 24px; overflow-y: auto; overscroll-behavior: contain; }
-.vocabulary-status-guide-body > p { margin: 0; color: var(--muted); font-size: .875rem; }
-.vocabulary-status-guide-body dl { display: grid; gap: 16px; margin: 20px 0; }
+.vocabulary-status-guide-body dl { display: grid; gap: 16px; margin: 0; }
 .vocabulary-status-guide-body dl > div { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.vocabulary-status-guide-body dl > div:last-child { padding-bottom: 0; border-bottom: 0; }
 .vocabulary-status-guide-body dt { font-size: .9375rem; font-weight: 550; }
 .vocabulary-status-guide-body dd { margin: 4px 0 0 16px; font-size: .875rem; color: var(--muted); }
 .vocabulary-overview-totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }

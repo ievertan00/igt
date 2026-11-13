@@ -1,15 +1,19 @@
 .learning-dashboard { min-width: 0; color: var(--ink); }
-.learning-dashboard .growth-trend-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1rem; margin-bottom: 1rem; }
-.learning-dashboard .growth-periods { display: inline-flex; gap: .125rem; background: var(--wash); border-radius: .625rem; padding: .1875rem; }
-.learning-dashboard .growth-periods button { min-height: 36px; padding: .375rem .75rem; border: 0; border-radius: .5rem; background: transparent; color: var(--muted); font-size: .75rem; font-weight: 550; box-shadow: none; white-space: nowrap; }
+.learning-dashboard .growth-trend-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .625rem 1rem; margin-bottom: 1rem; }
+/* Four equal period buttons span the whole panel instead of leaving a ragged right edge. */
+.learning-dashboard .growth-periods { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex: 1 0 100%; gap: .125rem; background: var(--wash); border-radius: .625rem; padding: .1875rem; }
+.learning-dashboard .growth-periods button { min-width: 0; min-height: 36px; padding: .375rem .5rem; border: 0; border-radius: .5rem; background: transparent; color: var(--muted); font-size: .75rem; font-weight: 550; text-align: center; box-shadow: none; }
 .learning-dashboard .growth-periods button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm); }
 .learning-dashboard .growth-date-range { display: flex; align-items: center; flex-wrap: wrap; gap: .4375rem; font-size: .75rem; color: var(--muted); }
 .learning-dashboard .growth-date-range label { display: block; }
-.learning-dashboard .growth-date-range input { width: 8.125rem; max-width: 100%; min-height: 36px; border: 1px solid var(--line); border-radius: .5rem; background: var(--paper); padding: .375rem .4375rem; font-size: .75rem; color: var(--ink); }
-.learning-dashboard :is(.growth-section-title, .growth-compare-selectors, .growth-detail-status) select { min-height: 36px; padding: .4375rem 2rem .4375rem .625rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .75rem; background-color: var(--paper); color: var(--ink); width: auto; max-width: 100%; }
+/* The attribute selector outranks the global 48px input rule, so the date row stays as short as the period row. */
+.learning-dashboard .growth-date-range input[type="date"] { width: 8.125rem; max-width: 100%; height: 32px; min-height: 32px; padding: .125rem .5rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--paper); font-size: .75rem; line-height: 1.25; color: var(--ink); }
+.learning-dashboard .growth-date-range button { min-height: 32px; }
+.learning-dashboard :is(.growth-section-title, .growth-detail-status) select { min-height: 36px; padding: .4375rem 2rem .4375rem .625rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .75rem; background-color: var(--paper); color: var(--ink); width: auto; max-width: 100%; }
 .learning-dashboard .growth-text-button { padding: .5rem .125rem; min-height: 36px; border: 0; background: transparent; box-shadow: none; color: var(--accent-text); font-size: .75rem; font-weight: 550; text-align: left; }
 .learning-dashboard .growth-text-button:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: .2em; }
-.learning-dashboard .growth-section-title { display: flex; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1.125rem; }
+/* Only the trend panel still carries a detail line (its date range); a shared floor keeps every panel's content start aligned. */
+.learning-dashboard .growth-section-title { display: flex; align-items: start; justify-content: space-between; gap: 1rem; min-height: 3.125rem; margin-bottom: 1.125rem; }
 /* Headings stay deep ink; the hue lives on the figures, not on the title. */
 .learning-dashboard .growth-section-title h2 { margin: 0; font-size: 1rem; line-height: 1.5; letter-spacing: -.015em; color: var(--ink); }
 .learning-dashboard .growth-section-title p { margin: .3125rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.7; }
@@ -18,7 +22,6 @@
 .learning-dashboard .growth-saved-section { margin: 0 0 1.5rem; }
 .learning-dashboard .growth-saved-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: .375rem .75rem; margin: 0 0 .75rem; }
 .learning-dashboard .growth-saved-heading h2 { margin: 0; font-size: 1rem; font-weight: 650; letter-spacing: -.02em; }
-.learning-dashboard .growth-saved-heading p { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.6; }
 .learning-dashboard .growth-saved-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
 /* Semantic type colour: each source owns one hue for its label and total; body copy and notes stay neutral. */
 .learning-dashboard .growth-saved-card:nth-child(1) { --card-ink: var(--accent-text); }
@@ -73,16 +76,12 @@
 .learning-dashboard .growth-chart-legend span:first-child { color: var(--accent-text); font-weight: 550; }
 .learning-dashboard .growth-chart-legend i { width: 1rem; height: 3px; background: var(--accent); border-radius: 2px; }
 .learning-dashboard .growth-chart-legend i.is-previous { background: #a0abb7; }
-.learning-dashboard .growth-evidence-footer summary { cursor: pointer; padding: .4375rem 0; color: var(--muted); font-size: .75rem; }
 .learning-dashboard .growth-table-scroll { overflow-x: auto; max-width: 100%; }
 .learning-dashboard .growth-table-scroll table { width: 100%; border-collapse: collapse; font-size: .75rem; font-variant-numeric: tabular-nums; text-align: left; }
 .learning-dashboard .growth-table-scroll th, .learning-dashboard .growth-table-scroll td { padding: .75rem .625rem; border-bottom: 1px solid var(--line); line-height: 1.8; vertical-align: top; min-width: 4rem; }
 .learning-dashboard .growth-table-scroll th { color: var(--muted); font-weight: 550; background: #f8fafc; }
 .learning-dashboard .growth-table-scroll tr:last-child td { border-bottom: 0; }
 .learning-dashboard .growth-table-scroll .growth-text-button { font-size: inherit; min-height: 0; padding: 0; }
-.learning-dashboard .growth-panel-note { color: var(--muted); font-size: .75rem; line-height: 1.85; margin: 1rem 0 0; }
-/* The period control lives in this panel, so its scope is stated in the panel's own voice. */
-.learning-dashboard .growth-trend-scope { color: var(--info); background: var(--info-bg); border-radius: .5rem; padding: .5rem .625rem; }
 .learning-dashboard .growth-tag { display: inline-flex; align-items: center; padding: .25rem .5rem; background: var(--info-bg); border-radius: .375rem; font-size: .75rem; color: var(--info); white-space: nowrap; }
 .learning-dashboard .growth-priority-count { color: var(--accent-text); background: var(--accent-soft); font-weight: 650; font-variant-numeric: tabular-nums; }
 .learning-dashboard .growth-bar-list { display: grid; gap: 1.25rem; margin-top: 1.875rem; }
@@ -146,16 +145,6 @@
 .learning-dashboard .growth-activity-row time { font-size: .75rem; color: var(--muted); white-space: nowrap; }
 .learning-dashboard .growth-activity-row > .icon { width: 14px; height: 14px; color: var(--control); }
 .learning-dashboard .growth-practice-log { margin-top: .5rem; }
-.learning-dashboard .growth-comparison { margin-top: 1.5rem; }
-.learning-dashboard .growth-comparison > summary { color: var(--muted); padding: .75rem 0; cursor: pointer; font-size: .8125rem; font-weight: 550; }
-.learning-dashboard .growth-comparison-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; }
-.learning-dashboard .growth-comparison-tabs button { min-height: 40px; padding: .5rem .875rem; border: 1px solid var(--line); border-radius: .625rem; background: var(--paper); color: var(--muted); font-size: .75rem; box-shadow: none; }
-.learning-dashboard .growth-comparison-tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent-border); }
-.learning-dashboard .growth-compare-selectors { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
-.learning-dashboard .growth-compare-selectors label { display: grid; gap: .4375rem; font-size: .75rem; color: var(--muted); flex: 1 1 0; min-width: 0; max-width: 24rem; }
-.learning-dashboard .growth-evidence-footer { margin: 1rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.8; }
-.learning-dashboard .growth-evidence-footer > p { margin-bottom: .5rem; }
-.learning-dashboard .growth-coverage-row { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding: .625rem 0; font-size: .75rem; }
 .learning-dashboard .growth-loading { font-size: .75rem; color: var(--muted); }
 .learning-dashboard .growth-notice { padding: .75rem 1rem; border-radius: .75rem; background: var(--warning-bg); color: var(--warning-text); font-size: .75rem; line-height: 1.8; }
 .learning-dashboard .growth-error { background: var(--danger-bg); color: var(--danger-text); border-radius: .75rem; padding: 1rem; font-size: .8125rem; line-height: 1.7; margin-bottom: 1rem; }
@@ -208,11 +197,12 @@
   .learning-dashboard .growth-section-title select { max-width: 12rem; }
 }
 @media (max-width: 560px) {
-  .learning-dashboard .growth-periods { width: 100%; justify-content: space-between; }
-  .learning-dashboard .growth-periods button { padding-inline: .5rem; }
+  /* Two by two still fills the panel, but gives each label room once the text is enlarged. */
+  .learning-dashboard .growth-periods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .learning-dashboard .growth-periods button { padding-inline: .5rem; line-height: 1.35; }
   .learning-dashboard .growth-date-range { gap: .375rem; width: 100%; }
   .learning-dashboard .growth-date-range label { min-width: 0; flex: 1; }
-  .learning-dashboard .growth-date-range input { width: 100%; padding-inline: .3125rem; }
+  .learning-dashboard .growth-date-range input[type="date"] { width: 100%; padding-inline: .3125rem; }
   .learning-dashboard .growth-date-range button { flex: 1 0 100%; padding-block: .125rem; min-height: 30px; }
   .learning-dashboard .growth-metric-card { padding: .875rem; }
   /* One cramped column per source reads worse than a row, so narrow screens give each source the full width. */
@@ -240,16 +230,11 @@
   .learning-dashboard .growth-drawer-heading { padding-inline: 1rem; }
   .learning-dashboard .growth-drawer-content { padding: 1.25rem 1rem; }
   .learning-dashboard .growth-drawer-content > h2 { font-size: 1.25rem; }
-  .learning-dashboard .growth-compare-selectors { gap: .75rem; }
-  .learning-dashboard .growth-compare-selectors select { width: 100%; }
 }
 @media (max-width: 350px) {
   .learning-dashboard .growth-metric-grid { gap: .5rem; }
   .learning-dashboard .growth-metric-card { padding: .75rem; }
   .learning-dashboard .growth-status-list { grid-template-columns: 1fr; }
-  /* Four nowrap period buttons cannot share one row this narrow, so they stack two by two. */
-  .learning-dashboard .growth-periods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .learning-dashboard .growth-periods button { padding-inline: .25rem; }
   /* The category name and its count need the full row once the text is enlarged, so the bar drops below them. */
   .learning-dashboard .growth-bar-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: .375rem; }
   .learning-dashboard .growth-bar-row > .growth-bar-track { grid-column: 1 / -1; }
