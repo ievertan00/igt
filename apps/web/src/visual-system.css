@@ -119,27 +119,34 @@ p { overflow-wrap: anywhere; }
 .skip-link { position: fixed; top: -100px; left: 16px; z-index: 50; background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 8px; }
 .skip-link:focus { top: 12px; }
 .shell { min-height: 100dvh; display: flex; flex-direction: column; background: var(--canvas); }
-.topbar { min-height: 5.25rem; width: 100%; padding: 0 var(--page-gutter); display: flex; align-items: center; gap: 3rem; border-bottom: 1px solid var(--topbar-line); position: sticky; top: 0; z-index: 10; background: var(--paper); }
+.topbar { min-height: 5.25rem; width: 100%; padding: 0 var(--page-gutter); display: flex; align-items: center; gap: 3rem; border-bottom: 1px solid var(--topbar-line); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; background: var(--paper); }
 .brand { display: inline-flex; align-items: center; text-decoration: none; line-height: 1; flex-shrink: 0; }
 .brand-mark { display: grid; place-items: center; background: var(--accent); color: var(--on-dark); width: 2.625rem; height: 2.625rem; border-radius: 1rem; margin-right: .75rem; box-shadow: 0 4px 8px -3px rgb(33 131 67 / 35%); }
 .brand-mark svg { width: 24px; height: 24px; }
 .brand-wordmark { font-size: 1.5rem; font-weight: 750; letter-spacing: -.04em; white-space: nowrap; }
 .top-nav { display: flex; flex: 1; align-items: center; gap: .75rem; font-size: 1.0625rem; font-weight: 600; min-width: 0; }
-.nav-primary { display: grid; grid-template-columns: repeat(5, 1fr); flex: 0 0 auto; width: max-content; align-items: center; gap: .25rem; margin-inline-end: auto; }
+.nav-primary { display: grid; grid-template-columns: repeat(4, 1fr); flex: 0 0 auto; width: max-content; align-items: center; gap: .25rem; }
 .nav-primary > .learning-menu { min-width: 0; }
 .nav-primary > .nav-link, .nav-primary > .learning-menu > summary { position: relative; min-height: var(--target-size); padding: .5rem 1.25rem; border-radius: var(--radius-control); color: var(--muted); }
-.nav-primary > .learning-menu > summary > .icon { display: none; }
+.nav-primary > .learning-menu > summary > .icon:not(.nav-item-icon) { display: none; }
 .nav-primary > .my-learning-menu > summary > .icon { display: block; flex-shrink: 0; }
-.nav-primary .active::after { content: ""; position: absolute; right: .375rem; width: .625rem; height: .625rem; border-radius: 50%; background: var(--accent); }
+.nav-link > .nav-item-icon, .nav-primary > .learning-menu > summary > .nav-item-icon { width: 18px; height: 18px; flex-shrink: 0; }
+/* The right-hand group keeps My learning next to the gear and language switcher; one hairline splits destinations from tools. */
+.nav-tools { position: relative; display: flex; align-items: center; gap: .5rem; flex-shrink: 0; margin-left: auto; padding-left: 1.125rem; }
+.nav-tools::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 1.5rem; transform: translateY(-50%); background: var(--line); }
+.nav-tools > .my-learning-link { position: relative; padding: .5rem 1rem; border-radius: var(--radius-control); color: var(--muted); }
 .nav-link, .settings-link, .learning-menu summary { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: .625rem 1rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
 .nav-link:hover, .learning-menu summary:hover, .settings-link:hover { background: var(--wash); }
-.nav-primary > .nav-link.active, .nav-primary > .learning-menu > summary.active { background: var(--wash); color: var(--ink); }
+/* Active destination is the only colored element in the nav: soft green fill, deep green label/icon, hairline ring. No dot, no width change when switching pages. */
+.nav-primary > .nav-link.active, .nav-primary > .learning-menu > summary.active, .nav-tools > .nav-link.active,
+.nav-primary > .nav-link.active:hover, .nav-primary > .learning-menu > summary.active:hover, .nav-tools > .nav-link.active:hover { background: var(--accent-soft); color: var(--accent-active-text); box-shadow: inset 0 0 0 1px var(--accent-border); }
+.nav-link.active > .nav-item-icon, .learning-menu > summary.active > .nav-item-icon { color: var(--accent-outline); }
 .settings-link { display: grid; place-items: center; flex-shrink: 0; width: var(--target-size); height: var(--target-size); padding: 0; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); }
 .settings-link span { display: none; }
-.settings-link[aria-current="page"] { color: var(--accent-text); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--selection-border); }
-.settings-link[aria-current="page"]:hover { color: var(--ink); background: var(--accent-soft); }
-.learner-language-menu { flex-shrink: 0; margin-left: .5rem; padding-left: 1.125rem; }
-.learner-language-menu::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 1.5rem; transform: translateY(-50%); background: var(--line); }
+.settings-link[aria-current="page"] { color: var(--accent-active-text); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-border); }
+.settings-link[aria-current="page"]:hover { color: var(--accent-active-text); background: var(--accent-soft); }
+.settings-link[aria-current="page"] .icon { color: var(--accent-outline); }
+.learner-language-menu { flex-shrink: 0; }
 .learner-language-menu > summary { color: var(--muted); background: var(--wash); border: 1px solid var(--line); border-radius: var(--radius-control); padding: .5rem .875rem; font-size: .9375rem; }
 .learner-language-menu[open] > summary { background: var(--wash); color: var(--ink); }
 .learning-menu.learner-language-menu > summary .language-menu-icon { width: 18px; height: 18px; }
@@ -158,7 +165,7 @@ p { overflow-wrap: anywhere; }
 .learning-menu summary { list-style: none; }
 .learning-menu summary::-webkit-details-marker { display: none; }
 .learning-menu summary .icon { width: 14px; }
-.learning-menu[open] summary .icon { transform: rotate(180deg); }
+.learning-menu[open] summary .icon:not(.nav-item-icon) { transform: rotate(180deg); }
 .learning-links { position: absolute; top: calc(100% + 10px); left: 0; width: max-content; min-width: 190px; padding: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
 .learning-links a { display: flex; gap: 12px; padding: 12px; text-decoration: none; border-radius: 6px; white-space: nowrap; }
 .learning-links a:hover, .learning-links a[aria-current="page"] { background: var(--accent-soft); }
@@ -921,9 +928,9 @@ p { overflow-wrap: anywhere; }
 /* Between the mobile layout and 1320px the primary nav has to give up width, otherwise the language switcher is clipped. */
 @media (min-width: 961px) and (max-width: 1240px) {
   .topbar { gap: 1rem; }
-  .nav-primary { grid-template-columns: repeat(5, auto); gap: 0; }
+  .nav-primary { grid-template-columns: repeat(4, auto); gap: 0; }
   .nav-primary > .nav-link, .nav-primary > .learning-menu > summary { padding: .5rem .75rem; }
-  .learner-language-menu { margin-left: .25rem; padding-left: .625rem; }
+  .nav-tools { padding-left: .625rem; }
   .learner-language-menu > summary { padding: .5rem .625rem; }
 }
 @media (max-width: 960px) {
@@ -938,9 +945,12 @@ p { overflow-wrap: anywhere; }
   .top-nav.is-open { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; flex-basis: 100%; padding-top: 16px; }
   .nav-primary { display: flex; flex: 1 1 100%; width: 100%; flex-wrap: wrap; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; }
   .nav-primary > .learning-menu > summary > .icon { display: block; }
-  .nav-primary .active::after { display: none; }
+  .top-nav.is-open .nav-primary > .learning-menu > summary { justify-content: flex-start; }
+  .top-nav.is-open .nav-primary > .learning-menu > summary > .icon:not(.nav-item-icon) { display: block; margin-left: auto; }
+  .nav-tools { flex: 1 1 100%; flex-wrap: wrap; gap: 6px; margin-left: 0; padding-left: 0; }
+  .nav-tools::before { display: none; }
+  .nav-tools > .my-learning-link { justify-content: flex-start; width: calc(50% - 3px); }
   .top-nav .learner-language-menu { margin-left: 0; padding-left: 0; }
-  .learner-language-menu::before { display: none; }
   .learner-language-menu > summary { justify-content: flex-start; }
   .learner-language-menu > summary > .icon:last-child { display: block; margin-left: auto; }
   .language-options { position: static; width: 100%; margin-top: 4px; }

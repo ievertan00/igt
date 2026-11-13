@@ -2678,7 +2678,12 @@ function CopyButton({ value, label, small }: { value: string; label: string; sma
   );
 }
 
-const primaryRoutes: Route[] = ["word-lookup", "practice", "ask"];
+const primaryRoutes = ["word-lookup", "practice", "ask"] as const satisfies readonly Route[];
+const primaryNavIcons: Record<(typeof primaryRoutes)[number], "word-lookup" | "practice" | "ask"> = {
+  "word-lookup": "word-lookup",
+  practice: "practice",
+  ask: "ask",
+};
 const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }> = [
   {
     label: "Writing",
@@ -2812,6 +2817,7 @@ export function App() {
           {navigationGroups.map((group) => (
             <details key={group.label} className="learning-menu" name="workspace-navigation">
               <summary className={group.routes.some(([key]) => key === route) ? "active" : ""}>
+                <Icon name="grammar" className="nav-item-icon" />
                 {group.label}
                 <Icon name="chevron" />
               </summary>
@@ -2832,21 +2838,31 @@ export function App() {
                 className={route === key && !(key === "ask" && askView === "notes") ? "nav-link active" : "nav-link"}
                 aria-current={route === key && !(key === "ask" && askView === "notes") ? "page" : undefined}
               >
+                <Icon name={primaryNavIcons[key]} className="nav-item-icon" />
                 {items.find(([itemKey]) => itemKey === key)?.[1]}
               </a>
             ))}
-          <a className={isMyLearning ? "nav-link active" : "nav-link"} href="#dashboard" aria-current={isMyLearning ? "page" : undefined}>My learning</a>
           </div>
-          <a
-            className="settings-link"
-            href="#settings"
-            aria-label={t("Model settings")}
-            aria-current={route === "settings" ? "page" : undefined}
-          >
-            <Icon name="settings" />
-            <span>Settings</span>
-          </a>
-          <LearnerLanguageSwitch />
+          <div className="nav-tools">
+            <a
+              className={isMyLearning ? "nav-link my-learning-link active" : "nav-link my-learning-link"}
+              href="#dashboard"
+              aria-current={isMyLearning ? "page" : undefined}
+            >
+              <Icon name="dashboard" className="nav-item-icon" />
+              My learning
+            </a>
+            <a
+              className="settings-link"
+              href="#settings"
+              aria-label={t("Model settings")}
+              aria-current={route === "settings" ? "page" : undefined}
+            >
+              <Icon name="settings" />
+              <span>Settings</span>
+            </a>
+            <LearnerLanguageSwitch />
+          </div>
         </nav>
       </header>
       {isMyLearning && <MyLearningNavigation route={route} />}
