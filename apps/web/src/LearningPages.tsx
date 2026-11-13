@@ -146,7 +146,7 @@ export function Coach() {
   }
   function download() {
     if (!report) return;
-    const text = `# ${coachReportTitle}\n\nGenerated: ${report.generatedAt}\n\n${report.totalChecks} saved records; ${report.evidence.length} records supplied for analysis.\n\n${reportMarkdown}`;
+    const text = `# ${coachReportTitle}\n\nGenerated: ${report.generatedAt}\n\n${reportMarkdown}`;
     const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
     const link = document.createElement("a"); link.href = url; link.download = "english-proficiency-report.md"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -176,13 +176,10 @@ export function Coach() {
     {report && <Panel title={coachReportTitle} icon="document" className="coach-report">
       <div className="coach-report-meta">
         <span><Icon name="calendar" />{report.cached ? "Cached report" : "Generated on"} {new Date(report.generatedAt).toLocaleString()}</span>
-        <span><Icon name="layers" />{report.sourceCounts?.grammar ?? report.totalChecks} grammar checks</span>
-        <span><Icon name="ask" />{report.sourceCounts?.practice ?? 0} practice records</span>
-        <span><Icon name="info" />{report.coverage.unclassified} unknown sources</span>
       </div>
       <div className="coach-report-provenance">
-      {report.saveError && <p role="alert">{report.saveError}</p>}
-      {report.sourceStatus && report.sourceStatus.practice !== "available" && <p className="handbook-evidence">Practice log: {report.sourceStatus.practice}. Practice evidence was not available for this report.</p>}
+      {report.saveError && <p role="alert">The report could not be saved. Try generating it again.</p>}
+      {report.sourceStatus && report.sourceStatus.practice !== "available" && <p className="handbook-evidence">Practice records could not be read. This report uses the available learning records.</p>}
       {report.sourceStatus?.grammar === "unavailable" && <p className="handbook-evidence">Grammar records could not be read. This report uses available Practice evidence.</p>}
       </div>
       <Markdown source={reportMarkdown} />

@@ -8,6 +8,8 @@
   --canvas: #f6f8fb;
   --ink: #101827;
   --muted: #64748b;
+  /* Readable neutral for quiet controls on --wash, where --muted drops below 4.5:1. */
+  --ink-soft: #475569;
   --wash: #f1f5f9;
   /* The sub-nav track is a white surface, not a recessed blue-grey band: one less full-width colour block per page. */
   --tab-track-surface: #ffffff;
@@ -55,6 +57,7 @@
   --shadow-floating: 0 12px 32px -4px rgb(16 24 39 / 12%);
   --target-size: 44px;
   --action-height: 48px;
+  --action-min-width: 9rem;
   /* One palette for the six SRS retention states, shared by Overview and Saved words. */
   --learning-status-new: #9b9f9c;
   --learning-status-learning: #87aad6;
@@ -131,10 +134,11 @@ p { overflow-wrap: anywhere; }
 .nav-primary > .learning-menu > summary > .icon:not(.nav-item-icon) { display: none; }
 .nav-primary > .my-learning-menu > summary > .icon { display: block; flex-shrink: 0; }
 .nav-link > .nav-item-icon, .nav-primary > .learning-menu > summary > .nav-item-icon { width: 18px; height: 18px; flex-shrink: 0; }
-/* The right-hand group keeps My learning next to the gear and language switcher; one hairline splits destinations from tools. */
-.nav-tools { position: relative; display: flex; align-items: center; gap: .5rem; flex-shrink: 0; margin-left: auto; padding-left: 1.125rem; }
-.nav-tools::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 1.5rem; transform: translateY(-50%); background: var(--line); }
+/* My learning hugs the hairline from the left, set apart from the destinations by flexible space. Wider air around the hairline than inside the utility pair so the separator reads as a group boundary. */
+.nav-tools { display: flex; align-items: center; gap: 1.25rem; flex-shrink: 0; margin-left: auto; }
 .nav-tools > .my-learning-link { position: relative; padding: .5rem 1rem; border-radius: var(--radius-control); color: var(--muted); }
+.nav-utility { position: relative; display: flex; align-items: center; gap: 1rem; padding-left: 1.25rem; }
+.nav-utility::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: 1.5rem; transform: translateY(-50%); background: var(--line); }
 .nav-link, .settings-link, .learning-menu summary { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: .625rem 1rem; border-radius: 999px; text-decoration: none; white-space: nowrap; }
 .nav-link:hover, .learning-menu summary:hover, .settings-link:hover { background: var(--wash); }
 /* Active destination is the only colored element in the nav: soft green fill, deep green label/icon, hairline ring. No dot, no width change when switching pages. */
@@ -190,7 +194,7 @@ p { overflow-wrap: anywhere; }
 .heading h1 { margin-bottom: .5rem; }
 .heading p { color: var(--muted); font-size: 1.0625rem; max-width: 62ch; margin-bottom: 0; line-height: 1.7; }
 .primary, .secondary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: var(--action-height); padding: 12px 22px; border: 1px solid transparent; border-radius: var(--radius-control); text-decoration: none; font-size: 14px; font-weight: 600; line-height: 1.4; }
-.primary { background: var(--ink); color: var(--paper); }
+.primary { background: var(--ink); color: var(--paper); min-width: var(--action-min-width); }
 .primary > .icon { color: currentColor; }
 .primary .icon-arrow { transition: transform var(--duration-fast) var(--ease-out); }
 .primary:not(:has(.icon-arrow))::after { content: ""; width: 20px; height: 20px; flex: 0 0 auto; background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h16m-6-6 6 6-6 6' fill='none' stroke='black' stroke-width='1.65' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; transition: transform var(--duration-fast) var(--ease-out); }
@@ -930,7 +934,8 @@ p { overflow-wrap: anywhere; }
   .topbar { gap: 1rem; }
   .nav-primary { grid-template-columns: repeat(4, auto); gap: 0; }
   .nav-primary > .nav-link, .nav-primary > .learning-menu > summary { padding: .5rem .75rem; }
-  .nav-tools { padding-left: .625rem; }
+  .nav-tools { gap: .75rem; }
+  .nav-utility { gap: .75rem; padding-left: .75rem; }
   .learner-language-menu > summary { padding: .5rem .625rem; }
 }
 @media (max-width: 960px) {
@@ -947,8 +952,9 @@ p { overflow-wrap: anywhere; }
   .nav-primary > .learning-menu > summary > .icon { display: block; }
   .top-nav.is-open .nav-primary > .learning-menu > summary { justify-content: flex-start; }
   .top-nav.is-open .nav-primary > .learning-menu > summary > .icon:not(.nav-item-icon) { display: block; margin-left: auto; }
-  .nav-tools { flex: 1 1 100%; flex-wrap: wrap; gap: 6px; margin-left: 0; padding-left: 0; }
-  .nav-tools::before { display: none; }
+  .nav-tools { flex: 1 1 100%; flex-wrap: wrap; gap: 6px; margin-left: 0; }
+  .nav-utility { display: contents; }
+  .nav-utility::before { display: none; }
   .nav-tools > .my-learning-link { justify-content: flex-start; width: calc(50% - 3px); }
   .top-nav .learner-language-menu { margin-left: 0; padding-left: 0; }
   .learner-language-menu > summary { justify-content: flex-start; }
@@ -1024,7 +1030,7 @@ p { overflow-wrap: anywhere; }
 .floating-action-dock { position: fixed; right: max(var(--page-gutter), calc((100vw - var(--workspace-max)) / 2)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 8; max-width: calc(100% - var(--page-gutter) - var(--page-gutter)); display: flex; justify-content: flex-end; pointer-events: none; }
 .shell:has(.floating-action-dock) .site-footer { padding-bottom: max(5rem, env(safe-area-inset-bottom)); }
 .floating-action { pointer-events: auto; min-height: 52px; max-width: 100%; padding: 0 1.5rem; border-radius: 999px; box-shadow: var(--shadow-floating); animation: fab-enter 250ms var(--ease-out); }
-.floating-action.floating-action-compact { width: 48px; height: 48px; min-height: 48px; padding: 0; }
+.floating-action.floating-action-compact { width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 0; }
 .floating-action.floating-action-compact::after { content: none; }
 .floating-action > span { min-width: 0; overflow-wrap: anywhere; }
 .floating-action:hover:not(:disabled) { box-shadow: 0 16px 36px -4px rgb(16 24 39 / 18%); }

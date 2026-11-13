@@ -3,9 +3,9 @@ name: ClearWrite Design System
 description: 以 Markdown 文件设置示例为基准的 ClearWrite 界面规范
 ---
 
-# ClearWrite Design System · v2.5
+# ClearWrite Design System · v2.7
 
-更新日期：2026-11-13。以 Markdown 文件设置示例为基准，统一 ClearWrite 的导航、标题、面板、表单和交互状态。v2.3 按「优化页面布局减少视觉疲劳」设计稿调整了页面底色、My learning 子导航（新增子页面标题 + 白面页签轨道）与 Grammar check log 的内容布局，并按「说明文字纪律」清理了 My learning 全段的口径 / 证据边界类说明文字。v2.4 按「导航栏设计修改」评审结论定稿顶栏：`My learning` 归入右侧工具组、保留圆形齿轮设置入口、取消独立的主题切换图标，顶栏边界补上 1px 分隔线与轻投影；所有色值与尺寸统一取本文件 token，不采用参考稿的第二套绿色（`#0E9F6E` / `#E8F8EE` / `#0A6E4B`）。v2.5 补齐导航图标与选中态：每个导航项改为「线性图标 + 文字标签」，选中态由浅灰底 + 绿点改为浅绿底 + 深绿字 + 绿色图标 + 1px 细描边，与二级页签的选中语言一致；齿轮按钮的选中态同步。
+更新日期：2026-11-13。以 Markdown 文件设置示例为基准，统一 ClearWrite 的导航、标题、面板、表单和交互状态。v2.3 按「优化页面布局减少视觉疲劳」设计稿调整了页面底色、My learning 子导航（新增子页面标题 + 白面页签轨道）与 Grammar check log 的内容布局，并按「说明文字纪律」清理了 My learning 全段的口径 / 证据边界类说明文字。v2.4 按「导航栏设计修改」评审结论定稿顶栏：`My learning` 归入右侧工具组、保留圆形齿轮设置入口、取消独立的主题切换图标，顶栏边界补上 1px 分隔线与轻投影；所有色值与尺寸统一取本文件 token，不采用参考稿的第二套绿色（`#0E9F6E` / `#E8F8EE` / `#0A6E4B`）。v2.5 补齐导航图标与选中态：每个导航项改为「线性图标 + 文字标签」，选中态由浅灰底 + 绿点改为浅绿底 + 深绿字 + 绿色图标 + 1px 细描边，与二级页签的选中语言一致；齿轮按钮的选中态同步。v2.6 收敛 Overview 的文字色彩表达：卡片标签与数字同色系、空数据与零计数退为中性、浅灰底上的安静控件文字改用 `--ink-soft`、观察面板正文回归墨色，并补齐悬停态的对比度与可见反馈。v2.7 按评审把 `My learning` 放在分隔线左侧、靠右独立成组，与目的地之间以弹性留白分开；右侧工具组只保留齿轮与语言选择器，二者间距 `1rem`，分隔线两侧各 `1.25rem`（961–1240px 档收紧为 `.75rem`）。
 
 ---
 
@@ -36,6 +36,7 @@ ClearWrite 是一款集“写作润色（Writing/Grammar/Express）”、“词�
 | `--paper` | `#ffffff` | 卡片表面、输入主体、顶部栏、弹窗背景 |
 | `--ink` | `#101827` | 主标题、深色主按钮底色、重要阅读文字 |
 | `--muted` | `#64748b` | 次要文字、占位符、辅助时间戳与元数据说明 |
+| `--ink-soft` | `#475569` | 浅灰底（`--wash`）上的安静控件文字与中性状态名；`--muted` 在浅灰底上不足 4.5:1 时的中性替代 |
 | `--wash` | `#f1f5f9` | 胶囊导航槽底、弱化辅助区域、浅灰背景 |
 | `--tab-track-surface` | `#ffffff` | My learning 二级页签轨道：白面 + 1px 描边，替代原先深两档的冷灰凹槽，减少一整条满宽色带 |
 | `--tab-track-line` | `#e3eaf3` | 二级页签轨道的 1px 内描边 |
@@ -62,7 +63,7 @@ ClearWrite 是一款集“写作润色（Writing/Grammar/Express）”、“词�
 
 ## 3. 导航、面板与 Markdown 文件设置
 
-- 顶部栏使用白底、1px `--topbar-line` 细分隔线与 `--shadow-sm` 轻投影，桌面高度 `84px`（`5.25rem`），吸顶滚动时保持不透明。绿色圆角方形标识（`--accent`）与深色 ClearWrite 字标组成品牌入口。页面目的地（Writing / Vocabulary / Practice / Ask）直接排在白底上，每项为 18px 线性图标 + 文字标签（图标只辅助识别，文字始终保留）。当前入口用 `--accent-soft` 浅绿圆角底、`--accent-active-text` 深绿文字、`--accent-outline` 绿色图标和 1px `--accent-border` 内描边标识，是导航区唯一彩色元素；未选中项的悬停仍只加 `--wash` 浅灰底。选中态不改变字重、内边距或盒模型尺寸，切换页面时宽度不跳动。右侧工具组以 1px `--line` 竖线与目的地切开，依次是 `My learning`、圆形轮廓齿轮设置按钮（`--target-size` 44px、`--line` 描边）与语言选择器；齿轮是唯一的偏好 / 设置入口，不另设主题切换图标，避免两个入口管同一件事。语言选择器使用 `--wash` 浅底、`--line` 描边与下拉箭头；`My learning` 带图标，选中态与目的地一致（浅绿底 + 深绿字 + 绿色图标），齿轮按钮在设置页也用同一套浅绿选中样式。窄屏收起为可键盘操作的菜单，工具组随菜单展开，竖线隐藏，图标与文字标签始终同时保留，`My learning` 与主导航项同宽。全部色值、圆角与触控尺寸只取本文件第 2 节 token。
+- 顶部栏使用白底、1px `--topbar-line` 细分隔线与 `--shadow-sm` 轻投影，桌面高度 `84px`（`5.25rem`），吸顶滚动时保持不透明。绿色圆角方形标识（`--accent`）与深色 ClearWrite 字标组成品牌入口。页面目的地（Writing / Vocabulary / Practice / Ask）直接排在白底上，每项为 18px 线性图标 + 文字标签（图标只辅助识别，文字始终保留）。当前入口用 `--accent-soft` 浅绿圆角底、`--accent-active-text` 深绿文字、`--accent-outline` 绿色图标和 1px `--accent-border` 内描边标识，是导航区唯一彩色元素；未选中项的悬停仍只加 `--wash` 浅灰底。选中态不改变字重、内边距或盒模型尺寸，切换页面时宽度不跳动。`My learning` 靠右贴近分隔线左侧，与目的地之间以弹性留白分开；右侧工具组以 1px `--line` 竖线切开，依次是圆形轮廓齿轮设置按钮（`--target-size` 44px、`--line` 描边）与语言选择器，二者间距 `1rem`；竖线两侧各留 `1.25rem`，宽于工具组内部间距，让分隔线读作组边界（961–1240px 档统一收紧为 `.75rem`）；齿轮是唯一的偏好 / 设置入口，不另设主题切换图标，避免两个入口管同一件事。语言选择器使用 `--wash` 浅底、`--line` 描边与下拉箭头；`My learning` 带图标，选中态与目的地一致（浅绿底 + 深绿字 + 绿色图标），齿轮按钮在设置页也用同一套浅绿选中样式。窄屏收起为可键盘操作的菜单，工具组随菜单展开，竖线隐藏，图标与文字标签始终同时保留，`My learning` 与主导航项同宽。全部色值、圆角与触控尺寸只取本文件第 2 节 token。
 - 页面标题区按分类标签、主标题、简短说明排列。沿用同一标题层级和浅绿标签处理，各学习页面按任务需要保留编辑器、练习选择、词表或报告布局。
 - 学习洞察区（My learning）用一条随页面滚动的二级页签栏承载**当前子页面标题 + 子页签**：标题不再由页签代替，也不在内容区新增页级大标题（各子页原有的小节标题不受影响）。栏内自上而下是 `MY LEARNING` 小字 kicker 与 `h1` 子页面标题（与当前 `aria-current="page"` 页签同名，随语言切换）、然后是页签轨道；两者共用 `--canvas` 页面底色、不带分隔线和投影，因此不会在吸顶主导航之下再压出第二层白色头部。栏不做 `position: sticky`，滚出首屏即随内容离开，`scroll-padding-top` 只补偿吸顶的主导航高度。轨道与顶部栏之间保留 `24px` 页面底色空带（窄屏 `16px`），标题与轨道之间 `10px`，内容区起始处保留 `24px` 间隙。`56px` 高的轨道改用 `--tab-track-surface` (`#ffffff`) 白面，比页面底色亮一档，替代原先深两档的冷灰凹槽 `--wash-sunken`，整页少一条满宽色带；轨道宽度与下方内容面板完全一致、左右边缘共用工作区起线；带浮动滚动按钮的子页会为右侧控件预留 `4rem` 轨道，页签栏同步预留，避免窄屏下轨道比内容宽出一截。页签保持自然宽度依次左排，不做拉伸或均分，轨道右侧的空白原样保留、不再补控件。轨道用 `1px` `--tab-track-line` (`#e3eaf3`) 内描边加 `--shadow-sm` 轻投影划边界，圆角 `14px`、内边距 `8px`，内嵌 `40px` 页签，页签圆角 `10px`、间距 `4px`，图标 `16px` 配 `14px` Medium 文字。两条 `1px` `--control`（50% 不透明度）分隔线把页签分成概览、资料库、洞察三组。未选中为中性灰，悬停加 `--wash` 浅底并加深文字；选中态为 `--accent-soft` 浅绿底加 `--accent-outline` (`#16a34a`) 描边、`--accent-active-text` 文字、绿色图标和 `--shadow-sm`，让激活页签成为导航区唯一的彩色元素，同时保持深绿文字在浅绿底上的可读对比；键盘焦点保留 `2px` 轮廓。画布上的浅绿描边 `#cde8d8` 不直接采用，因为它在白底上不足 3:1。窄屏下页签保持完整图标与标签，由轨道横向滚动承接，分隔线不隐藏；标题缩到 `19px`。
 - 设置页面使用带图标的独立标签按钮。默认白底细边框，选中态为浅绿底、深绿文字和图标。支持方向键、Home 和 End 切换。Markdown 标题右侧的文件夹插图为装饰，手机端隐藏。
@@ -75,9 +76,16 @@ ClearWrite 是一款集“写作润色（Writing/Grammar/Express）”、“词�
 
 - 「How performance changes」面板的时段按钮与日期输入是**面板局部状态**：只驱动该面板趋势图的独立 `/dashboard/growth` 请求，页面其他数字（指标卡、Saved material、错误分布、Top priorities、最近活动）保持进入页面时的时段不变。`Saved material` 的大数字是全量库存、`Word retention` 是当前库存状态，二者按设计不随时段回溯。控件区「拉平」：`Last 7/30/90 days` 与 `All history` 用 `repeat(4, minmax(0, 1fr))` 四等分铺满面板内容宽度（≤560px 收成 2×2、仍满宽且允许标签换行），两个日期框压到 `32px` 高（以 `input[type="date"]` 提权覆盖全局 48px 输入规则），与时段行等高。图表下方两条说明——作用域提示与指标口径提示——按需求移除；此后「改时段不影响整页数字」不再有文字提醒，只能由标题区日期区间体现。若后续出现误读，优先用 `title` / 无障碍描述补回，不要恢复整行文字。
 - `Top priorities` 最多列出 5 项，来自当前时段内实际出现过的错误类型（服务端 `summary.counts.slice(0, 5)`，仅保留 `count > 0` 的项）。数据里只有 3 类诊断时就只显示 3 行；标题改为不带数字的 `Top priorities`，并在标题区用 `N / 5` 计数标签说明，不再用固定「Top 5」标题误导。
-- 字体色彩做语义分层：正文与标题保持 `--ink`，说明与元数据保持 `--muted`；指标卡大数字按语义分绿 / 蓝 / 琥珀 / 青绿，资料卡标签与数字同色系，环比增减用绿 / 红 / 灰，状态名、排名、分类计数与标签用对应语义色。语义色在白底上保持可读对比，色相只标数据、不改变正文可读性。
+- 字体色彩做语义分层：正文与标题保持 `--ink`，说明与元数据保持 `--muted`，浅灰底上的安静控件文字（未选中时段按钮、中性状态名）用 `--ink-soft`。指标卡与资料卡的标签和大数字同色系（绿 / 蓝 / 琥珀 / 青绿），不再用混色把标签调脏；资料卡「期内新增」数字跟随该卡色相，不再一律绿色。环比增减用绿 / 红 / 灰；状态名与计数、排名、分类计数与标签用对应语义色，中性状态（New / Insufficient history / Status unavailable）用 `--ink-soft`。**空数据不着色**：不可用指标的大数字、零计数的分类行与状态行、为 0 的期内增量一律退为 `--muted`，色相只标记真实存在的观察。观察面板的正文回归 `--ink`，绿只留在底色、标题与链接；趋势图上一时段的线与图例色块用 `--control`（白底 ≥ 3:1）。卡片悬停换浅绿底时次要文字同步升一档到 `--ink-soft` 保持对比；分类行与状态行的悬停反馈改为标签下划线（分类行另加轨道加深），不再依赖会被语义色覆盖的文字变色。语义色在白底上保持可读对比，色相只标数据、不改变正文可读性。
 - Overview 收敛为「一屏可读的结论」：移除底部「Compare evidence」的三组对比表（时段 / 模块 / 错误类型）和「Sources and evidence boundaries」的来源明细折叠面板，两者都是低频自助分析控件，留在概览末尾会与主结论争夺注意力。页脚证据说明句也一并移除；来源不可读时仍由页面顶部的 `growth-notice` 提示，不因移除面板而丢失异常反馈。
 - **说明文字纪律**：My learning 全段清掉「口径 / 证据边界 / 免责声明」式说明性文字（如 `Affected records, counted once per category.`、`Based on recorded recall evidence.`、`Review intervals and streaks do not prove mastery…`、`Based on locally saved records…`），覆盖 Overview 各面板标题区副标题与页脚、记录详情抽屉、Handbook 右栏提示与卡片副标题、Saved words「About statuses」弹窗首尾段、Grammar 追问输入区脚注。保留的是**反馈与数据**：来源读取异常提示、无日期记录提示、空状态与操作引导、卡片数据状态、状态释义 `<dl>`、快捷键提示、图表无障碍描述，以及日期区间、`N / 5`、`Current state` 等数据徽标。Error distribution 的 `n = N` 徽标一并移除，柱条改用 `title` 承接「点击查看记录」的发现性。删掉副标题后只有趋势面板仍带日期区间，标题区用 `min-height: 3.125rem` 统一下方内容起始线。**代价**：统计口径与「不等于掌握」的边界不再有文字兜底，若后续出现误读，优先用 `title` / `aria-label` 补回，不恢复整行文字。
+
+### Overview visual hierarchy refinement (2026-11-13)
+
+- Panel headings use their natural height; removed helper copy must not leave an empty reserved line. Analysis and secondary panels align at the top and keep natural heights.
+- Error distribution sorts categories by descending count. The highest nonzero count (including ties) uses the brand green; remaining bars use a muted green and neutral labels. This replaces the earlier per-category hue treatment; zero counts remain neutral.
+- Word retention uses a 16px status band, breathing room before the legend, and stronger counts. Preserve the existing status meanings and colors.
+- Top priorities emphasizes the first item with a soft green surface and a stronger rank; other ranks stay neutral. Recent activity remains compact, with module icons, fine separators, and readable timestamps on narrow screens.
 
 ### 3.2 Grammar check log · 低疲劳内容布局
 
@@ -96,6 +104,7 @@ ClearWrite 是一款集“写作润色（Writing/Grammar/Express）”、“词�
 ### 4.1 主动作按钮 (Primary Action Button)
 - **外观**：深蓝曜石色背景（`background: var(--ink)`），白色字（`color: #ffffff`），右侧用白色箭头（`→`）表示提交或继续。
 - **规格**：高度统一为 `48px`（大面板核心动作为 `52px`），内边距 `0 1.5rem`，圆角 `var(--radius-control)`（`12px` 或 `16px`）。
+- **宽度统一**：共享最小宽度 `var(--action-min-width)`（`9rem` / `144px`）作用于 `.primary`，让短标签主动作（`Send` / `Search` / `Look up` / `Ask AI`）宽度一致、不再过窄；长标签按钮与突出 CTA（`Check answer` `180px`、`Start practice` `13rem`）按内容自然加宽，不被压缩。圆形变体（紧凑悬浮按钮 `48px`、Handbook 笔记开关 `44px`）单独声明最小宽度以保持正圆；窄屏仍沿用各页 `width: 100%` / `min-width: 0` 规则。次级按钮与分页（`Previous` / `Next`）保持内容自适应，不套用该最小宽度。
 - **交互状态**：
   - *Default*：深邃平整，文字清晰，无重投影。
   - *Hover*：背景转为 `#1e293b`，小箭头带轻微平移 `transform: translateX(3px)`，整体微浮升 `transform: translateY(-1px)`。

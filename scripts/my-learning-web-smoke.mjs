@@ -43,7 +43,17 @@ try {
       const json = body => request.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
       if (url.pathname === '/dashboard/growth') await json(await getGrowthOverview(options, deps));
       else if (url.pathname === '/dashboard/records') { if (failRecords) throw Error('Synthetic record failure'); await json(await getGrowthRecords(options, deps)); }
-      else if (url.pathname === '/dashboard/record') { if (failHistory) throw Error('Synthetic history failure'); await json(await getGrowthRecord(options, deps)); }
+      else if (url.pathname === '/dashboard/record') {
+        if (failHistory) throw Error('Synthetic history failure');
+        const detail = await getGrowthRecord(options, deps);
+        // Unknown payloads must not leak through either text fields or debug disclosures.
+        detail.raw.internal_debug = { token: 'internal-payload-marker' };
+        if (detail.kind === 'word') {
+          detail.raw.collocations = { internal: 'internal-object-marker' };
+          detail.raw.note = JSON.stringify({ internal: 'internal-json-marker' });
+        }
+        await json(detail);
+      }
       else if (url.pathname === '/handbook') await json(buildGrammarHistory(reviews, options, now));
       else if (url.pathname === '/vocab/words') {
         const selected = words.filter(word => !options.status || options.status === 'all' || word.learningStatus === options.status);
@@ -142,6 +152,15 @@ try {
   assert.deepEqual(new Set(await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent))), new Set(['steady', 'durable']));
   await page.click('.growth-drawer .growth-activity-row'); await ready();
   assert.ok(await page.$('.growth-word-history'));
+  assert.equal(await page.$('.growth-original-record'), null, 'raw vocabulary payload is never rendered');
+  assert.doesNotMatch(await page.$eval('.growth-drawer', node => node.textContent), /internal-(?:payload|object|json)-marker/);
+  assert.doesNotMatch(await page.$eval('.growth-drawer', node => node.textContent), /Original record and fields|Saved report evidence|"cardId"|"feedback"|\[object Object\]/);
+  await page.click('.growth-word-history details summary');
+  assert.match(await page.$eval('.growth-word-history details', node => node.textContent), /View review details/);
+  await page.click('.growth-word-history details button'); await ready();
+  assert.equal(await page.$('.growth-original-record'), null, 'raw review payload is never rendered');
+  assert.match(await page.$eval('.growth-drawer', node => node.textContent), /Your answer|Good/);
+  assert.doesNotMatch(await page.$eval('.growth-drawer', node => node.textContent), /"cardId"|"intervalDays"|"feedback"/);
   await page.keyboard.press('Escape');
   assert.equal(await page.$eval('.growth-metric-card:nth-child(4)', node => node === document.activeElement), true);
   await page.click('.growth-recent .growth-section-title button'); await ready();
@@ -149,7 +168,8 @@ try {
   failRecords = true;
   await page.click('.growth-drawer .growth-pagination button:last-child'); await ready();
   assert.equal(await page.$$eval('.growth-drawer .growth-activity-row', nodes => nodes.length), 0);
-  assert.match(await page.$eval('.growth-drawer [role="alert"]', node => node.textContent), /Synthetic record failure/);
+  assert.match(await page.$eval('.growth-drawer [role="alert"]', node => node.textContent), /The records could not be loaded/);
+  assert.doesNotMatch(await page.$eval('.growth-drawer [role="alert"]', node => node.textContent), /Synthetic record failure/);
   failRecords = false; await page.click('.growth-drawer [role="alert"] button'); await ready();
   assert.notDeepEqual(await page.$$eval('.growth-drawer .growth-activity-copy strong', nodes => nodes.map(node => node.textContent)), oldTitles);
   await page.keyboard.press('Escape');

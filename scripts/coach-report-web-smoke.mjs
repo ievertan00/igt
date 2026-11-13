@@ -31,13 +31,13 @@ const llm = { config: {}, getCurrentProviderName: () => "custom", generateWithFa
   const grammar = data.evidence.find(item => item.source === "grammar").entryId;
   const practice = data.evidence.find(item => item.source === "practice").entryId;
   const titles = data.language === "en"
-    ? ["Executive Summary", "Learning Data & Evidence Analysis", "English Proficiency Assessment", "Language Knowledge & Weakness Diagnosis", "Personalized Learning Recommendations"]
-    : ["综合能力概览", "学习数据与证据分析", "英语能力评估", "语言知识与薄弱环节诊断", "个性化学习建议"];
+    ? ["Executive Summary", "Assessment Scope & Evidence Limitations", "English Proficiency Assessment", "Language Knowledge & Weakness Diagnosis", "Personalized Learning Recommendations"]
+    : ["综合能力概览", "评估范围与证据局限", "英语能力评估", "语言知识与薄弱环节诊断", "个性化学习建议"];
   const body = [
     `Your meaning is understandable; noun phrases need attention. [${grammar}]`,
     "根据保存的语法检查和练习记录分析；样本有限，带提示的回答不能证明独立掌握。",
     `You communicate a clear subject and action. [${practice}]`,
-    `### 4.1. Error Classification & Frequency Analysis\n\nOne affected original. [${grammar}]\n\n### 4.2. Individual patterns and rule mapping\n\n| Error type | Pattern | Original | Proposed correction | Rule | Explanation | Severity | Mastery | Evidence |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| Article Usage | Missing determiner | I read book. | I read a book. | Singular count nouns need determiners | Countability and reference determine the form. | Minor | Not Observed | [${grammar}] |\n\n### 4.3. Recurring Error Patterns\nInsufficient evidence.\n\n### 4.4. Root Cause Analysis\nPossible cause: noun countability may need attention. This is a hypothesis. [${grammar}]\n\n### 4.5. Language Knowledge Map\nNoun phrases need attention. [${grammar}]\n\n### 4.6. Rule-Level Mastery Assessment\nNot Observed: insufficient independent evidence.\n\n### 4.7. Error Recurrence & Independent Application\nAssisted Practice cannot establish independent application. [${practice}]\n\n### 4.8. Knowledge Relationships & Dependencies\nCountability informs determiner choice. [${grammar}]`,
+    `### 4.1. Error Classification & Severity\n\nMissing determiner in noun phrases; minor severity. [${grammar}]\n\n### 4.2. Individual patterns and rule mapping\n\n| Error type | Pattern | Original | Proposed correction | Rule | Explanation | Severity | Mastery | Evidence |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| Article Usage | Missing determiner | I read book. | I read a book. | Singular count nouns need determiners | Countability and reference determine the form. | Minor | Not Observed | [${grammar}] |\n\n### 4.3. Recurring Error Patterns\nInsufficient evidence.\n\n### 4.4. Root Cause Analysis\nPossible cause: noun countability may need attention. This is a hypothesis. [${grammar}]\n\n### 4.5. Language Knowledge Map\nNoun phrases need attention. [${grammar}]\n\n### 4.6. Rule-Level Mastery Assessment\nNot Observed: insufficient independent evidence.\n\n### 4.7. Error Recurrence & Independent Application\nAssisted Practice cannot establish independent application. [${practice}]\n\n### 4.8. Knowledge Relationships & Dependencies\nCountability informs determiner choice. [${grammar}]`,
     "Build on your clear communication by attending to noun phrases and agreement in new contexts.",
   ];
   return titles.map((title, i) => `## ${i + 1}. ${title}\n\n${body[i]}`).join("\n\n");
@@ -91,8 +91,7 @@ try {
   assert.equal(calls, 1);
   assert.equal((await page.$$(".coach-report .md > h3")).length, 5);
   const text = await page.$eval(".coach-report", node => node.textContent);
-  assert.match(text, /1 grammar checks/);
-  assert.match(text, /1 practice records/);
+  assert.doesNotMatch(text, /grammar checks|practice records|unknown sources/);
   assert.doesNotMatch(text, /repeated inputs|need validation through practice|shortened for analysis|Saved locally/);
   assert.match(text, /Individual patterns and rule mapping/);
   assert.doesNotMatch(text, /private-grammar-id|practice-log-[a-f0-9]/);

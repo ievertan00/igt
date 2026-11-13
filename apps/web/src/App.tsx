@@ -1905,9 +1905,10 @@ function Handbook() {
       {busy && <p role="status">{t("Loading saved checks…")}</p>}
       {data && <>
         {data.coverage.undated > 0 && days !== 0 && <p className="handbook-evidence">{t("Some records have no usable date and cannot be placed in this time window.")}</p>}
+        <div className="panel-heading handbook-log-heading"><h2>{t("Grammar check log")}</h2></div>
         <div className="handbook-log-layout">
           <div className="handbook-log-main">
-            <Panel title={t("Grammar check log")} className="handbook-log">
+            <Panel className="handbook-log">
               {data.entries.length ? data.entries.map((entry, index) => <article className="activity handbook-example" key={entry.entryId} id={`check-${entry.entryId}`}>
                 <header className="handbook-source">
                   <span className="handbook-entry-meta"><time><Icon name="word-review" />{timestampLabel(entry.timestamp)}</time>
@@ -2852,16 +2853,18 @@ export function App() {
               <Icon name="dashboard" className="nav-item-icon" />
               My learning
             </a>
-            <a
-              className="settings-link"
-              href="#settings"
-              aria-label={t("Model settings")}
-              aria-current={route === "settings" ? "page" : undefined}
-            >
-              <Icon name="settings" />
-              <span>Settings</span>
-            </a>
-            <LearnerLanguageSwitch />
+            <div className="nav-utility">
+              <a
+                className="settings-link"
+                href="#settings"
+                aria-label={t("Model settings")}
+                aria-current={route === "settings" ? "page" : undefined}
+              >
+                <Icon name="settings" />
+                <span>Settings</span>
+              </a>
+              <LearnerLanguageSwitch />
+            </div>
           </div>
         </nav>
       </header>

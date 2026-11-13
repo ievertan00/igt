@@ -185,5 +185,6 @@ function blocks(source: string): ReactNode[] {
 
 export function Markdown({ source }: { source: string }) {
   if (!source?.trim()) return null;
-  return <div className="md">{blocks(source)}</div>;
+  // HTML comments are storage markers (e.g. ask-save fingerprints), never learner-facing content.
+  return <div className="md">{blocks(source.replace(/<!--[\s\S]*?-->/g, ""))}</div>;
 }

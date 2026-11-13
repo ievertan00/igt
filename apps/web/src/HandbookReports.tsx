@@ -73,7 +73,7 @@ export function HandbookReports() {
       {comparison && (comparison.available ? <div className="handbook-comparison" role="region" aria-label="Report count comparison">
         <p>{comparison.note}</p><div className="handbook-table-scroll"><table><thead><tr><th>{t("Category")}</th><th>Earlier</th><th>Open report</th><th>Change</th></tr></thead><tbody>{comparison.changes?.map((row) => <tr key={row.errorType}><td>{row.errorType}</td><td>{row.before}</td><td>{row.after}</td><td>{row.delta > 0 ? "+" : ""}{row.delta}</td></tr>)}</tbody></table></div>
       </div> : <p role="status">{comparison.reason}</p>)}
-      <iframe title={`Saved Handbook report: ${report.id}`} srcDoc={report.html} sandbox="allow-popups allow-popups-to-escape-sandbox" />
+      <iframe title={(() => { const meta = reports.find(item => item.id === selected); return meta ? `Saved Handbook report: ${meta.date} · ${meta.provider}` : 'Saved Handbook report'; })()} srcDoc={report.html} sandbox="allow-popups allow-popups-to-escape-sandbox" />
     </>}
   </details>;
 }
