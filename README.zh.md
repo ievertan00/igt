@@ -247,7 +247,7 @@ node scripts/web-dev.mjs --skip-vocabulary-sync
 
 首版部署模型为：单用户、单实例、持久化磁盘、在常开主机上受控访问。完整设计、安全边界与验收清单见 [WEB-DEPLOYMENT-PLAN.md](WEB-DEPLOYMENT-PLAN.md)。
 
-- **发布目录。**每个版本从明确的 commit 构建到独立目录：`git archive <commit>` 解压到该目录，然后 `npm ci`、`npm run web:typecheck`、`npm run web:build`。发布目录保留独立的部署 `.env`，用绝对路径指向真实数据库和 Markdown 仓库；升级时前向携带该文件，代码更新不覆盖配置与数据。保持单一写入端：启动发布实例前先停止开发链路（`npm run dev:stop`）。
+- **发布目录。**每个版本从明确的 commit 构建到独立目录：`git archive <commit>` 解压到该目录，然后 `npm ci`、`npm run web:typecheck`、`npm run web:build`。发布目录保留独立的部署 `.env`，用绝对路径指向真实数据库和 Markdown 仓库；升级时前向携带该文件，代码更新不覆盖配置与数据。保持单一写入端：启动发布实例前先停止开发链路（`npm run dev:stop`）。该约束已自动强制执行——Runtime 在数据库旁维护锁文件，当另一个存活实例（开发或生产）持有它时，新实例会输出警告并拒绝启动。
 - **服务监督器。**`node scripts/deploy/service-launcher.mjs --logs <目录>` 以 `--env-file=.env` 运行 Runtime，崩溃后按退避策略自动重启，按天写日志并清理 14 天前的日志。
 - **计划任务。**`scripts/deploy/register-tasks.ps1 -ReleaseDir <目录> -BackupDir <目录> -LogDir <目录>` 注册当前用户级任务：登录时启动 Runtime、每日备份。非管理员环境下触发器为登录时；如需登录前自启，须由管理员注册 S4U 任务或 Windows 服务。
 - **备份与恢复。**`node scripts/deploy/backup.mjs --dest <目录> [--mirror <目录>]` 生成 SQLite Backup API 一致性快照及 Markdown 仓库、配置副本，附校验和清单，保留 14 份日备和 8 份周备；`--mirror` 将每份快照复制到第二位置用于异机留存。`node scripts/deploy/restore.mjs --backup <目录> --target <隔离目录>` 恢复到隔离目录并校验校验和、integrity 与行数。服务运行期间切勿向真实数据目录恢复。
