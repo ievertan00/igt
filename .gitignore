@@ -52,6 +52,7 @@ tests/*
 !tests/local-learning-resources.test.mjs
 !tests/migrations.test.mjs
 !tests/practice-attempts.test.mjs
+!tests/request-guard.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md
