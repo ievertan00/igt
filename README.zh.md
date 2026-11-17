@@ -14,24 +14,25 @@ ClearWrite 是 **IGT（Interactive Grammar Tool，互动语法工具）** 的本
 - [命令行工具](#命令行工具)
 - [配置与本地数据](#配置与本地数据)
 - [开发与验证](#开发与验证)
+- [部署与运维](#部署与运维)
 - [项目架构](#项目架构)
 - [常见问题](#常见问题)
 - [许可证](#许可证)
 
 ## 快速开始
 
-准备 **Node.js 24 LTS**（项目的 Windows 环境使用 v24.13.1）、npm 和 Git。以下命令使用 PowerShell，在项目目录中执行。
+准备 **Node.js 24 LTS**（项目的 Windows 环境使用 v24.16.0）、npm 和 Git。以下命令使用 PowerShell，在项目目录中执行。
 
 ### 1. 安装并配置
 
 ```powershell
 git clone https://github.com/ievertan00/igt.git
 Set-Location igt
-npm install
+npm ci
 Copy-Item .env.example .env
 ```
 
-仅在首次安装时复制配置模板；已有的 `.env` 应保留。用文本编辑器打开它，配置 AI 提供商，例如：
+`npm ci` 依据已纳入版本控制的 `package-lock.json` 安装，保证依赖可复现。仅在首次安装时复制配置模板；已有的 `.env` 应保留。用文本编辑器打开它，配置 AI 提供商，例如：
 
 ```env
 IGT_LLM_PROVIDER=gemini
@@ -67,7 +68,9 @@ npm run web:build
 npm run web:start
 ```
 
-Runtime 直接提供 `apps/web/dist` 中的页面，无需启动命令行交互界面。默认绑定 `127.0.0.1`；`IGT_SERVER_PORT=0` 表示选择可用端口。访问启动时输出的地址即可。
+`web:start` 实际执行 `node --env-file=.env apps/local/server.mjs`：`.env` 必须存在，监听地址和端口由其中的 `IGT_SERVER_HOST` / `IGT_SERVER_PORT` 决定。默认绑定 `127.0.0.1`，`IGT_SERVER_PORT=0` 表示选择可用端口；需要固定地址时请设置固定端口。Runtime 直接提供 `apps/web/dist` 中的页面，无需启动命令行交互界面。
+
+若要在同一可信网络内的手机或其他电脑上使用，设置 `IGT_SERVER_HOST=0.0.0.0` 和固定端口，然后访问 `http://<主机局域网IP>:<端口>`。该模式没有登录认证——同网设备都拥有完整服务器能力——因此只可在可信局域网中使用，切勿将端口暴露到公网。Runtime 会拒绝未知 Host 头和跨域浏览器请求，POST 正文上限 2 MB，并在非回环监听时禁用服务器桌面文件选择器。以托管服务方式运行见[部署与运维](#部署与运维)。
 
 ## Web 学习空间
 
@@ -206,12 +209,13 @@ node igt.mjs
 | `IGT_ASK_PATH` | 明确指定 Ask 笔记路径。 |
 | `IGT_PRACTICE_PATH` | 明确指定 Practice Markdown 日志路径。 |
 | `IGT_VAULT_DIR` | 可选的 Obsidian 仓库根目录。 |
-| `IGT_SERVER_HOST`、`IGT_SERVER_PORT` | 生产 Runtime 监听设置。 |
+| `IGT_SERVER_HOST`、`IGT_SERVER_PORT` | 生产 Runtime 监听设置。`0.0.0.0` 用于可信局域网访问，请配合固定端口。 |
+| `IGT_ALLOWED_HOSTS` | 可选的额外 Host/Origin 白名单（英文逗号分隔），补充回环、本机名和网卡地址之外的入口。 |
 | `IGT_DEV_API_PORT`、`IGT_WEB_PORT` | 开发 API 和 Web 端口。 |
 
 旧的仓库相对路径配置仍可在 `.env.example` 中查阅。Markdown 导出是用户可直接阅读的学习记录；SQLite 管理词汇复习调度和作答记录。Practice 题目内容以实际配置的数据库为准，`canonical-questions.json` 是其版本化导出，不要用测试库或历史种子替换真实数据。
 
-移动数据或修复迁移前，请同时备份数据库和 Markdown 记录。复制 SQLite 数据库前应停止使用它的进程，避免已提交的数据仍留在 WAL 文件中。
+移动数据或修复迁移前，请同时备份数据库和 Markdown 记录。`node scripts/deploy/backup.mjs --dest <目录>` 可在不停服务的情况下生成一致性快照（SQLite Backup API + 词汇仓库 + 配置），见[部署与运维](#部署与运维)。若改为手动复制 `.db` 文件，应先停止使用 SQLite 的进程，避免已提交的数据仍留在 WAL 文件中。
 
 ### 可选语音
 
@@ -237,7 +241,17 @@ npm run verify-learning-resources
 node scripts/web-dev.mjs --skip-vocabulary-sync
 ```
 
-生产入口 `node apps/local/server.mjs` 也支持此参数。Web 开始新复习时仍会导入已保存词汇。
+生产入口 `node --env-file=.env apps/local/server.mjs --skip-vocabulary-sync` 也支持此参数。Web 开始新复习时仍会导入已保存词汇。
+
+## 部署与运维
+
+首版部署模型为：单用户、单实例、持久化磁盘、在常开主机上受控访问。完整设计、安全边界与验收清单见 [WEB-DEPLOYMENT-PLAN.md](WEB-DEPLOYMENT-PLAN.md)。
+
+- **发布目录。**每个版本从明确的 commit 构建到独立目录：`git archive <commit>` 解压到该目录，然后 `npm ci`、`npm run web:typecheck`、`npm run web:build`。发布目录保留独立的部署 `.env`，用绝对路径指向真实数据库和 Markdown 仓库；升级时前向携带该文件，代码更新不覆盖配置与数据。保持单一写入端：启动发布实例前先停止开发链路（`npm run dev:stop`）。
+- **服务监督器。**`node scripts/deploy/service-launcher.mjs --logs <目录>` 以 `--env-file=.env` 运行 Runtime，崩溃后按退避策略自动重启，按天写日志并清理 14 天前的日志。
+- **计划任务。**`scripts/deploy/register-tasks.ps1 -ReleaseDir <目录> -BackupDir <目录> -LogDir <目录>` 注册当前用户级任务：登录时启动 Runtime、每日备份。非管理员环境下触发器为登录时；如需登录前自启，须由管理员注册 S4U 任务或 Windows 服务。
+- **备份与恢复。**`node scripts/deploy/backup.mjs --dest <目录> [--mirror <目录>]` 生成 SQLite Backup API 一致性快照及 Markdown 仓库、配置副本，附校验和清单，保留 14 份日备和 8 份周备；`--mirror` 将每份快照复制到第二位置用于异机留存。`node scripts/deploy/restore.mjs --backup <目录> --target <隔离目录>` 恢复到隔离目录并校验校验和、integrity 与行数。服务运行期间切勿向真实数据目录恢复。
+- **就绪检查。**`GET /health` 在运行时长之外报告 `checks.database`；以 `status: "ok"` 为就绪依据，而非仅看进程存活。
 
 ## 项目架构
 
@@ -258,7 +272,9 @@ React Web 客户端和 CLI 调用同一个本地 HTTP Runtime。Runtime 负责�
 ## 常见问题
 
 - **开发端口被占用：**先用 `npm run dev:status` 查看实例，再用 `npm run dev:stop` 停止。旧服务先执行 `npm run dev:status -- --legacy` 核对，再用 `npm run dev:stop -- --legacy` 清理，详见[开发服务管理](DEV-SERVICES.md)。有意并行运行时才在 `.env` 中配置不同端口。
-- **生产页面无法打开：**先执行 `web:build`，再执行 `web:start`，并访问 Runtime 输出的地址。
+- **生产页面无法打开：**先执行 `web:build`，再执行 `web:start`；确认 `.env` 存在（启动时显式加载），访问 Runtime 输出的地址或固定的 `IGT_SERVER_PORT`。
+- **手机打不开局域网地址：**确认两台设备在同一网络、主机防火墙放行所选端口的入站 TCP（需管理员规则）、`IGT_SERVER_HOST=0.0.0.0`。主机局域网 IP 可能随 DHCP 变化。纯 HTTP 局域网页面已适配，剪贴板与复习会话在非安全上下文下自动回退。
+- **`/health` 报告 degraded：**数据库检查失败——核对配置路径，并确认只有一个写入端（发布实例而非开发链路）在使用数据库。
 - **提供商报错或限流：**检查密钥、模型配置和提供商状态，在服务允许时重试。
 - **Handbook 或学习报告中没有某次 Grammar：**先将结果保存到复习日志；学习报告还会排除来源未知的旧记录。
 - **数据库锁定或迁移失败：**关闭占用数据库的进程，查看配置的错误日志，并在修复前保留备份。删除数据库会丢失本地状态，不应作为常规修复步骤。

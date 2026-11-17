@@ -14,24 +14,25 @@ Learning records are stored locally in SQLite and Markdown. When you choose an o
 - [CLI companion](#cli-companion)
 - [Configuration and local data](#configuration-and-local-data)
 - [Development and verification](#development-and-verification)
+- [Deployment and operations](#deployment-and-operations)
 - [Architecture](#architecture)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
 ## Quick start
 
-Use **Node.js 24 LTS** (the project's Windows environment uses v24.13.1), npm, and Git. The commands below use PowerShell and run from the project folder.
+Use **Node.js 24 LTS** (the project's Windows environment uses v24.16.0), npm, and Git. The commands below use PowerShell and run from the project folder.
 
 ### 1. Install and configure
 
 ```powershell
 git clone https://github.com/ievertan00/igt.git
 Set-Location igt
-npm install
+npm ci
 Copy-Item .env.example .env
 ```
 
-Copy the template only for a new installation; preserve an existing `.env`. Open it in a text editor and configure an AI provider. For example:
+`npm ci` installs from the tracked `package-lock.json` for a reproducible dependency set. Copy the template only for a new installation; preserve an existing `.env`. Open it in a text editor and configure an AI provider. For example:
 
 ```env
 IGT_LLM_PROVIDER=gemini
@@ -67,7 +68,9 @@ npm run web:build
 npm run web:start
 ```
 
-The Runtime serves `apps/web/dist` without opening the CLI. It binds to `127.0.0.1` by default; `IGT_SERVER_PORT=0` selects an available port. Use the URL printed at startup.
+`web:start` runs `node --env-file=.env apps/local/server.mjs`: the `.env` file must exist, and its `IGT_SERVER_HOST` / `IGT_SERVER_PORT` values control the binding. The defaults are `127.0.0.1` and `IGT_SERVER_PORT=0` (an available port); set a fixed port for a stable address. The Runtime serves `apps/web/dist` without opening the CLI.
+
+To use the app from a phone or another computer on the same trusted network, set `IGT_SERVER_HOST=0.0.0.0` with a fixed port and open `http://<host-LAN-IP>:<port>`. There is no login — anyone on that network receives full server capabilities — so only do this on a trusted LAN and never expose the port to the internet. The Runtime rejects unknown Host headers and cross-origin browser requests, caps POST bodies at 2 MB, and disables the server-desktop file picker when listening beyond loopback. See [Deployment and operations](#deployment-and-operations) for running it as a managed service.
 
 ## The Web workspace
 
@@ -206,12 +209,13 @@ Compatibility commands include `/today` for daily activity and review counts, `/
 | `IGT_ASK_PATH` | Explicit Ask notes path. |
 | `IGT_PRACTICE_PATH` | Explicit Practice Markdown log path. |
 | `IGT_VAULT_DIR` | Optional Obsidian vault root. |
-| `IGT_SERVER_HOST`, `IGT_SERVER_PORT` | Production Runtime binding. |
+| `IGT_SERVER_HOST`, `IGT_SERVER_PORT` | Production Runtime binding. `0.0.0.0` enables trusted-LAN access; use a fixed port. |
+| `IGT_ALLOWED_HOSTS` | Optional extra Host/Origin allowlist entries (comma-separated) beyond loopback, the machine name, and its interface addresses. |
 | `IGT_DEV_API_PORT`, `IGT_WEB_PORT` | Development API and Web ports. |
 
 Older vault-relative settings remain documented in `.env.example`. Markdown exports are user-readable learning records; SQLite owns vocabulary scheduling and recorded attempts. The actual configured database is the authority for Practice question content; `canonical-questions.json` is its versioned export. Do not replace live data with a test database or historical seed.
 
-Back up both the configured database and Markdown records before moving data or repairing migrations. Stop processes using SQLite before making a file-copy backup so committed data is not left in a WAL file.
+Back up both the configured database and Markdown records before moving data or repairing migrations. `node scripts/deploy/backup.mjs --dest <dir>` takes a consistent snapshot (SQLite Backup API plus vault and configuration) without stopping the service; see [Deployment and operations](#deployment-and-operations). If you instead copy the `.db` file manually, stop processes using SQLite first so committed data is not left in a WAL file.
 
 ### Optional speech
 
@@ -237,7 +241,17 @@ For an API/UI restart that skips startup vocabulary synchronization:
 node scripts/web-dev.mjs --skip-vocabulary-sync
 ```
 
-Production supports the same flag on `node apps/local/server.mjs`. Starting a Web review session still imports saved vocabulary.
+Production supports the same flag on `node --env-file=.env apps/local/server.mjs --skip-vocabulary-sync`. Starting a Web review session still imports saved vocabulary.
+
+## Deployment and operations
+
+The first-version deployment model is single user, single instance, persistent disk, and controlled access on an always-on machine. [WEB-DEPLOYMENT-PLAN.md](WEB-DEPLOYMENT-PLAN.md) records the full design, security boundary, and acceptance checklist.
+
+- **Release directory.** Build each release from an explicit commit into a separate directory: `git archive <commit>` extracted there, then `npm ci`, `npm run web:typecheck`, `npm run web:build`. Keep a deployment `.env` in that directory with absolute paths to the live database and Markdown vault, and carry it forward on upgrades so code updates never overwrite configuration or data. Keep a single writer: stop the development chain (`npm run dev:stop`) before starting the release instance.
+- **Service supervisor.** `node scripts/deploy/service-launcher.mjs --logs <dir>` runs the Runtime with `--env-file=.env`, restarts it after crashes with backoff, writes one log file per day, and prunes logs older than 14 days.
+- **Scheduled tasks.** `scripts/deploy/register-tasks.ps1 -ReleaseDir <dir> -BackupDir <dir> -LogDir <dir>` registers current-user tasks for the Runtime (at logon) and a daily backup. Without elevation the trigger is logon-based; starting before logon requires an administrator to register an S4U task or a Windows service.
+- **Backup and restore.** `node scripts/deploy/backup.mjs --dest <dir> [--mirror <dir>]` writes a consistent SQLite Backup API snapshot plus the Markdown vault and configuration with a checksum manifest, keeping 14 daily and 8 weekly snapshots; `--mirror` copies each snapshot to a second location for off-machine retention. `node scripts/deploy/restore.mjs --backup <dir> --target <isolated-dir>` restores into an isolated directory and verifies checksums, integrity, and row counts. Never restore over live data while the service is running.
+- **Readiness.** `GET /health` reports `checks.database` alongside uptime; treat `status: "ok"` as ready rather than relying on process liveness alone.
 
 ## Architecture
 
@@ -258,7 +272,9 @@ The React Web client and CLI call a shared local HTTP Runtime. The Runtime handl
 ## Troubleshooting
 
 - **Development port occupied:** inspect `npm run dev:status` and stop the managed instance with `npm run dev:stop`. For old services, inspect `npm run dev:status -- --legacy` before using `npm run dev:stop -- --legacy`. See [development service management](DEV-SERVICES.md). Configure different ports in `.env` only for intentionally parallel services.
-- **Production page unavailable:** run `web:build` before `web:start`, and use the printed Runtime URL.
+- **Production page unavailable:** run `web:build` before `web:start`, confirm `.env` exists (it is loaded explicitly), and use the printed Runtime URL or the fixed `IGT_SERVER_PORT`.
+- **Phone cannot reach the LAN address:** confirm both devices are on the same network, the host firewall allows inbound TCP on the chosen port (administrator rule), and `IGT_SERVER_HOST=0.0.0.0`. The host LAN IP can change under DHCP. Plain-HTTP LAN pages are supported; clipboard and review sessions fall back automatically outside secure contexts.
+- **`/health` reports degraded:** the database check failed — verify the configured path and that only one writer (the release instance, not the dev chain) is using it.
 - **Provider error or rate limit:** check credentials, model settings, and provider status; retry when the provider permits it.
 - **Grammar missing from Handbook or Learning reports:** save the result to the review log. Learning reports also exclude legacy records with an unknown source.
 - **Database locked or migration failed:** close processes using the database, inspect the configured error log, and preserve a backup before repair. Deleting the database erases local state and is not a routine fix.
