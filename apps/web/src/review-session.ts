@@ -24,6 +24,15 @@ export function reviewDay(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
   return ["year", "month", "day"].map((type) => parts.find((part) => part.type === type)?.value).join("-");
 }
+// crypto.randomUUID only exists in secure contexts; LAN deployment is plain HTTP.
+function sessionUuid(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 function readSession(day: string): ReviewSession | null {
   try {
     const value = JSON.parse(localStorage.getItem(REVIEW_SESSION_KEY) || "null");
@@ -82,7 +91,7 @@ export function useDailyReviewSession() {
       try {
         const response = await webApi.getReviewDue(requestedLimit);
         if (!cancelled && day === reviewDay()) update((fresh ? null : readSession(day)) || {
-          version: 2, day, id: crypto.randomUUID(), limit: requestedLimit, cards: response.cards || [], index: 0,
+          version: 2, day, id: sessionUuid(), limit: requestedLimit, cards: response.cards || [], index: 0,
           answer: null, result: null, audioPlayed: false, correct: 0, wrong: 0,
         });
       } catch (e: any) {

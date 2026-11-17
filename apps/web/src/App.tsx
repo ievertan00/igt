@@ -11,6 +11,7 @@ import { GrammarFollowUp } from "./GrammarFollowUp";
 import { SelectionLookup } from "./SelectionLookup";
 import { webApi } from "./api/client";
 import { useDailyReviewSession } from "./review-session";
+import { copyText } from "./clipboard";
 import { reviewExampleParts } from "./review-example";
 import { VocabularyLibrary } from "./VocabularyLibrary";
 import { PageScrollControls } from "./PageScrollControls";
@@ -1772,8 +1773,7 @@ function HandbookSentence({ original, correction, corrected = false }: { origina
 function HandbookCopy({ text }: { text: string }) {
   const [status, setStatus] = useState("");
   return <span className="handbook-copy"><IconButton quiet icon={status === "Copied" ? "check" : "copy"} label="Copy correction" onClick={async () => {
-    try { await navigator.clipboard.writeText(text); setStatus("Copied"); }
-    catch { setStatus("Could not copy. Select and copy the correction."); }
+    setStatus(await copyText(text) ? "Copied" : "Could not copy. Select and copy the correction.");
   }} /><span role="status">{status}</span></span>;
 }
 

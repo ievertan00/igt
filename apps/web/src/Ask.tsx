@@ -5,6 +5,7 @@ import { FloatingAction } from "./FloatingAction";
 import { Heading } from "./Page";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
+import { copyText } from "./clipboard";
 import { GuideText, useGuideCopy, type LearnerLanguage } from "./learner-language";
 import "./Ask.css";
 import { ModelSwitcher } from "./model-settings";
@@ -260,17 +261,15 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
     </div>;
   }
   async function copy(answer: string) {
-    try { await navigator.clipboard.writeText(answer); setCopyStatus("Response copied"); }
-    catch { setCopyStatus("Could not copy. Select the response text and copy it manually."); }
+    setCopyStatus(await copyText(answer) ? "Response copied" : "Could not copy. Select the response text and copy it manually.");
   }
   async function copyNote(content: string, id: string) {
     setNoteCopyError("");
-    try {
-      await navigator.clipboard.writeText(content);
+    if (await copyText(content)) {
       clearTimeout(copyTimer.current);
       setCopiedNote(id);
       copyTimer.current = setTimeout(() => setCopiedNote(""), 2000);
-    } catch {
+    } else {
       setNoteCopyError(t("Could not copy. Open the note and copy its text manually."));
     }
   }
