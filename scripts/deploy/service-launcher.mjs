@@ -49,7 +49,7 @@ function start() {
   }
   child = spawn(process.execPath, ["--env-file=.env", "apps/local/server.mjs"], {
     cwd: projectRoot,
-    env: process.env,
+    env: { ...process.env, IGT_RUNTIME_MODE: "production" },
     stdio: ["ignore", "pipe", "pipe", "ipc"],
     windowsHide: true,
   });

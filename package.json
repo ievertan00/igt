@@ -39,7 +39,7 @@
     "verify-learning-resources": "node scripts/verify-learning-resources.mjs",
     "verify:practice-bank": "node scripts/verify-practice-bank.mjs",
     "export:practice-bank": "node scripts/export-practice-bank.mjs --export",
-    "test:learning": "node --test --test-isolation=none tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/word-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs tests/request-guard.test.mjs"
+    "test:learning": "node --test --test-isolation=none tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/word-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs tests/request-guard.test.mjs tests/runtime-lock.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

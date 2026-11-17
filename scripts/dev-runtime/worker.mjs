@@ -94,7 +94,7 @@ export async function runWorker(instance, { apiEntry = path.join(root, "apps", "
 
     if (record.mode === "dev") {
       api = fork(apiEntry, record.skipSync ? ["--skip-vocabulary-sync"] : [], {
-        cwd: root, env: { ...process.env, IGT_SERVER_HOST: "127.0.0.1", IGT_SERVER_PORT: String(record.apiPort) },
+        cwd: root, env: { ...process.env, IGT_RUNTIME_MODE: "dev", IGT_SERVER_HOST: "127.0.0.1", IGT_SERVER_PORT: String(record.apiPort) },
         stdio: ["ignore", "pipe", "pipe", "ipc"],
       });
       record.apiPid = api.pid;
