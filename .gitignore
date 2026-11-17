@@ -78,3 +78,6 @@ graphify-out/
 apps/web/dist/
 output/
 tools/cosyvoice/server.py.container-bak
+
+# Deployment backups contain private learning data
+backups/
