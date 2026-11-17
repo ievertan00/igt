@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { fork, spawnSync } from "node:child_process";
 import http from "node:http";
+import { PRACTICE_QUESTION_ID_PATTERN } from "../lib/features/practice/question-ids.mjs";
 
 function rawGet(port, requestPath) {
   return new Promise((resolve, reject) => {
@@ -76,14 +77,15 @@ try {
     assert.equal(question.difficulty, "standard");
     assert.equal(question.reference_answer, undefined);
     assert.equal(question.alternative_note, undefined);
-    assert.ok(question.id.startsWith("language-"));
-    assert.ok(question.focus_id);
+    assert.match(question.id, PRACTICE_QUESTION_ID_PATTERN);
+    assert.ok(question.focus);
     assert.deepEqual(Object.keys(question.hints), ["simple", "intermediate", "complete"]);
-    assert.ok(question.metadata.purpose);
+    assert.ok(question.metadata.learning_goal);
+    assert.ok(question.metadata.primary_target);
   }
   const dashboard = await getJson("/dashboard");
   assert.equal(typeof dashboard, "object");
-  assert.equal(typeof dashboard.assets, "object");
+  assert.equal(typeof dashboard.savedMaterial, "object");
   const web = await fetch(`http://127.0.0.1:${port}/`);
   assert.equal(web.status, 200);
   assert.match(await web.text(), /id="root"/);
