@@ -10,14 +10,13 @@ import { saveAsk } from "../lib/application/ask.mjs";
 import { listAskNotes } from "../lib/application/ask-notes.mjs";
 import { registerAskRoutes } from "../lib/server/routes/ask.mjs";
 import { dispatch } from "../lib/server/router.mjs";
+import { runMigrations } from "../lib/db/migrations.mjs";
 import * as history from "../lib/features/ask/history.mjs";
 
-function reviewDb(t) {
+async function reviewDb(t) {
   const db = new Database(":memory:");
   t.after(() => db.close());
-  for (const name of ["001_initial_schema.sql", "009_practice_attempts.sql", "010_practice_context.sql", "011_learning_plans.sql", "012_practice_task_link.sql", "015_learning_plan_pause.sql"]) {
-    db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", name), "utf8"));
-  }
+  await runMigrations(db, path.join(process.cwd(), "migrations"));
   db.prepare("INSERT INTO srs_cards (source_type,prompt,answer,word,due_date) VALUES ('vocab','follow up','follow up','follow up','2026-01-01')").run();
   return db;
 }
@@ -30,8 +29,8 @@ function notes(t) {
 }
 const turn = (answer = "Use the past simple.") => ({ question: "Tense question?", title: "时态用法", answer, related: ["Why?"] });
 
-test("typed recall shares CLI spelling policy, atomic evidence and retry identity", (t) => {
-  const db = reviewDb(t);
+test("typed recall shares CLI spelling policy, atomic evidence and retry identity", async (t) => {
+  const db = await reviewDb(t);
   const request = { cardId: 1, answer: "FOLLOW-UP", requestId: randomUUID(), audioPlayed: true };
   const result = gradeVocabularyReview(db, request);
   assert.equal(result.correct, true);
@@ -44,8 +43,8 @@ test("typed recall shares CLI spelling policy, atomic evidence and retry identit
   assert.equal(JSON.parse(row.feedback).audioPlayed, true);
   assert.throws(() => gradeVocabularyReview(db, { ...request, answer: "another" }), /different answer/);
 });
-test("blank recall is incorrect; failed evidence rolls back scheduling", (t) => {
-  const db = reviewDb(t);
+test("blank recall is incorrect; failed evidence rolls back scheduling", async (t) => {
+  const db = await reviewDb(t);
   const result = gradeVocabularyReview(db, { cardId: 1, answer: "", requestId: randomUUID() });
   assert.equal(result.correct, false);
   assert.equal(result.next.intervalDays, 1);

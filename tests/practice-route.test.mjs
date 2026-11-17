@@ -48,7 +48,7 @@ test("bank selection needs no LLM or learner history and hides references", asyn
   assert.equal(result.status, 200); assert.ok(result.body.data.questions.length > 0); assert.ok(result.body.data.questions.length <= 10);
   assert.equal(result.body.data.requested_count, 10); assert.equal(llmCalls, before);
   for (const q of result.body.data.questions) {
-    assert.equal(q.kind, "sentence"); assert.equal(q.style, "formal"); assert.equal(q.context, "work-study");
+    assert.equal(q.kind, "sentence"); assert.equal(q.style, "formal"); assert.equal(q.context, "work");
     assert.equal(q.reference_answer, undefined);
     assert.equal(q.alternative_note, undefined);
     assert.equal(q.hints_json, undefined);
@@ -90,7 +90,7 @@ test("evaluation resolves bank content and records result and categories", async
   assert.equal(lastInput.style, decodePracticeQuestion(stored).style);
   assert.equal(result.body.data.reference_answer, lastInput.reference_answer);
   assert.equal(attempts.at(-1).activityType, "practice-sentence");
-  assert.equal(attempts.at(-1).contextLabel, "work-study");
+  assert.equal(attempts.at(-1).contextLabel, "work");
   assert.equal(attempts.at(-1).feedback.question_id, question.id);
   assert.equal(attempts.at(-1).feedback.difficulty, stored.difficulty);
   assert.equal(result.body.persistence.saved, false);

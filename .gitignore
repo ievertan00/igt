@@ -1,5 +1,4 @@
 node_modules/
-package-lock.json
 .gemini/
 .claude/
 .superpowers/
@@ -46,6 +45,13 @@ tests/*
 !tests/vocabulary-ratings.test.mjs
 !tests/vocabulary-library.test.mjs
 !tests/legacy-coach-storage.test.mjs
+!tests/coach-ai.test.mjs
+!tests/handbook-profile.test.mjs
+!tests/handbook-report.test.mjs
+!tests/learning-diagnosis.test.mjs
+!tests/local-learning-resources.test.mjs
+!tests/migrations.test.mjs
+!tests/practice-attempts.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md
@@ -59,6 +65,11 @@ social-card-igt/
 
 # Dev-only / debug scripts (moved to scripts/dev/)
 scripts/dev/
+
+# Local scratch / QA artifacts
+.tmp/
+.workbuddy/
+tmp-shots/
 
 practice.js
 assets/logo.jpg

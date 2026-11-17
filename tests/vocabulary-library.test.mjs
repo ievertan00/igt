@@ -5,6 +5,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import Database from "better-sqlite3";
 import { listSavedVocabulary, readVocabularyHistory } from "../lib/application/vocabulary-library.mjs";
+import { parseVocabularyMarkdown } from "../lib/application/vocabulary.mjs";
 import { registerVocabRoutes } from "../lib/server/routes/vocab.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 
@@ -28,6 +29,7 @@ const entry = (word, date = "2026-10-20") => `### ${word}
 **Collocations:** useful expression
 **Verb forms:** go · went · gone
 **Plural:** saved expressions
+**Comparative:** more saved
 **Example 1:** First example for ${word}.
 **Example 2:** Second example for ${word}.
 **Example 3:** Third example for ${word}.
@@ -35,6 +37,27 @@ const entry = (word, date = "2026-10-20") => `### ${word}
 **Memory:** A useful memory cue.
 *Added: ${date}*
 `;
+
+test("SRS sync parser carries adjective comparatives and keeps empty word-form fields empty", () => {
+  const content = `### fragile
+**PoS:** adjective · /ˈfrædʒ.aɪl/
+**Meaning:** Easily broken.
+**中文:** 脆弱的
+**Verb forms:**
+**Plural:**
+**Comparative:** more fragile
+**Example 1:** Glass is fragile.
+**Note:**
+`;
+  const [entry] = parseVocabularyMarkdown(content);
+  assert.equal(entry.vocabDetails.comparative, "more fragile");
+  assert.equal(entry.vocabDetails.verbForms, "", "an empty line must not swallow the next field");
+  assert.equal(entry.vocabDetails.plural, "");
+  assert.equal(entry.vocabDetails.examples[0], "Glass is fragile.");
+  const [empty] = parseVocabularyMarkdown(content.replace("**Comparative:** more fragile", "**Comparative:**"));
+  assert.equal(empty.vocabDetails.comparative, "", "a non-gradable adjective has no comparative");
+  assert.equal(empty.vocabDetails.examples[0], "Glass is fragile.");
+});
 
 test("library reads every Markdown entry without depending on the SRS deck", t => {
   const input = `# Vocabulary\n${entry("zebra")}${entry("apple")}${entry("apple")}`;
@@ -50,6 +73,7 @@ test("library reads every Markdown entry without depending on the SRS deck", t =
   assert.equal(result.words[0].phonetic, "/test/");
   assert.equal(result.words[0].verbForms, "go · went · gone");
   assert.equal(result.words[0].plural, "saved expressions");
+  assert.equal(result.words[0].comparative, "more saved");
   assert.equal(fs.readFileSync(file, "utf8"), input, "browsing never rewrites the vocabulary file");
   assert.equal(JSON.stringify(result).includes(file), false);
 });
@@ -60,6 +84,7 @@ test("library searches Chinese, examples and notes, sorts and paginates consiste
   assert.equal(listSavedVocabulary({ config, search: "保存" }).total, 3);
   assert.equal(listSavedVocabulary({ config, search: "SECOND EXAMPLE FOR APPLE" }).total, 1);
   assert.equal(listSavedVocabulary({ config, search: "went" }).total, 3, "verb forms join the search fields");
+  assert.equal(listSavedVocabulary({ config, search: "more saved" }).total, 3, "comparatives join the search fields");
   assert.equal(listSavedVocabulary({ config, search: "memory cue" }).total, 3);
   const page = listSavedVocabulary({ config, limit: 1, offset: 1 });
   assert.equal(page.words[0].word, "banana"); assert.equal(page.hasMore, true);
@@ -97,7 +122,7 @@ test("saved vocabulary GET route validates queries and returns complete entries 
 test("overview separates typed recall from ratings, counts the whole library and never writes learning state", t => {
   const { config } = source(t, ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew"].map(word => entry(word)).join(""));
   const db = new Database(":memory:"); t.after(() => db.close());
-  for (const file of ["001_initial_schema.sql", "009_practice_attempts.sql"]) db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", file), "utf8"));
+  db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", "001_initial_schema.sql"), "utf8"));
   const card = db.prepare("INSERT INTO srs_cards (source_type,prompt,answer,word,due_date,total_reviews,correct_streak,interval_days,last_reviewed) VALUES ('vocab',?,?,?,?,?,?,?,?)");
   const review = db.prepare("INSERT INTO practice_attempts (activity_type,prompt,learner_answer,reference_answer,score,feedback,created_at) VALUES ('review-vocabulary',?,?,?,?,?,?)");
   for (const [index, word] of ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape"].entries()) {
@@ -134,7 +159,7 @@ test("overview separates typed recall from ratings, counts the whole library and
 
 test("history pages are newest first, preserve raw evidence and exclude other activities/cards", async t => {
   const db = new Database(":memory:"); t.after(() => db.close());
-  db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", "009_practice_attempts.sql"), "utf8"));
+  db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", "001_initial_schema.sql"), "utf8"));
   const insert = db.prepare("INSERT INTO practice_attempts (activity_type,prompt,learner_answer,reference_answer,score,feedback,created_at) VALUES (?,?,?,?,?,?,?)");
   for (let i = 0; i < 25; i++) insert.run("review-vocabulary", "apple", "wrong", "apple", 0, JSON.stringify({ cardId: 1, correct: false, rating: "easy", audioPlayed: true }), "2026-10-22 12:00:00");
   insert.run("review-vocabulary", "banana", "banana", "banana", 100, '{"cardId":2}', "2026-10-23 12:00:00");

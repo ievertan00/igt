@@ -6,17 +6,13 @@ import puppeteer from "puppeteer";
 import { preview } from "vite";
 import { checkVocabularyReview, gradeVocabularyReview } from "../lib/application/vocabulary-review.mjs";
 import { beijingDate } from "../lib/shared/timezone.mjs";
-import { up as removeLegacyCoachStorage } from "../migrations/063_remove_legacy_coach_storage.mjs";
+import { runMigrations } from "../lib/db/migrations.mjs";
 
 // Isolated in-memory SRS and evidence. No user DB, notes or configuration writes.
 const db = new Database(":memory:");
-for (const file of ["001_initial_schema.sql", "009_practice_attempts.sql", "010_practice_context.sql", "011_learning_plans.sql", "012_practice_task_link.sql", "015_learning_plan_pause.sql"]) {
-  db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", file), "utf8"));
-}
-removeLegacyCoachStorage(db);
+await runMigrations(db, path.join(process.cwd(), "migrations"));
 db.prepare("INSERT INTO srs_cards (id,source_type,prompt,answer,word,zh,meaning,example,due_date) VALUES (1,'vocab','follow up','follow up','follow up','跟进','to act after an earlier event','She followed up yesterday.','2026-01-01')").run();
 db.prepare("INSERT INTO srs_cards (id,source_type,prompt,answer,word,zh,meaning,due_date) VALUES (2,'vocab','boulder','boulder','boulder','巨石','a very large rock','2026-01-01')").run();
-db.exec("ALTER TABLE srs_cards ADD COLUMN vocab_details TEXT");
 db.prepare("UPDATE srs_cards SET pos='phrasal verb', vocab_details=? WHERE id=1").run(JSON.stringify({
   phonetic: "/ˈfɒləʊ ʌp/", synonyms: "check back, pursue, continue",
   collocations: "follow up on a request; follow up with a colleague",
@@ -83,6 +79,27 @@ try {
   await page.waitForSelector("#review-answer");
   assert.equal(await page.$eval("#review-answer", el => document.activeElement === el), true);
   await capture("recall-reference");
+  // The IPA is a hint rather than a clue: it stays concealed on the question side until the learner uncovers it.
+  await page.setViewport({ width: 1440, height: 1000 });
+  const ipaBefore = await page.evaluate(() => ({
+    promptText: document.querySelector('.review-prompt').innerText,
+    button: document.querySelector('.review-hints .review-hint-button')?.textContent.trim() || null,
+    inputTop: document.querySelector('.review-recall-form').getBoundingClientRect().top + window.scrollY,
+    firstLetterHint: Boolean(document.querySelector('.review-letter-hint')),
+  }));
+  assert.equal(ipaBefore.promptText.includes('/ˈfɒləʊ ʌp/'), false, 'the IPA is concealed on the question side');
+  assert.equal(ipaBefore.button, 'Show the IPA', 'the first-letter hint button is renamed');
+  assert.equal(ipaBefore.firstLetterHint, false, 'the first-letter hint no longer exists');
+  await page.click('.review-hints .review-hint-button');
+  const ipaAfter = await page.evaluate(() => ({
+    revealed: document.querySelector('.review-ipa-hint')?.textContent.trim() || null,
+    promptText: document.querySelector('.review-prompt').innerText,
+    inputTop: document.querySelector('.review-recall-form').getBoundingClientRect().top + window.scrollY,
+  }));
+  assert.match(ipaAfter.revealed || '', /ˈfɒləʊ ʌp/, 'the button uncovers the IPA');
+  assert.equal(ipaAfter.promptText.includes('/ˈfɒləʊ ʌp/'), true, 'the uncovered IPA is visible');
+  assert.ok(Math.abs(ipaAfter.inputTop - ipaBefore.inputTop) < 1, 'uncovering the IPA does not move the answer field');
+  await page.focus("#review-answer");
   await page.type("#review-answer", "FOLLOW-UP");
   await page.keyboard.press("Enter");
   await page.waitForSelector(".review-rating-button");

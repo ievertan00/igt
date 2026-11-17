@@ -5,8 +5,8 @@ const translations: Record<string, string> = {
   'Your learning, in view.': '看见进步，也看清下一步。',
   'Understand your progress through the expressions, recalls and ideas you have saved.': '从保存的表达、回忆与思考中，发现你的学习变化。',
   'Your saved material': '你的学习资料',
-  'Saved material': '已保存资料',
-  'Added in this period:': '本时段新增：', 'Last saved:': '最近保存：', 'No dated record': '没有带日期的记录', 'Open': '打开',
+  'Saved material': '已保存资料', 'Performance snapshot': '表现概览',
+  'Last saved:': '最近保存：', 'No dated record': '没有带日期的记录',
   'How performance changes': '表现如何变化', 'Error distribution': '错误分布',
   'Unaided word recall': '无提示词汇回忆正确率', 'Translation score': '翻译平均得分', 'Checks with saved diagnoses': '有保存诊断的纠错记录',
   'Current word retention': '当前词汇保留状态', 'No recorded audio hint': '未播放音频提示', 'Scored translation attempts': '次已评分翻译',
@@ -24,7 +24,7 @@ const translations: Record<string, string> = {
   'Word retention': '词汇保留状态',
   'New': '尚未复习', 'Learning': '学习中', 'Needs reinforcement': '需要巩固', 'Retained': '已保留', 'Well retained': '保留较稳固',
   'Insufficient history': '历史证据不足', 'Status unavailable': '状态不可用',
-  'A brief observation': '给当前的你，一点观察', 'Open English skills report': '查看 English skills report', 'Top priorities': '最值得关注的问题',
+  'A brief observation': '给当前的你，一点观察', 'Top priorities': '最值得关注的问题',
   'View examples': '看例句', 'Multiple distinct inputs': '多输入中出现', 'Single observation': '单次观察',
   'No concrete error types in this period.': '当前时段没有可识别的具体错误类型。',
   'Unknown labels remain in the original records.': '未知标签保留在原始记录中，不强行归类。',
@@ -50,6 +50,16 @@ const translations: Record<string, string> = {
   'Previous': '上一页', 'Next': '下一页', 'Date unavailable': '日期未知',
   'Meaning': '释义', 'Chinese meaning': '中文释义', 'Part of speech / pronunciation': '词性 / 发音',
   'Examples': '例句', 'Collocations': '搭配', 'Word note': '单词笔记', 'Remember': '记忆提示',
+  'Verb forms': '动词形式', 'Plural': '复数形式', 'Comparative': '比较级',
+  // Overview card revision: data labels and one-line actions, not explanatory disclaimers.
+  'View recent activity': '查看最近活动', 'this period': '本时段新增',
+  'Compared with the previous {n} days': '与之前 {n} 天相比', 'total': '条',
+  'Flagged issues in this period': '本时段标记的问题', 'Focus area: {category}': '重点关注：{category}',
+  '{category} accounts for {percent}% of all flagged issues ({count} of {total}).': '{category} 占全部标记问题的 {percent}%（{count} / {total}）。',
+  '{first} and {second} are the two recurring patterns.': '{first} 与 {second} 是两个反复出现的模式。',
+  '{first} is the recurring pattern.': '{first} 是反复出现的模式。',
+  'Review': '查看', 'corrections': '相关修正', 'records': '条记录',
+  '{n} flagged issues in this period': '本时段共标记 {n} 个问题', 'Open full report': '查看完整报告',
 };
 
 export function useLearningCopy() {

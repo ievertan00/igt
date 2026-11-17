@@ -416,7 +416,7 @@ function WordReview() {
     startNew,
   } = useDailyReviewSession();
   const [answer, setAnswer] = useState("");
-  const [showFirstLetter, setShowFirstLetter] = useState(false);
+  const [showIPA, setShowIPA] = useState(false);
   const [showDeleteHint, setShowDeleteHint] = useState(false);
   const [ratingHint, setRatingHint] = useState<string | null>(null);
   const [focusMethod, setFocusMethod] = useState<"pointer" | "keyboard">("pointer");
@@ -426,7 +426,7 @@ function WordReview() {
   const card = cards[index];
   useLayoutEffect(() => {
     setAnswer("");
-    setShowFirstLetter(false);
+    setShowIPA(false);
     setShowDeleteHint(false);
     setRatingHint(null);
     composing.current = false;
@@ -453,7 +453,6 @@ function WordReview() {
   useLayoutEffect(() => {
     if (complete) completionRef.current?.focus({ preventScroll: true });
   }, [complete]);
-  const firstLetter = targetWord.match(/[A-Za-z]/)?.[0] || "";
   const feedbackState = result?.correct ? "correct" : submittedAnswer?.trim() ? "incorrect" : "revealed";
   const feedbackLabel = feedbackState === "correct" ? "Correct!" : feedbackState === "incorrect" ? "Not quite" : "Answer revealed";
   const exploreExamples = examples.filter(Boolean);
@@ -614,9 +613,7 @@ function WordReview() {
               <h2 lang={card.zh ? "zh" : undefined}>
                 {card.zh || "Recall this English expression"}
               </h2>
-              {pronunciation && (
-                <p className="review-phonetic" lang="en">{pronunciation}</p>
-              )}
+              {/* The IPA is a hint, not a clue: it stays concealed until the learner asks for it. */}
               <p className="review-meaning" lang="en">
                 {card.meaning || "Write the English expression that matches this clue."}
               </p>
@@ -633,21 +630,21 @@ function WordReview() {
                       reviewPrompt
                     />
                   </span>
-                  {firstLetter && (
-                    <div className="review-letter-slot">
-                      {!showFirstLetter ? (
+                  {pronunciation && (
+                    <div className="review-ipa-slot">
+                      {!showIPA ? (
                         <button
                           type="button"
                           className="review-hint-button"
                           disabled={grading || starting}
-                          onClick={() => setShowFirstLetter(true)}
+                          onClick={() => setShowIPA(true)}
                         >
                           <Icon name="idea" />
-                          Show first letter
+                          {t("Show the IPA")}
                         </button>
                       ) : (
-                        <span className="review-letter-hint" role="status">
-                          Starts with “{firstLetter}”
+                        <span className="review-ipa-hint" role="status" lang="en">
+                          <span className="sr-only">IPA: </span>{pronunciation}
                         </span>
                       )}
                     </div>
@@ -744,9 +741,9 @@ function WordReview() {
                         )}
                       </div>
                     </div>
-                    {(details?.verbForms || details?.plural) && (
+                    {(details?.verbForms || details?.plural || details?.comparative) && (
                       <dl className="review-word-forms">
-                        {[["Verb forms", details?.verbForms], ["Plural", details?.plural]]
+                        {[[t("Verb forms"), details?.verbForms], [t("Plural"), details?.plural], [t("Comparative"), details?.comparative]]
                           .filter(([, value]) => value)
                           .map(([label, value]) => (
                             <div key={label}>
@@ -985,6 +982,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
 }
 
 function WordDetails({ entry, examples, showWord = true }: { entry: any; examples: string[]; showWord?: boolean }) {
+  const { t } = useGuideCopy();
   return (
     <div className="word-details">
       <div className="word-heading">
@@ -997,7 +995,7 @@ function WordDetails({ entry, examples, showWord = true }: { entry: any; example
         </div>
         <AudioButton text={entry.word} />
       </div>
-      {(entry.verbForms || entry.plural) && (
+      {(entry.verbForms || entry.plural || entry.comparative) && (
         <div className="word-detail-pair">
           {entry.verbForms && (
             <section className="word-detail-block word-verb-forms">
@@ -1005,7 +1003,7 @@ function WordDetails({ entry, examples, showWord = true }: { entry: any; example
                 <Icon name="grammar" />
               </div>
               <div>
-                <h4>Verb forms</h4>
+                <h4>{t("Verb forms")}</h4>
                 <p>{entry.verbForms}</p>
               </div>
             </section>
@@ -1016,8 +1014,19 @@ function WordDetails({ entry, examples, showWord = true }: { entry: any; example
                 <Icon name="word-library" />
               </div>
               <div>
-                <h4>Plural</h4>
+                <h4>{t("Plural")}</h4>
                 <p>{entry.plural}</p>
+              </div>
+            </section>
+          )}
+          {entry.comparative && (
+            <section className="word-detail-block word-comparative">
+              <div className="word-detail-icon">
+                <Icon name="grammar" />
+              </div>
+              <div>
+                <h4>{t("Comparative")}</h4>
+                <p>{entry.comparative}</p>
               </div>
             </section>
           )}

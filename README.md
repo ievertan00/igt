@@ -58,6 +58,8 @@ npm run web:dev
 
 This starts Vite and the Local Runtime together. Open the Web URL printed in the terminal. Development ports come from `IGT_WEB_PORT` and `IGT_DEV_API_PORT` in `.env`.
 
+Use `npm run dev:status`, `npm run dev:stop`, or `npm run dev:restart` from any terminal. Closing the foreground terminal stops the Windows development instance; use `npm run dev:start -- --background` to keep it running deliberately. See [development service management](DEV-SERVICES.md) for preview instances and cleanup of older unregistered services.
+
 For a production build served locally:
 
 ```powershell
@@ -74,13 +76,14 @@ The Runtime serves `apps/web/dist` without opening the CLI. It binds to `127.0.0
 | **Writing → Grammar** | Check an English sentence or passage, compare corrections and refinements, and ask follow-up questions about the feedback. |
 | **Writing → Express** | Turn a Chinese idea into natural English, or understand an English passage in Chinese. Include context and the tone you want. |
 | **Vocabulary** | Look up English words or Chinese expressions, read meanings and examples, and save entries for review. |
+| **Review** | Recall saved vocabulary from a clue, reveal the answer, and rate recall as **Again / Hard / Good / Easy**. |
 | **Practice** | Translate Chinese sentences into English, reveal progressive hints, and compare your answer with feedback and a reference. |
 | **Ask** | Discuss grammar, word choice, tone, and usage; save an answer or summarize and save a conversation. |
-| **My learning → Overview** | See recorded activity by type and a recent-activity timeline. |
+| **My learning → Overview** | Survey saved material and recent performance: inventory cards for saved words, Grammar corrections, Ask notes, and reports; a performance snapshot compared with the previous period; trends with metric switching, a data table, and period comparison; drill into the underlying records; and open the Practice log. |
 | **My learning → Saved words** | Search and browse the Markdown vocabulary library, open entry details, and start vocabulary review. |
 | **My learning → Saved notes** | Search saved Ask notes, filter by category and topic, and continue a discussion. |
 | **My learning → Handbook** | Browse saved Grammar checks, newest first, with search and mistake-type filters. |
-| **My learning → Coach** | Explore recurring mistakes in saved Grammar checks and request explanations of causes and grammar rules. |
+| **My learning → Learning reports** | Generate a proficiency report from saved Grammar checks and the Practice log: choose a time window and report language, review recurring error patterns and improvement directions, revisit saved reports, and download Markdown. |
 | **Settings** | Configure models and Markdown file locations. |
 
 The interface defaults to English. **中文引导** adds beginner guidance while keeping English examples, target expressions, and learner content in their original language. Ask has separate **Answer language** and **Note language** controls for generated explanations and conversation summaries.
@@ -89,7 +92,13 @@ The interface defaults to English. **中文引导** adds beginner guidance while
 
 Grammar handles the complete submitted passage, including numbered or bulleted items. Review the correction, rewrite, and diagnosed mistakes, then choose **Save to review log** when you want to keep the result. Generating feedback alone does not save a learning record or automatically create a flashcard.
 
-Handbook shows only saved Grammar checks, with legacy records of unknown source labeled separately. Coach uses only records explicitly identified as Grammar checks; Practice, full-text analysis, and unknown-source records are excluded. A check with **No diagnosed mistakes** is not proof of error-free writing or durable mastery.
+Handbook shows only saved Grammar checks, with legacy records of unknown source labeled separately.
+
+### Overview and Learning reports
+
+**My learning** is a direct entry in the Web app with five tabs: Overview, Saved words, Saved notes, Handbook, and Learning reports. Overview reads the currently configured data through the Local Runtime — no snapshot import needed. It pairs a full inventory of saved material with performance figures for the selected period; figures are annotated with the chosen time window or current retention state. Trends support metric switching, a data table, period comparison, and drilling down into the underlying records. A practice log view lists recorded Practice attempts.
+
+Learning reports generate a report grounded in saved Grammar checks and the Practice log, reviewing proficiency, recurring error patterns, underlying knowledge gaps, and improvement directions. Only abilities supported by your saved writing are assessed; AI corrections and assisted answers do not establish mastery. Reports use only records explicitly identified as Grammar checks; Practice, full-text analysis, and unknown-source records are excluded. A check with **No diagnosed mistakes** is not proof of error-free writing or durable mastery.
 
 ### Sentence Practice
 
@@ -159,7 +168,7 @@ Optionally run `npm link` once to register the global `igt` command. Type an Eng
 | `/ask` | Start a language consultation with optional saving. |
 | `/chat` | Practise conversation with gentle corrections. |
 | `/handbook` (`/h`) | Browse and filter saved Grammar checks. |
-| `/coach` | Analyze recurring Grammar mistakes and request explanations. |
+| `/coach` | Analyze recurring mistakes in saved Grammar checks and request explanations. |
 | `/stats` (`/st`) | Show recorded activity and a timeline. |
 | `/provider status` | Show provider and model configuration. |
 | `/provider switch <provider>` | Switch AI providers. |
@@ -248,10 +257,10 @@ The React Web client and CLI call a shared local HTTP Runtime. The Runtime handl
 
 ## Troubleshooting
 
-- **Development port occupied:** change `IGT_DEV_API_PORT` or `IGT_WEB_PORT` in `.env`, then restart `web:dev`.
+- **Development port occupied:** inspect `npm run dev:status` and stop the managed instance with `npm run dev:stop`. For old services, inspect `npm run dev:status -- --legacy` before using `npm run dev:stop -- --legacy`. See [development service management](DEV-SERVICES.md). Configure different ports in `.env` only for intentionally parallel services.
 - **Production page unavailable:** run `web:build` before `web:start`, and use the printed Runtime URL.
 - **Provider error or rate limit:** check credentials, model settings, and provider status; retry when the provider permits it.
-- **Grammar missing from Handbook or Coach:** save the result to the review log. Coach also excludes legacy records with an unknown source.
+- **Grammar missing from Handbook or Learning reports:** save the result to the review log. Learning reports also exclude legacy records with an unknown source.
 - **Database locked or migration failed:** close processes using the database, inspect the configured error log, and preserve a backup before repair. Deleting the database erases local state and is not a routine fix.
 - **Missing grammar reference resources:** run `npm run verify-learning-resources` and inspect its report; `init-db` prepares the primary database, not an external reference corpus.
 

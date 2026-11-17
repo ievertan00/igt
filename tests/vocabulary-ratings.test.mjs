@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
@@ -11,16 +10,13 @@ import { registerSrsRoutes } from "../lib/server/routes/srs.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 import { api } from "../lib/cli/api-client.mjs";
 import { runReview } from "../lib/cli/commands/review.mjs";
-import { up as removeLegacyCoachStorage } from "../migrations/063_remove_legacy_coach_storage.mjs";
+import { runMigrations } from "../lib/db/migrations.mjs";
 
 const fresh = { ease: 2.5, intervalDays: 1, totalReviews: 0, correctStreak: 0 };
-function reviewDb(t) {
+async function reviewDb(t) {
   const db = new Database(":memory:");
   t.after(() => db.close());
-  for (const file of ["001_initial_schema.sql", "009_practice_attempts.sql", "010_practice_context.sql", "011_learning_plans.sql", "012_practice_task_link.sql", "015_learning_plan_pause.sql"]) {
-    db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", file), "utf8"));
-  }
-  removeLegacyCoachStorage(db);
+  await runMigrations(db, path.join(process.cwd(), "migrations"));
   db.prepare("INSERT INTO srs_cards (source_type,prompt,answer,word,due_date) VALUES ('vocab','follow up','follow up','follow up','2026-01-01')").run();
   return db;
 }
@@ -47,8 +43,8 @@ test("mature intervals are ordered, Hard grows slowly, and lapses restart learni
   assert.ok(difficult.intervalDays > 30);
 });
 
-test("answer check is read-only; a rating atomically stores separate recall evidence once", t => {
-  const db = reviewDb(t);
+test("answer check is read-only; a rating atomically stores separate recall evidence once", async t => {
+  const db = await reviewDb(t);
   const checked = checkVocabularyReview(db, { cardId: 1, answer: "wrong" });
   assert.equal(checked.correct, false);
   assert.equal(checked.persistence.saved, false);
@@ -69,8 +65,8 @@ test("answer check is read-only; a rating atomically stores separate recall evid
   assert.throws(() => gradeVocabularyReview(db, { ...input, rating: "invalid", requestId: randomUUID() }), error => error.status === 400);
 });
 
-test("blank Again remains incorrect, due today; evidence failure rolls back SRS", t => {
-  const db = reviewDb(t);
+test("blank Again remains incorrect, due today; evidence failure rolls back SRS", async t => {
+  const db = await reviewDb(t);
   const input = { cardId: 1, answer: "", rating: "again", requestId: randomUUID() };
   const saved = gradeVocabularyReview(db, input);
   assert.equal(saved.correct, false);
@@ -83,7 +79,7 @@ test("blank Again remains incorrect, due today; evidence failure rolls back SRS"
 });
 
 test("HTTP check and grade use the same application contract without a model", async t => {
-  const db = reviewDb(t);
+  const db = await reviewDb(t);
   registerSrsRoutes({ getReviewDb: async () => db, getLLMManager: () => { throw new Error("must not use a model"); } });
   async function post(url, body) {
     const req = Readable.from([JSON.stringify(body)]);
@@ -103,7 +99,7 @@ test("HTTP check and grade use the same application contract without a model", a
 });
 
 test("CLI accepts all four ratings, repeats Again, and retries the identical save", async t => {
-  const db = reviewDb(t);
+  const db = await reviewDb(t);
   let output = "";
   t.mock.method(process.stdout, "write", chunk => { output += chunk; return true; });
   t.mock.method(api, "getDue", async () => ({ cards: [1, 2, 3].map(id => ({ id, word: "follow up", zh: "跟进" })) }));

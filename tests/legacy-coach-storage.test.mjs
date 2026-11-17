@@ -1,21 +1,33 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import Database from "better-sqlite3";
-import { up } from "../migrations/063_remove_legacy_coach_storage.mjs";
+import { runMigrations } from "../lib/db/migrations.mjs";
+import { up } from "../migrations/002_retire_legacy_storage.mjs";
 import { insertPracticeAttempt, readLearningPracticeAttempts } from "../lib/features/practice/attempts.mjs";
 import { gradeVocabularyReview } from "../lib/application/vocabulary-review.mjs";
 
-test("legacy Coach cleanup preserves evidence and scheduling and supports new reviews", t => {
+test("legacy Coach cleanup preserves evidence and scheduling and supports new reviews", async t => {
   const db = new Database(":memory:");
   t.after(() => db.close());
   db.pragma("foreign_keys = ON");
-  for (const file of ["001_initial_schema.sql", "007_quiz_questions.sql", "009_practice_attempts.sql", "010_practice_context.sql", "011_learning_plans.sql", "012_practice_task_link.sql", "015_learning_plan_pause.sql"]) {
-    db.exec(fs.readFileSync(path.join(import.meta.dirname, "..", "migrations", file), "utf8"));
-  }
-  db.exec(`INSERT INTO learning_plans (id, goal, window_days) VALUES (1, 'Grammar', 14);
+  await runMigrations(db, path.join(import.meta.dirname, "..", "migrations"));
+  // Recreate the retired Coach storage on top of the baseline to simulate an
+  // older database that still carries plans, tasks, quiz rows and the task link.
+  db.exec(`CREATE TABLE learning_plans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, goal TEXT NOT NULL, window_days INTEGER NOT NULL);
+    CREATE TABLE learning_tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plan_id INTEGER NOT NULL REFERENCES learning_plans(id) ON DELETE CASCADE,
+      priority_index INTEGER NOT NULL, error_type TEXT NOT NULL, phase INTEGER NOT NULL,
+      phase_name TEXT NOT NULL, task TEXT NOT NULL, check_text TEXT NOT NULL, scheduled_day INTEGER NOT NULL);
+    CREATE TABLE quiz_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, chinese TEXT NOT NULL, reference_answer TEXT NOT NULL,
+      fingerprint TEXT NOT NULL UNIQUE);
+    ALTER TABLE practice_attempts ADD COLUMN learning_task_id INTEGER REFERENCES learning_tasks(id);
+    CREATE INDEX idx_practice_attempts_task ON practice_attempts(learning_task_id);
+    INSERT INTO learning_plans (id, goal, window_days) VALUES (1, 'Grammar', 14);
     INSERT INTO learning_tasks (id, plan_id, priority_index, error_type, phase, phase_name, task, check_text, scheduled_day)
       VALUES (1, 1, 0, 'Vocabulary', 2, 'Contrast', 'Recall', 'Check recall', 4);
     INSERT INTO quiz_questions (chinese, reference_answer, fingerprint) VALUES ('旧题', 'Old question', 'legacy');

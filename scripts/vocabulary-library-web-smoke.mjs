@@ -28,7 +28,7 @@ const content = Array.from({ length: 31 }, (_, index) => {
 }).join("\n");
 fs.writeFileSync(file, content);
 const db = new Database(":memory:");
-for (const name of ["001_initial_schema.sql", "009_practice_attempts.sql"]) db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", name), "utf8"));
+db.exec(fs.readFileSync(path.join(process.cwd(), "migrations", "001_initial_schema.sql"), "utf8"));
 for (let index = 0; index < 31; index++) {
   const word = index === 0 ? "follow up" : `word${String(index).padStart(2, "0")}`;
   db.prepare("INSERT INTO srs_cards (source_type,prompt,answer,word,due_date,total_reviews,interval_days,last_reviewed) VALUES ('vocab',?,?,?,?,?,?,?)")

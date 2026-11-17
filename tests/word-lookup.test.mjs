@@ -3,9 +3,10 @@ import { test } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
 import { registerWordRoutes } from "../lib/server/routes/word.mjs";
+import { WORD_LOOKUP_PROMPT, WORD_LOOKUP_SCHEMA } from "../lib/application/word.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 
-const entry = { status: "found", word: "scrutiny", pos: "noun", phonetic: "/ˈskruːtəni/", meaning: "Careful examination.", zh: "仔细审查", synonyms: "inspection", collocations: "under scrutiny", verbForms: "", plural: "", example: "The plan is under scrutiny.", example2: "Her work faced scrutiny.", example3: "The report deserves scrutiny.", note: "Usually uncountable.", suggestions: "" };
+const entry = { status: "found", word: "scrutiny", pos: "noun", phonetic: "/ˈskruːtəni/", meaning: "Careful examination.", zh: "仔细审查", synonyms: "inspection", collocations: "under scrutiny", verbForms: "", plural: "", comparative: "", example: "The plan is under scrutiny.", example2: "Her work faced scrutiny.", example3: "The report deserves scrutiny.", note: "Usually uncountable.", suggestions: "" };
 let outputs = [];
 let calls = [];
 const parent = path.join(process.cwd(), ".cache");
@@ -80,6 +81,37 @@ test("verb tense forms and noun plural survive lookup and Markdown saving", asyn
   assert.equal(saved.body.data.verbForms, "");
 });
 
+test("the dictionary schema and prompt request adjective comparatives", () => {
+  assert.equal(WORD_LOOKUP_SCHEMA.properties.comparative.type, "string");
+  assert.ok(WORD_LOOKUP_SCHEMA.required.includes("comparative"));
+  assert.match(WORD_LOOKUP_PROMPT, /comparative for gradable adjectives/i);
+  assert.match(WORD_LOOKUP_PROMPT, /adjectives that have no standard comparative/i);
+});
+
+test("adjective comparatives survive lookup while verb forms and plural stay empty", async () => {
+  const adjective = { ...entry, word: "fragile", pos: "adjective", meaning: "Easily broken.", zh: "脆弱的", verbForms: "", plural: "", comparative: "more fragile", example: "Glass is fragile.", example2: "The fragile vase cracked.", example3: "Handle the fragile box gently.", note: "Gradable.", suggestions: "" };
+  const result = await lookup([JSON.stringify(adjective)]);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.data.comparative, "more fragile");
+  assert.equal(result.body.data.verbForms, "");
+  assert.equal(result.body.data.plural, "");
+  assert.equal(calls.length, 1);
+  assert.match(String(calls[0][1]), /comparative for gradable adjectives/i, "the model prompt requests the new field");
+});
+
+test("saved adjective comparatives parse without swallowing the next Markdown line", async () => {
+  const content = "# Vocabulary\n\n### fragile\n**PoS:** adjective · /ˈfrædʒ.aɪl/\n**Meaning:** Easily broken.\n**中文:** 脆弱的\n**Verb forms:**\n**Plural:**\n**Comparative:** more fragile\n**Example 1:** Glass is fragile.\n**Note:**\n";
+  fs.writeFileSync(vocabularyFile, content);
+  try {
+    const result = await lookup([], "fragile");
+    assert.equal(result.body.data.comparative, "more fragile");
+    assert.equal(result.body.data.verbForms, "");
+    assert.equal(result.body.data.plural, "");
+    assert.equal(result.body.data.example, "Glass is fragile.");
+    assert.equal(result.body.data.existing, true);
+  } finally { fs.unlinkSync(vocabularyFile); }
+});
+
 test("lookup retries generic mention-only filler examples and returns meaningful replacements", async () => {
   const filler = { ...entry,
     example2: 'In a practical context, the team used “scrutiny” when discussing the same idea at work.',
@@ -145,7 +177,7 @@ test("Chinese translation failures preserve provider errors and do not generate 
 });
 
 test("saved vocabulary wins before lookup and after canonicalization", async () => {
-  const content = "# Vocabulary\n\n### scrutiny\n**PoS:** noun · /saved/\n**Meaning:** My saved meaning.\n**中文:** 仔细审查\n**Verb forms:**\n**Plural:** scrutinies\n**Example:** Saved example.\n**Note:**\n**Memory:** my memory hook\n";
+  const content = "# Vocabulary\n\n### scrutiny\n**PoS:** noun · /saved/\n**Meaning:** My saved meaning.\n**中文:** 仔细审查\n**Verb forms:**\n**Plural:** scrutinies\n**Comparative:**\n**Example:** Saved example.\n**Note:**\n**Memory:** my memory hook\n";
   fs.writeFileSync(vocabularyFile, content);
   try {
     const direct = await lookup([], "SCRUTINY");
@@ -154,6 +186,7 @@ test("saved vocabulary wins before lookup and after canonicalization", async () 
     assert.equal(direct.body.data.note, "", "an empty field must not consume the next Markdown line");
     assert.equal(direct.body.data.verbForms, "", "an empty verb forms field must parse as empty");
     assert.equal(direct.body.data.plural, "scrutinies");
+    assert.equal(direct.body.data.comparative, "", "an empty comparative field must parse as empty");
     assert.equal(direct.body.data.existing, true);
     assert.equal(calls.length, 0);
     const chinese = await lookup(["scrutiny"], "仔细审查");

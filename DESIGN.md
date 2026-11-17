@@ -3,9 +3,9 @@ name: ClearWrite Design System
 description: 以 Markdown 文件设置示例为基准的 ClearWrite 界面规范
 ---
 
-# ClearWrite Design System · v2.7
+# ClearWrite Design System · v2.16
 
-更新日期：2026-11-13。以 Markdown 文件设置示例为基准，统一 ClearWrite 的导航、标题、面板、表单和交互状态。v2.3 按「优化页面布局减少视觉疲劳」设计稿调整了页面底色、My learning 子导航（新增子页面标题 + 白面页签轨道）与 Grammar check log 的内容布局，并按「说明文字纪律」清理了 My learning 全段的口径 / 证据边界类说明文字。v2.4 按「导航栏设计修改」评审结论定稿顶栏：`My learning` 归入右侧工具组、保留圆形齿轮设置入口、取消独立的主题切换图标，顶栏边界补上 1px 分隔线与轻投影；所有色值与尺寸统一取本文件 token，不采用参考稿的第二套绿色（`#0E9F6E` / `#E8F8EE` / `#0A6E4B`）。v2.5 补齐导航图标与选中态：每个导航项改为「线性图标 + 文字标签」，选中态由浅灰底 + 绿点改为浅绿底 + 深绿字 + 绿色图标 + 1px 细描边，与二级页签的选中语言一致；齿轮按钮的选中态同步。v2.6 收敛 Overview 的文字色彩表达：卡片标签与数字同色系、空数据与零计数退为中性、浅灰底上的安静控件文字改用 `--ink-soft`、观察面板正文回归墨色，并补齐悬停态的对比度与可见反馈。v2.7 按评审把 `My learning` 放在分隔线左侧、靠右独立成组，与目的地之间以弹性留白分开；右侧工具组只保留齿轮与语言选择器，二者间距 `1rem`，分隔线两侧各 `1.25rem`（961–1240px 档收紧为 `.75rem`）。
+更新日期：2026-11-13。以 Markdown 文件设置示例为基准，统一 ClearWrite 的导航、标题、面板、表单和交互状态。v2.3 按「优化页面布局减少视觉疲劳」设计稿调整了页面底色、My learning 子导航（新增子页面标题 + 白面页签轨道）与 Grammar check log 的内容布局，并按「说明文字纪律」清理了 My learning 全段的口径 / 证据边界类说明文字。v2.4 按「导航栏设计修改」评审结论定稿顶栏：`My learning` 归入右侧工具组、保留圆形齿轮设置入口、取消独立的主题切换图标，顶栏边界补上 1px 分隔线与轻投影；所有色值与尺寸统一取本文件 token，不采用参考稿的第二套绿色（`#0E9F6E` / `#E8F8EE` / `#0A6E4B`）。v2.5 补齐导航图标与选中态：每个导航项改为「线性图标 + 文字标签」，选中态由浅灰底 + 绿点改为浅绿底 + 深绿字 + 绿色图标 + 1px 细描边，与二级页签的选中语言一致；齿轮按钮的选中态同步。v2.6 收敛 Overview 的文字色彩表达：卡片标签与数字同色系、空数据与零计数退为中性、浅灰底上的安静控件文字改用 `--ink-soft`、观察面板正文回归墨色，并补齐悬停态的对比度与可见反馈。v2.7 按评审把 `My learning` 放在分隔线左侧、靠右独立成组，与目的地之间以弹性留白分开；右侧工具组只保留齿轮与语言选择器，二者间距 `1rem`，分隔线两侧各 `1.25rem`（961–1240px 档收紧为 `.75rem`）。v2.8 按三张 Overview 参考截图合并观察与优先级卡、重做错误分布与资料 / 指标卡；只取版式与数据标签，色值全量沿用第 2 节 token。v2.9 按第二轮评审收紧 Overview：移除 Recent activity、重排两行面板宽度与等高、压缩第一行高度、把资料区入口改为 `View recent activity`，并对四个标题统一做光学左移。v2.10 按第三轮微调：`Top priorities` 由 5 项收为 3 项（`N / 3`），`Word retention` 状态图例改单列垂直排列。v2.11 撤销 My learning 页面对主导航的专属缩放，恢复 §3.1 的全局 84px 顶栏与字号，页面切换时主导航位置与尺寸不变。v2.12 把子页面名与两个区块标题由「左突出 6px」改为「右内缩 6px」，并同步到全部子页面。v2.13 收紧三条 Top priorities 白卡内的文字高度，把腾出的垂直空间放到每条卡的顶部留白。v2.14 把趋势图 legend 移到绘图区上方右侧、重做 Previous period 图标，并让图表纵向填满趋势卡以消除底部空白。v2.15 收敛趋势图的点标记：去掉 Previous period 数据点外层的实心大圆盘、改用空心圈，Current period 保持实心点；两枚图例统一为不带圆圈的纯线段（实线 / 虚线）。v2.16 把词汇复习题面上的 IPA 由常显改为按需揭示：去掉会泄露答案的音标行，原来的 `Show first letter` 提示改名为 `Show the IPA` 并用于手动揭开音标。
 
 ---
 
@@ -87,6 +87,86 @@ ClearWrite 是一款集“写作润色（Writing/Grammar/Express）”、“词�
 - Word retention uses a 16px status band, breathing room before the legend, and stronger counts. Preserve the existing status meanings and colors.
 - Top priorities emphasizes the first item with a soft green surface and a stronger rank; other ranks stay neutral. Recent activity remains compact, with module icons, fine separators, and readable timestamps on narrow screens.
 
+### Overview card refinement (2026-11-13, v2.8)
+
+以三张参考截图为版式基准；**只取结构与数据标签，颜色仍全量取第 2 节 token**，不采用参考稿自身的第二套绿色。以下条目覆盖 §3.1 中的旧表述。
+
+- **合并结论卡**：`A brief observation` 与 `Top priorities` 合成一张 `--accent-soft` 浅绿卡（桌面 7 列）。卡内依次是墨色标题 + 白圆 sparkle 徽标、观察正文、绿色 `Top priorities` 小标题配 `N / 5`、白底细边的编号优先级卡（名次 + 类型 + `N records · N distinct inputs` 灰药丸 + 数据副行）、前三项的胶囊 chips、页脚计数与 `Open full report →`。`.growth-priorities` 保留为卡内子区块，仍持有 `h2`、`N / 5` 与可点击行，数据 / 证据逻辑与既有断言不变。`Recent activity` 独占 12 列一行，≥901px 时内部两列，窄屏自动收成单列。
+- **Error distribution**：标题右侧 `N total` 灰徽标、标题下 `Flagged issues in this period` 副标题；柱条按降序，最高非零项用 `--accent`、其余柔绿、零计数保持中性，去掉整行浅绿底。分隔线下方是 `Focus area` 浅绿提示框：白圆 info 图标 + 最大分类、真实占比 `(N / total)`、反复出现的具体错误类型、打开该分类记录的 `Review … corrections →`。无标记问题时整块不渲染。
+- **资料卡与指标卡**：§3.1「标签和大数字同色系」改为——大数字回归 `--ink`、标签回归 `--muted`，四种语义色只落在资料卡 32px 图标方块与 `+N this period` 药丸上；`Saved material` 标题右侧 `View all material →` 打开全量记录抽屉。指标条四项各自补一条按真实比例填充的细进度条（回忆率 / 翻译分 / 有诊断占比 / 保留占比），环比增减改绿 / 红 / 灰药丸；`Performance snapshot` 标题右侧写 `Compared with the previous N days`（由 `previous.filters` 真实区间计算）。
+- **说明文字纪律的四条例外**：`N total`、`Flagged issues in this period`、`Compared with the previous N days`、`N flagged issues in this period` 都是计数 / 时段数据标签，不是口径或证据边界声明；其余说明文字仍按 §3.1 不恢复。副标题与提示框文本不放进 `.growth-section-title`，避免与趋势面板的日期区间共用标题区高度。
+
+### Overview density & alignment pass (2026-11-13, v2.9)
+
+本轮只做版式与入口收敛，不新增说明文字、不改动数据与证据逻辑；以下条目覆盖 v2.8 中 `Recent activity` 独占一行、结论卡 7 列、`View all material` 三处旧表述，以及 §3.1 关于「最近活动」的旧表述。
+
+- **两行栅格**：第一行 `How performance changes` 7 列 / `Error distribution` 5 列不变；第二行 `Word retention` 由 5 列收为 **4 列**、结论卡由 7 列扩为 **8 列**。两卡 `align-items: stretch` 等高，去掉 `align-self: start`；窄状态栏多出的高度不追加内容，而是把状态带加厚到 `1.5rem`，并用上下 `margin: auto` 把「堆叠条 + 图例」作为一组垂直居中，避免半截空卡。≤1120px 两卡各自满行，恢复自然高度。
+- **第一行压缩**：趋势图 `viewBox` 高度 238 → 202（上下留白同步收紧），图表 `min-height` 桌面 `13.75rem → 10.5rem`、≤620px `11.25rem → 8.5rem`（后者防止缩短后的 SVG 在手机上被 letterbox 成一条空白带）；标题区 / 控件区下边距各减 4px。错误分布的副标题下边距、柱行最小高度（40 → 34px）与行距、列表下内边距、focus 提示框外边距 / 内边距 / 段距全部收紧。1440px 实测第一行由 562.7px 降到 488.4px。
+- **图例语义**：上一时段在图中是虚线，其图例标记由实心 `--control` 色块改为 `repeating-linear-gradient` 虚线色块，与线型一致；当前时段仍是实心 `--accent`。
+- **入口与文案**：`Recent activity` 面板整块移除，`.growth-recent` / `.growth-practice-log` 相关样式一并清理。`View all material` 更名 `View recent activity`，点击打开 `Recent activity` 全量记录抽屉（承接被移除面板的「查看全部记录」）；`Open practice log` 移到 `Saved material` 标题右侧动作组，保证练习日志视图仍有唯一入口。标题右侧动作组可换行、链接允许断行，200% 文字缩放 + 320px 不产生横向溢出。
+- **光学对齐**：`MY LEARNING`（含其右侧子页面标题）、`Saved material`、`Performance snapshot` 四个标题统一 `position: relative; left: -.375rem`。首字字形左侧边距让文字在硬卡片边缘旁看起来略微内缩，这个 6px 微调让四者共享同一条视觉起笔线；它不参与布局、不影响页签轨道与工作区边缘的既有对齐断言。
+
+### Overview third-pass tweaks (2026-11-13, v2.10)
+
+两项微调，覆盖 v2.9 中「优先级 5 项」与「状态图例两列」的旧表述：
+
+- **Top priorities 收为 3 项**：前端 `data.priorities.slice(0, 3)`，计数标签由 `N / 5` 改 `N / 3`；胶囊 chips 同步只取前三项，与服务端排序的前三名保持一致。冒烟断言改为 3 行 / `3 / 3`。
+- **Word retention 状态图例单列**：`.growth-status-list` 由两列改 `grid-template-columns: 1fr`，六类状态一行一个、自上而下；窄状态栏被拉高时「堆叠条 + 图例」仍整组垂直居中，≤620px 行距收紧到 `.375rem`，≤350px 的旧单列覆盖规则删除（已无两列布局）。
+
+### Global primary navigation (2026-11-15, v2.11)
+
+主导航（`.topbar` / 品牌 / `.top-nav`）属于全局，不属于任何子页面；以下规则覆盖 `MyLearning.css` 里曾经存在的桌面专属覆写：
+
+- **不按页面缩放**：My learning 不改写 `.topbar` 高度、`.brand-mark` 尺寸、`.brand-wordmark` / `.top-nav` / `.learner-language-menu` 字号，也不改写导航项内边距。桌面全站统一 §3.1 的 `84px`（`5.25rem`）顶栏、`42px` 品牌方块、`24px` 字标、`17px` 导航文字；≤1320px 与 ≤960px 的响应式档位同样只由 `visual-system.css` 决定（实测 1100px 导航 15px、390px 顶栏 77px，My learning 与其它页面完全一致）。
+- **切换不动**：`html:has(.my-learning-shell)` 的 `--learning-topbar-height` 与 `scroll-padding-top` 回退值同步恢复 `5.25rem`，只用于锚点偏移补偿，不参与顶栏尺寸；`hashchange` 原地切换路由时主导航的 top / left / width / height 与字号、字重、间距全部保持原值。
+- **回归断言**：`my-learning-web-smoke.mjs` 在 `#dashboard` 与 `#grammar` 之间原地切换，深比较主导航指纹（顶栏与品牌方块矩形、字标字号 / 字重、导航字号 / 字重 / gap、导航项字号 / 内边距、语言选择器字号），任何页面级覆写都会让断言失败。
+
+### Sub-page name inset (2026-11-15, v2.12)
+
+覆盖 v2.9「四个标题统一 `left: -.375rem` 光学左移」的旧表述：
+
+- **由左突出改为右内缩**：`.my-learning-navigation-head`（`MY LEARNING` kicker + 子页面 `h1`）与 `.growth-saved-heading h2` / `.growth-snapshot-heading h2` 统一 `left: .375rem`（+6px）。三处文字最左缘落在主内容左边缘内侧 6px，页签轨道、卡片、面板仍严格贴齐 0，不参与布局流。
+- **全子页同步**：导航头由 `MyLearning.tsx` 单一组件渲染，五个子页（Overview / Saved words / Saved notes / Handbook / Learning reports）与 1440 / 1100 / 390px 各档实测偏移完全一致：kicker +6px、标题 +119.97px（390px +106.36px）、区块标题 +6px、卡片 0。
+- **回归断言**：`headingNudge` 改为要求三者 offset 在 `(1, 12)` 且彼此差 <1.5px；路由循环新增逐宽度比较，任一子页的 kicker / 标题位置漂移都会失败。
+
+### Priority bar text density (2026-11-15, v2.13)
+
+只改三条 `Top priorities` 白卡内的文字与内边距，不动观察正文、chips、页脚与栅格。
+
+- **根因**：通用 `.growth-activity-row:first-child { padding-top: .125rem }` 本意只作用于证据列表首行，但每个优先级按钮都是自己 `<li>` 的首个子元素，导致三条白卡实际为「上 2px / 下 14px」，文字贴着上沿、下方反而空。该规则收窄为 `.growth-activity-list > .growth-activity-row:first-child`，抽屉里的证据列表行为不变。
+- **文字减高**：标题 `.875rem/1.5 → .8125rem/1.35`（14px/21px → 13px/17.6px），副行 `.75rem/1.7 → .6875rem/1.4` 且上间距 `.3125rem → .1875rem`（12px/20.4px → 11px/15.4px），徽标行高 `1.6 → 1.4`、上下内边距 `.125rem → .0625rem`。文字块整体约减 13px。
+- **腾出的高度放到顶部**：行内边距改 `.75rem 1rem`（上下各 12px），`align-items: center` 让编号方块、箭头与文字块一起居中；顶部留白 2px → 12px，与底部相等。1440px 实测单卡 64px → 61.9px，结论卡 574.1px → 568px，仍与 `Word retention` 等高。窄屏徽标折行时按内容自然增高，不裁切。
+- **回归断言**：`my-learning-web-smoke.mjs` 校验首条白卡上下内边距 ≥10px 且相等、标题行高 ≤18px、副行行高 ≤16px、单卡高度 ≤66px。
+
+### Trend legend & chart fill (2026-11-15, v2.14)
+
+覆盖 v2.9「viewBox 高度 238 → 202」「图例标记改为虚线色块」与 v2.9 之后「legend 在图表下方」的旧表述；本轮只改趋势面板，错误分布面板与两卡等高关系不动。
+
+- **根因**：第一行两卡 `align-items: stretch` 等高 488.4px，但行高由 `Error distribution` 的内容撑起；趋势卡原有内容只到 411px，legend 下方有 57px 纯空白（含 20px 底部内边距共 77px）。
+- **图表填满**：`TrendChart` 的 `viewBox` 高度 `202 → 254`（宽度仍 680，等比缩放、图形不变形），1440px 下 SVG 渲染高 `206.8 → 260.1px`，图表底缘距卡片底只剩 `21.8px`（即底部内边距），空白带消失；两卡仍同为 488.4px。≤620px 的 `min-height` 由 `8.5rem → 7rem`、≤350px 再降为 `0`，避免变高后的 SVG 在窄屏被 letterbox 成空白带（390px 实测 SVG 115.4px 恰高于 112px 下限）。
+- **legend 位置**：由图表下方左侧移到**绘图区上方、右对齐**（`justify-content: flex-end; margin: 0 0 .5rem`），与日期控件右缘对齐；窄屏可换行。这样 x 轴标签可以直接落在卡片底部，不必再为下方图例预留一整行。
+- **Previous period 图标**：与 Current period 统一为 `1.5rem × 3px`，虚线沿用图表的 `5/5` 节奏（`repeating-linear-gradient(90deg, var(--control) 0 5px, transparent 5px 10px)`，原先是 `16 × 2px` 的两小块 `5/9`）；中央加 `10px` 空心圆点（`--paper` 底 + `2px --control` 边）呼应图上的空心点。Current period 保持连续实心绿线、不加圆点，避免白色描边把实线切断而看起来也像虚线。
+- **回归断言**：`my-learning-web-smoke.mjs` 校验 legend 在 SVG 上方且右对齐、图表底缘到卡片底 ≤26px、两枚 key 尺寸相同、Previous period 的虚线渐变与空心点边框。
+
+### Trend point markers & pure line keys (2026-11-15, v2.15)
+
+覆盖 v2.14「Previous period 图标中央加空心圆点」的表述；本轮只改趋势图的点与图例标识，图表尺寸、legend 位置、两卡等高关系均不动。
+
+- **根因**：`.growth-series.is-previous circle`（特异性 0,3,1）盖过 `.growth-series .growth-point-hit`（0,3,0），把 `r=12` 的透明点击热区也填成 `--control`，于是每个 Previous period 数据点外面出现一个 24px 实心大圆盘，看起来像「点外面套了圆圈」。把热区规则提到 `circle.growth-point-hit`（0,3,1）并让比较序列的点规则用 `:not(.growth-point-hit)`（0,4,1）限定到可见点，两条序列的热区都保持透明。
+- **点标记语义**：Current period = 实心绿点（`--accent` 填充 + `--paper` 描边），Previous period = 空心圈（`--paper` 填充 + `2px --control` 描边），只靠实心/空心区分，不再叠加任何外圈或光晕。键盘聚焦时的 `focus-visible` 描边仍由更高特异性规则接管。
+- **图例统一**：两枚 key 都是 `1.5rem × 3px`、`border-radius: 2px` 的纯线段，Current 为连续绿实线、Previous 为 `5/5` 灰虚线；移除 `i.is-previous::after` 的空心圆点，图例中不再出现任何圆圈。取消原先 `is-previous` 的 `border-radius: 0`，两项形状完全一致。
+- **回归断言**：`my-learning-web-smoke.mjs` 校验两枚 key 圆角一致且均无 `::after` 标记、两条序列的点击热区填充透明且无描边、Current 点填 `--accent`、Previous 点填 `--paper` 且描边为 `--control`（≥2px）。
+
+### Vocabulary review IPA hint (2026-11-15, v2.16)
+
+覆盖 §4.3 里「💡 Show first letter」这一代表操作的旧表述；本轮只改 `WordReview` 题面，答案侧、评分流程与复习记录口径不动。
+
+- **问题**：题面在中文线索下方常显 IPA（`.review-phonetic`，等宽字体、完整音标），读音几乎直接给出答案，与「先回忆、再核对」的复习目标冲突。原先的 `Show first letter` 只提供首字母，属于另一条提示路径。
+- **规则**：题面不再渲染 IPA 行；只有词条存在 `phonetic` / `phonetics` 时才在 hints 行出现 `💡 Show the IPA`（中文界面 `显示音标`），点击后在同一位置揭晓音标。首字母提示（`Starts with "x"`）整条移除，避免两套提示并存。
+- **布局稳定**：沿用固定 `min-height: 44px` 的提示槽（`.review-ipa-slot`，`min-width: 176px`、可随内容增宽），按钮与揭晓后的 `.review-ipa-hint` 互换而不改变槽高；`.review-ipa-hint` 用等宽字体 + `overflow-wrap: anywhere` 容纳长音标，答题框不会因揭示而跳动。题面删除音标行后同时清理 `.review-phonetic` 及窄屏 `max-width` 规则。
+- **答案侧保留**：核对答案后 `review-word-meta` 仍显示 `词性 · 音标`，此时答案已揭晓，不再构成泄题；揭晓状态用 `role="status"` + `sr-only` 的 `IPA:` 前缀播报。
+- **回归断言**：`vocabulary-ratings-web-smoke.mjs` 校验题面不含 `/ˈfɒləʊ ʌp/`、按钮文案为 `Show the IPA`、无 `.review-letter-hint`、点击后出现音标且答题框 `top` 不变。
+
 ### 3.2 Grammar check log · 低疲劳内容布局
 
 以「优化页面布局减少视觉疲劳」设计稿（`ClearWrite · Grammar check log — 布局优化 v2`）为视觉基准，落到 Handbook 实际页面。疲劳源是**重复的高对比满宽色块**，不是留白不足，因此改法是「一张安静白面 + 单一绿色强调」：
@@ -124,7 +204,7 @@ ClearWrite 是一款集“写作润色（Writing/Grammar/Express）”、“词�
 ### 4.3 品牌轻量辅助与学习提示 Chip 按钮 (Hint & Soft Action Chips)
 - **外观**：浅绿色底色（`var(--accent-soft)`），深绿文案与图标（`var(--accent-text)`），边框为半透明绿色边（`1px solid #d5efdf`）。
 - **规格**：高度 `36px - 40px`，圆角胶囊（`rounded-full` 或 `8px`）。
-- **代表操作**：`🔊 Audio hint`、`💡 Show first letter`、`Review due words` 快捷条。
+- **代表操作**：`🔊 Audio hint`、`💡 Show the IPA`、`Review due words` 快捷条。
 
 ### 4.4 图标按钮 (Icon Buttons)
 - **规格**：外层触控命中区域严格保持 `≥ 44×44px`（无障碍黄金法则），视觉图标区域可居中为 `32×32px` 或 `20px` 矢量图形。

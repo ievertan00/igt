@@ -1,30 +1,33 @@
 /* The strip is the place where a sub-page is named and switched: a quiet page-colour band holding one title and a white tab track. */
 /* Only the primary header sticks, so anchors need no extra offset for a second sticky band. */
-html:has(.my-learning-shell) { --learning-topbar-height: 5.25rem; --learning-tab-height: 56px; --learning-tab-gap: 24px; --learning-content-gap: 1.5rem; scroll-padding-top: var(--learning-topbar-height, 5.25rem); }
+html:has(.my-learning-shell) { --learning-topbar-height: 5.25rem; --learning-tab-height: 56px; --learning-tab-gap: 26px; --learning-content-gap: 1.5rem; scroll-padding-top: var(--learning-topbar-height, 5.25rem); }
 /* Narrow screens keep the anchor offset in sync with the shorter wrapped header. */
 @media (max-width: 960px) { html:has(.my-learning-shell) { --learning-topbar-height: 77px; --learning-tab-gap: 16px; } }
 /* The title and the tabs share the page's own ground, so the header does not become a second white bar under the top navigation. */
-.my-learning-navigation { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: .625rem; width: 100%; min-width: 0; flex: 0 0 auto; box-sizing: border-box; padding-block: var(--learning-tab-gap) 0; padding-inline: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2)); background: var(--canvas); }
+/* The primary topbar is global: My learning never resizes or re-fonts it, so switching pages cannot move the main navigation. */
+.my-learning-navigation { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: 1.125rem; width: 100%; min-width: 0; flex: 0 0 auto; box-sizing: border-box; padding-block: var(--learning-tab-gap) 0; padding-inline: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2)); background: var(--canvas); }
 /* Pages with floating scroll controls reserve a right rail on the workspace; the strip reserves the same rail so both right edges still line up. */
 .has-scroll-navigation .my-learning-navigation { padding-inline-end: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2), calc(4rem + env(safe-area-inset-right))); }
 /* Naming the sub-page removes the need for a second heading in the content. The kicker stays small so the title is the only strong line. */
-.my-learning-navigation-head { display: flex; align-items: baseline; gap: .625rem; min-width: 0; }
-.my-learning-navigation-kicker { flex: 0 0 auto; color: var(--accent-text); font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.my-learning-navigation-title { margin: 0; min-width: 0; color: var(--ink); font-size: 1.375rem; font-weight: 700; line-height: 1.25; letter-spacing: -.02em; overflow-wrap: anywhere; }
-/* A white surface with a hairline replaces the recessed blue-grey slab: one less full-width colour band, and the active chip becomes the single accent. */
-.my-learning-tabs { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; width: 100%; min-width: 0; height: var(--learning-tab-height); margin: 0; padding: 8px; box-sizing: border-box; border-radius: 14px; background: var(--tab-track-surface); box-shadow: inset 0 0 0 1px var(--tab-track-line), var(--shadow-sm); overflow-x: auto; scrollbar-width: none; }
+/* Shares the section headings' optical inset: the kicker and the sub-page title sit a few pixels inside the content edge on every sub-page. */
+.my-learning-navigation-head { display: flex; align-items: baseline; gap: 1.125rem; min-width: 0; position: relative; left: .375rem; }
+.my-learning-navigation-kicker { flex: 0 0 auto; color: var(--accent-text); font-size: .71875rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.my-learning-navigation-title { margin: 0; min-width: 0; color: var(--ink); font-size: 1.3125rem; font-weight: 700; line-height: 1.25; letter-spacing: -.025em; overflow-wrap: anywhere; }
+/* The linked Overview uses a quiet underline row on the page ground instead of a white track. */
+.my-learning-tabs { display: flex; align-items: center; gap: .25rem; flex: 1 1 auto; width: 100%; min-width: 0; height: auto; margin: 0; padding: 0; box-sizing: border-box; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; overflow-x: auto; scrollbar-width: none; }
 .my-learning-tabs::-webkit-scrollbar { display: none; }
-.my-learning-tab-divider { flex: 0 0 1px; width: 1px; height: 20px; background: var(--control); opacity: .5; }
-.my-learning-tabs a { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; height: 40px; padding: 0 12px; box-sizing: border-box; border: 1px solid transparent; border-radius: 10px; color: var(--muted); font-size: 14px; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap; transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.my-learning-tab-divider { display: none; }
+.my-learning-tabs a { position: relative; display: inline-flex; align-items: center; gap: .4375rem; flex: 0 0 auto; height: auto; padding: .6875rem .875rem .8125rem; box-sizing: border-box; border: 0; border-radius: 0; color: var(--muted); font-size: .84375rem; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap; transition: color var(--duration-fast) var(--ease-out); }
 .my-learning-tabs a > .icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--muted); }
-.my-learning-tabs a:hover { color: var(--ink); background: var(--wash); }
+.my-learning-tabs a:hover { color: var(--ink); background: transparent; }
 .my-learning-tabs a:hover > .icon { color: inherit; }
-.my-learning-tabs a[aria-current="page"] { color: var(--accent-active-text); background: var(--accent-soft); border-color: var(--accent-outline); box-shadow: var(--shadow-sm); font-weight: 600; }
+.my-learning-tabs a[aria-current="page"] { color: var(--accent-active-text); background: transparent; border: 0; box-shadow: none; font-weight: 650; }
+.my-learning-tabs a[aria-current="page"]::after { content: ""; position: absolute; left: .75rem; right: .75rem; bottom: -1px; height: 2px; border-radius: 2px; background: var(--accent); }
 .my-learning-tabs a[aria-current="page"] > .icon { color: var(--accent-outline); }
 .my-learning-tabs a:focus-visible { outline: 2px solid var(--focus-ring, var(--accent-hover)); outline-offset: 2px; }
 /* Below the workspace width the full labels stop fitting, so the track scrolls instead of dropping icons or shortening labels. A thin thumb signals that more tabs exist; it stays hidden while everything fits. */
 @media (max-width: 960px) {
-  .my-learning-tabs { scrollbar-width: thin; scrollbar-color: var(--control) transparent; padding-bottom: 4px; }
+  .my-learning-tabs { scrollbar-width: thin; scrollbar-color: var(--control) transparent; padding-bottom: 0; }
   .my-learning-tabs::-webkit-scrollbar { display: block; height: 4px; }
   .my-learning-tabs::-webkit-scrollbar-thumb { background: var(--control); border-radius: 2px; }
 }

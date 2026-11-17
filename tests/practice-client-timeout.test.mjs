@@ -4,7 +4,9 @@ import { test } from "node:test";
 import { stripTypeScriptTypes } from "node:module";
 
 const source = fs.readFileSync(new URL("../apps/web/src/api/client.ts", import.meta.url), "utf8");
-const outputText = stripTypeScriptTypes(source);
+const modelSelection = fs.readFileSync(new URL("../apps/web/src/api/model-selection.ts", import.meta.url), "utf8");
+const modelSelectionUrl = `data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(modelSelection)).toString("base64")}`;
+const outputText = stripTypeScriptTypes(source).replaceAll('from "./model-selection"', `from "${modelSelectionUrl}"`);
 const { requestJson, webApi } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 
 test("practice selection sends all categories", async (t) => {

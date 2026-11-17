@@ -33,6 +33,16 @@ try {
   result = await syncVocabularySrs({ sourcePath: source, db });
   assert.equal(result.inserted, 0);
   assert.equal(result.updated, 0);
+
+  // Adjective comparatives reach the review card; empty word-form lines stay empty.
+  fs.writeFileSync(source, "# IGT Vocabulary\n\n### fragile\n**PoS:** adjective\n**Meaning:** easily broken\n**中文:** 脆弱的\n**Verb forms:**\n**Plural:**\n**Comparative:** more fragile\n**Example 1:** Glass is fragile.\n");
+  result = await syncVocabularySrs({ sourcePath: source, db });
+  assert.equal(result.inserted, 1);
+  const details = JSON.parse(db.prepare("SELECT vocab_details FROM srs_cards WHERE word = 'fragile'").get().vocab_details);
+  assert.equal(details.comparative, "more fragile");
+  assert.equal(details.verbForms, "");
+  assert.equal(details.plural, "");
+  assert.deepEqual(details.examples, ["Glass is fragile."]);
   console.log("vocabulary sync smoke ok");
 } finally {
   db.close();

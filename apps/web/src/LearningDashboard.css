@@ -1,5 +1,5 @@
 .learning-dashboard { min-width: 0; color: var(--ink); }
-.learning-dashboard .growth-trend-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .625rem 1rem; margin-bottom: 1rem; }
+.learning-dashboard .growth-trend-controls { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; margin-bottom: .75rem; }
 /* Four equal period buttons span the whole panel instead of leaving a ragged right edge. */
 .learning-dashboard .growth-periods { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex: 1 0 100%; gap: .125rem; background: var(--wash); border-radius: .625rem; padding: .1875rem; }
 .learning-dashboard .growth-periods button { min-width: 0; min-height: 36px; padding: .375rem .5rem; border: 0; border-radius: .5rem; background: transparent; color: var(--ink-soft); font-size: .75rem; font-weight: 550; text-align: center; box-shadow: none; }
@@ -13,80 +13,100 @@
 .learning-dashboard .growth-text-button { padding: .5rem .125rem; min-height: 36px; border: 0; background: transparent; box-shadow: none; color: var(--accent-text); font-size: .75rem; font-weight: 550; text-align: left; }
 .learning-dashboard .growth-text-button:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: .2em; }
 /* Content sets the heading height; panels without helper copy do not reserve an empty line. */
-.learning-dashboard .growth-section-title { display: flex; align-items: start; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
+.learning-dashboard .growth-section-title { display: flex; align-items: start; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
 /* Headings stay deep ink; the hue lives on the figures, not on the title. */
 .learning-dashboard .growth-section-title h2 { margin: 0; font-size: .9375rem; font-weight: 650; line-height: 1.5; letter-spacing: -.015em; color: var(--ink); }
 .learning-dashboard .growth-section-title p { margin: .3125rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.7; }
 .learning-dashboard .growth-section-title > .icon { color: var(--accent-text); }
 .learning-dashboard .growth-section-title > .growth-inline-link { min-height: 24px; padding-block: 0; }
 /* Saved material reads as a data summary of the local library: the total leads, the period and the last saved date explain it, and opening the source stays a quiet action. */
-.learning-dashboard .growth-saved-section { margin: 0 0 1.5rem; }
-.learning-dashboard .growth-saved-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: .375rem .75rem; margin: 0 0 .75rem; }
-.learning-dashboard .growth-saved-heading h2 { margin: 0; font-size: 1rem; font-weight: 650; letter-spacing: -.02em; }
+.learning-dashboard .growth-saved-section { margin: 0 0 1.625rem; }
+.learning-dashboard .growth-saved-heading, .learning-dashboard .growth-snapshot-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .375rem .75rem; margin: 0 0 .75rem; }
+.learning-dashboard :is(.growth-saved-heading, .growth-snapshot-heading) h2 { margin: 0; font-size: 1rem; font-weight: 650; letter-spacing: -.02em; }
+/* Two quiet actions share the heading's right edge; the practice log keeps its only in-app entry after Recent activity is gone. */
+.learning-dashboard .growth-heading-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .25rem 1rem; margin-left: auto; min-width: 0; }
+.learning-dashboard .growth-heading-actions .growth-inline-link { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.learning-dashboard .growth-heading-action { max-width: 100%; font-size: .8125rem; overflow-wrap: anywhere; }
+.learning-dashboard .growth-snapshot-caption { margin-left: auto; color: var(--muted); font-size: .75rem; line-height: 1.6; overflow-wrap: anywhere; }
+/* Optical alignment: section headings start a few pixels inside the content edge, matching the sub-page kicker's inset. */
+.learning-dashboard :is(.growth-saved-heading, .growth-snapshot-heading) h2 { position: relative; left: .375rem; }
 .learning-dashboard .growth-saved-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
-/* Semantic type colour: each source owns one hue for its label and total; body copy and notes stay neutral. */
-.learning-dashboard .growth-saved-card:nth-child(1) { --card-ink: var(--accent-text); }
-.learning-dashboard .growth-saved-card:nth-child(2) { --card-ink: var(--info); }
-.learning-dashboard .growth-saved-card:nth-child(3) { --card-ink: var(--warning-text); }
-.learning-dashboard .growth-saved-card:nth-child(4) { --card-ink: var(--success-text); }
-.learning-dashboard .growth-saved-card { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 1.125rem 1.25rem 2.625rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--paper); color: var(--ink); text-decoration: none; transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
+/* The source hue lives on the icon tile and the period chip; the total itself reads in ink. */
+.learning-dashboard .growth-saved-card:nth-child(1) { --card-ink: var(--accent-text); --card-tint: var(--accent-soft); }
+.learning-dashboard .growth-saved-card:nth-child(2) { --card-ink: var(--info); --card-tint: var(--info-bg); }
+.learning-dashboard .growth-saved-card:nth-child(3) { --card-ink: var(--warning-text); --card-tint: var(--warning-bg); }
+.learning-dashboard .growth-saved-card:nth-child(4) { --card-ink: var(--success-text); --card-tint: var(--success-bg); }
+.learning-dashboard .growth-saved-card { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; min-height: 158px; padding: 1.125rem 1.25rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--paper); box-shadow: var(--shadow-sm); color: var(--ink); text-decoration: none; transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
 /* A near-white hover is invisible on a white card; the shared soft green gives every card a real material response. */
 .learning-dashboard .growth-saved-card:hover { border-color: var(--accent-border); background: var(--accent-soft); }
 /* On the soft-green hover surface --muted drops below 4.5:1, so quiet copy steps up one neutral. */
 .learning-dashboard .growth-saved-card:hover .growth-saved-meta { color: var(--ink-soft); }
 .learning-dashboard .growth-saved-card:focus-visible { outline: 2px solid var(--focus-ring, var(--accent)); outline-offset: 2px; }
-.learning-dashboard .growth-saved-card > span:first-child { display: flex; align-items: center; gap: .5rem; min-width: 0; color: var(--card-ink, var(--muted)); font-size: .75rem; font-weight: 550; line-height: 1.4; }
-.learning-dashboard .growth-saved-card .icon { width: 15px; height: 15px; flex-shrink: 0; }
-.learning-dashboard .growth-saved-card strong { margin: .5rem 0 .1875rem; color: var(--card-ink, var(--ink)); font-size: clamp(1.75rem, 2.6vw, 2.125rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.learning-dashboard .growth-saved-meta { display: flex; flex-direction: column; gap: .125rem; color: var(--muted); font-size: .75rem; line-height: 1.6; font-weight: 400; overflow-wrap: break-word; }
-.learning-dashboard .growth-saved-meta b { color: var(--card-ink, var(--accent-text)); font-weight: 650; font-variant-numeric: tabular-nums; }
-.learning-dashboard .growth-saved-meta b.is-empty { color: var(--muted); font-weight: 500; }
+.learning-dashboard .growth-saved-icon { display: grid; place-items: center; width: 2rem; height: 2rem; margin-bottom: .75rem; border-radius: .625rem; background: var(--card-tint, var(--accent-soft)); color: var(--card-ink, var(--accent-text)); }
+.learning-dashboard .growth-saved-icon .icon { width: 16px; height: 16px; }
+.learning-dashboard .growth-saved-label { color: var(--muted); font-size: .75rem; font-weight: 550; line-height: 1.5; }
+.learning-dashboard .growth-saved-card strong { margin: .25rem 0 .75rem; color: var(--ink); font-size: clamp(1.75rem, 2.6vw, 2.125rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-saved-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .625rem; margin-top: auto; color: var(--muted); font-size: .75rem; line-height: 1.6; font-weight: 400; overflow-wrap: anywhere; }
+.learning-dashboard .growth-saved-chip { display: inline-flex; align-items: center; padding: .125rem .5rem; border-radius: .375rem; background: var(--accent-soft); color: var(--accent-text); font-size: .6875rem; font-weight: 650; line-height: 1.6; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.learning-dashboard .growth-saved-chip.is-empty { background: var(--wash); color: var(--muted); }
 /* A date is one value, so it should never be split across lines by CJK line breaking. */
 .learning-dashboard .growth-saved-date { white-space: nowrap; }
-.learning-dashboard .growth-saved-card-action { position: absolute; right: 1.25rem; bottom: 1rem; display: inline-flex; align-items: center; gap: .375rem; color: var(--muted); font-size: .75rem; font-weight: 600; }
-.learning-dashboard .growth-saved-card:hover .growth-saved-card-action { color: var(--accent-text); }
-.learning-dashboard .growth-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 0 0 1.5rem; }
-.learning-dashboard .growth-metric-card:nth-child(1) { --metric-ink: var(--accent-text); }
-.learning-dashboard .growth-metric-card:nth-child(2) { --metric-ink: var(--info); }
-.learning-dashboard .growth-metric-card:nth-child(3) { --metric-ink: var(--warning-text); }
-.learning-dashboard .growth-metric-card:nth-child(4) { --metric-ink: var(--success-text); }
-.learning-dashboard .growth-metric-card { text-align: left; min-width: 0; padding: 1.125rem 1.25rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--paper); box-shadow: none; color: var(--ink); transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
-.learning-dashboard .growth-metric-card:hover { border-color: var(--accent-border); background: var(--accent-soft); }
+/* The linked overview keeps all four readouts on one white surface, split by hairlines. */
+.learning-dashboard .growth-metric-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 1.625rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--paper); box-shadow: var(--shadow-sm); overflow: hidden; }
+.learning-dashboard .growth-metric-card { text-align: left; min-width: 0; padding: 1.125rem 1.375rem; border: 0; border-radius: 0; background: transparent; color: var(--ink); transition: background-color var(--duration-fast) var(--ease-out); }
+.learning-dashboard .growth-metric-card + .growth-metric-card { border-left: 1px solid var(--line); }
+.learning-dashboard .growth-metric-card:hover { background: var(--accent-soft); }
 .learning-dashboard .growth-metric-card:hover > small, .learning-dashboard .growth-metric-card:hover strong small { color: var(--ink-soft); }
-.learning-dashboard .growth-metric-card > span { display: block; font-size: .75rem; font-weight: 550; color: var(--metric-ink, var(--ink-soft)); line-height: 1.65; }
+.learning-dashboard .growth-metric-card > span { display: block; font-size: .75rem; font-weight: 550; color: var(--muted); line-height: 1.65; }
 .learning-dashboard .growth-metric-card > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: .5rem; margin: .4375rem 0 .375rem; }
-.learning-dashboard .growth-metric-card strong { color: var(--metric-ink, var(--ink)); font-size: clamp(1.5rem, 2.3vw, 1.875rem); font-weight: 750; letter-spacing: -.035em; font-variant-numeric: tabular-nums; line-height: 1.5; }
+.learning-dashboard .growth-metric-card strong { color: var(--ink); font-size: clamp(1.5rem, 2.3vw, 1.875rem); font-weight: 750; letter-spacing: -.035em; font-variant-numeric: tabular-nums; line-height: 1.5; }
 /* An absent observation is not a coloured zero: unavailable figures recede to neutral. */
 .learning-dashboard :is(.growth-metric-card, .growth-saved-card) strong.is-empty { color: var(--muted); }
 .learning-dashboard .growth-metric-card strong small { font-size: .875rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
 .learning-dashboard .growth-metric-card > small { display: block; color: var(--muted); font-size: .75rem; line-height: 1.8; }
+/* A thin meter closes each readout; its width is the metric's own share, not a decorative fill. */
+.learning-dashboard .growth-metric-progress { display: block; height: .3125rem; margin-top: .875rem; border-radius: 999px; background: var(--wash); overflow: hidden; }
+.learning-dashboard .growth-metric-progress i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
 /* A change in a learning metric reads as progress or regression, not as a stock tick. */
-.learning-dashboard .growth-delta { color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; font-weight: 500; }
-.learning-dashboard .growth-delta.is-up { color: var(--success-text); font-weight: 650; }
-.learning-dashboard .growth-delta.is-down { color: var(--danger-text); font-weight: 650; }
-.learning-dashboard .growth-delta.is-flat, .learning-dashboard .growth-delta.is-unknown { color: var(--muted); }
-.learning-dashboard .growth-panel { padding: 1.375rem; background: var(--paper); border: 1px solid var(--line); border-radius: 1rem; min-width: 0; }
-/* Independent cards use equal columns and row heights, keeping every edge aligned. */
-.learning-dashboard .growth-insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; align-items: stretch; gap: 1.25rem; }
-@media (max-width: 880px) {
-  .learning-dashboard .growth-insights-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+.learning-dashboard .growth-delta { display: inline-flex; align-items: center; padding: .1875rem .5rem; border-radius: .375rem; background: var(--wash); color: var(--ink-soft); font-size: .6875rem; font-variant-numeric: tabular-nums; font-weight: 650; line-height: 1.5; }
+.learning-dashboard .growth-delta.is-up { color: var(--success-text); background: var(--success-bg); }
+.learning-dashboard .growth-delta.is-down { color: var(--danger-text); background: var(--danger-bg); }
+.learning-dashboard .growth-delta.is-flat, .learning-dashboard .growth-delta.is-unknown { color: var(--muted); background: var(--wash); }
+.learning-dashboard .growth-panel { padding: 1.25rem; background: var(--paper); border: 1px solid var(--line); border-radius: 1rem; min-width: 0; }
+/* Linked overview: a wide analysis column beside a narrow rail, then a narrow state rail beside the full conclusion card. */
+.learning-dashboard .growth-insights-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: stretch; gap: 1.25rem; }
+.learning-dashboard .growth-trend { grid-column: span 7; }
+.learning-dashboard .growth-distribution { grid-column: span 5; }
+/* Stretching the state rail to the conclusion card's height closes the ragged bottom edge of the second row. */
+.learning-dashboard .growth-retention { grid-column: span 4; display: flex; flex-direction: column; }
+.learning-dashboard .growth-diagnosis { grid-column: span 8; }
+/* The stretched rail has more room than its six status rows: centre the bar and its legend as one block, so the extra height reads as a calm summary instead of an unfinished card. */
+.learning-dashboard .growth-retention > .growth-status-stack { height: 1.5rem; border-radius: .625rem; margin-top: auto; }
+.learning-dashboard .growth-retention > .growth-status-list { margin-bottom: auto; }
+@media (max-width: 900px) {
+  .learning-dashboard .growth-insights-grid { grid-template-columns: minmax(0, 1fr); }
+  .learning-dashboard .growth-insights-grid > .growth-panel { grid-column: 1 / -1; }
 }
-.learning-dashboard .growth-chart { width: 100%; height: auto; min-height: 13.75rem; display: block; overflow: visible; }
+.learning-dashboard .growth-chart { width: 100%; height: auto; min-height: 10.5rem; display: block; overflow: visible; }
 .learning-dashboard .growth-chart text { fill: var(--muted); font: 12px 'DM Sans', system-ui, sans-serif; }
 .learning-dashboard .growth-chart line { stroke: var(--line); stroke-dasharray: 3 5; }
 .learning-dashboard .growth-series path { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
 .learning-dashboard .growth-series circle { fill: var(--accent); stroke: var(--paper); stroke-width: 1.5; }
+/* The generous hit area must never paint: keep it transparent for both series, including the comparison line. */
+.learning-dashboard .growth-series circle.growth-point-hit { fill: transparent; stroke: none; }
 .learning-dashboard .growth-series.is-previous path { stroke: var(--control); stroke-dasharray: 5 5; stroke-width: 2; }
-.learning-dashboard .growth-series.is-previous circle { fill: var(--control); }
-.learning-dashboard .growth-series .growth-point-hit { fill: transparent; stroke: none; }
+/* Current points are solid, comparison points are hollow rings; neither gets an outer halo. */
+.learning-dashboard .growth-series.is-previous circle:not(.growth-point-hit) { fill: var(--paper); stroke: var(--control); stroke-width: 2; }
 .learning-dashboard .growth-series [role="button"] { cursor: pointer; }
 .learning-dashboard .growth-series [role="button"]:focus-visible { outline: none; }
 .learning-dashboard .growth-series [role="button"]:focus-visible circle:last-child { stroke: var(--accent-text); stroke-width: 3; }
-.learning-dashboard .growth-chart-legend { display: flex; gap: 1.25rem; font-size: .75rem; color: var(--muted); margin: .5rem 0 0; }
-.learning-dashboard .growth-chart-legend span { display: inline-flex; align-items: center; gap: .375rem; }
+/* The legend sits above the plot at its right edge, so the chart can run down to the card's bottom padding. */
+.learning-dashboard .growth-chart-legend { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .75rem; color: var(--muted); margin: 0 0 .5rem; }
+.learning-dashboard .growth-chart-legend span { display: inline-flex; align-items: center; gap: .5rem; }
 .learning-dashboard .growth-chart-legend span:first-child { color: var(--accent-text); font-weight: 550; }
-.learning-dashboard .growth-chart-legend i { width: 1rem; height: 3px; background: var(--accent); border-radius: 2px; }
-.learning-dashboard .growth-chart-legend i.is-previous { background: var(--control); }
+/* Both keys are plain line samples of identical size and shape: solid for the current series, dashed for the comparison. Neither carries a point marker. */
+.learning-dashboard .growth-chart-legend i { width: 1.5rem; height: 3px; flex-shrink: 0; background: var(--accent); border-radius: 2px; }
+.learning-dashboard .growth-chart-legend i.is-previous { background: repeating-linear-gradient(90deg, var(--control) 0 5px, transparent 5px 10px); }
 .learning-dashboard .growth-table-scroll { overflow-x: auto; max-width: 100%; }
 .learning-dashboard .growth-table-scroll table { width: 100%; border-collapse: collapse; font-size: .75rem; font-variant-numeric: tabular-nums; text-align: left; }
 .learning-dashboard .growth-table-scroll th, .learning-dashboard .growth-table-scroll td { padding: .75rem .625rem; border-bottom: 1px solid var(--line); line-height: 1.8; vertical-align: top; min-width: 4rem; }
@@ -94,19 +114,28 @@
 .learning-dashboard .growth-table-scroll tr:last-child td { border-bottom: 0; }
 .learning-dashboard .growth-table-scroll .growth-text-button { font-size: inherit; min-height: 0; padding: 0; }
 .learning-dashboard .growth-tag { display: inline-flex; align-items: center; padding: .25rem .5rem; background: var(--info-bg); border-radius: .375rem; font-size: .75rem; color: var(--info); white-space: nowrap; }
-.learning-dashboard .growth-priority-count { color: var(--accent-text); background: var(--accent-soft); font-weight: 650; font-variant-numeric: tabular-nums; }
-.learning-dashboard .growth-bar-list { display: grid; gap: .5rem; margin-top: .25rem; }
-.learning-dashboard .growth-bar-row { display: grid; grid-template-columns: 5.375rem minmax(0, 1fr) minmax(2rem, auto); align-items: center; gap: .75rem; width: 100%; min-height: 44px; border: 0; border-radius: .5rem; padding: .5rem .625rem; text-align: left; background: transparent; box-shadow: none; color: var(--ink); font-size: .8125rem; transition: background-color var(--duration-fast) var(--ease-out); }
-.learning-dashboard .growth-bar-row > span:first-child { color: var(--ink-soft); font-weight: 500; overflow-wrap: anywhere; }
+.learning-dashboard .growth-distribution-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.learning-dashboard .growth-distribution-heading h2 { min-width: 0; margin: 0; color: var(--ink); font-size: 1.0625rem; font-weight: 700; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.learning-dashboard .growth-total-badge { display: inline-flex; align-items: center; padding: .25rem .625rem; border-radius: .5rem; background: var(--wash); color: var(--ink-soft); font-size: .75rem; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.learning-dashboard .growth-distribution-subtitle { margin: .25rem 0 .75rem; color: var(--muted); font-size: .75rem; line-height: 1.7; }
+.learning-dashboard .growth-bar-list { display: grid; gap: .5rem; margin: 0; padding-bottom: .875rem; border-bottom: 1px solid var(--line); }
+.learning-dashboard .growth-bar-row { display: grid; grid-template-columns: 5.375rem minmax(0, 1fr) minmax(1.5rem, auto); align-items: center; gap: .75rem; width: 100%; min-height: 34px; border: 0; border-radius: .5rem; padding: .25rem; text-align: left; background: transparent; box-shadow: none; color: var(--ink); font-size: .8125rem; transition: background-color var(--duration-fast) var(--ease-out); }
+.learning-dashboard .growth-bar-row > span:first-child { color: var(--ink-soft); font-weight: 550; overflow-wrap: anywhere; }
 .learning-dashboard .growth-bar-row:hover { background: var(--wash); }
-.learning-dashboard .growth-bar-row.is-leading { background: var(--accent-soft); }
-.learning-dashboard .growth-bar-row.is-leading > span:first-child, .learning-dashboard .growth-bar-row.is-leading b { color: var(--accent-text); font-weight: 700; }
-.learning-dashboard .growth-bar-track { display: block; height: .5rem; border-radius: .375rem; background: var(--wash); overflow: hidden; }
-.learning-dashboard .growth-bar-track i { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--accent) 35%, var(--line)); }
-.learning-dashboard .growth-bar-row.is-leading .growth-bar-track { background: var(--accent-border); }
+.learning-dashboard .growth-bar-track { display: block; height: .625rem; border-radius: 999px; background: var(--wash); overflow: hidden; }
+.learning-dashboard .growth-bar-track i { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--accent) 62%, var(--line)); }
 .learning-dashboard .growth-bar-row.is-leading .growth-bar-track i { background: var(--accent); }
-.learning-dashboard .growth-bar-row b { color: var(--ink); text-align: right; font-size: 1.0625rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-bar-row b { color: var(--ink); text-align: right; font-size: .875rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-bar-row.is-leading b { color: var(--accent-text); }
 .learning-dashboard .growth-bar-row.is-empty > span:first-child, .learning-dashboard .growth-bar-row.is-empty b { color: var(--muted); font-weight: 500; }
+/* The focus callout turns the largest category into one concrete next step. */
+.learning-dashboard .growth-focus { display: flex; align-items: flex-start; gap: .75rem; margin-top: .875rem; padding: .75rem .875rem; border: 1px solid var(--accent-border); border-radius: .875rem; background: var(--accent-soft); }
+.learning-dashboard .growth-focus-icon { display: grid; place-items: center; flex: 0 0 2rem; width: 2rem; height: 2rem; border: 1px solid var(--accent-border); border-radius: 50%; background: var(--paper); color: var(--accent-text); }
+.learning-dashboard .growth-focus-icon .icon { width: 16px; height: 16px; }
+.learning-dashboard .growth-focus-copy { min-width: 0; }
+.learning-dashboard .growth-focus-copy strong { display: block; color: var(--accent-text); font-size: .875rem; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.learning-dashboard .growth-focus-copy p { margin: .25rem 0 0; color: var(--ink); font-size: .8125rem; line-height: 1.7; overflow-wrap: anywhere; }
+.learning-dashboard .growth-focus-link { max-width: 100%; margin-top: .5rem; flex-wrap: wrap; font-size: .8125rem; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
 .learning-dashboard .growth-status-stack { display: flex; height: 1rem; border-radius: .5rem; background: var(--wash); overflow: hidden; margin: .375rem 0 1.5rem; }
 .learning-dashboard .growth-status-stack i { height: 100%; }
 .learning-dashboard .growth-status-new { background: var(--learning-status-new); }
@@ -116,7 +145,8 @@
 .learning-dashboard .growth-status-well-retained { background: var(--learning-status-well-retained); }
 .learning-dashboard .growth-status-insufficient-history { background: var(--learning-status-insufficient-history); }
 .learning-dashboard .growth-status-unavailable { background: var(--learning-status-unavailable); }
-.learning-dashboard .growth-status-list { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem 1.5rem; }
+/* Six status rows stack vertically: the narrow rail reads as one state scale, one row per status. */
+.learning-dashboard .growth-status-list { display: grid; grid-template-columns: 1fr; gap: .4375rem; }
 .learning-dashboard .growth-status-list button { display: flex; align-items: center; gap: .5rem; padding: .3125rem 0; border: 0; background: none; box-shadow: none; text-align: left; color: var(--ink-soft); font-size: .75rem; min-width: 0; }
 .learning-dashboard .growth-status-list button:hover span { text-decoration: underline; text-underline-offset: .2em; }
 .learning-dashboard .growth-status-list i { width: .4375rem; height: .4375rem; border-radius: 50%; flex-shrink: 0; }
@@ -127,29 +157,44 @@
 .learning-dashboard .growth-status-list .growth-status-well-retained + span, .learning-dashboard .growth-status-list .growth-status-well-retained ~ b { color: var(--accent-text); }
 .learning-dashboard .growth-status-list button.is-empty span, .learning-dashboard .growth-status-list button.is-empty b { color: var(--muted); }
 .learning-dashboard .growth-status-list b { margin-left: auto; font-size: .9375rem; font-weight: 650; font-variant-numeric: tabular-nums; }
-.learning-dashboard .growth-diagnosis { background: var(--accent-soft); border-color: var(--accent-border); }
-.learning-dashboard .growth-diagnosis h2 { color: var(--accent-text); }
-/* The observation is prose: it reads in ink while the surface, title and link carry the green. */
-.learning-dashboard .growth-diagnosis > p { font-size: .8125rem; line-height: 1.9; color: var(--ink); margin: .75rem 0; }
-.learning-dashboard .growth-diagnosis > small { display: block; font-size: .75rem; line-height: 1.8; color: var(--muted); }
+/* The merged conclusion card: one quiet green surface holding the observation and its priorities. */
+.learning-dashboard .growth-diagnosis { padding: 1.375rem 1.5rem; background: var(--accent-soft); border-color: var(--accent-border); }
+.learning-dashboard .growth-diagnosis-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.learning-dashboard .growth-diagnosis-heading h2 { min-width: 0; margin: 0; color: var(--ink); font-size: 1.0625rem; font-weight: 700; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.learning-dashboard .growth-diagnosis-spark { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; flex-shrink: 0; border-radius: 50%; background: var(--paper); color: var(--accent-text); box-shadow: var(--shadow-sm); }
+.learning-dashboard .growth-diagnosis-spark .icon { width: 18px; height: 18px; }
+.learning-dashboard .growth-diagnosis-copy { max-width: 76ch; margin: .875rem 0 0; }
+.learning-dashboard .growth-diagnosis-copy p { margin: 0 0 .5rem; color: var(--ink); font-size: .875rem; line-height: 1.8; }
+.learning-dashboard .growth-diagnosis-copy p:last-child { margin-bottom: 0; color: var(--muted); font-size: .75rem; }
 .learning-dashboard .growth-inline-link { display: inline-flex; align-items: center; justify-content: start; gap: .375rem; padding: .375rem 0; background: none; border: 0; box-shadow: none; color: var(--accent-text); font-size: .75rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .learning-dashboard .growth-inline-link:hover { text-decoration: underline; text-underline-offset: .2em; }
 .learning-dashboard .growth-inline-link .icon { width: 14px; height: 14px; }
-.learning-dashboard .growth-diagnosis > .growth-inline-link { margin-top: .75rem; }
-.learning-dashboard .growth-priorities ol { list-style: none; padding: 0; margin: 0; }
-.learning-dashboard .growth-priorities li + li { border-top: 1px solid var(--line); }
-.learning-dashboard .growth-priorities .growth-activity-row { grid-template-columns: 1.875rem minmax(0, 1fr) 1rem; padding: .8125rem 0; }
-.learning-dashboard .growth-priorities li:first-child .growth-activity-row { padding-top: .75rem; background: var(--accent-soft); }
-.learning-dashboard .growth-priorities .growth-activity-row { padding: .75rem .625rem; border-radius: .5rem; }
-.learning-dashboard .growth-priorities .growth-activity-copy strong { font-size: .875rem; font-weight: 650; white-space: normal; line-height: 1.5; }
-.learning-dashboard .growth-priorities li:first-child .growth-activity-copy strong { color: var(--accent-text); }
-.learning-dashboard .growth-priorities .growth-activity-copy small { font-size: .6875rem; }
-.learning-dashboard .growth-priorities li:first-child .growth-rank { background: var(--accent-text); color: var(--paper); }
-.learning-dashboard .growth-activity-icon.growth-rank { color: var(--ink-soft); background: var(--wash); font-size: .875rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-priorities { margin-top: 1.375rem; }
+.learning-dashboard .growth-priorities-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.learning-dashboard .growth-priorities-heading h2 { margin: 0; color: var(--accent-text); font-size: .9375rem; font-weight: 700; }
+.learning-dashboard .growth-priority-count { padding: .1875rem .5rem; border-radius: .375rem; background: var(--paper); color: var(--accent-text); font-size: .75rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-priority-list { display: grid; gap: .625rem; list-style: none; margin: 0; padding: 0; }
+/* The compact two-line block frees height for real top padding: text no longer sits against the bar's upper edge. */
+.learning-dashboard .growth-activity-row.growth-priority-row { grid-template-columns: 1.75rem minmax(0, 1fr) 1rem; align-items: center; gap: .875rem; min-height: 0; padding: .75rem 1rem; border: 1px solid var(--accent-border); border-radius: .75rem; background: var(--paper); box-shadow: var(--shadow-sm); }
+.learning-dashboard .growth-activity-row.growth-priority-row:hover { border-color: var(--accent-outline); }
+.learning-dashboard .growth-activity-icon.growth-rank { width: 1.75rem; height: 1.75rem; color: var(--accent-text); background: var(--accent-soft); font-size: .8125rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-priority-body { min-width: 0; }
+.learning-dashboard .growth-priority-title { display: flex; align-items: center; flex-wrap: wrap; gap: .1875rem .625rem; }
+.learning-dashboard .growth-priority-title strong { min-width: 0; color: var(--ink); font-size: .8125rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.learning-dashboard .growth-priority-badge { max-width: 100%; padding: .0625rem .5rem; border-radius: .375rem; background: var(--wash); color: var(--muted); font-size: .6875rem; font-weight: 550; line-height: 1.4; overflow-wrap: anywhere; }
+.learning-dashboard .growth-priority-body small { display: block; margin-top: .1875rem; color: var(--muted); font-size: .6875rem; line-height: 1.4; }
+.learning-dashboard .growth-priority-row > .icon { margin-top: 0; }
+.learning-dashboard .growth-diagnosis-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.learning-dashboard .growth-diagnosis-chip { display: inline-flex; align-items: baseline; flex-wrap: wrap; max-width: 100%; gap: .375rem; padding: .375rem .75rem; border: 1px solid var(--accent-border); border-radius: 999px; background: var(--paper); color: var(--ink-soft); font-size: .75rem; overflow-wrap: anywhere; }
+.learning-dashboard .growth-diagnosis-chip b { color: var(--accent-text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.learning-dashboard .growth-diagnosis-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem; margin-top: 1.125rem; }
+.learning-dashboard .growth-diagnosis-footer > span { color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }
+.learning-dashboard .growth-diagnosis-footer .growth-inline-link { font-size: .8125rem; font-weight: 700; }
 
 .learning-dashboard .growth-activity-list { min-width: 0; }
 .learning-dashboard .growth-activity-row { display: grid; grid-template-columns: 1.875rem minmax(0, 1fr) auto 1rem; width: 100%; align-items: center; text-align: left; gap: .625rem; padding: .8125rem 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; box-shadow: none; color: var(--ink); }
-.learning-dashboard .growth-activity-row:first-child { border-top: 0; padding-top: .125rem; }
+/* Only the evidence list has a first row that needs its separator removed; priority buttons are each the first child of their own <li>, so the generic rule must not steal their top padding. */
+.learning-dashboard .growth-activity-list > .growth-activity-row:first-child { border-top: 0; padding-top: .125rem; }
 .learning-dashboard .growth-activity-row:hover .growth-activity-copy strong { color: var(--accent-text); }
 .learning-dashboard .growth-activity-icon { display: grid; place-items: center; width: 1.875rem; height: 1.875rem; color: var(--muted); background: var(--wash); border-radius: .5rem; }
 .learning-dashboard .growth-activity-icon .icon { width: 16px; height: 16px; }
@@ -158,14 +203,7 @@
 .learning-dashboard .growth-activity-copy small { display: block; color: var(--muted); font-size: .75rem; margin-top: .1875rem; line-height: 1.8; }
 .learning-dashboard .growth-activity-row time { font-size: .75rem; color: var(--muted); white-space: nowrap; }
 .learning-dashboard .growth-activity-row > .icon { width: 14px; height: 14px; color: var(--control); }
-.learning-dashboard .growth-recent .growth-activity-row { padding: .625rem .375rem; border-radius: .375rem; }
-.learning-dashboard .growth-priorities .growth-activity-row:first-child { padding-block: .75rem; }
-.learning-dashboard .growth-recent .growth-activity-copy strong { font-size: .8125rem; font-weight: 550; line-height: 1.6; }
-.learning-dashboard .growth-recent .growth-activity-copy small { margin-top: .125rem; font-size: .6875rem; }
-.learning-dashboard .growth-recent .growth-activity-row time { font-size: .6875rem; }
-.learning-dashboard :is(.growth-priorities, .growth-recent) .growth-activity-row:hover { background: var(--wash); }
-.learning-dashboard :is(.growth-priorities, .growth-recent) .growth-activity-row:hover small { color: var(--ink-soft); }
-.learning-dashboard .growth-practice-log { margin-top: .5rem; }
+.learning-dashboard .growth-activity-row.growth-priority-row:hover strong { color: var(--accent-text); }
 .learning-dashboard .growth-loading { font-size: .75rem; color: var(--muted); }
 .learning-dashboard .growth-notice { padding: .75rem 1rem; border-radius: .75rem; background: var(--warning-bg); color: var(--warning-text); font-size: .75rem; line-height: 1.8; }
 .learning-dashboard .growth-error { background: var(--danger-bg); color: var(--danger-text); border-radius: .75rem; padding: 1rem; font-size: .8125rem; line-height: 1.7; margin-bottom: 1rem; }
@@ -203,21 +241,28 @@
 .learning-dashboard .growth-detail-markdown { min-width: 0; overflow-wrap: anywhere; font-size: .875rem; }
 .learning-dashboard .growth-detail-markdown table { display: block; overflow-x: auto; max-width: 100%; }
 @media (max-width: 1120px) {
-  .learning-dashboard .growth-metric-grid { gap: .75rem; }
+  .learning-dashboard .growth-trend, .learning-dashboard .growth-distribution, .learning-dashboard .growth-retention, .learning-dashboard .growth-diagnosis { grid-column: 1 / -1; }
+  .learning-dashboard .growth-metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .learning-dashboard .growth-metric-card:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+  .learning-dashboard .growth-metric-card:nth-child(4) { border-top: 1px solid var(--line); }
   .learning-dashboard .growth-metric-card { padding: 1rem; }
   .learning-dashboard .growth-activity-row time { display: none; }
   .learning-dashboard .growth-activity-row { grid-template-columns: 1.875rem minmax(0, 1fr) 1rem; }
-  .learning-dashboard .growth-recent .growth-activity-row time { display: block; grid-column: 2; grid-row: 2; }
-  .learning-dashboard .growth-recent .growth-activity-row { row-gap: .125rem; }
-  .learning-dashboard .growth-recent .growth-activity-row > .icon { grid-column: 3; grid-row: 1; }
 }
-@media (max-width: 880px) {
-  .learning-dashboard .growth-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) {
   .learning-dashboard .growth-saved-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .learning-dashboard .growth-bar-list { margin-top: .25rem; gap: .5rem; }
+  .learning-dashboard .growth-bar-list { gap: .5rem; }
   .learning-dashboard .growth-section-title select { max-width: 12rem; }
 }
-@media (max-width: 560px) {
+@media (max-width: 620px) {
+  /* One readout per row, separated by hairlines; the saved cards stay compact. */
+  .learning-dashboard .growth-metric-strip { grid-template-columns: minmax(0, 1fr); }
+  .learning-dashboard .growth-metric-card + .growth-metric-card { border-left: 0; border-top: 1px solid var(--line); }
+  .learning-dashboard .growth-saved-card { min-height: 0; }
+  /* SVG text is in viewBox units: enlarge it so axis labels stay legible on a narrow chart. */
+  .learning-dashboard .growth-chart text { font-size: 22px; }
+  .learning-dashboard .growth-series path { stroke-width: 4; }
+  .learning-dashboard .growth-series.is-previous path { stroke-width: 3; }
   /* Two by two still fills the panel, but gives each label room once the text is enlarged. */
   .learning-dashboard .growth-periods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .learning-dashboard .growth-periods button { padding-inline: .5rem; line-height: 1.35; }
@@ -228,11 +273,10 @@
   .learning-dashboard .growth-metric-card { padding: .875rem; }
   /* One cramped column per source reads worse than a row, so narrow screens give each source the full width. */
   .learning-dashboard .growth-saved-grid { grid-template-columns: 1fr; gap: .625rem; }
-  .learning-dashboard .growth-saved-card { flex-flow: row wrap; align-items: baseline; gap: .25rem .75rem; padding: .875rem 1rem; }
-  .learning-dashboard .growth-saved-card > span:first-child { flex: 1 1 100%; }
-  .learning-dashboard .growth-saved-card strong { margin: 0; font-size: 1.625rem; }
-  .learning-dashboard .growth-saved-meta { flex: 1 1 100%; order: 2; }
-  .learning-dashboard .growth-saved-card-action { position: static; margin-inline-start: auto; order: 1; }
+  .learning-dashboard .growth-saved-card { padding: .875rem 1rem; }
+  .learning-dashboard .growth-saved-icon { width: 1.75rem; height: 1.75rem; margin-bottom: .5rem; }
+  .learning-dashboard .growth-saved-card strong { margin: 0 0 .5rem; font-size: 1.625rem; }
+  .learning-dashboard .growth-saved-meta { margin-top: 0; }
   .learning-dashboard .growth-metric-card strong { font-size: 1.625rem; }
   .learning-dashboard .growth-metric-card strong small { font-size: .75rem; }
   .learning-dashboard .growth-metric-card > div { gap: .1875rem .5rem; }
@@ -245,17 +289,19 @@
   .learning-dashboard .growth-section-title > label > select { width: 100%; }
   .learning-dashboard .growth-chart-legend { flex-wrap: wrap; gap: .5rem 1.25rem; }
   .learning-dashboard .growth-inline-link { white-space: normal; }
-  .learning-dashboard .growth-chart { min-height: 11.25rem; }
-  .learning-dashboard .growth-status-list { gap: .4375rem 1rem; }
+  /* The taller viewBox already gives phones enough plot height; keep the floor below the intrinsic ratio so the SVG never letterboxes into a blank band. */
+  .learning-dashboard .growth-chart { min-height: 7rem; }
+  .learning-dashboard .growth-status-list { gap: .375rem; }
   .learning-dashboard .growth-drawer { width: 100%; border-radius: 0; }
   .learning-dashboard .growth-drawer-heading { padding-inline: 1rem; }
   .learning-dashboard .growth-drawer-content { padding: 1.25rem 1rem; }
   .learning-dashboard .growth-drawer-content > h2 { font-size: 1.25rem; }
 }
 @media (max-width: 350px) {
-  .learning-dashboard .growth-metric-grid { gap: .5rem; }
+  .learning-dashboard .growth-metric-strip { gap: .5rem; }
   .learning-dashboard .growth-metric-card { padding: .75rem; }
-  .learning-dashboard .growth-status-list { grid-template-columns: 1fr; }
+  /* At this width the intrinsic plot is shorter than the phone floor; drop the floor so the SVG is not letterboxed. */
+  .learning-dashboard .growth-chart { min-height: 0; }
   /* The category name and its count need the full row once the text is enlarged, so the bar drops below them. */
   .learning-dashboard .growth-bar-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: .375rem; }
   .learning-dashboard .growth-bar-row > .growth-bar-track { grid-column: 1 / -1; }

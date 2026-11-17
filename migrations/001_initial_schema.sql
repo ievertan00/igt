@@ -1,54 +1,11 @@
--- Core IGT schema (Squashed 001-003: initial tables + consultations).
--- Idempotent (CREATE IF NOT EXISTS).
-
-CREATE TABLE IF NOT EXISTS sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  end_time TIMESTAMP,
-  total_inputs INTEGER DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS inputs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id INTEGER,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  original_text TEXT NOT NULL,
-  correction TEXT,
-  refine TEXT,
-  FOREIGN KEY (session_id) REFERENCES sessions(id)
-);
-
-CREATE TABLE IF NOT EXISTS diagnoses (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  input_id INTEGER,
-  error_type TEXT NOT NULL,
-  severity TEXT,
-  explanation TEXT,
-  FOREIGN KEY (input_id) REFERENCES inputs(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS advice (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  input_id INTEGER,
-  rule TEXT,
-  tip TEXT,
-  FOREIGN KEY (input_id) REFERENCES inputs(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS assessments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  level TEXT NOT NULL,
-  score_raw TEXT,
-  inputs_window_start INTEGER,
-  inputs_window_end INTEGER,
-  inputs_count INTEGER
-);
+-- IGT baseline schema, squashed from the historical migration chain (001-071).
+-- Creates the final runtime tables only; retired grammar-session, Coach-plan and
+-- quiz storage is not recreated. Idempotent (CREATE IF NOT EXISTS).
 
 CREATE TABLE IF NOT EXISTS srs_cards (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   source_type    TEXT    NOT NULL CHECK (source_type IN ('input', 'vocab')),
-  source_id      INTEGER,           -- input.id for grammar cards; NULL for vocab cards
+  source_id      INTEGER,
   prompt         TEXT    NOT NULL,
   answer         TEXT    NOT NULL,
   ease           REAL    DEFAULT 2.5,
@@ -58,42 +15,56 @@ CREATE TABLE IF NOT EXISTS srs_cards (
   total_reviews  INTEGER DEFAULT 0,
   correct_streak INTEGER DEFAULT 0,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  word           TEXT,              -- vocab cards only
+  word           TEXT,
   pos            TEXT,
   zh             TEXT,
   meaning        TEXT,
   example        TEXT,
-  note           TEXT
+  note           TEXT,
+  vocab_details  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS status_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT NOT NULL,
-    type TEXT NOT NULL, -- 'tip', 'quote', 'grammar_fact'
-    author TEXT,
-    source TEXT,
-    last_shown_at TIMESTAMP
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  content TEXT NOT NULL,
+  type TEXT NOT NULL, -- 'quote', 'grammar_fact'
+  author TEXT,
+  source TEXT,
+  last_shown_at DATETIME
 );
 
-CREATE TABLE IF NOT EXISTS consultations (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id    INTEGER NOT NULL,
-  timestamp     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  question      TEXT NOT NULL,
-  response_json TEXT NOT NULL,
-  turn_count    INTEGER NOT NULL DEFAULT 1,
-  FOREIGN KEY (session_id) REFERENCES sessions(id)
+CREATE TABLE IF NOT EXISTS practice_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_type TEXT NOT NULL,
+  target_error_type TEXT,
+  target_pattern TEXT,
+  context_label TEXT,
+  prompt TEXT NOT NULL,
+  learner_answer TEXT NOT NULL,
+  reference_answer TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  feedback TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_inputs_timestamp ON inputs(timestamp);
-CREATE INDEX IF NOT EXISTS idx_diagnoses_input_id ON diagnoses(input_id);
-CREATE INDEX IF NOT EXISTS idx_diagnoses_error_type ON diagnoses(error_type);
-CREATE INDEX IF NOT EXISTS idx_advice_input_id ON advice(input_id);
-CREATE INDEX IF NOT EXISTS idx_assessments_timestamp ON assessments(timestamp);
+CREATE TABLE IF NOT EXISTS practice_questions (
+  id TEXT PRIMARY KEY,
+  prompt_zh TEXT NOT NULL UNIQUE,
+  reference_answer TEXT NOT NULL,
+  difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'standard', 'challenge')),
+  context TEXT NOT NULL CHECK (context IN ('home', 'dining', 'shopping', 'entertainment', 'social', 'health', 'work', 'transit', 'travel', 'services')),
+  practice_fields_json TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(practice_fields_json) AND json_type(practice_fields_json) = 'object'),
+  hint_json TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(hint_json) AND json_type(hint_json) = 'object'),
+  generated_by TEXT NOT NULL DEFAULT 'unknown',
+  served_count INTEGER NOT NULL DEFAULT 0 CHECK (served_count >= 0),
+  active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1))
+);
+
 CREATE INDEX IF NOT EXISTS idx_srs_due ON srs_cards(due_date);
 CREATE INDEX IF NOT EXISTS idx_srs_source ON srs_cards(source_type, source_id);
-CREATE INDEX IF NOT EXISTS idx_inputs_session_id ON inputs(session_id);
-CREATE INDEX IF NOT EXISTS idx_status_messages_last_shown_at ON status_messages(last_shown_at);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_status_messages_content ON status_messages(content);
-CREATE INDEX IF NOT EXISTS idx_consultations_session_id ON consultations(session_id);
-CREATE INDEX IF NOT EXISTS idx_consultations_timestamp ON consultations(timestamp);
+CREATE INDEX IF NOT EXISTS idx_practice_attempts_target
+  ON practice_attempts(target_error_type, created_at);
+CREATE INDEX IF NOT EXISTS idx_practice_attempts_created_at
+  ON practice_attempts(created_at);
+CREATE INDEX IF NOT EXISTS practice_questions_selection
+  ON practice_questions(active, difficulty, context, served_count);

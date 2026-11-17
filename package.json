@@ -7,10 +7,15 @@
   },
   "scripts": {
     "web:dev": "node scripts/web-dev.mjs",
+    "dev:start": "node scripts/web-dev.mjs start",
+    "dev:status": "node scripts/web-dev.mjs status",
+    "dev:stop": "node scripts/web-dev.mjs stop",
+    "dev:restart": "node scripts/web-dev.mjs restart",
+    "test:dev-lifecycle": "node --test scripts/dev-runtime/lifecycle.test.mjs",
     "web:build": "vite build --config apps/web/vite.config.ts",
     "web:typecheck": "tsc -p apps/web/tsconfig.json --noEmit",
-    "web:preview": "vite preview --config apps/web/vite.config.ts --host 127.0.0.1",
-    "web:start": "node apps/local/server.mjs",
+    "web:preview": "node scripts/web-dev.mjs start --mode preview",
+    "web:start": "node --env-file=.env apps/local/server.mjs",
     "test:web": "node scripts/web-smoke.mjs",
     "test:static": "node scripts/static-smoke.mjs",
     "test:contracts": "node scripts/api-client-smoke.mjs",
@@ -22,7 +27,7 @@
     "test:vocabulary-sync": "node scripts/vocabulary-sync-smoke.mjs",
     "test:review-log-contract": "node scripts/review-log-contract-smoke.mjs",
     "test:config-paths": "node scripts/config-path-smoke.mjs",
-    "test:web-dev": "node scripts/web-dev-smoke.mjs",
+    "test:web-dev": "node --test scripts/dev-runtime/lifecycle.test.mjs",
     "test:practice-log": "node scripts/practice-log-smoke.mjs",
     "test:practice-web": "node scripts/practice-web-smoke.mjs",
     "test:handbook": "node --test --test-isolation=none tests/handbook-profile.test.mjs tests/handbook-report.test.mjs tests/handbook-browser-data.test.mjs tests/handbook-rules.test.mjs tests/handbook-practice.test.mjs tests/handbook-reports.test.mjs tests/handbook-evidence.test.mjs",
@@ -34,7 +39,7 @@
     "verify-learning-resources": "node scripts/verify-learning-resources.mjs",
     "verify:practice-bank": "node scripts/verify-practice-bank.mjs",
     "export:practice-bank": "node scripts/export-practice-bank.mjs --export",
-    "test:learning": "node --test --test-isolation=none tests/learning-plans.test.mjs tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs"
+    "test:learning": "node --test --test-isolation=none tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/word-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

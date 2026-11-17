@@ -58,6 +58,8 @@ npm run web:dev
 
 此命令同时启动 Vite 和 Local Runtime。在浏览器中打开终端输出的 Web 地址。开发端口由 `.env` 中的 `IGT_WEB_PORT` 和 `IGT_DEV_API_PORT` 指定。
 
+可从任意新终端执行 `npm run dev:status`、`npm run dev:stop` 或 `npm run dev:restart`。Windows 下关闭前台终端会停止整套开发实例；需要持续后台运行时，显式执行 `npm run dev:start -- --background`。预览实例和历史遗留服务的处理方法见[开发服务管理](DEV-SERVICES.md)。
+
 构建并在本机运行生产版本：
 
 ```powershell
@@ -74,13 +76,14 @@ Runtime 直接提供 `apps/web/dist` 中的页面，无需启动命令行交互�
 | **Writing → Grammar** | 检查英语句子或完整篇章，比较纠正与润色结果，并围绕反馈继续追问。 |
 | **Writing → Express** | 将中文想法表达为自然英语，或用中文理解英语篇章；可以补充语境和期望语气。 |
 | **Vocabulary** | 查询英语单词或中文说法，阅读释义、例句，并保存词条用于复习。 |
+| **Review** | 根据提示回忆已保存词汇，揭示答案后按 **Again / Hard / Good / Easy** 评分。 |
 | **Practice** | 将中文句子翻译成英语，逐步查看提示，再对照反馈和参考表达。 |
 | **Ask** | 讨论语法、选词、语气和用法，保存单条回答或总结整段对话。 |
-| **My learning → Overview** | 按类型查看已记录的学习活动和近期时间线。 |
+| **My learning → Overview** | 总览已保存材料和近期表现：词汇、语法纠错、Ask 笔记和学习报告四张库存卡片；与上一时段对比的表现快照；支持指标切换、数据表和时段对比的趋势；可下钻到具体记录；并可打开练习记录。 |
 | **My learning → Saved words** | 搜索和浏览 Markdown 词汇库、打开词条详情、开始词汇复习。 |
 | **My learning → Saved notes** | 搜索已保存的 Ask 笔记，按分类和主题筛选，并继续讨论。 |
 | **My learning → Handbook** | 按时间倒序浏览已保存的 Grammar 检查，支持搜索和错误类型筛选。 |
-| **My learning → Coach** | 查看已保存 Grammar 检查中的常见错误，按需解释原因和语法规则。 |
+| **My learning → Learning reports** | 基于已保存的 Grammar 检查和练习记录生成学习报告：选择时间范围和报告语言，查看常见错误模式和改进方向，回看已保存报告，并下载 Markdown。 |
 | **Settings** | 配置模型和 Markdown 文件位置。 |
 
 界面默认使用英语。**中文引导**为初学者提供操作说明，英语例句、目标表达和学习者内容保留原有语言。Ask 的 **Answer language** 和 **Note language** 分别控制新回答与对话总结的讲解语言。
@@ -89,7 +92,13 @@ Runtime 直接提供 `apps/web/dist` 中的页面，无需启动命令行交互�
 
 Grammar 会处理整段提交内容，包括编号列表和项目符号列表。阅读纠正、润色和错误诊断后，选择 **Save to review log** 才会保留本次记录。仅生成反馈不会保存学习记录，也不会自动创建闪卡。
 
-Handbook 展示已保存的 Grammar 检查，并单独标注来源未知的旧记录。Coach 只使用明确标记为 Grammar 的记录，不纳入 Practice、全文分析或来源未知的内容。**No diagnosed mistakes** 只表示本次没有诊断出错误，不能证明文本完全无误或已经持久掌握。
+Handbook 展示已保存的 Grammar 检查，并单独标注来源未知的旧记录。
+
+### 总览与学习报告
+
+**My learning** 是主 Web 的直接入口，包含五个标签页：Overview、Saved words、Saved notes、Handbook 和 Learning reports。Overview 通过 Local Runtime 直接读取当前配置的数据，无需导入快照。它把已保存材料的完整库存与所选时段的表现数据放在一起；表现数据注明所选时段或当前保留状态。趋势支持指标切换、数据表、时段对比和证据下钻。练习记录视图列出已记录的 Practice 作答。
+
+学习报告基于已保存的 Grammar 检查和练习记录生成，回顾熟练度、常见错误模式、潜在知识缺口和改进方向。只评估有写作记录支撑的能力；AI 纠正和借助提示的作答不能证明掌握。报告只使用明确标记为 Grammar 的记录，不纳入 Practice、全文分析或来源未知的内容。**No diagnosed mistakes** 只表示本次没有诊断出错误，不能证明文本完全无误或已经持久掌握。
 
 ### 句子 Practice
 
@@ -159,7 +168,7 @@ node igt.mjs
 | `/ask` | 进行语言咨询，可选择保存。 |
 | `/chat` | 进行英语对话，获得温和纠错。 |
 | `/handbook`（`/h`） | 浏览和筛选已保存的 Grammar 检查。 |
-| `/coach` | 分析常见 Grammar 错误，按需请求解释。 |
+| `/coach` | 分析已保存 Grammar 检查中的常见错误，按需请求解释。 |
 | `/stats`（`/st`） | 查看已记录活动和时间线。 |
 | `/provider status` | 查看提供商和模型配置。 |
 | `/provider switch <provider>` | 切换 AI 提供商。 |
@@ -248,10 +257,10 @@ React Web 客户端和 CLI 调用同一个本地 HTTP Runtime。Runtime 负责�
 
 ## 常见问题
 
-- **开发端口被占用：**修改 `.env` 中的 `IGT_DEV_API_PORT` 或 `IGT_WEB_PORT`，然后重启 `web:dev`。
+- **开发端口被占用：**先用 `npm run dev:status` 查看实例，再用 `npm run dev:stop` 停止。旧服务先执行 `npm run dev:status -- --legacy` 核对，再用 `npm run dev:stop -- --legacy` 清理，详见[开发服务管理](DEV-SERVICES.md)。有意并行运行时才在 `.env` 中配置不同端口。
 - **生产页面无法打开：**先执行 `web:build`，再执行 `web:start`，并访问 Runtime 输出的地址。
 - **提供商报错或限流：**检查密钥、模型配置和提供商状态，在服务允许时重试。
-- **Handbook 或 Coach 中没有某次 Grammar：**先将结果保存到复习日志；Coach 还会排除来源未知的旧记录。
+- **Handbook 或学习报告中没有某次 Grammar：**先将结果保存到复习日志；学习报告还会排除来源未知的旧记录。
 - **数据库锁定或迁移失败：**关闭占用数据库的进程，查看配置的错误日志，并在修复前保留备份。删除数据库会丢失本地状态，不应作为常规修复步骤。
 - **缺少语法参考资源：**运行 `npm run verify-learning-resources` 查看报告；`init-db` 准备的是主数据库，不会安装外部参考语料。
 

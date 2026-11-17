@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { fork, spawnSync } from "node:child_process";
 import http from "node:http";
 
 function rawGet(port, requestPath) {
@@ -13,10 +13,10 @@ function rawGet(port, requestPath) {
   });
 }
 
-const child = spawn(process.execPath, ["apps/local/server.mjs"], {
+const child = fork("apps/local/server.mjs", [], {
   cwd: process.cwd(),
   env: { ...process.env, IGT_SERVER_HOST: "127.0.0.1", IGT_SERVER_PORT: "0" },
-  stdio: ["ignore", "pipe", "pipe"]
+  stdio: ["ignore", "pipe", "pipe", "ipc"]
 });
 
 let output = "";
@@ -93,5 +93,17 @@ try {
   assert.equal(await rawGet(port, "/%2e%2e/package.json"), 404);
   console.log("runtime API smoke ok");
 } finally {
-  child.kill();
+  // Ask the API to shut down its TTS sidecar before it exits, including on Windows.
+  if (child.pid && child.exitCode === null && child.signalCode === null) {
+    let timer;
+    const exited = new Promise(resolve => child.once("exit", resolve));
+    if (child.connected) child.send({ type: "igt:shutdown" }, () => {});
+    await Promise.race([exited, new Promise(resolve => { timer = setTimeout(resolve, 5000); })]);
+    clearTimeout(timer);
+    if (child.exitCode === null && child.signalCode === null) {
+      if (process.platform === "win32") spawnSync("taskkill.exe", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
+      else child.kill("SIGKILL");
+      await exited;
+    }
+  }
 }

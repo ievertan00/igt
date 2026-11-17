@@ -36,14 +36,14 @@ function parseEntries(content) {
     const block = [lines[index++]];
     while (index < lines.length && !/^###?\s+/.test(lines[index])) block.push(lines[index++]);
     const raw = block.join("\n");
-    const field = (name) => raw.match(new RegExp(`\\*\\*${name}:\\*\\*\\s*(.+)`))?.[1]?.trim() || "";
+    const field = (name) => raw.match(new RegExp(`\\*\\*${name}:\\*\\*[^\\S\\r\\n]*(.*)`))?.[1]?.trim() || "";
     const word = heading[1].trim();
     const examples = [field("Example 1") || field("Example"), field("Example 2"), field("Example 3")].filter(Boolean);
     if (word) entries.push({
       word,
       key: normalizeWord(word),
       pos: field("PoS").split(" · ")[0],
-      vocabDetails: { phonetic: field("PoS").split(" · ").slice(1).join(" · "), synonyms: field("Synonyms"), collocations: field("Collocations"), verbForms: field("Verb forms"), plural: field("Plural"), examples, note: field("Note") },
+      vocabDetails: { phonetic: field("PoS").split(" · ").slice(1).join(" · "), synonyms: field("Synonyms"), collocations: field("Collocations"), verbForms: field("Verb forms"), plural: field("Plural"), comparative: field("Comparative"), examples, note: field("Note") },
       zh: field("中文"),
       meaning: field("Meaning"),
       example: field("Example 1") || field("Example"),
