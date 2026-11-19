@@ -1,4 +1,4 @@
-import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
+import { createCliModelManager } from "../lib/server/llm/request-model.mjs";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, "..");
 
 // Load config via unified config loader and initialize LLM providers
-const llmManager = initializeLLMProviders();
+const llmManager = createCliModelManager("practice");
 const config = llmManager.config;
 
 // Load database

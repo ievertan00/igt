@@ -3,7 +3,7 @@
 
 import { createInterface } from "node:readline";
 import { PassThrough } from "node:stream";
-import { execSync } from "node:child_process";
+import { stripVTControlCharacters } from "node:util";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
@@ -13,7 +13,7 @@ import { api } from "./lib/cli/api-client.mjs";
 import { startServer, stopServer, startTtsSidecar, stopTtsSidecar } from "./lib/cli/server-manager.mjs";
 import { handleCommand } from "./lib/cli/commands/dispatch.mjs";
 import { runGrammarCheck } from "./lib/cli/commands/grammar.mjs";
-import { resolveModel } from "./lib/server/llm/model-resolver.mjs";
+import { readCliModels, selectedCliModel } from "./lib/server/llm/cli-models.mjs";
 import { validateInput, isMainlyChinese } from "./lib/cli/validate-input.mjs";
 import { runTrans } from "./lib/cli/commands/translation.mjs";
 import { createPasteFilter } from "./lib/cli/paste-filter.mjs";
@@ -34,7 +34,8 @@ let lastStatus = "";
 let sigintHandler = null;
 let globalEscHandler = null;
 let lastSubmittedText = "";
-let lastSubmittedProvider = "";
+let lastSubmittedModel = "";
+let grammarModel;
 let lastTargetPath = "";
 let lastGrammarResult = null;
 let sessionSentenceCount = 0;
@@ -45,14 +46,8 @@ let isUIStopped = false;
 
 // ─── UI ─────────────────────────────────────────────────────────────────────────
 
-function getModel(config) {
-  const provider = (process.env.IGT_LLM_PROVIDER || config.LLMProvider || "gemini").toLowerCase();
-  try {
-    const { model } = resolveModel(provider, "grammar", config);
-    return { provider, model };
-  } catch (err) {
-    return { provider, model: provider };
-  }
+function refreshGrammarModel() {
+  grammarModel = selectedCliModel(readCliModels(), "grammar");
 }
 
 function sweepStatusBar() {
@@ -67,7 +62,7 @@ function sweepStatusBar() {
   process.stdout.write(sweep);
 }
 
-function updateUI(config) {
+function updateUI() {
   if (isResizing || isUIStopped) return;
   const { rows = 24, cols = 80 } = process.stdout;
 
@@ -79,7 +74,7 @@ function updateUI(config) {
     lastRows = rows;
     lastCols = cols;
   }
-  const { model } = getModel(config);
+  const model = stripVTControlCharacters(grammarModel.model);
   const status = renderStatusBar(
     { totalInputs, totalDiagnoses, model },
     { content: currentStatusMessage, author: currentStatusAuthor },
@@ -109,7 +104,7 @@ function askLine(rl, prompt) {
             if (msg.content !== currentStatusMessage) scrollOffset = 0;
             currentStatusMessage = msg.content;
             currentStatusAuthor = msg.author || "";
-            updateUI(configLoader.load());
+            updateUI();
           }
         })
         .catch(() => {});
@@ -141,6 +136,7 @@ async function main() {
   } catch {}
 
   const config = configLoader.load();
+  refreshGrammarModel();
   applyTheme(config.Theme || "auto");
   const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
   const rows = process.stdout.rows || 24;
@@ -156,7 +152,7 @@ async function main() {
     `${paint(colors.gray, sep)}\n`,
   );
   process.stdout.write(
-    `${paint(colors.gray, "Model  ")}${paint(colors.gray, getModel(config).model)}\n`,
+    `${paint(colors.gray, "Model  ")}${paint(colors.gray, stripVTControlCharacters(grammarModel.model))}\n`,
   );
   process.stdout.write(
     `${paint(colors.gray, "Usage  type text to check · /help for commands · ")}\n`,
@@ -165,14 +161,16 @@ async function main() {
     `${paint(colors.gray, sep)}\n`,
   );
 
-  const ok = await startServer(({ port }) => {
+  let reusedRuntime = false;
+  const ok = await startServer(({ port, reused }) => {
+    reusedRuntime = Boolean(reused);
     process.stdout.write(`${paint(colors.gray, `● server  port ${port}`)}\n\n`);
   });
   if (!ok) process.exit(1);
 
   // Auto-launch the configured local TTS adapter (e.g. CosyVoice shim) so `igt`
   // alone brings up voice. No-op unless IGT_TTS_SIDECAR is set.
-  startTtsSidecar(config.Tts?.Sidecar);
+  if (!reusedRuntime) startTtsSidecar(config.Tts?.Sidecar);
 
   const stopUI = () => {
     isUIStopped = true;
@@ -222,7 +220,7 @@ async function main() {
   const initRows = process.stdout.rows || 24;
   process.stdout.write(ansi.saveCursor + ansi.setScrollingRegion(initRows) + ansi.restoreCursor);
   lastStatus = "";
-  updateUI(config);
+  updateUI();
 
   (async () => {
     try {
@@ -234,13 +232,13 @@ async function main() {
         currentStatusMessage = msg.content;
         currentStatusAuthor = msg.author || "";
       }
-      updateUI(config);
+      updateUI();
     } catch {}
   })();
 
   const uiInterval = setInterval(() => {
     scrollOffset++;
-    updateUI(config);
+    updateUI();
   }, 300);
 
   globalEscHandler = (chunk) => {
@@ -263,7 +261,7 @@ async function main() {
 
   async function asyncExit() {
     try {
-      await api.unloadOllama();
+      if (!reusedRuntime) await api.unloadOllama();
     } catch {}
     process.exit(0);
   }
@@ -286,7 +284,7 @@ async function main() {
       isResizing = false;
       sweepStatusBar();
       lastRows = 0; // Force updateUI to fully re-render
-      updateUI(configLoader.load());
+      updateUI();
     }, 150);
   });
   process.on("exit", cleanup);
@@ -303,12 +301,13 @@ async function main() {
       sessionSentenceCount++;
       totalInputs += inputs;
       totalDiagnoses += diagnoses;
-      updateUI(configLoader.load());
+      updateUI();
     },
   };
 
   while (true) {
-    const { model } = getModel(config);
+    refreshGrammarModel();
+    const model = stripVTControlCharacters(grammarModel.model);
     const line = await askLine(rl, `${paint(colors.cyan, model + " ❯")} `);
     if (line === null) continue;
     const text = line.trim();
@@ -367,16 +366,20 @@ async function main() {
           // the child (e.g. igt-add's "Save?") do nothing. resume() in attachStdin.
           process.stdin.pause();
         },
-        refreshUI: () => updateUI(configLoader.load()),
+        refreshUI: () => {
+          refreshGrammarModel();
+          updateUI();
+        },
         refreshStats: async () => {
           try {
             const stats = await api.getStats();
             if (stats.totalInputs !== undefined) totalInputs = stats.totalInputs;
             if (stats.totalDiagnoses !== undefined) totalDiagnoses = stats.totalDiagnoses;
-            updateUI(configLoader.load());
+            updateUI();
           } catch {}
         },
         stopUI,
+        exit: asyncExit,
       });
       continue;
     }
@@ -386,13 +389,15 @@ async function main() {
       continue;
     }
 
-    const rejection = validateInput(text, { lastSubmittedText, lastSubmittedProvider });
+    refreshGrammarModel();
+    const currentModel = JSON.stringify([grammarModel.id, grammarModel.provider, grammarModel.model]);
+    const rejection = validateInput(text, { lastSubmittedText, lastSubmittedModel, currentModel });
     if (rejection) {
       process.stdout.write(`${paint(colors.yellow, rejection)}\n\n`);
       continue;
     }
     lastSubmittedText = text;
-    lastSubmittedProvider = process.env.IGT_LLM_PROVIDER || "gemini";
+    lastSubmittedModel = currentModel;
     lastTargetPath = targetPath;
     lastGrammarResult = await runGrammarCheck(text, targetPath, grammarCtx);
   }

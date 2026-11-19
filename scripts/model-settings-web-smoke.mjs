@@ -57,13 +57,14 @@ try {
         "/ask/notes": { notes: [] },
         "/grammar": { result: { originalText: "Keep this unfinished sentence.", correction: "Keep this unfinished sentence.", diagnoses: [], refine: "Keep this sentence." } },
         "/review/due": { cards: [] },
+        "/word/lookup": { data: { word: "unfinished", existing: true } },
         "/vocab/words": { words: [], total: 0, totalSaved: 0, sourceAvailable: true, hasMore: false },
         "/coach": { days: 90, checks: 0, patterns: [], coverage: { grammar: 0, excludedOtherSources: 0, unclassified: 0, undated: 0 } },
         "/settings/files": { paths: { vocabulary: "", reviewLog: "", askNotesDir: "", handbookReports: "" } },
         "/coach/reports": [],
         "/practice/generate": { data: { questions: [{ id: "fixture-only", prompt_zh: "我每天练习英语。", reference_answer: "I practise English every day.", difficulty: "standard", context: "home", style: "neutral" }] } },
       };
-      if (["/ask", "/grammar", "/practice/evaluate"].includes(url.pathname)) aiRequests.push({ path: url.pathname, profileId: request.headers()["x-igt-model-profile"] });
+      if (["/ask", "/grammar", "/practice/evaluate", "/word/lookup"].includes(url.pathname)) aiRequests.push({ path: url.pathname, profileId: request.headers()["x-igt-model-profile"] });
       return json(fixtures[url.pathname] || {});
     } catch (e) { errors.push(e.message); await request.abort(); }
   });
@@ -84,8 +85,8 @@ try {
   const localId = await page.$eval(".model-card.is-active", e => e.dataset.profileId);
   assert.ok(localId && localId !== "current");
   assert.equal(await page.$$eval(".model-card", es => es.length), 2);
-  assert.equal(manager.config.CustomFlashModel, "local-fast", "saving applies the new single model");
-  assert.equal(manager.config.CustomProModel, "local-fast", "single model mirror fills the pro slot");
+  assert.equal(manager.config.CustomFlashModel, "writing-fast", "saving a Web default leaves the CLI fallback alone");
+  assert.equal(JSON.parse(Buffer.from(loader.env.IGT_LLM_PROFILES, "base64")).find(p => p.id === localId).models.pro, "local-fast");
   await page.reload({ waitUntil: "networkidle0" });
   await page.waitForSelector(".model-card");
   assert.equal(await page.$eval(".model-card.is-active", e => e.dataset.profileId), localId, "saved model stays active after reload");
@@ -122,6 +123,18 @@ try {
   await page.click(".handbook-delete-confirm .handbook-delete-submit");
   await page.waitForFunction(() => document.querySelectorAll(".model-card").length === 2 && !document.querySelector(".handbook-delete-confirm"));
 
+  const cliPage = `${base}/#settings?client=cli`;
+  await page.goto(cliPage, { waitUntil: "networkidle0" });
+  assert.equal(await page.$("#add-model-default"), null);
+  await page.type("#add-model-name", "Local CLI");
+  await page.type("#add-model-id", "cli-local");
+  await page.type("#add-model-base-url", "http://localhost:1234/v1");
+  await page.click(".model-add-actions .primary");
+  await page.waitForFunction(() => document.querySelectorAll(".model-card").length === 3);
+  const cliId = await page.$$eval(".model-card", cards => cards.find(card => card.querySelector("h3")?.textContent.trim() === "Local CLI")?.dataset.profileId);
+  assert.ok(cliId);
+  assert.equal(loader.env.IGT_WEB_DEFAULT_MODEL, "current", "saving from the CLI page leaves the Web default intact");
+
   await page.goto(`${base}/#grammar`, { waitUntil: "networkidle0" });
   await page.type("#grammar-input", "Keep this unfinished sentence.");
   const writesBeforeSwitch = settingsWrites;
@@ -132,6 +145,31 @@ try {
   await page.click(".grammar-composer .primary");
   await page.waitForFunction(() => document.querySelector(".grammar-page.has-result"));
   assert.equal(aiRequests.at(-1).profileId, localId);
+
+  await page.$eval("#grammar-input", input => {
+    input.focus();
+    input.setSelectionRange(10, 20);
+  });
+  await page.waitForSelector(".selection-lookup-trigger", { visible: true });
+  await page.click(".selection-lookup-trigger");
+  await page.waitForSelector("#selection-lookup-dialog .lookup-result");
+  assert.deepEqual(aiRequests.at(-1), { path: "/word/lookup", profileId: "current" }, "selection lookup follows the Vocabulary default");
+  assert.equal(await page.$eval("#selection-model", element => element.value), "current");
+  await page.click("#selection-model");
+  await page.click(`#selection-lookup-dialog .model-menu-option[data-profile-id="${cliId}"]`);
+  await page.waitForFunction(id => document.querySelector("#selection-model").value === id, {}, cliId);
+  const lookupResponse = page.waitForResponse(response => new URL(response.url()).pathname === "/word/lookup");
+  await page.focus("#selection-lookup-input");
+  await page.keyboard.press("Enter");
+  await lookupResponse;
+  assert.deepEqual(aiRequests.at(-1), { path: "/word/lookup", profileId: cliId });
+  await page.click('button[aria-label="Close selection lookup"]');
+  assert.equal(await page.$eval("#workspace-model", element => element.value), localId, "selection lookup leaves the Grammar choice intact");
+
+  await page.goto(`${base}/#word-lookup`, { waitUntil: "networkidle0" });
+  assert.equal(await page.$eval("#workspace-model", element => element.value), cliId, "Vocabulary inherits model changes made in selection lookup");
+  await selectModel("current");
+
   await page.goto(`${base}/#ask`, { waitUntil: "networkidle0" });
   await page.waitForSelector("#ask-input");
   assert.equal(await page.$eval("#workspace-model", e => e.value), "current", "Ask is independent of Writing");

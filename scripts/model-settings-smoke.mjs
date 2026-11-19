@@ -4,8 +4,9 @@ import path from "node:path";
 import http from "node:http";
 import { ConfigLoader } from "../lib/shared/config-loader.mjs";
 import { registerLlmSettingsRoutes } from "../lib/server/routes/llm-settings.mjs";
-import { dispatch } from "../lib/server/router.mjs";
+import { dispatch, register } from "../lib/server/router.mjs";
 import { initializeLLMProviders } from "../lib/server/llm/init.mjs";
+import { requestModelManager } from "../lib/server/llm/request-model.mjs";
 
 const root = fs.mkdtempSync(path.join(process.cwd(), ".cache", "model-settings-"));
 const originalEnv = { ...process.env };
@@ -27,11 +28,18 @@ const loader = new ConfigLoader(root);
 const config = loader.load();
 const manager = initializeLLMProviders(config);
 registerLlmSettingsRoutes({ config, loader, getLLMManager: async () => manager });
+const getRequestManager = requestModelManager(async () => manager, loader);
+register("POST", "/test-model-routing", async (_req, res, { body }) => {
+  const llm = await getRequestManager();
+  await llm.generate("test", "", { taskType: body.taskType });
+  res.writeHead(200);
+  res.end(JSON.stringify({ ok: true }));
+});
 
-async function request(method, url, body = {}) {
+async function request(method, url, body = {}, headers = {}) {
   let status;
   let payload;
-  await dispatch({ method, url, on(event, cb) { if (event === "data") cb(JSON.stringify(body)); if (event === "end") cb(); } }, {
+  await dispatch({ method, url, headers, on(event, cb) { if (event === "data") cb(JSON.stringify(body)); if (event === "end") cb(); } }, {
     writeHead(code) { status = code; }, end(raw) { payload = JSON.parse(raw); },
   });
   return { status, ...payload };
@@ -174,6 +182,43 @@ try {
   assert.notEqual(removedActive.activeProfileId, cloudId, "deleting the active profile resets the default");
   assert.ok(!removedActive.profiles.some(p => p.id === cloudId));
   await activate("current");
+
+  // The Web default and browser requests use the shared catalog. CLI defaults
+  // and per-task overrides persist separately, and each profile names one CLI model.
+  const setCli = (task, profileId) => request("POST", "/settings/llm/cli", { task, profileId });
+  const routeModel = (headers, taskType = "grammar") => request("POST", "/test-model-routing", { taskType }, headers);
+  const webSave = await request("POST", "/settings/llm", {
+    action: "create", profileName: "Web cloud", provider: "custom", defaultScope: "web",
+    models: { custom: { flash: "web-cloud", pro: "web-cloud" } },
+    baseUrls: { CustomApiBase: `${endpoint}/web/v1` },
+    apiKeys: { custom: "web-secret" },
+  });
+  assert.equal(webSave.status, 200);
+  const webId = webSave.activeProfileId;
+  assert.equal((await routeModel({ "x-igt-cli-task": "text" }, "text")).status, 200);
+  assert.equal(calls.at(-1).body.model, "original-flash", "unassigned CLI tasks use the existing default model across roles");
+  assert.equal((await setCli("default", localId)).status, 200);
+  assert.equal((await setCli("practice", ollamaId)).status, 200);
+  assert.equal((await setCli("coach", persistedCopyId)).status, 200);
+  for (const [cliTask, taskType, model] of [
+    ["translation", "translation", "Local-flash"],
+    ["practice", "practice", "Ollama-flash"],
+    ["coach", "handbook", "another-flash"],
+  ]) {
+    assert.equal((await routeModel({ "x-igt-cli-task": cliTask }, taskType)).status, 200);
+    assert.equal(calls.at(-1).body.model, model);
+  }
+  assert.equal((await routeModel({ "x-igt-model-profile": webId })).status, 200);
+  assert.equal(calls.at(-1).body.model, "web-cloud");
+  assert.equal((await request("GET", "/settings/llm")).activeProfileId, webId);
+  assert.equal((await setCli("practice", "")).status, 200);
+  await routeModel({ "x-igt-cli-task": "practice" }, "practice");
+  assert.equal(calls.at(-1).body.model, "Local-flash", "reset restores the CLI default");
+  await request("POST", "/settings/llm", { action: "delete", profileId: persistedCopyId });
+  await routeModel({ "x-igt-cli-task": "coach" }, "handbook");
+  assert.equal(calls.at(-1).body.model, "Local-flash", "deleted profile falls back to the CLI default");
+  assert.equal((await setCli("missing", localId)).status, 400);
+  assert.equal((await setCli("grammar", "missing")).status, 404);
 
   // Existing native provider setups migrate using their active endpoint and key,
   // even if another compatible connection was saved earlier.

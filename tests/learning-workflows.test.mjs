@@ -158,9 +158,28 @@ test("help exposes the public learning workflows", (t) => {
   let output = "";
   t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
   showHelp();
-  for (const command of ["/word", "/w", "/a", "/practice", "/practice sentence", "/ps", "/text", "/ask", "/coach", "/stats", "/theme", "/provider", "/voice"]) assert.ok(output.includes(command));
+  for (const command of ["/word", "/w", "/a", "/practice", "/practice sentence", "/ps", "/text", "/ask", "/coach", "/stats", "/theme", "/model", "/model add", "/voice"]) assert.ok(output.includes(command));
   assert.doesNotMatch(output, /\/add(?:\s|$)|\/listen|\/retry|\/vocab|\/drill|\/mc|\/quiz|\/today/);
   assert.doesNotMatch(output, /on by default|\/pw|\/pc|practice word|practice choice/);
+});
+
+test("help topics show detailed usage without the full overview", (t) => {
+  let output = "";
+  t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
+  showHelp("practice");
+  assert.match(output, /\/practice \[1-10\]/);
+  assert.match(output, /--difficulty/);
+  assert.match(output, /--context/);
+  assert.match(output, /返回总览/);
+  assert.doesNotMatch(output, /Start here/);
+});
+
+test("unknown help topics fall back to the overview", (t) => {
+  let output = "";
+  t.mock.method(process.stdout, "write", (chunk) => { output += chunk; return true; });
+  showHelp("nope");
+  assert.match(output, /No help for \/nope/);
+  assert.match(output, /IGT help/);
 });
 
 import Database from "better-sqlite3";

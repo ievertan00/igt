@@ -1,7 +1,7 @@
-import { requestModelProfile } from "./model-selection";
+import { requestModelProfile, type ModelPage } from "./model-selection";
 import type { GrowthDetail, GrowthFilters, GrowthOverview, GrowthRecords } from "./learning-growth";
 
-export type RequestJsonInit = RequestInit & { timeoutMs?: number };
+export type RequestJsonInit = RequestInit & { timeoutMs?: number; modelPage?: ModelPage };
 export type CoachReport = {
   days: number; language: string; totalChecks: number; duplicateInputs: number; sampled: boolean; truncated: boolean;
   coverage: GrammarHistory["coverage"]; markdown: string; evidenceIds: string[]; generatedAt: string; cached: boolean;
@@ -49,7 +49,7 @@ function webError(code: string, message: string, retryable: boolean, cause?: unk
 }
 
 export async function requestJson<T>(url: string, init: RequestJsonInit = {}): Promise<T> {
-  const { timeoutMs = 30_000, signal: externalSignal, ...requestInit } = init;
+  const { timeoutMs = 30_000, signal: externalSignal, modelPage, ...requestInit } = init;
   const controller = new AbortController();
   let timedOut = false;
   const abortFromCaller = () => controller.abort(externalSignal?.reason);
@@ -62,7 +62,7 @@ export async function requestJson<T>(url: string, init: RequestJsonInit = {}): P
     controller.abort();
   }, timeoutMs) : undefined;
   try {
-    const profile = url.startsWith("/settings/") ? undefined : requestModelProfile();
+    const profile = url.startsWith("/settings/") ? undefined : requestModelProfile(modelPage);
     const response = await fetch(url, {
       ...requestInit,
       headers: { "Content-Type": "application/json", ...(profile ? { "X-IGT-Model-Profile": profile } : {}), ...(requestInit.headers || {}) },
@@ -126,7 +126,7 @@ export const webApi = {
   explainCoach: (errorType: string, days: number, version: string, refresh = false) => requestJson<CoachDetail>("/coach/explain", { method: "POST", body: JSON.stringify({ errorType, days, version, refresh }), timeoutMs: 180_000 }),
   // Dictionary generation can outlast the generic 30-second deadline,
   // especially when the provider retries or a local model is loading.
-  lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`, { timeoutMs: 180_000 }),
+  lookupWord: (query: string) => requestJson<any>(`/word/lookup?q=${encodeURIComponent(query)}`, { timeoutMs: 180_000, modelPage: "word-lookup" }),
   addWord: (entry: unknown) => requestJson<any>("/word/add", { method: "POST", body: JSON.stringify({ entry }) }),
   generatePractice: (mode = "sentence", count = 3, difficulty = "standard", style = "all", context = "all", targetErrorType = "") => requestJson<any>("/practice/generate", { method: "POST", body: JSON.stringify({ mode, count, difficulty, style, context, ...(targetErrorType ? { targetErrorType } : {}) }) }),
   evaluatePractice: (question: unknown, answer: string, hintsUsed = 0) => requestJson<any>("/practice/evaluate", {

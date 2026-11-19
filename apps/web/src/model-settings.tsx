@@ -4,7 +4,7 @@ import { webApi } from "./api/client";
 import { useGuideCopy } from "./learner-language";
 import "./ModelSettings.css";
 import { Icon } from "./Icon";
-import { currentModelPage, modelPages, readModelSelections, writeModelSelections, type ModelPage, type ModelSelections } from "./api/model-selection";
+import { currentModelPage, modelPages, readModelSelections, setDefaultModelProfile, writeModelSelections, type ModelPage, type ModelSelections } from "./api/model-selection";
 
 export type ModelProfile = {
   id: string; name: string; provider: string; baseUrl: string;
@@ -29,9 +29,9 @@ export function ModelSettingsProvider({ children }: { children: ReactNode }) {
   const revision = useRef(0);
   const syncSelections = useCallback((value: ModelSettings) => {
     const next = readModelSelections();
-    const fallback = value.activeProfileId || value.profiles[0]?.id || "";
+    setDefaultModelProfile(value.activeProfileId || value.profiles[0]?.id || "");
     for (const page of modelPages) {
-      if (!value.profiles.some(profile => profile.id === next[page])) next[page] = fallback;
+      if (!value.profiles.some(profile => profile.id === next[page])) delete next[page];
     }
     writeModelSelections(next);
     setSelections(next);
@@ -55,7 +55,12 @@ export function ModelSettingsProvider({ children }: { children: ReactNode }) {
       if (request === revision.current) setError(e.message || "Could not load model settings");
     }
   }, [syncSelections]);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    function onFocus() { void refresh(); }
+    onFocus();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refresh]);
   async function activate(id: string, page: ModelPage) {
     if (!settings?.profiles.some(profile => profile.id === id)) return;
     const next = { ...readModelSelections(), [page]: id };
@@ -79,7 +84,7 @@ export function ModelSwitcher({ role = "flash", disabled = false, id = "workspac
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ left: 0, top: 0 });
-  const selectedId = selections[page] || "";
+  const selectedId = selections[page] || settings?.activeProfileId || settings?.profiles[0]?.id || "";
   const active = settings?.profiles.find(p => p.id === selectedId);
   const model = active?.models[role] || settings?.providers[settings.provider]?.models[role];
   const unavailable = !settings || disabled;

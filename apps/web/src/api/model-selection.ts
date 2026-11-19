@@ -3,6 +3,11 @@ export type ModelPage = typeof modelPages[number];
 export type ModelSelections = Partial<Record<ModelPage, string>>;
 const storageKey = "clearwrite.page-models";
 let memory: ModelSelections = {};
+let defaultProfileId = "";
+
+export function setDefaultModelProfile(id: string) {
+  defaultProfileId = id;
+}
 
 export function currentModelPage(): ModelPage | undefined {
   if (typeof window === "undefined") return undefined;
@@ -23,7 +28,6 @@ export function writeModelSelections(value: ModelSelections) {
   try { localStorage.setItem(storageKey, JSON.stringify(memory)); } catch { /* Session-only persistence. */ }
 }
 
-export function requestModelProfile() {
-  const page = currentModelPage();
-  return page ? readModelSelections()[page] : undefined;
+export function requestModelProfile(page = currentModelPage()) {
+  return page ? readModelSelections()[page] || defaultProfileId || undefined : undefined;
 }

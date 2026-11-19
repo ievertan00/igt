@@ -3,7 +3,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
 import Database from "better-sqlite3";
-import initializeLLMProviders, { configLoader } from "../lib/server/llm/init.mjs";
+import configLoader from "../lib/shared/config-loader.mjs";
+import { createCliModelManager } from "../lib/server/llm/request-model.mjs";
 import { resolveVocabularyQuery, isMainlyChinese } from "../lib/shared/add-input.mjs";
 import { resolveVocabularyPath, findVocabularyBlock } from "../lib/shared/vocabulary-source.mjs";
 import { ui, paint, colors, Spinner, wrapText, wrapCJK, currentTheme, applyTheme } from "../lib/cli/ui/index.mjs";
@@ -206,7 +207,7 @@ if (!requestedWord) {
   process.exit(1);
 }
 
-const llmManager = initializeLLMProviders();
+const llmManager = createCliModelManager("word");
 let word = requestedWord;
 
 if (isMainlyChinese(requestedWord)) {
@@ -249,7 +250,7 @@ if (existingBlock) {
 }
 
 const activeProvider = llmManager.getCurrentProviderName();
-const activeModel = llmManager.getCurrentProvider().getModelName(config, "grammar");
+const activeModel = llmManager.getCurrentProvider().getModelName(llmManager.config, "grammar");
 
 startSpinner(`Looking up vocabulary via ${paint(c.cyan, activeProvider)} (${paint(c.gray, activeModel)})…`);
 let raw;

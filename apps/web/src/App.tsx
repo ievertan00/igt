@@ -18,7 +18,7 @@ import { PageScrollControls } from "./PageScrollControls";
 import "./Writing.css";
 import "./Handbook.css";
 import { CorrectionText } from "./CorrectionText";
-import { ModelSwitcher, useModelSettings, type ModelProfile, type ModelSettings } from "./model-settings";
+import { ModelSwitcher, useModelSettings, type ModelProfile } from "./model-settings";
 
 type Route =
   | "dashboard"
@@ -955,7 +955,7 @@ function WordLookup({ initialQuery = "", compact = false }: { initialQuery?: str
             placeholder={t("Try “follow up” or “跟进”")}
           />
           <div className="input-bottom-toolbar">
-            <ModelSwitcher disabled={busy || saving} id={compact ? "selection-model" : "workspace-model"} />
+            <ModelSwitcher page="word-lookup" disabled={busy || saving} id={compact ? "selection-model" : "workspace-model"} />
             <button className={entry && !entry.existing ? "secondary" : "primary"} onClick={lookup} aria-busy={busy} disabled={busy || saving}>
               {busy ? "Looking it up…" : <><GuideText text="Look up" /><Icon name="arrow" /></>}
             </button>
@@ -2024,11 +2024,11 @@ const emptyAddForm: Omit<ModelDraft, "id"> = {
   apiKey: "", clearKey: false, setDefault: true, showKey: false, keyConfigured: false,
 };
 
-function LlmSettings() {
+function LlmSettings({ fromCli }: { fromCli: boolean }) {
   const { t } = useGuideCopy();
   const models = useModelSettings();
   const [settingsTab, setSettingsTab] = useState<"models" | "markdown">("models");
-  const [savedData, setSavedData] = useState<ModelSettings>();
+  const savedData = models.settings;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -2039,7 +2039,6 @@ function LlmSettings() {
   const [addForm, setAddForm] = useState<ModelDraft>(() => ({ ...emptyAddForm, id: null }));
   const editDialog = useRef<HTMLDialogElement>(null);
   const deleteDialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => { if (!models.settings || savedData) return; setSavedData(models.settings); }, [models.settings, savedData]);
   useEffect(() => { if (editing && editDialog.current && !editDialog.current.open) editDialog.current.showModal(); }, [editing]);
   useEffect(() => { if (deleting && deleteDialog.current && !deleteDialog.current.open) deleteDialog.current.showModal(); }, [deleting]);
 
@@ -2089,11 +2088,11 @@ function LlmSettings() {
         clearApiKeys: { [preset.provider]: draft.clearKey },
         models: { [preset.provider]: { flash: model, pro: (draft.pro && draft.pro !== model ? draft.pro : model) } },
         baseUrls: { [preset.provider === "ollama" ? "OllamaBaseUrl" : "CustomApiBase"]: baseUrl },
-        setDefault: draft.setDefault,
+        setDefault: !fromCli && draft.setDefault,
+        defaultScope: "web",
       });
       models.update(saved);
-      setSavedData(saved);
-      setStatus(draft.setDefault ? t("Model configuration saved and applied.") : t("Model configuration saved."));
+      setStatus(!fromCli && draft.setDefault ? t("Model configuration saved and applied.") : t("Model configuration saved."));
       setEditing(undefined);
       setTestStatus("");
       if (action === "create") setAddForm({ ...emptyAddForm, id: null });
@@ -2110,7 +2109,7 @@ function LlmSettings() {
     if (!draft.model.trim() || !baseUrl) { setTestStatus(t("Enter an API base URL and a model name first")); return false; }
     setTesting(true); setTestStatus(""); setError("");
     try {
-      const result = await webApi.testLlmConnection({ baseUrl, model: draft.model.trim(), apiKey: draft.apiKey || "", profileId: undefined, clearApiKey: false });
+      const result = await webApi.testLlmConnection({ baseUrl, model: draft.model.trim(), apiKey: draft.apiKey || "", profileId: draft.id || "", clearApiKey: draft.clearKey });
       const ok = !result?.error;
       setTestStatus(ok ? result.message || "Connection successful" : result.message || "Connection test failed");
       return ok;
@@ -2141,7 +2140,6 @@ function LlmSettings() {
     try {
       const saved = await webApi.saveLlmSettings({ action: "delete", profileId: deleting.id });
       models.update(saved);
-      setSavedData(saved);
       setDeleting(undefined);
       setStatus(t("Model deleted."));
     } catch (e: any) {
@@ -2221,7 +2219,7 @@ function LlmSettings() {
           : <div className="saved-model-grid">
               {profiles.map(profile => {
                 const preset = presetOf(profile.provider, profile.baseUrl);
-                const isActive = profile.id === savedData.activeProfileId;
+                const isActive = !fromCli && profile.id === savedData.activeProfileId;
                 const modelName = profile.models.flash || profile.models.pro;
                 return <article key={profile.id} className={`model-card${isActive ? " is-active" : ""}`} data-profile-id={profile.id}>
                   <header className="model-card-head">
@@ -2277,10 +2275,10 @@ function LlmSettings() {
               </span>
             </label>
           ) : <p className="model-ollama-note"><GuideText text="No API key required" /></p>}
-          <label className="settings-check">
+          {!fromCli && <label className="settings-check">
             <input id="add-model-default" type="checkbox" checked={addForm.setDefault} onChange={(e) => setAddForm((f) => ({ ...f, setDefault: e.target.checked }))} />
             <span><GuideText text="Set as default model" /></span>
-          </label>
+          </label>}
           {testStatus && <p role="status" className={testStatus === "Connection successful" ? "llm-test-success" : "llm-test-error"}>{testStatus}</p>}
           {error && <State title={t("Could not save")} detail={error} />}
           <div className="model-add-actions">
@@ -2338,10 +2336,10 @@ function LlmSettings() {
                 )}
               </div>
             )}
-            <label className="settings-check">
+            {!fromCli && <label className="settings-check">
               <input id="edit-model-default" type="checkbox" checked={editing.setDefault} onChange={(e) => setEditing(d => d && { ...d, setDefault: e.target.checked })} />
               <span>{t("Set as default model")}</span>
-            </label>
+            </label>}
             {testStatus && <p role="status" className={testStatus === "Connection successful" ? "llm-test-success" : "llm-test-error"}>{testStatus}</p>}
             {error && <State title={t("Could not save")} detail={error} />}
             <div className="model-dialog-actions">
@@ -2770,7 +2768,7 @@ export function App() {
     coach: <Coach />,
     practice: <Practice key={routeHash} />,
     handbook: <Handbook />,
-    settings: <LlmSettings />,
+    settings: <LlmSettings fromCli={new URLSearchParams(routeHash.split("?")[1]).get("client") === "cli"} />,
   };
   return (
     <div className={`shell${route === "grammar" ? " writing-shell" : ""}${hasScrollNavigation ? " has-scroll-navigation" : ""}${isMyLearning ? " my-learning-shell" : ""}`}>
