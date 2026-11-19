@@ -338,7 +338,7 @@ try {
       assert.ok(titleInset.kicker > 1 && titleInset.kicker < 12, `${route} sub-page name starts just inside the content edge at ${width}`);
       if (titleAnchor[width] === undefined) titleAnchor[width] = titleInset;
       else assert.ok(Math.abs(titleInset.kicker - titleAnchor[width].kicker) < 1.5 && Math.abs(titleInset.title - titleAnchor[width].title) < 1.5, `${route} shares the sub-page name position at ${width}`);
-      // The strip shares both workspace edges at every width, including pages that reserve a right rail for the scroll controls.
+      // The strip shares both workspace edges at every width; scroll controls are fixed overlays and reserve no rail.
       const edges = await page.evaluate(() => {
         const track = document.querySelector('.my-learning-tabs').getBoundingClientRect();
         const workspace = document.querySelector('main.workspace').getBoundingClientRect();

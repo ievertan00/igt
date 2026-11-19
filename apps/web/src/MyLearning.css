@@ -6,8 +6,8 @@ html:has(.my-learning-shell) { --learning-topbar-height: 5.25rem; --learning-tab
 /* The title and the tabs share the page's own ground, so the header does not become a second white bar under the top navigation. */
 /* The primary topbar is global: My learning never resizes or re-fonts it, so switching pages cannot move the main navigation. */
 .my-learning-navigation { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: 1.125rem; width: 100%; min-width: 0; flex: 0 0 auto; box-sizing: border-box; padding-block: var(--learning-tab-gap) 0; padding-inline: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2)); background: var(--canvas); }
-/* Pages with floating scroll controls reserve a right rail on the workspace; the strip reserves the same rail so both right edges still line up. */
-.has-scroll-navigation .my-learning-navigation { padding-inline-end: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2), calc(4rem + env(safe-area-inset-right))); }
+/* The strip uses the standard workspace gutter on both sides. Floating scroll controls are
+   fixed overlays, so no right rail is reserved and the track stays flush with the content. */
 /* Naming the sub-page removes the need for a second heading in the content. The kicker stays small so the title is the only strong line. */
 /* Shares the section headings' optical inset: the kicker and the sub-page title sit a few pixels inside the content edge on every sub-page. */
 .my-learning-navigation-head { display: flex; align-items: baseline; gap: 1.125rem; min-width: 0; position: relative; left: .375rem; }
@@ -27,13 +27,15 @@ html:has(.my-learning-shell) { --learning-topbar-height: 5.25rem; --learning-tab
 .my-learning-tabs a:focus-visible { outline: 2px solid var(--focus-ring, var(--accent-hover)); outline-offset: 2px; }
 /* Below the workspace width the full labels stop fitting, so the track scrolls instead of dropping icons or shortening labels. A thin thumb signals that more tabs exist; it stays hidden while everything fits. */
 @media (max-width: 960px) {
-  .my-learning-tabs { scrollbar-width: thin; scrollbar-color: var(--control) transparent; padding-bottom: 0; }
+  .my-learning-tabs { scrollbar-width: thin; scrollbar-color: var(--control) var(--wash); padding-bottom: 0; }
   .my-learning-tabs::-webkit-scrollbar { display: block; height: 4px; }
+  .my-learning-tabs::-webkit-scrollbar-track { background: var(--wash); border-radius: 2px; }
   .my-learning-tabs::-webkit-scrollbar-thumb { background: var(--control); border-radius: 2px; }
 }
 @media (max-width: 600px) {
   .my-learning-navigation-title { font-size: 1.1875rem; }
   .my-learning-navigation-kicker { font-size: .625rem; letter-spacing: .08em; }
+  /* The track keeps the same standard gutter as other pages; scroll buttons overlay it. */
 }
 
 /* Each sub-page opens on its own content; the gap matches the page-colour band above the track. */

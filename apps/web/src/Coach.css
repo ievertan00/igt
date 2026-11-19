@@ -68,6 +68,16 @@
   .coach-report .md > p, .coach-report .md > ul, .coach-report .md > ol { margin-left: 0; }
   .coach-report .md > h3 { font-size: 1.125rem; }
 }
+/* Phones: keep the three selectors in a two-column block instead of stacking one per
+   row. The two actions share a row too, so the saved-report list is visible on the
+   first screen without shrinking any control below its 44px target. */
 @media (max-width: 560px) {
-  .coach-page .handbook-filters.coach-toolbar, .coach-actions { grid-template-columns: minmax(0, 1fr); }
+  .coach-page .handbook-filters.coach-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .625rem .75rem;
+    padding: .75rem;
+  }
+  .coach-toolbar label, .coach-model { gap: .25rem; font-size: .75rem; }
+  .coach-actions { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .coach-page .coach-actions button { padding-inline: .5rem; font-size: .8125rem; }
 }

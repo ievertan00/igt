@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>移动端页面优化 · 前后对比</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px clamp(16px, 4vw, 56px) 64px; background: #f6f7f9; color: #1f2430;
+         font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -.02em; }
+  .lead { color: #5b6473; margin: 0 0 28px; max-width: 780px; }
+  h2 { font-size: 17px; margin: 36px 0 14px; }
+  .card { background: #fff; border: 1px solid #e3e7ec; border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 11px 16px; text-align: left; border-bottom: 1px solid #eef0f3; font-variant-numeric: tabular-nums; }
+  th { background: #fafbfc; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #6b7482; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; width: 96px; }
+  .delta { color: #177245; font-weight: 600; }
+  .flat { color: #8a919c; }
+  .pairs { display: grid; grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); gap: 20px; }
+  .pair { background: #fff; border: 1px solid #e3e7ec; border-radius: 12px; padding: 16px; }
+  .pair h3 { font-size: 15px; margin: 0 0 12px; }
+  .pair .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  figure { margin: 0; }
+  figcaption { font-size: 12px; color: #6b7482; margin-bottom: 6px; font-weight: 600; }
+  img { width: 100%; max-width: 260px; display: block; border: 1px solid #dfe3e9; border-radius: 6px; background: #fff; }
+  .note { font-size: 13px; color: #5b6473; margin-top: 10px; }
+  code { background: #eef1f5; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>移动端页面优化 · 前后对比</h1>
+  <p class="lead">390px 视口、中文界面、接同一份真实数据。<strong>优化前</strong>取自正在运行的服务（旧构建），<strong>优化后</strong>取自当前工作区源码经 Vite 渲染。英文文案按要求全部保留，本轮只调整手机端布局。</p>
+  <p class="note" style="background:#fff;border:1px solid #e3e7ec;border-radius:10px;padding:12px 16px;color:#1f2430;"><strong>后续更新（宽度一致 + FAB 覆盖式悬浮）：</strong>My learning 内容区已从 342px 进一步统一到 <strong>358px</strong>，与其它页面完全一致；右下浮动按钮改为不占布局宽度的 fixed 浮层。下方截图与指标表记录的是上一轮 342px 版本的对比，最新 36 渲染实测结果见 <code>audit-report.json</code>。</p>
+
+  <h2>关键几何指标</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>指标</th><th class="num">优化前</th><th class="num">优化后</th><th class="num">变化</th></tr></thead>
+      <tbody>
+        <tr><td>My learning 内容区宽度</td><td class="num">310 px</td><td class="num">342 px</td><td class="num delta">+32</td></tr>
+        <tr><td>学习报告工具栏高度</td><td class="num">419 px</td><td class="num">263 px</td><td class="num delta">−156</td></tr>
+        <tr><td>手册筛选区高度</td><td class="num">258 px</td><td class="num">158 px</td><td class="num delta">−100</td></tr>
+        <tr><td>手册日志起始位置 Y</td><td class="num">513 px</td><td class="num">413 px</td><td class="num delta">−100</td></tr>
+        <tr><td>Vocabulary overview 卡片高度</td><td class="num">806 px</td><td class="num">619 px</td><td class="num delta">−187</td></tr>
+        <tr><td>已保存单词列表起始 Y</td><td class="num">1388 px</td><td class="num">1194 px</td><td class="num delta">−194</td></tr>
+        <tr><td>Word lookup 标题区高度</td><td class="num">207 px</td><td class="num">150 px</td><td class="num delta">−57</td></tr>
+        <tr><td>Word lookup 表单起始 Y</td><td class="num">472 px</td><td class="num">323 px</td><td class="num delta">−149</td></tr>
+        <tr><td>笔记主题区嵌套滚动差</td><td class="num">48 px</td><td class="num">0 px</td><td class="num delta">−48</td></tr>
+        <tr><td>横向溢出 / 页面错误</td><td class="num">0 / 0</td><td class="num">0 / 0</td><td class="num flat">持平</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">另在 320 / 360 / 430px 复测，全部零横向溢出；<code>npm run test:mobile-ui</code> 覆盖 4 档宽度 × 9 路由 = 36 次渲染，0 断言失败、0 页面错误。</p>
+
+  <h2>逐页截图</h2>
+  <div class="pairs">
+    <div class="pair">
+      <h3>学习报告</h3>
+      <div class="cols">
+        <figure><figcaption>优化前</figcaption><img src="before-coach-390.png" alt="优化前的学习报告页面" /></figure>
+        <figure><figcaption>优化后</figcaption><img src="after-coach-390.png" alt="优化后的学习报告页面" /></figure>
+      </div>
+      <p class="note">下拉控件与按钮改为双列，工具栏从 419px 收至 263px。</p>
+    </div>
+    <div class="pair">
+      <h3>手册</h3>
+      <div class="cols">
+        <figure><figcaption>优化前</figcaption><img src="before-handbook-390.png" alt="优化前的手册页面" /></figure>
+        <figure><figcaption>优化后</figcaption><img src="after-handbook-390.png" alt="优化后的手册页面" /></figure>
+      </div>
+      <p class="note">筛选控件两行两列，日志提前 100px 出现；右下按钮收拢。</p>
+    </div>
+    <div class="pair">
+      <h3>已保存的笔记</h3>
+      <div class="cols">
+        <figure><figcaption>优化前</figcaption><img src="before-ask-notes-390.png" alt="优化前的已保存笔记页面" /></figure>
+        <figure><figcaption>优化后</figcaption><img src="after-ask-notes-390.png" alt="优化后的已保存笔记页面" /></figure>
+      </div>
+      <p class="note">主题标签不再出现卡片内嵌套滚动条。</p>
+    </div>
+    <div class="pair">
+      <h3>已保存的单词</h3>
+      <div class="cols">
+        <figure><figcaption>优化前</figcaption><img src="before-word-library-390.png" alt="优化前的已保存单词页面" /></figure>
+        <figure><figcaption>优化后</figcaption><img src="after-word-library-390.png" alt="优化后的已保存单词页面" /></figure>
+      </div>
+      <p class="note">概览卡高度 806 → 619px，列表更早进入首屏。</p>
+    </div>
+    <div class="pair">
+      <h3>Word 查词</h3>
+      <div class="cols">
+        <figure><figcaption>优化前</figcaption><img src="before-word-lookup-390.png" alt="优化前的 Word 查词页面" /></figure>
+        <figure><figcaption>优化后</figcaption><img src="after-word-lookup-390.png" alt="优化后的 Word 查词页面" /></figure>
+      </div>
+      <p class="note">标题区收紧、快捷入口并排，输入框从 y=472 提前到 y=323。</p>
+    </div>
+  </div>
+</body>
+</html>

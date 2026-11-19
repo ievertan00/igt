@@ -123,15 +123,27 @@
 .vocabulary-library-empty h2 { margin-bottom: 8px; font-size: 1.25rem; }
 .vocabulary-library-empty p { color: var(--muted); max-width: 52ch; margin: 0 auto 20px; }
 @media (max-width: 640px) {
-  .vocabulary-overview { padding: 16px; margin-bottom: 24px; }
-  .vocabulary-overview-heading { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-bottom: 16px; }
-  .vocabulary-overview-heading h2 { font-size: 1.25rem; }
+  /* Tighten the overview so the whole status grid is closer to the first screen.
+     Only spacing and type scale change; colours and status semantics stay as-is. */
+  .vocabulary-overview { padding: 12px; margin-bottom: 16px; }
+  .vocabulary-overview-heading { grid-template-columns: minmax(0, 1fr); gap: 6px; margin-bottom: 12px; }
+  .vocabulary-overview-heading h2 { font-size: 1.125rem; }
+  .vocabulary-overview-heading p { font-size: .8125rem; }
   .vocabulary-status-guide-trigger { justify-content: start; justify-self: start; }
   .vocabulary-status-guide-body { padding: 16px; }
-  .vocabulary-distribution-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .vocabulary-distribution-item { padding: 12px; }
-  .vocabulary-overview-metric { padding: 12px; }
-  .vocabulary-overview-metric strong { font-size: 1.5rem; }
+  .vocabulary-overview-totals { gap: 8px; }
+  .vocabulary-overview-metric { padding: 10px; gap: 2px; }
+  .vocabulary-overview-metric > span { font-size: .8125rem; }
+  .vocabulary-overview-metric strong { font-size: 1.375rem; }
+  .vocabulary-overview-metric small { font-size: .6875rem; }
+  .vocabulary-distribution { margin-top: 16px; padding-top: 12px; }
+  .vocabulary-distribution-heading { margin-bottom: 10px; }
+  .vocabulary-distribution-bar { height: 10px; margin-bottom: 10px; }
+  .vocabulary-distribution-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .vocabulary-distribution-item { padding: 8px 10px; gap: 2px; }
+  .vocabulary-distribution-item .word-learning-label { font-size: .8125rem; }
+  .vocabulary-distribution-value strong { font-size: 1.25rem; }
+  .vocabulary-distribution-item > small { font-size: .6875rem; }
   .vocabulary-library-filters { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .vocabulary-library-filters .text-button { justify-self: start; }
   .saved-word-row { grid-template-columns: minmax(0, 1fr) 20px; gap: 8px 12px; padding: 16px; }

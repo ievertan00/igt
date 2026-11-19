@@ -1,20 +1,14 @@
 .page-scroll-controls {
   position: fixed;
-  right: max(8px, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  right: max(8px, var(--safe-right));
+  bottom: max(1rem, var(--safe-bottom));
   z-index: 8;
   display: grid;
   gap: 8px;
 }
 
-/* Reserve a slim rail when the normal page gutter cannot fit the controls.
-   Keep this stable even on short pages so loading content never shifts sideways. */
-.has-scroll-navigation .workspace,
-.has-scroll-navigation .site-footer {
-  width: min(calc(100% - var(--page-gutter) - max(var(--page-gutter), calc(4rem + env(safe-area-inset-right)))), var(--workspace-max));
-  margin-inline-start: max(var(--page-gutter), calc((100% - var(--workspace-max)) / 2));
-  margin-inline-end: auto;
-}
+/* Floating controls are fixed overlays: they never occupy layout width. My learning therefore
+   keeps the same standard workspace gutter as every other page at all breakpoints. */
 
 .page-scroll-controls .icon-button {
   width: 48px;
@@ -32,14 +26,30 @@
 
 /* Compact learning actions sit above the scroll controls in the same gutter. */
 .shell:has(.page-scroll-controls) :is(.floating-action-dock-compact, .handbook-notes-dock) {
-  right: max(8px, env(safe-area-inset-right));
-  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 112px);
+  right: max(8px, var(--safe-right));
+  bottom: calc(max(1rem, var(--safe-bottom)) + 112px);
 }
 
 .shell:has(.page-scroll-controls) .floating-action-dock:not(.floating-action-dock-compact, .handbook-notes-dock) {
-  right: max(4rem, calc(4rem + env(safe-area-inset-right)));
+  right: max(4rem, calc(4rem + var(--safe-right)));
 }
 
 @media (max-width: 540px) {
-  .shell:has(.page-scroll-controls) .site-footer { padding-bottom: max(5rem, env(safe-area-inset-bottom)); }
+  .shell:has(.page-scroll-controls) .site-footer { padding-bottom: max(5rem, var(--safe-bottom)); }
+}
+
+/* Phone widths: buttons shrink to the 44px icon floor and stay flush with the right edge,
+   floating above the content instead of reserving a rail beside it. */
+@media (max-width: 600px) {
+  /* 44px is the shared icon-button floor (DESIGN.md 4.4); the stack sits over the card
+     gutter, and the footer keeps its bottom clearance below. */
+  .page-scroll-controls { right: var(--safe-right); gap: 4px; }
+  .page-scroll-controls .icon-button { width: 44px; height: 44px; }
+  .shell:has(.page-scroll-controls) :is(.floating-action-dock-compact, .handbook-notes-dock) {
+    right: var(--safe-right);
+    bottom: calc(max(1rem, var(--safe-bottom)) + 100px);
+  }
+  .shell:has(.page-scroll-controls) .floating-action-dock:not(.floating-action-dock-compact, .handbook-notes-dock) {
+    right: calc(3rem + var(--safe-right));
+  }
 }

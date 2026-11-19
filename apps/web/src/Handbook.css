@@ -108,9 +108,13 @@
   .handbook-filter-footer { flex: 1 1 100%; min-width: 0; justify-content: flex-start; }
 }
 @media (max-width: 600px) {
-  .handbook-page .handbook-filters { padding: .5rem; }
+  /* Four filters in a 2x2 block instead of four full-width rows, so the log starts
+     higher on the first screen. Labels stay visually hidden (DESIGN.md 3.2). */
+  .handbook-page .handbook-filters { padding: .5rem; gap: .375rem; }
   .handbook-page .handbook-filters > label,
-  .handbook-page .handbook-filters > label:nth-of-type(2) { flex: 1 1 100%; min-width: 0; }
+  .handbook-page .handbook-filters > label:nth-of-type(2) { flex: 1 1 calc(50% - .25rem); min-width: 0; }
+  .handbook-page .handbook-filters input,
+  .handbook-page .handbook-filters select { padding-inline: 8px; }
   .handbook-page .handbook-example { padding: 1rem; }
   .handbook-page .handbook-natural { flex-direction: column; align-items: flex-start; }
   .handbook-page .handbook-sentence { grid-template-columns: minmax(0, 1fr); gap: .125rem; }
@@ -123,7 +127,7 @@
 
 .handbook-page .heading { min-width: 0; overflow-wrap: anywhere; }
 .handbook-page:has(.handbook-notes-toggle) { padding-bottom: 5rem; }
-.handbook-page .handbook-notes-dock { right: max(1rem, env(safe-area-inset-right)); }
+.handbook-page .handbook-notes-dock { right: max(1rem, var(--safe-right)); }
 .handbook-page .handbook-notes-toggle { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; gap: 0; }
 .handbook-page .handbook-notes-toggle.primary::after { content: none; }
 .handbook-notes-toggle > .icon:first-child { color: var(--accent); }
@@ -137,3 +141,13 @@
 .handbook-delete-confirm [role="alert"] { color: var(--danger-text); }
 .handbook-delete-actions .handbook-delete-submit { color: var(--danger-text); border-color: var(--danger-text); }
 .handbook-delete > .icon-button { color: var(--danger-text); }
+
+/* ---- Mobile baseline ---- */
+/* iOS Safari zooms the whole page when a text field below 16px is focused. The 40px
+   toolbar from DESIGN.md 3.2 keeps its height by tightening line-height, not padding. */
+@media (pointer: coarse) {
+  .handbook-page .handbook-filters input[type="search"] { font-size: 16px; line-height: 1.25; }
+}
+/* The empty-state link is a standalone action, not an inline text link: give it a
+   WCAG 2.2 SC 2.5.8 target (24px) without adding a visible block to the layout. */
+.handbook-empty a { display: inline-flex; align-items: center; min-height: 24px; }

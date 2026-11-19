@@ -233,3 +233,14 @@
   .ask-note-dialog-footer { max-height: calc(100dvh - 7rem); overflow-y: auto; }
   .ask-reader-size-bar, .ask-reader-reset { display: none; }
 }
+
+/* Mobile baseline: text-entry fields stay at >=16px on touch devices so iOS Safari
+   does not zoom the page on focus (native pickers are exempt). */
+@media (pointer: coarse) {
+  .ask-page .ask-library-tools .ask-library-search input { font-size: 16px; }
+}
+/* Phone lists are short: let the topic chips grow with the page instead of trapping
+   them in a 10rem nested scroller (the visible scrollbar sat over the card edge). */
+@media (max-width: 600px) {
+  .ask-topic-filters { max-height: none; overflow: visible; }
+}

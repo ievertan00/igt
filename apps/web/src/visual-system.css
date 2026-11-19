@@ -51,6 +51,11 @@
   --workspace-max: 80rem;
   --page-gutter: 2rem;
   --panel-padding: 1.75rem;
+  /* Device insets only resolve when the viewport declares viewport-fit=cover. Centralised so
+     every floating control and full-bleed surface reads the same value. */
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 5%);
   --shadow-surface: 0 4px 20px -2px rgb(16 24 39 / 4%);
   --shadow-card-hover: 0 4px 6px -1px rgb(16 24 39 / 10%), 0 2px 4px -2px rgb(16 24 39 / 10%);
@@ -88,7 +93,7 @@
   -webkit-font-smoothing: antialiased;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-padding-top: 6.25rem; scrollbar-gutter: stable; }
+html { scroll-padding-top: 6.25rem; scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; }
 body { margin: 0; font-size: 16px; line-height: 1.65; }
 ::selection { background: color-mix(in srgb, var(--accent) 45%, var(--paper)); color: var(--ink); }
 :focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
@@ -121,8 +126,8 @@ p { overflow-wrap: anywhere; }
 .guide-copy::after { content: attr(data-reserve); visibility: hidden; pointer-events: none; user-select: none; }
 .skip-link { position: fixed; top: -100px; left: 16px; z-index: 50; background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 8px; }
 .skip-link:focus { top: 12px; }
-.shell { min-height: 100dvh; display: flex; flex-direction: column; background: var(--canvas); }
-.topbar { min-height: 5.25rem; width: 100%; padding: 0 var(--page-gutter); display: flex; align-items: center; gap: 3rem; border-bottom: 1px solid var(--topbar-line); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; background: var(--paper); }
+.shell { min-height: 100dvh; display: flex; flex-direction: column; background: var(--canvas); padding-inline: var(--safe-left) var(--safe-right); }
+.topbar { min-height: 5.25rem; width: calc(100% + var(--safe-left) + var(--safe-right)); padding-block: 0; padding-inline: calc(var(--page-gutter) + var(--safe-left)) calc(var(--page-gutter) + var(--safe-right)); margin-inline: calc(-1 * var(--safe-left)) calc(-1 * var(--safe-right)); display: flex; align-items: center; gap: 3rem; border-bottom: 1px solid var(--topbar-line); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; background: var(--paper); }
 .brand { display: inline-flex; align-items: center; text-decoration: none; line-height: 1; flex-shrink: 0; }
 .brand-mark { display: grid; place-items: center; background: var(--accent); color: var(--on-dark); width: 2.625rem; height: 2.625rem; border-radius: 1rem; margin-right: .75rem; box-shadow: 0 4px 8px -3px rgb(33 131 67 / 35%); }
 .brand-mark svg { width: 24px; height: 24px; }
@@ -941,7 +946,7 @@ p { overflow-wrap: anywhere; }
 @media (max-width: 960px) {
   :root { --page-gutter: 1.25rem; }
   html { scroll-padding-top: 6rem; }
-  .topbar { min-height: 72px; flex-wrap: wrap; justify-content: space-between; gap: 0; padding: 16px 20px; }
+  .topbar { min-height: 72px; flex-wrap: wrap; justify-content: space-between; gap: 0; padding-block: 16px; padding-inline: calc(20px + var(--safe-left)) calc(20px + var(--safe-right)); }
   .topbar:has(.top-nav.is-open) { max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; }
   .brand-wordmark { font-size: 1.5rem; }
   .brand-mark { width: 32px; height: 32px; }
@@ -1020,15 +1025,15 @@ p { overflow-wrap: anywhere; }
   .detail-natural { padding: 20px 12px; }
   .detail-natural .detail-copy { font-size: 18px; }
   .detail-icon { width: 24px; height: 28px; }
-  .site-footer { padding: 24px 0 max(28px, env(safe-area-inset-bottom)); }
+  .site-footer { padding: 24px 0 max(28px, var(--safe-bottom)); }
   .primary + .secondary { margin: 12px 0 0; }
   .focus { padding: 24px; }
   .count-options { gap: 8px; }
   .count-options label { padding: 9px; }
 }
 /* Long-list shortcuts reuse existing routes; their dock leaves the final row clear. */
-.floating-action-dock { position: fixed; right: max(var(--page-gutter), calc((100vw - var(--workspace-max)) / 2)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 8; max-width: calc(100% - var(--page-gutter) - var(--page-gutter)); display: flex; justify-content: flex-end; pointer-events: none; }
-.shell:has(.floating-action-dock) .site-footer { padding-bottom: max(5rem, env(safe-area-inset-bottom)); }
+.floating-action-dock { position: fixed; right: max(var(--page-gutter), calc((100vw - var(--workspace-max)) / 2), var(--safe-right)); bottom: max(1rem, var(--safe-bottom)); z-index: 8; max-width: calc(100% - var(--page-gutter) - var(--page-gutter)); display: flex; justify-content: flex-end; pointer-events: none; }
+.shell:has(.floating-action-dock) .site-footer { padding-bottom: max(5rem, var(--safe-bottom)); }
 .floating-action { pointer-events: auto; min-height: 52px; max-width: 100%; padding: 0 1.5rem; border-radius: 999px; box-shadow: var(--shadow-floating); animation: fab-enter 250ms var(--ease-out); }
 .floating-action.floating-action-compact { width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 0; }
 .floating-action.floating-action-compact::after { content: none; }
@@ -1044,7 +1049,7 @@ p { overflow-wrap: anywhere; }
   .floating-action:active:not(:disabled) { transform: scale(.97); }
 }
 @media (max-width: 540px) {
-  .floating-action-dock { bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .floating-action-dock { bottom: max(1rem, var(--safe-bottom)); }
   .floating-action { padding-inline: 1.125rem; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1122,4 +1127,25 @@ p { overflow-wrap: anywhere; }
   .practice-choice-copy { padding-right: 1rem; gap: .125rem; }
   .practice-choice-check { top: 50%; right: .875rem; bottom: auto; transform: translateY(-50%); }
   .practice-section-hint { margin-left: 0; }
+}
+
+/* Word lookup landing on phones: the hero, two shortcuts and the form should not
+   eat the whole first screen. English copy is a product decision and stays intact. */
+@media (max-width: 600px) {
+  .word-page:not(.word-lookup-page) > .heading { margin-bottom: .75rem; }
+  .word-page:not(.word-lookup-page) > .heading h1 { font-size: 1.75rem; margin-bottom: .375rem; }
+  .word-page:not(.word-lookup-page) > .heading p { font-size: .9375rem; line-height: 1.55; }
+  .word-page:not(.word-lookup-page) > .lookup-learning-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+    margin-bottom: .75rem;
+  }
+  .word-page:not(.word-lookup-page) > .lookup-learning-actions .secondary {
+    min-width: 0;
+    justify-content: center;
+    padding-inline: .5rem;
+    font-size: .8125rem;
+  }
+  .word-page:not(.word-lookup-page) > .lookup-form { padding: 1rem; }
 }
