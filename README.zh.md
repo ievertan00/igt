@@ -1,285 +1,218 @@
-# ClearWrite — Write with clarity
+# ClearWrite · 产品说明书
 
-[English](README.md) | [简体中文](README.zh.md)
+[English](README.md) · **简体中文**
 
-ClearWrite 是 **IGT（Interactive Grammar Tool，互动语法工具）** 的本地 Web 应用，将英语写作反馈、表达辅导、词汇积累、中译英句子练习和语言答疑放在同一个工作空间中。IGT 同时提供命令行工具。
-
-学习记录保存在本地 SQLite 数据库和 Markdown 文件中。使用在线 AI 提供商时，请求所需的文本会发送给该提供商；也可以通过 Ollama 在本机运行模型。
+> 用自己的句子学英语。ClearWrite 是 IGT（Interactive Grammar Tool）中的本地英语学习空间，把「写不出来 → 看懂修改 → 记住用法 → 独立再写一次」串成一条可以长期积累的学习链路。
 
 ## 目录
 
-- [快速开始](#快速开始)
-- [Web 学习空间](#web-学习空间)
-- [AI 提供商](#ai-提供商)
-- [命令行工具](#命令行工具)
-- [配置与本地数据](#配置与本地数据)
-- [开发与验证](#开发与验证)
-- [部署与运维](#部署与运维)
-- [项目架构](#项目架构)
-- [常见问题](#常见问题)
-- [许可证](#许可证)
+[1. 产品是什么](#1-产品是什么) · [2. 功能总览](#2-功能总览) · [3. 功能详解](#3-功能详解) · [4. 一次完整的学习闭环](#4-一次完整的学习闭环) · [5. 三种使用形态](#5-三种使用形态) · [6. 学习记录与隐私](#6-学习记录与隐私) · [7. 快速开始](#7-快速开始) · [8. 命令行速查](#8-命令行速查) · [9. 相关文档与许可证](#9-相关文档与许可证)
 
-## 快速开始
+---
 
-准备 **Node.js 24 LTS**（项目的 Windows 环境使用 v24.16.0）、npm 和 Git。以下命令使用 PowerShell，在项目目录中执行。
+## 1. 产品是什么
 
-### 1. 安装并配置
+ClearWrite 是一套运行在你自己电脑上的英语学习工作台：**Web 界面是主入口**，同时提供命令行工具与安卓开发版。你提交的是自己真正要写、要说、要读懂的英文和中文想法；产品围绕这些真实语料给出反馈，并让你决定哪些值得留下。
+
+- **本地优先**：学习记录保存为可直接阅读的 Markdown 文件与本机 SQLite 数据库，也可以指向自己的 Obsidian 仓库。
+- **模型自选**：在 Web 的 **Model settings** 添加你能使用的模型——OpenAI、Anthropic、DeepSeek、Ollama，以及 Gemini、Qwen、LM Studio、vLLM 等 OpenAI 兼容服务；只用本机 Ollama 时可以全程不联网。
+- **中文友好**：界面默认英文，开启「**中文引导**」后操作说明变成中文，英文例句、目标表达和你的学习内容仍保留原语言。
+- **不夸大掌握**：一次纠错、一次借助提示答对、一次自评「Good」，都不会被记成「已经掌握」。这条证据边界贯穿写作反馈、练习记录和学习报告。
+
+**适合谁**
+
+- 需要写英文邮件、文档或消息，常觉得「哪里别扭，却说不出该改哪里」；
+- 中文想得很清楚，英文只能直译，想找到更自然、更得体的说法；
+- 查过的词、问过的用法当时懂了，过几天又想不起来；
+- 想知道自己是否反复错在同一类问题上，而不是每次从头改起。
+
+**它不是什么**：不是作文打分器，不是背单词打卡 App，也不录音、不评估发音。它把真实的表达问题变成可检索、可复习、可复现的个人语料；英语学习仍需要持续的阅读、听力和真实交流。
+
+---
+
+## 2. 功能总览
+
+| 模块 | Web 入口 | 核心能力 | 对英语学习的帮助 |
+| --- | --- | --- | --- |
+| 写作与表达 | **Writing → Grammar / Express** | 整段语法反馈、可选润色、错误诊断、就地追问、中英双向表达 | 从「被改对」到「知道为什么」，并把修改留在自己的原句里 |
+| 词汇与记忆 | **Vocabulary / Review / Saved words** | 英汉双向查词、保存词条、主动回忆 + 四档评分的间隔复习 | 区分「查过」和「用得出来」，让词条按记忆状态回到眼前 |
+| 句子产出 | **Practice** | 本地题库中译英、难度与场景筛选、三层渐进提示、作答评价 | 练「从意思到句子」的主动产出，并分辨独立写对与借助提示写对 |
+| 问答与笔记 | **Ask / Saved notes** | 用法追问、举例、保存单条回答或整段对话为结构化笔记 | 把零散疑问沉淀成带分类和主题、可反复检索的个人语料 |
+| 学习记录与诊断 | **My learning**（Overview / Saved words / Saved notes / Handbook / Learning reports） | 库存与趋势、按错误类型筛选、基于真实记录的 Coach 报告 | 把「我好像总错冠词」变成可核对的记录，决定下一步练什么 |
+| 设置与辅助 | **Settings**、划词查词、语音朗读 | 模型与 Markdown 位置配置、选中英文即可查词、可选朗读 | 降低操作成本，让注意力留在语言本身 |
+
+---
+
+## 3. 功能详解
+
+### 3.1 写作与表达 · Writing
+
+**Writing → Grammar** 支持单句，也支持整篇内容（分段、编号列表、项目符号列表均可）。一次反馈按五层组织：**Evaluate**（整体评估）→ **Correction**（必要修改）→ **More natural**（可选润色）→ **Why**（按错误类型解释原因）→ **Remember**（记忆提示，即 Tips）。必要的改动和「换个更自然的说法」分开呈现，你可以只改一处，保留自己原本想表达的意思。
+
+**完整示例：邮件结尾最常见的一句话**（三处必要修改分属动名词、时间介词和动词搭配，另有一处可选润色）：
+
+> 提交：*I am looking forward to meet you at next Friday and discuss about the details of our cooperation.*
+
+- **Evaluate**：意思清楚，但有三处必要修改，另有一处可选的语气润色。
+- **Correction**：*I am looking forward to meeting you next Friday and discussing the details of our cooperation.*
+- **More natural**：*I'm looking forward to seeing you next Friday and talking about possible cooperation.*
+- **Why**：
+  1. **meeting / discussing** —— *look forward to* 里的 *to* 是介词，不是不定式符号，后面接名词或动名词（-ing）；*meet* 和 *discuss* 并列受它支配，都要改成 *meeting / discussing*。对比 *I hope to meet you*：那里的 *to* 引出不定式，才用动词原形 *meet*。
+  2. **next Friday** —— *next / this / last* 加时间名词（如 *next Friday*、*last week*）本身已经表示时间，前面不再加介词；*at next Friday* 属于冗余。
+  3. **discuss** —— *discuss* 是及物动词，后面直接接宾语，不说 *discuss about something*；去掉 *about*，直接说 *discuss the details*。
+  4. **Optional（对应 More natural）** —— *seeing you / talking about possible cooperation* 比 *meet you / discuss the details of our cooperation* 更自然、更像邮件收尾，意思不变。
+- **Remember（Tips）**：看到 *look forward to* 就想「*to* 是介词，后面接 -ing」（*be used to doing*、*object to doing* 同理）；*next / last / this* 加时间名词前不加介词；*discuss* 后面直接接宾语，别加 *about*。
+
+反馈下方可以继续追问，直到把规则问透。例如提交 *If I would have known about the meeting, I would have told you.* 后追问「为什么从句不能用 *would have*？」——第三条件句的从句用过去完成时 *had known*，主句才用 *would have told*。
+
+只有点击 **Save to review log** 才会写入学习记录；仅生成反馈不保存、不自动生成复习卡片。页面上选中任意英文，还可以就地查词。
+
+**Writing → Express** 提供两个方向：
+
+- **Chinese → English**：输入中文想法，可写明谈话对象和期望语气，得到自然的英文说法与措辞说明。例如「我想问同事能不能把会议挪到周五，语气客气一点」。
+- **English → Chinese**：粘贴同事的回复或不熟悉的英文段落，结合上下文理解意思与隐含语气。
+
+> **学习价值**：修改以「你的原句 + 当时的语境」为载体保存下来，下次写同类邮件时能带着具体问题重看，比孤立的语法条文更容易调用；双向表达则同时补上「说不出」和「读不准」两个缺口。
+
+### 3.2 词汇与记忆 · Vocabulary / Review
+
+**Vocabulary** 支持从英文词组（如 *follow up on*）或中文说法（如「跟进」）查起，阅读释义、例句与常见搭配，再决定是否保存。**Saved words** 是可搜索的 Markdown 词库，可打开词条详情、从这里开始复习。
+
+**Review** 采用「先回忆、再核对」：看中文线索先想英文表达 → 揭示答案 → 按回忆难度选择 **Again / Hard / Good / Easy** → 由系统安排下次复习。音标按需揭开，不提前泄露答案。只有提交评分才记录本次复习和新的到期时间；平时翻阅词库不会改变复习计划，输入答案是否正确与自我评分也分开记录。
+
+> **学习价值**：主动回忆比反复重读更能形成长期记忆；四档自评把「认得」和「能主动说出来」区分开，避免把查词记录误当成词汇量。
+
+### 3.3 句子产出练习 · Practice
+
+- **选题**：Web 提供 3 / 5 / 10 题，难度 **easy / standard / challenge**，场景 **home、dining、shopping、entertainment、social、health、work、transit、travel、services** 或全部。命令行另支持 1–10 题与 `--style casual|neutral|formal`。出差前练 travel，开会前练 work，题目来自本机题库，不依赖历史记录，也不需要临时生成。
+- **作答**：先自己写一版英文；卡住时逐层展开提示——**Simple hint → Intermediate hint → Complete pattern**，最多三层，最后一层只给句型，不代替你写完。
+- **对照**：提交后看评价与参考译文。措辞不同但传达了原意，同样成立，无需逐字对齐。
+- **留痕**：作答记录保存提示使用情况，可在 **Overview → Practice log** 回看哪些句子是独立写出来的、哪些值得遮住提示再做一次。
+
+> **学习价值**：练的是「中文意思 → 英文句子」的主动产出，而不是选择题。提示层级被如实记录，因此借助提示答对不会被误记为已能独立运用。
+
+### 3.4 问答与笔记 · Ask
+
+**Ask** 用来把一个用法问题问透：先问「*follow up on the proposal* 和 *follow up with Alex* 有什么区别」，再请它各举一个例子，或贴上自己的句子继续讨论。**Answer language** 与 **Note language** 可分别设置——例如用中文弄懂，用英文留一份总结。
+
+值得留下的内容可以保存为单条回答，也可以把整段对话总结成一篇 Markdown 笔记；笔记带分类、标签与标题。**Saved notes** 支持关键词搜索、按分类和主题筛选，还能以某篇旧笔记为上下文开启新讨论（原笔记保持不变）。
+
+> **学习价值**：疑问不再随对话窗口一起消失，而是变成可检索的第二本「个人语法书」；用中文理解、用英文归档，也顺带练了概括表达。
+
+### 3.5 学习记录与诊断 · My learning
+
+| 子页 | 内容 | 用途 |
+| --- | --- | --- |
+| **Overview** | 已保存材料库存、与上一时段对比的表现快照、趋势、错误分布、优先项与练习日志 | 看清这段时间做了什么，并可下钻到具体记录 |
+| **Handbook** | 已保存的 Grammar 检查，按时间、关键词、错误类型筛选 | 集中复习某一类修改，例如只看冠词问题 |
+| **Learning reports** | 选时间范围与报告语言，由 Coach 基于已保存的 Grammar 检查和练习作答生成报告 | 找出反复出现的错误模式、知识缺口与练习方向；可重读历史报告、下载 Markdown |
+
+**证据边界是产品刻意保留的设计**：一次 AI 纠正、一次借助提示的作答、一次自评分数，都不能证明持久掌握；报告只评估有写作记录支撑的能力；**No diagnosed mistakes** 只表示本次没有诊断出错误，不代表全文无误。读懂一次修改后，隔几天换个情境独立再写一遍，才是有效的验证方式。
+
+### 3.6 设置与辅助
+
+- **Model settings**：可保存多套命名配置，每套由一个你自定义的模型构成——服务、接口地址、密钥与模型 ID 全部自行填写；可设为 Web 默认，也可按任务分配。
+  - **Web**：写作、翻译、查词、练习、Coach、Ask 各有独立模型选择器，页面各自记住所选配置，未选时用默认配置。
+  - **命令行**：`/model add` 添加配置（打开模型设置页），`/model list` 查看各任务分配，`/model <任务> 名称` 指定，`/model <任务> reset` 恢复默认。可分配的任务：grammar、translation、word、practice、text、ask、chat、coach。
+  - **按任务选模型，兼顾成本与效果**：Grammar 这类高频、结构化的简单任务可指向本地模型（如 Ollama），不消耗在线 token；Ask、Coach 这类需要深度推理和综合诊断的任务可指向付费的高级 SOTA 模型，得到更可靠的解释与建议。Web 与命令行共用同一套已保存配置；具体分配两端各自保存（Web 记在浏览器，CLI 写入 `.env` 的 `IGT_CLI_MODELS`），互不覆盖。
+- **Markdown files**：指定词汇、修改记录、笔记、练习日志与报告的保存位置，可直接指向 Obsidian 仓库。
+- **划词查词**：在任意页面选中英文或中文即可就地查词，不必切换页面。
+- **可选语音**：朗读单词或对话语音（兼容 OpenAI `/v1/audio/speech` 的本地服务）；应用不录音，也不评估发音。
+
+---
+
+## 4. 一次完整的学习闭环
+
+各模块不是并列的工具，而是围绕同一个语言问题前后衔接：
+
+1. **写** —— 邮件草稿里出现 *I look forward to meet you on Friday.*
+2. **懂** —— Grammar 指出 *meet → meeting*，追问后弄清 *to* 的两种身份。
+3. **存** —— Save to review log，原句、修改与解释一起进入 Handbook。
+4. **扩** —— Express 用中文再练一次「客气地改约会议」；Vocabulary 顺手存下 *follow up on*。
+5. **练** —— Practice 选 work 场景独立写邀请与跟进句；Review 隔几天回忆那个词组。
+6. **看** —— Overview 回看这段时间的活动，Handbook 按错误类型筛选，Learning reports 找出反复出现的问题。
+7. **复现** —— 隔几天换一个情境，不看提示再写一次，用最初的作答作对照。
+
+这条闭环解决的正是英语学习里最常见的落差：**当时看懂了，之后用不出来**。每一环都以你自己的句子为材料，产物是可以随时翻回的记录，而不是一次性的分数。
+
+---
+
+## 5. 三种使用形态
+
+| 形态 | 启动方式 | 适合 |
+| --- | --- | --- |
+| **Web 界面（主入口）** | `npm run web:start` | 日常学习、完整功能、中文引导与可视化报告 |
+| **命令行工具** | `node igt.mjs` | 习惯终端；直接输入英文查语法、输入中文即翻译 |
+| **安卓开发版** | ADB 连接正在运行 ClearWrite 的电脑 | 手机上的写作、词汇、练习、问答与学习记录，共用同一份数据和模型设置 |
+
+三者共用同一套学习记录与模型配置。安卓安装与连接见[中文指南](apps/android/README.zh.md) / [English guide](apps/android/README.md)。
+
+---
+
+## 6. 学习记录与隐私
+
+| 内容 | 存放位置 |
+| --- | --- |
+| 词汇、已保存的修改、Ask 笔记、练习日志、Coach 报告 | 本地 **Markdown** 文件（可指向 Obsidian 仓库） |
+| Practice 题库与作答、词汇复习排期、统计记录 | 本机 **SQLite** 数据库 |
+
+使用在线模型时，只有完成该次请求所需的文本会发送到你选择的服务；选择本地模型即可在电脑上完成处理。学习记录不依赖账号、不上传同步。备份学习历史时，请**同时保留数据库和 Markdown 文件**；配置项与部署、备份说明见 [.env.example](.env.example) 与[部署与备份](WEB-DEPLOYMENT-PLAN.md)。
+
+---
+
+## 7. 快速开始
+
+准备 Node.js 24、npm 和 Git。首次安装时在 PowerShell 执行：
 
 ```powershell
 git clone https://github.com/ievertan00/igt.git
 Set-Location igt
 npm ci
-Copy-Item .env.example .env
-```
-
-`npm ci` 依据已纳入版本控制的 `package-lock.json` 安装，保证依赖可复现。仅在首次安装时复制配置模板；已有的 `.env` 应保留。用文本编辑器打开它，配置 AI 提供商，例如：
-
-```env
-IGT_LLM_PROVIDER=gemini
-GOOGLE_API_KEYS=your-api-key
-```
-
-Qwen、Deepseek 和 Ollama 的配置见 [AI 提供商](#ai-提供商)。API 密钥和本机配置放在 `.env` 中，该文件已被 Git 忽略。
-
-### 2. 准备本地存储
-
-```powershell
-npm run init-db
-```
-
-此命令通过迁移创建或更新配置的 SQLite 数据库。Runtime 启动时也会应用待执行的迁移；已有安装更新后通常只需重启。
-
-### 3. 打开 Web 应用
-
-开发模式：
-
-```powershell
-npm run web:dev
-```
-
-此命令同时启动 Vite 和 Local Runtime。在浏览器中打开终端输出的 Web 地址。开发端口由 `.env` 中的 `IGT_WEB_PORT` 和 `IGT_DEV_API_PORT` 指定。
-
-可从任意新终端执行 `npm run dev:status`、`npm run dev:stop` 或 `npm run dev:restart`。Windows 下关闭前台终端会停止整套开发实例；需要持续后台运行时，显式执行 `npm run dev:start -- --background`。预览实例和历史遗留服务的处理方法见[开发服务管理](DEV-SERVICES.md)。
-
-构建并在本机运行生产版本：
-
-```powershell
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 npm run web:build
 npm run web:start
 ```
 
-`web:start` 实际执行 `node --env-file=.env apps/local/server.mjs`：`.env` 必须存在，监听地址和端口由其中的 `IGT_SERVER_HOST` / `IGT_SERVER_PORT` 决定。默认绑定 `127.0.0.1`，`IGT_SERVER_PORT=0` 表示选择可用端口；需要固定地址时请设置固定端口。Runtime 直接提供 `apps/web/dist` 中的页面，无需启动命令行交互界面。
+1. 保持终端运行，打开启动信息中 **Ready on** 后的本地地址。界面默认英文，需要中文提示时开启「中文引导」。
+2. 打开 **Settings → Model settings**，添加你能使用的模型并设为 Web 默认；按所选服务填写模型 ID、密钥与接口地址。使用本机 Ollama 时，在 `.env` 保留 `IGT_LLM_PROVIDER=ollama`，把 `IGT_DEFAULT_MODEL` 填为 `ollama list` 中已安装的模型名，启动 Ollama 后重启 ClearWrite。
+3. 进入 **Writing → Grammar**，用上面的邮件例句试一次。之后每次使用只需在项目目录运行 `npm run web:start`。
 
-若要在同一可信网络内的手机或其他电脑上使用，设置 `IGT_SERVER_HOST=0.0.0.0` 和固定端口，然后访问 `http://<主机局域网IP>:<端口>`。该模式没有登录认证——同网设备都拥有完整服务器能力——因此只可在可信局域网中使用，切勿将端口暴露到公网。Runtime 会拒绝未知 Host 头和跨域浏览器请求，POST 正文上限 2 MB，并在非回环监听时禁用服务器桌面文件选择器。以托管服务方式运行见[部署与运维](#部署与运维)。
+### 从命令行启动
 
-## Web 学习空间
+在项目目录运行 `node igt.mjs` 即可打开交互式命令行工具；直接输入英文句子检查语法，输入中文则翻译，其余功能用 `/` 命令（见下一章速查表）。命令行和 Web 共用同一份学习记录与模型配置。
 
-| 页面入口 | 用途 |
-| --- | --- |
-| **Writing → Grammar** | 检查英语句子或完整篇章，比较纠正与润色结果，并围绕反馈继续追问。 |
-| **Writing → Express** | 将中文想法表达为自然英语，或用中文理解英语篇章；可以补充语境和期望语气。 |
-| **Vocabulary** | 查询英语单词或中文说法，阅读释义、例句，并保存词条用于复习。 |
-| **Review** | 根据提示回忆已保存词汇，揭示答案后按 **Again / Hard / Good / Easy** 评分。 |
-| **Practice** | 将中文句子翻译成英语，逐步查看提示，再对照反馈和参考表达。 |
-| **Ask** | 讨论语法、选词、语气和用法，保存单条回答或总结整段对话。 |
-| **My learning → Overview** | 总览已保存材料和近期表现：词汇、语法纠错、Ask 笔记和学习报告四张库存卡片；与上一时段对比的表现快照；支持指标切换、数据表和时段对比的趋势；可下钻到具体记录；并可打开练习记录。 |
-| **My learning → Saved words** | 搜索和浏览 Markdown 词汇库、打开词条详情、开始词汇复习。 |
-| **My learning → Saved notes** | 搜索已保存的 Ask 笔记，按分类和主题筛选，并继续讨论。 |
-| **My learning → Handbook** | 按时间倒序浏览已保存的 Grammar 检查，支持搜索和错误类型筛选。 |
-| **My learning → Learning reports** | 基于已保存的 Grammar 检查和练习记录生成学习报告：选择时间范围和报告语言，查看常见错误模式和改进方向，回看已保存报告，并下载 Markdown。 |
-| **Settings** | 配置模型和 Markdown 文件位置。 |
-
-界面默认使用英语。**中文引导**为初学者提供操作说明，英语例句、目标表达和学习者内容保留原有语言。Ask 的 **Answer language** 和 **Note language** 分别控制新回答与对话总结的讲解语言。
-
-### 写作与已保存的 Grammar 检查
-
-Grammar 会处理整段提交内容，包括编号列表和项目符号列表。阅读纠正、润色和错误诊断后，选择 **Save to review log** 才会保留本次记录。仅生成反馈不会保存学习记录，也不会自动创建闪卡。
-
-Handbook 展示已保存的 Grammar 检查，并单独标注来源未知的旧记录。
-
-### 总览与学习报告
-
-**My learning** 是主 Web 的直接入口，包含五个标签页：Overview、Saved words、Saved notes、Handbook 和 Learning reports。Overview 通过 Local Runtime 直接读取当前配置的数据，无需导入快照。它把已保存材料的完整库存与所选时段的表现数据放在一起；表现数据注明所选时段或当前保留状态。趋势支持指标切换、数据表、时段对比和证据下钻。练习记录视图列出已记录的 Practice 作答。
-
-学习报告基于已保存的 Grammar 检查和练习记录生成，回顾熟练度、常见错误模式、潜在知识缺口和改进方向。只评估有写作记录支撑的能力；AI 纠正和借助提示的作答不能证明掌握。报告只使用明确标记为 Grammar 的记录，不纳入 Practice、全文分析或来源未知的内容。**No diagnosed mistakes** 只表示本次没有诊断出错误，不能证明文本完全无误或已经持久掌握。
-
-### 句子 Practice
-
-Practice 从配置的 SQLite 题库选题，开始练习不依赖语法历史，也无需调用模型临时生成题目。提交翻译后，由 AI 进行评价。
-
-- **难度：**`easy`、`standard`、`challenge`。
-- **风格：**`casual`、`neutral`、`formal` 或 `all`。
-- **场景：**`home`、`dining`、`shopping`、`entertainment`、`social`、`health`、`work`、`transit`、`travel`、`services` 或 `all`。
-- **题量：**命令行接受 1–10 题；Web 提供 3 / 5 / 10 题选项。
-
-同一轮内题目不重复，优先选取使用次数较少的题目；某个分类题量不足时会返回可用题目。检查答案前最多可逐步查看三层提示，提示使用情况会随作答记录保存。合理的其他译法无需与参考答案逐字一致。借助提示答对，不能证明已经能够独立运用。
-
-### 词汇与复习
-
-保存的词条以 Markdown 形式保留，浏览词汇库不会改变复习计划。词汇复习先要求回忆英语表达，再揭示答案，最后选择 **Again / Hard / Good / Easy**。选择评分才会保存本次复习和下次到期时间，仅揭示答案不会保存。
-
-Local Runtime 启动时会将词汇 Markdown 同步到可重建的 SQLite SRS 卡片，并保留已有调度字段。Web 开始新复习时也会导入已保存词汇。输入答案的正确性与自行选择的回忆评分分别记录。
-
-### Ask 笔记
-
-保存由用户选择。可以将单条回答保存为 Markdown 笔记，也可以按选定的笔记语言总结整段对话。笔记包含分类和标签等元数据，便于检索。新笔记文件名使用生成的简体中文标题，保留必要的英语术语；标题语言与正文讲解语言相互独立。同名笔记会添加后缀，避免覆盖其他笔记。
-
-## AI 提供商
-
-在 `.env` 中选择提供商，在线服务还需填写相应密钥。模型名称和提示词位于 `igt_config.json`，环境变量中的模型设置优先。服务可用性、额度和计费取决于你的提供商账号。
-
-| 提供商 | `.env` 设置 | 密钥管理 |
-| --- | --- | --- |
-| Google Gemini | `IGT_LLM_PROVIDER=gemini`、`GOOGLE_API_KEYS=...` | [Google AI Studio](https://aistudio.google.com/apikey) |
-| 阿里云 Qwen | `IGT_LLM_PROVIDER=qwen`、`DASHSCOPE_API_KEYS=...` | [DashScope](https://dashscope.console.aliyun.com/apiKey) |
-| Deepseek | `IGT_LLM_PROVIDER=deepseek`、`DEEPSEEK_API_KEYS=...` | [Deepseek 平台](https://platform.deepseek.com/api_keys) |
-| 本地 Ollama | `IGT_LLM_PROVIDER=ollama` | 无需 API 密钥 |
-| 自定义 OpenAI 兼容服务 | `IGT_LLM_PROVIDER=custom`、`IGT_CUSTOM_API_BASE=...`、`IGT_CUSTOM_API_KEYS=...` | 由所选服务管理 |
-
-多个密钥可用英文逗号分隔。通过 Web **Settings** 或命令行 `/provider status` 查看配置。
-
-自定义服务还需将 `IGT_CUSTOM_FLASH_MODEL` 和 `IGT_CUSTOM_PRO_MODEL` 设置为该接口支持的模型 ID，也可以在 Web Settings 中配置。
-
-使用 Ollama 时，从 [ollama.com](https://ollama.com/download) 安装服务，下载适合本机的模型，并配置对应覆盖项：
-
-```env
-IGT_LLM_PROVIDER=ollama
-IGT_OLLAMA_FLASH_MODEL=your-installed-model
-IGT_OLLAMA_PRO_MODEL=your-installed-model
-```
-
-用 `ollama list` 查看已安装模型。服务未运行时，在单独的终端中执行 `ollama serve`。本地推理需要足够的内存，较大的模型还可能需要 GPU 资源。
-
-## 命令行工具
-
-在项目目录运行：
+如果想在任意目录直接输入 `igt` 启动，可以在项目目录执行一次 `npm link`，把 `bin` 中声明的 `igt` 命令注册为全局命令：
 
 ```powershell
-node igt.mjs
+npm link
+igt
 ```
 
-也可以先执行一次 `npm link`，注册全局 `igt` 命令。在提示符后输入英语句子即可检查语法；CLI 会询问是否保存到复习日志。
+注册后无需每次回到项目目录；更新代码后一般无需重新注册。命令行同样需要先配置模型：首次使用可执行 `/model add` 添加模型，再用 `/model default` 设为默认；也可在 Web 的 Model settings 中完成配置。
 
-| 命令 | 用途 |
+---
+
+## 8. 命令行速查
+
+在项目目录运行 `node igt.mjs`。提示符后**直接输入英文句子**即检查语法，**输入中文**即翻译；其余功能用 `/` 命令，`/help <命令>` 可查看完整参数。
+
+| 想做什么 | 输入示例 |
 | --- | --- |
-| `/word <word or phrase>`（`/w`、`/a`） | 查询词汇，并选择是否保存。 |
-| `/word --list` | 浏览已保存词汇。 |
-| `/word review [1-100]` | 使用四档回忆评分复习词汇。 |
-| `/practice [1-10]`（`/p`） | 开始中译英句子练习。 |
-| `/text` | 打开编辑器并分析完整文档。 |
-| `/translate <text>`（`/tr`） | 翻译文本。 |
-| `/ask` | 进行语言咨询，可选择保存。 |
-| `/chat` | 进行英语对话，获得温和纠错。 |
-| `/handbook`（`/h`） | 浏览和筛选已保存的 Grammar 检查。 |
-| `/coach` | 分析已保存 Grammar 检查中的常见错误，按需请求解释。 |
-| `/stats`（`/st`） | 查看已记录活动和时间线。 |
-| `/provider status` | 查看提供商和模型配置。 |
-| `/provider switch <provider>` | 切换 AI 提供商。 |
-| `/voice [on\|off\|status]` | 控制对话自动语音。 |
-| `/theme` | 选择终端主题。 |
-| `/help` | 查看当前公开命令说明。 |
-| `/exit`（`/quit`、`/q`） | 退出命令行工具。 |
+| 查词、浏览词库、复习 5 个词条 | `/word follow up on`、`/word --list`、`/word review 5` |
+| 做 3 道基础中译英题 | `/practice 3 --difficulty easy` |
+| 在编辑器里写一整段再分析 | `/text` |
+| 翻译一段文本 | `/translate <text>` |
+| 问一个用法问题、练英文对话 | `/ask When do I use "by Friday"?`、`/chat` |
+| 翻最近一个月的修改、找反复出现的问题 | `/handbook --days 30`、`/coach --days 30` |
+| 看学习活动概况 | `/stats --days 30` |
+| 添加模型、设置任务模型 | `/model add`、`/model default` |
+| 语音开关、终端主题 | `/voice on`、`/theme` |
+| 查看帮助、退出 | `/help practice`、`/exit` |
 
-在 IGT 提示符后输入，例如：
+---
 
-```text
-/word follow up
-/practice 5 --difficulty easy --context home
-/practice sentence 3 --style formal --context work
-/handbook --days 90 --search "meeting" --type "Articles"
-/handbook --diagnosis none
-/coach --days 90 --type "Articles"
-/stats --days 30 --limit 10
-```
+## 9. 相关文档与许可证
 
-兼容入口包括：`/today` 查看当日活动和待复习数量，`/explain`（`/e`）讨论最近一次纠正，以及 `/llm` 作为 `/provider` 的别名。主要命令以 `/help` 为准。处理完整文档时，可用 `/text` 打开编辑器。
+[配置模板](.env.example) · [开发服务管理](DEV-SERVICES.md) · [部署与备份](WEB-DEPLOYMENT-PLAN.md) · [安卓指南](apps/android/README.zh.md)
 
-## 配置与本地数据
-
-[.env.example](.env.example) 提供带注释的配置模板。修改启动相关设置后，请重启对应进程。
-
-| 设置 | 用途 |
-| --- | --- |
-| `IGT_DB_PATH` | 主 SQLite 数据库，包含 Practice 题目、作答记录和 SRS 调度。 |
-| `IGT_GRAMMAR_REF_DB_PATH` | Ask 使用的本地语法参考数据库。 |
-| `IGT_LOG_PATH` | 技术和数据库错误日志。 |
-| `IGT_REVIEW_PATH` | 用户明确保存的 Grammar 检查 Markdown 日志。 |
-| `IGT_DATA_DIR` | 可选的统一数据目录，具体路径设置优先。 |
-| `IGT_VOCAB_PATH` | 明确指定词汇 Markdown 路径。 |
-| `IGT_ASK_PATH` | 明确指定 Ask 笔记路径。 |
-| `IGT_PRACTICE_PATH` | 明确指定 Practice Markdown 日志路径。 |
-| `IGT_VAULT_DIR` | 可选的 Obsidian 仓库根目录。 |
-| `IGT_SERVER_HOST`、`IGT_SERVER_PORT` | 生产 Runtime 监听设置。`0.0.0.0` 用于可信局域网访问，请配合固定端口。 |
-| `IGT_ALLOWED_HOSTS` | 可选的额外 Host/Origin 白名单（英文逗号分隔），补充回环、本机名和网卡地址之外的入口。 |
-| `IGT_DEV_API_PORT`、`IGT_WEB_PORT` | 开发 API 和 Web 端口。 |
-
-旧的仓库相对路径配置仍可在 `.env.example` 中查阅。Markdown 导出是用户可直接阅读的学习记录；SQLite 管理词汇复习调度和作答记录。Practice 题目内容以实际配置的数据库为准，`canonical-questions.json` 是其版本化导出，不要用测试库或历史种子替换真实数据。
-
-移动数据或修复迁移前，请同时备份数据库和 Markdown 记录。`node scripts/deploy/backup.mjs --dest <目录>` 可在不停服务的情况下生成一致性快照（SQLite Backup API + 词汇仓库 + 配置），见[部署与运维](#部署与运维)。若改为手动复制 `.db` 文件，应先停止使用 SQLite 的进程，避免已提交的数据仍留在 WAL 文件中。
-
-### 可选语音
-
-CLI 对话语音使用兼容 OpenAI `/v1/audio/speech` 协议的服务。通过 `IGT_TTS_BASE_URL` 配置地址，其他音色、模型、流式播放和适配器设置见 `.env.example`，其中提供 Kokoro 和 CosyVoice3 适配方案。通过 `ffplay` 流式播放需要安装 FFmpeg。Web 音频控件在服务音频失败时可尝试浏览器语音。应用不录音，也不评估发音。
-
-## 开发与验证
-
-```powershell
-npm run web:typecheck
-npm run web:build
-npm run test:learning
-npm run test:my-learning
-npm run verify-learning-resources
-```
-
-按需运行 Web 与 Runtime 检查：`test:web-dev`、`test:runtime`、`test:static`、`test:web`、`test:my-learning-web`、`test:handbook-web`、`test:practice-web`、`test:coach-cache`、`test:vocabulary-sync`、`test:review-log-contract` 和 `test:config-paths`。浏览器检查需要可用的 Chromium，必要时设置 `PUPPETEER_EXECUTABLE_PATH`。项目没有单一的全套测试脚本。
-
-修改 Practice 内容前，先阅读[存储约定](lib/features/practice/SCHEMA.md)，并在修改前后运行 `npm run verify:practice-bank`。通过 `npm run export:practice-bank` 明确导出已批准的真实题库修改。测试数据库应保持可丢弃，不得覆盖实际内容。
-
-若只重启 API/UI，并希望跳过启动时的词汇同步：
-
-```powershell
-node scripts/web-dev.mjs --skip-vocabulary-sync
-```
-
-生产入口 `node --env-file=.env apps/local/server.mjs --skip-vocabulary-sync` 也支持此参数。Web 开始新复习时仍会导入已保存词汇。
-
-## 部署与运维
-
-首版部署模型为：单用户、单实例、持久化磁盘、在常开主机上受控访问。完整设计、安全边界与验收清单见 [WEB-DEPLOYMENT-PLAN.md](WEB-DEPLOYMENT-PLAN.md)。
-
-- **发布目录。**每个版本从明确的 commit 构建到独立目录：`git archive <commit>` 解压到该目录，然后 `npm ci`、`npm run web:typecheck`、`npm run web:build`。发布目录保留独立的部署 `.env`，用绝对路径指向真实数据库和 Markdown 仓库；升级时前向携带该文件，代码更新不覆盖配置与数据。保持单一写入端：启动发布实例前先停止开发链路（`npm run dev:stop`）。该约束已自动强制执行——Runtime 在数据库旁维护锁文件，当另一个存活实例（开发或生产）持有它时，新实例会输出警告并拒绝启动。
-- **服务监督器。**`node scripts/deploy/service-launcher.mjs --logs <目录>` 以 `--env-file=.env` 运行 Runtime，崩溃后按退避策略自动重启，按天写日志并清理 14 天前的日志。
-- **计划任务。**`scripts/deploy/register-tasks.ps1 -ReleaseDir <目录> -BackupDir <目录> -LogDir <目录>` 注册当前用户级任务：登录时启动 Runtime、每日备份。非管理员环境下触发器为登录时；如需登录前自启，须由管理员注册 S4U 任务或 Windows 服务。
-- **备份与恢复。**`node scripts/deploy/backup.mjs --dest <目录> [--mirror <目录>]` 生成 SQLite Backup API 一致性快照及 Markdown 仓库、配置副本，附校验和清单，保留 14 份日备和 8 份周备；`--mirror` 将每份快照复制到第二位置用于异机留存。`node scripts/deploy/restore.mjs --backup <目录> --target <隔离目录>` 恢复到隔离目录并校验校验和、integrity 与行数。服务运行期间切勿向真实数据目录恢复。
-- **就绪检查。**`GET /health` 在运行时长之外报告 `checks.database`；以 `status: "ok"` 为就绪依据，而非仅看进程存活。
-
-## 项目架构
-
-React Web 客户端和 CLI 调用同一个本地 HTTP Runtime。Runtime 负责模型请求、迁移、SQLite 持久化和 Markdown 工作流。
-
-| 位置 | 职责 |
-| --- | --- |
-| `igt.mjs`、`lib/cli/` | 命令行交互、命令分发、渲染和 API 客户端。 |
-| `apps/web/` | 使用 Vite 构建的 React + TypeScript 客户端。 |
-| `apps/local/server.mjs` | 独立 Local Web Runtime 入口。 |
-| `lib/server/` | HTTP 路由和 LLM 提供商集成。 |
-| `lib/application/` | 应用工作流，包括 Grammar 分析与保存。 |
-| `lib/domain/`、`lib/features/` | 学习规则、解析和功能工作流。 |
-| `lib/db/`、`migrations/` | SQLite 访问和结构、数据迁移。 |
-| `lib/shared/` | 配置与共享工具。 |
-| `scripts/`、`tests/` | 维护工具和验证。 |
-
-## 常见问题
-
-- **开发端口被占用：**先用 `npm run dev:status` 查看实例，再用 `npm run dev:stop` 停止。旧服务先执行 `npm run dev:status -- --legacy` 核对，再用 `npm run dev:stop -- --legacy` 清理，详见[开发服务管理](DEV-SERVICES.md)。有意并行运行时才在 `.env` 中配置不同端口。
-- **生产页面无法打开：**先执行 `web:build`，再执行 `web:start`；确认 `.env` 存在（启动时显式加载），访问 Runtime 输出的地址或固定的 `IGT_SERVER_PORT`。
-- **手机打不开局域网地址：**确认两台设备在同一网络、主机防火墙放行所选端口的入站 TCP（需管理员规则）、`IGT_SERVER_HOST=0.0.0.0`。主机局域网 IP 可能随 DHCP 变化。纯 HTTP 局域网页面已适配，剪贴板与复习会话在非安全上下文下自动回退。
-- **`/health` 报告 degraded：**数据库检查失败——核对配置路径，并确认只有一个写入端（发布实例而非开发链路）在使用数据库。
-- **提供商报错或限流：**检查密钥、模型配置和提供商状态，在服务允许时重试。
-- **Handbook 或学习报告中没有某次 Grammar：**先将结果保存到复习日志；学习报告还会排除来源未知的旧记录。
-- **数据库锁定或迁移失败：**关闭占用数据库的进程，查看配置的错误日志，并在修复前保留备份。删除数据库会丢失本地状态，不应作为常规修复步骤。
-- **缺少语法参考资源：**运行 `npm run verify-learning-resources` 查看报告；`init-db` 准备的是主数据库，不会安装外部参考语料。
-
-## 许可证
-
-Apache 2.0
+许可证：Apache 2.0

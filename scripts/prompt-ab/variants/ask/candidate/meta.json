@@ -1,0 +1,3 @@
+{
+  "description": "Editable copy of the production Ask template ({{history}} placeholder is filled at runtime). Metadata/language/formatting fragments stay production-fixed."
+}

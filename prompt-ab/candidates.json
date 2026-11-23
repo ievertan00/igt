@@ -1,0 +1,12 @@
+{
+  "context": {
+    "grammar": "Read the passage once for the speaker's time frame, intended quantity, and degree of certainty. Evaluate each suspected error within that reading. If the original has a standard grammatical reading consistent with the surrounding sentences, keep that wording in correction. Explain the decisive context clue in Why when an edit is necessary.",
+    "ask": "Resolve references in the current question against the supplied conversation. Answer for the learner's actual sentence first. If two intended meanings give different answers, state the two meanings and their corresponding forms; ask a clarification only when neither can be explained from the available context.",
+    "coach": "For each proposed pattern, look across the supplied originals for a contrary example and for records of the same attempt. Where the evidence conflicts, cite both observations and state exactly which narrower conclusion they support. Attribute hints, feedback and reference answers to their correct source."
+  },
+  "teaching": {
+    "grammar": "For each necessary change, quote the smallest changed span and identify the cue a learner can find in this sentence. Use the most transferable cue for remember. Keep optional alternatives out of correction, and describe what changes in register or emphasis only if the change is real.",
+    "ask": "Build the answer around one choice the learner can make in their next sentence. Give the answer in the opening sentence. For a contrast, change only the decisive feature in a pair of natural examples and explain the resulting difference. For a single factual question, give the fact directly and stop once its use is clear.",
+    "coach": "For the highest-priority supported weakness, connect an exact cited original to one minimal repair and an independent check the learner could apply to fresh writing. For sparse evidence, identify a small new writing sample that could resolve the uncertainty. Keep the five required sections and avoid restating the same recommendation."
+  }
+}

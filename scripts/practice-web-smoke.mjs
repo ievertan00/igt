@@ -35,11 +35,22 @@ try {
   let selectedQuestions;
   let evaluationInput;
   let failEvaluation = false;
+  let failModelSettings = false;
   await page.setRequestInterception(true);
   page.on("request", async request => {
     const route = new URL(request.url()).pathname;
     const respond = data => request.respond({ status: 200, contentType: "application/json", body: JSON.stringify(data) });
     if (route === "/runtime") return respond({ runtime: "local", storage: { database: "sqlite", assets: "markdown" } });
+    if (route === "/status-message") return respond({ message: "" });
+    if (route === "/settings/llm") {
+      if (failModelSettings) {
+        return request.respond({ status: 503, contentType: "application/json", body: JSON.stringify({
+          error: { code: "UNAVAILABLE", message: "Model settings are unavailable. Restart IGT and try again.", retryable: true },
+        }) });
+      }
+      const profile = { id: "fixture", name: "Practice fixture", provider: "local", models: { flash: "fixture", pro: "fixture" } };
+      return respond({ provider: profile.provider, providers: {}, profiles: [profile], activeProfileId: profile.id });
+    }
     if (route === "/practice/generate") {
       selection = JSON.parse(request.postData());
       const questions = selectPracticeQuestions(db, selection).map(publicPracticeQuestion);
@@ -58,9 +69,10 @@ try {
     }
     return request.continue();
   });
-  for (const [name, width, height] of [["desktop", 1440, 1000], ["mobile", 390, 844]]) {
+  for (const [name, width, height] of [["desktop", 1440, 1000], ["mobile", 390, 844], ["mobile-model-error", 390, 844]]) {
+    failModelSettings = name === "mobile-model-error";
     await page.setViewport({ width, height });
-    await page.goto(`http://127.0.0.1:${port}/#practice`, { waitUntil: "networkidle0" });
+    await page.goto(`http://127.0.0.1:${port}/?smoke=${name}#practice`, { waitUntil: "networkidle0" });
     await page.waitForSelector('input[name="practice-count"]');
     assert.equal(await page.$('.switches'), null);
     await page.click('label:has(input[name="practice-count"][value="10"])');
@@ -98,9 +110,19 @@ try {
     assert.match(await page.$eval('.practice-session', node => node.textContent), /10 questions.*Challenge.*Work/);
     await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
     await page.screenshot({ path: path.join(captures, `${name}-setup.png`), fullPage: true });
+    if (failModelSettings) {
+      await page.waitForSelector(".practice-model-actions .model-switch-error");
+      const actionsClear = await page.$eval(".practice-model-actions", node => {
+        const error = node.querySelector(".model-switch-error").getBoundingClientRect();
+        const start = node.querySelector(".practice-generate").getBoundingClientRect();
+        return error.bottom <= start.top;
+      });
+      assert.ok(actionsClear, "The model settings error must leave room for Start practice");
+    }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.click('button.practice-generate');
     await page.waitForSelector('#practice-input');
+    if (failModelSettings) await page.waitForSelector(".practice-question .model-switch-error");
     assert.equal(selection.mode, "sentence"); assert.equal(selection.count, 10);
     assert.equal(selection.style, "all"); assert.equal(selection.difficulty, "challenge"); assert.equal(selection.context, "work");
     assert.equal(selectedQuestions.length, 10);
@@ -140,6 +162,12 @@ try {
       if (index < selectedQuestions.length - 1) await page.waitForFunction(() => document.querySelector('#practice-input')?.value === '');
     }
     await page.waitForSelector('input[name="practice-count"]');
+    if (failModelSettings) {
+      failModelSettings = false;
+      await page.click(".practice-model-actions .model-switch-error button");
+      await page.waitForSelector(".practice-model-actions .model-switch-error", { hidden: true });
+      assert.equal(await page.$eval(".practice-model-actions .model-switcher", button => button.disabled), false);
+    }
   }
   assert.deepEqual(errors, []);
   console.log("Practice desktop/mobile smoke ok; screenshots in .cache/practice-browser");

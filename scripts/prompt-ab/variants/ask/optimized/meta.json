@@ -1,0 +1,3 @@
+{
+  "description": "Optimized full Ask template rewrite (v1, 2026-11-22); keeps {{history}} and defers metadata/language/formatting to production fragments. Canonical copy: prompt-ab/optimized/ask/ask.txt."
+}

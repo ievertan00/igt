@@ -6,12 +6,13 @@
     "igt": "./igt.mjs"
   },
   "scripts": {
+    "android:build": "pwsh -NoProfile -File apps/android/build.ps1",
     "web:dev": "node scripts/web-dev.mjs",
     "dev:start": "node scripts/web-dev.mjs start",
     "dev:status": "node scripts/web-dev.mjs status",
     "dev:stop": "node scripts/web-dev.mjs stop",
     "dev:restart": "node scripts/web-dev.mjs restart",
-    "test:dev-lifecycle": "node --test scripts/dev-runtime/lifecycle.test.mjs",
+    "test:dev-lifecycle": "node --test scripts/dev-runtime/lifecycle.test.mjs scripts/dev-runtime/runtime.test.mjs",
     "web:build": "vite build --config apps/web/vite.config.ts",
     "web:typecheck": "tsc -p apps/web/tsconfig.json --noEmit",
     "web:preview": "node scripts/web-dev.mjs start --mode preview",
@@ -40,7 +41,11 @@
     "verify-learning-resources": "node scripts/verify-learning-resources.mjs",
     "verify:practice-bank": "node scripts/verify-practice-bank.mjs",
     "export:practice-bank": "node scripts/export-practice-bank.mjs --export",
-    "test:learning": "node --test --test-isolation=none tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/word-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs tests/request-guard.test.mjs tests/runtime-lock.test.mjs"
+    "test:learning": "node --test --test-isolation=none tests/local-learning-resources.test.mjs tests/handbook-profile.test.mjs tests/learning-diagnosis.test.mjs tests/coach-ai.test.mjs tests/learning-workflows.test.mjs tests/practice-attempts.test.mjs tests/practice-route.test.mjs tests/practice-question-bank.test.mjs tests/practice-client-timeout.test.mjs tests/word-client-timeout.test.mjs tests/translation-route.test.mjs tests/migrations.test.mjs tests/request-guard.test.mjs tests/runtime-lock.test.mjs",
+    "ab:run": "node scripts/prompt-ab/run.mjs",
+    "ab:list": "node scripts/prompt-ab/run.mjs --list",
+    "ab:snapshot": "node scripts/prompt-ab/snapshot-coach.mjs",
+    "test:prompt-ab": "node --test tests/prompt-ab.test.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

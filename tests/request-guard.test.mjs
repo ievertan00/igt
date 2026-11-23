@@ -48,6 +48,7 @@ test("remote mode follows the configured listen host", () => {
   try {
     process.env.IGT_SERVER_HOST = "0.0.0.0";
     assert.equal(isRemoteMode(), true);
+    assert.equal(isRemoteMode("127.0.0.1"), false);
     process.env.IGT_SERVER_HOST = "127.0.0.1";
     assert.equal(isRemoteMode(), false);
     delete process.env.IGT_SERVER_HOST;

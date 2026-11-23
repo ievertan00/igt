@@ -40,6 +40,15 @@ const ROUTES = ["#grammar", "#dashboard", "#word-lookup", "#word-library", "#pra
 const fixtures = {
   "/runtime": { runtime: "local", storage: { database: "sqlite", assets: "markdown" } },
   "/status-message": { content: "" },
+  "/grammar": {
+    result: {
+      originalText: "She go to work by train every day.",
+      correction: "She goes to work by train every day.",
+      refine: "She takes the train to work every day.",
+      diagnoses: [{ error_type: "Subject–verb agreement", explanation: "Use goes with she in the present simple." }],
+    },
+    persistence: { saved: false, requiresConfirmation: true },
+  },
   "/dashboard": { days: 30, summary: [], events: [], pagination: { total: 0, limit: 10, offset: 0, hasMore: false }, coverage: [], undated: 0, patterns: [] },
   "/dashboard/growth": (() => {
     const metric = { recall: { value: null, correct: 0, n: 0 }, translation: { value: null, n: 0 }, diagnosed: { count: 0, n: 0 } };
@@ -63,6 +72,7 @@ const fixtures = {
   "/review/due": { cards: [] },
   "/vocab/words": { words: [], total: 0, totalSaved: 0, sourceAvailable: true, limit: 25, offset: 0, hasMore: false, overview: {} },
   "/vocab/history": { records: [], total: 0, offset: 0, hasMore: false },
+  "/vocab/seed": { ok: true },
   "/ask/notes": { notes: [] },
 };
 
@@ -297,6 +307,53 @@ try {
     safeArea = { supported: false, error: error.message };
   }
   report.push({ safeArea, safeAreaPassed });
+
+  // The app uses an explicit WebView marker. Ordinary Android browsers stay on the Web shell.
+  const androidSession = await page.createCDPSession();
+  await androidSession.send("Emulation.setSafeAreaInsetsOverride", { insets: { top: 0, left: 0, right: 0, bottom: 0 } });
+  await page.setUserAgent({ userAgent: "Mozilla/5.0 (Linux; Android 16) Chrome/140.0.0.0 Mobile Safari/537.36 ClearWriteAndroid/1" });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const androidRoutes = ["#grammar", "#translation", "#word-lookup", "#word-review", "#word-library", "#practice", "#ask", "#ask?view=notes", "#dashboard", "#handbook", "#coach", "#settings"];
+  for (const width of WIDTHS) {
+    await page.setViewport({ width, height: 780, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    for (const route of androidRoutes) {
+      await page.goto(`${base}/${route}`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".android-dock");
+      const dimensions = await page.evaluate(() => ({
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        bottom: Math.round(document.querySelector(".android-dock").getBoundingClientRect().bottom),
+        targets: [...document.querySelectorAll(".android-dock a")].map(link => link.getBoundingClientRect().height),
+        offenders: [...document.querySelectorAll(".android-workspace *")].filter(node => {
+          const container = node.closest(".my-learning-tabs, .saved-model-grid");
+          return !container && node.getBoundingClientRect().right > document.documentElement.clientWidth + 1;
+        }).slice(0, 5).map(node => node.className),
+      }));
+      assert.ok(dimensions.overflow <= 1, `Android ${width}px ${route} overflows by ${dimensions.overflow}px: ${dimensions.offenders.join(", ")}`);
+      assert.equal(dimensions.bottom, 780, `Android ${route} dock must sit against the viewport bottom`);
+      assert.equal(dimensions.targets.length, 5);
+      assert.ok(dimensions.targets.every(height => height >= 44));
+    }
+  }
+
+  await page.goto(`${base}/#grammar`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#grammar-input");
+  await page.type("#grammar-input", fixtures["/grammar"].result.originalText);
+  await page.locator(".grammar-composer button[type=submit]").click();
+  await page.waitForSelector(".detail-correction, .grammar-page .state", { timeout: 5000 });
+  assert.equal(await page.$eval(".grammar-page", section => section.querySelector(".state")?.textContent ?? ""), "");
+  assert.equal(await page.$eval(".detail-correction .detail-copy p", result => result.textContent), fixtures["/grammar"].result.correction);
+  await page.evaluate(() => document.documentElement.setAttribute("data-clearwrite-ime", "true"));
+  await page.waitForSelector(".android-dock", { hidden: true });
+  await page.evaluate(() => document.documentElement.setAttribute("data-clearwrite-ime", "false"));
+  await page.waitForSelector(".android-dock", { visible: true });
+  await page.click('.android-dock a[href="#word-lookup"]');
+  await page.waitForSelector('.android-section-tabs a[href="#word-review"]');
+  await page.click('.android-section-tabs a[href="#word-review"]');
+  await page.waitForSelector('.android-section-tabs a[href="#word-review"][aria-current="page"]');
+  assert.equal(await page.$eval('.android-dock a[aria-current]', link => link.getAttribute("href")), "#word-lookup");
+  await page.goBack();
+  await page.waitForSelector('.android-section-tabs a[href="#word-lookup"][aria-current="page"]');
+  report.push({ androidRenders: WIDTHS.length * androidRoutes.length, androidCorrectionAndNavigationPassed: true });
   report.push({ pageErrors, failedRequests });
 } finally {
   await browser.close();

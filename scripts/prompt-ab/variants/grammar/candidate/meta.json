@@ -1,0 +1,3 @@
+{
+  "description": "Editable copy of the production Grammar system prompt. Edit this file, then run npm run ab:run -- --targets grammar."
+}

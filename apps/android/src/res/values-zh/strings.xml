@@ -1,0 +1,5 @@
+<resources>
+    <string name="connecting">正在连接 ClearWrite…</string>
+    <string name="disconnected">无法连接 ClearWrite。请检查电脑上的 ClearWrite 服务和 ADB 端口转发是否已启动。</string>
+    <string name="retry">重试</string>
+</resources>

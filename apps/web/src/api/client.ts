@@ -1,16 +1,9 @@
 import { requestModelProfile, type ModelPage } from "./model-selection";
 import type { GrowthDetail, GrowthFilters, GrowthOverview, GrowthRecords } from "./learning-growth";
+import { readCoachReportResponse, type CoachReport } from "../../../../lib/contracts/coach-report.mts";
 
 export type RequestJsonInit = RequestInit & { timeoutMs?: number; modelPage?: ModelPage };
-export type CoachReport = {
-  days: number; language: string; totalChecks: number; duplicateInputs: number; sampled: boolean; truncated: boolean;
-  coverage: GrammarHistory["coverage"]; markdown: string; evidenceIds: string[]; generatedAt: string; cached: boolean;
-  sourceCounts?: { grammar: number; practice: number };
-  sourceStatus?: { grammar: string; practice: string };
-  evidence: Array<{ entryId: string; timestamp: string; original: string; correction: string; refine?: string; source?: "grammar" | "practice";
-    practice?: { mode: string; context: string; prompt: string; referenceAnswer: string; feedback: string; hintsUsed: number | null } }>;
-  savedId?: string; savedPath?: string; saveError?: string;
-};
+export type { CoachReport };
 export type CoachReportSummary = Pick<CoachReport, "generatedAt" | "language" | "days" | "totalChecks"> & { savedId: string };
 
 export type GrammarHistory = {
@@ -68,9 +61,13 @@ export async function requestJson<T>(url: string, init: RequestJsonInit = {}): P
       headers: { "Content-Type": "application/json", ...(profile ? { "X-IGT-Model-Profile": profile } : {}), ...(requestInit.headers || {}) },
       signal: controller.signal,
     });
-    const payload = await response.json().catch(() => ({}));
+    const payload = await response.json().catch(error => {
+      if (!(error instanceof SyntaxError)) throw error;
+      if (response.ok) throw webError("INVALID_RESPONSE", "The Local Web Runtime returned invalid JSON.", false, error);
+      return undefined;
+    });
     if (!response.ok) {
-      const error = payload.error;
+      const error = payload?.error;
       if (error && typeof error === "object") {
         throw webError(error.code || `HTTP_${response.status}`, error.message || `HTTP ${response.status}`, Boolean(error.retryable));
       }
@@ -104,7 +101,8 @@ export const webApi = {
   checkGrammar: (text: string) => requestJson<any>("/grammar", { method: "POST", body: JSON.stringify({ text }) }),
   saveGrammar: (text: string, data: unknown) => requestJson<any>("/grammar/save", { method: "POST", body: JSON.stringify({ text, data }) }),
   translate: (text: string, direction: string) => requestJson<any>("/translation", { method: "POST", body: JSON.stringify({ text, direction }) }),
-  ask: (question: string, messages: unknown[], language?: "zh-CN" | "en") => requestJson<any>("/ask", { method: "POST", body: JSON.stringify({ question, messages, language }) }),
+  // Model generation and provider retries can outlast the default request deadline.
+  ask: (question: string, messages: unknown[], language?: "zh-CN" | "en") => requestJson<any>("/ask", { method: "POST", body: JSON.stringify({ question, messages, language }), timeoutMs: 180_000 }),
   saveAsk: (messages: unknown[], language?: "zh-CN" | "en") => requestJson<any>("/ask/save", { method: "POST", body: JSON.stringify({ messages, language }), timeoutMs: 180_000 }),
   listAskNotes: () => requestJson<{ directory: string; notes: Array<{ id: string; modifiedAt: string; bytes: number; content?: string; title?: string; category?: string; tags?: string[] }> }>("/ask/notes"),
   readAskNote: (id: string) => requestJson<{ id: string; content: string; bytes: number }>(`/ask/notes/read?${new URLSearchParams({ id })}`),
@@ -120,9 +118,9 @@ export const webApi = {
   vocabularyHistory: (cardId: number, offset: number, signal?: AbortSignal) => requestJson<import("../VocabularyLibrary").VocabularyHistoryResult>(`/vocab/history?${new URLSearchParams({ card_id: String(cardId), offset: String(offset) })}`, { signal }),
   getCoach: (days = 90) => requestJson<CoachPatterns>(`/coach?days=${days}`),
   listCoachReports: () => requestJson<CoachReportSummary[]>("/coach/reports"),
-  readCoachReport: (savedId: string) => requestJson<CoachReport>(`/coach/reports/${encodeURIComponent(savedId)}`),
+  readCoachReport: (savedId: string) => requestJson<unknown>(`/coach/reports/${encodeURIComponent(savedId)}`).then(readCoachReportResponse),
   // Coach owns the configurable generation deadline, including its validation retry.
-  generateCoachReport: (days: number, language: string, refresh = false) => requestJson<CoachReport>("/coach/report", { method: "POST", body: JSON.stringify({ days, language, refresh }), timeoutMs: 0 }),
+  generateCoachReport: (days: number, language: string, refresh = false) => requestJson<unknown>("/coach/report", { method: "POST", body: JSON.stringify({ days, language, refresh }), timeoutMs: 0 }).then(readCoachReportResponse),
   explainCoach: (errorType: string, days: number, version: string, refresh = false) => requestJson<CoachDetail>("/coach/explain", { method: "POST", body: JSON.stringify({ errorType, days, version, refresh }), timeoutMs: 180_000 }),
   // Dictionary generation can outlast the generic 30-second deadline,
   // especially when the provider retries or a local model is loading.

@@ -138,7 +138,7 @@ async function main() {
   const config = configLoader.load();
   refreshGrammarModel();
   applyTheme(config.Theme || "auto");
-  const targetPath = process.env.IGT_REVIEW_PATH || config.ReviewPath || "";
+  const targetPath = config.ReviewPath || "";
   const rows = process.stdout.rows || 24;
   const cols_val = process.stdout.columns || 80;
   const sep = "─".repeat(Math.min(66, Math.max(20, cols_val - 3)));

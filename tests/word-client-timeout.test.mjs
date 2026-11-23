@@ -6,7 +6,10 @@ import { stripTypeScriptTypes } from "node:module";
 const source = fs.readFileSync(new URL("../apps/web/src/api/client.ts", import.meta.url), "utf8");
 const modelSelection = fs.readFileSync(new URL("../apps/web/src/api/model-selection.ts", import.meta.url), "utf8");
 const modelSelectionUrl = `data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(modelSelection)).toString("base64")}`;
-const outputText = stripTypeScriptTypes(source).replaceAll('from "./model-selection"', `from "${modelSelectionUrl}"`);
+const coachReportUrl = new URL("../lib/contracts/coach-report.mts", import.meta.url);
+const outputText = stripTypeScriptTypes(source)
+  .replace('from "./model-selection"', `from "${modelSelectionUrl}"`)
+  .replace('from "../../../../lib/contracts/coach-report.mts"', `from "${coachReportUrl.href}"`);
 const { webApi } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 
 test("vocabulary lookup accepts a provider response after the generic 30-second deadline", async (t) => {

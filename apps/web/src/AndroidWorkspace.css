@@ -1,0 +1,238 @@
+html:has(.android-workspace) {
+  scroll-padding-top: 4rem;
+  scroll-padding-bottom: 5rem;
+  scrollbar-gutter: auto;
+}
+
+.android-workspace {
+  --android-content-max: 46rem;
+  --android-dock-height: 4.25rem;
+  --android-bottom: calc(var(--android-dock-height) + var(--safe-bottom));
+  padding-bottom: var(--android-bottom);
+}
+
+.android-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  min-height: 3.5rem;
+  padding: .375rem max(1rem, calc((100% - var(--android-content-max)) / 2));
+  border-bottom: 1px solid var(--topbar-line);
+  background: var(--paper);
+}
+
+.android-brand,
+.android-header-tools {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.android-brand {
+  min-height: var(--target-size);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.android-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: .625rem;
+  color: var(--on-dark);
+  background: var(--accent);
+}
+
+.android-brand-mark .icon { width: 1.125rem; height: 1.125rem; }
+.android-settings {
+  display: grid;
+  place-items: center;
+  width: var(--target-size);
+  height: var(--target-size);
+  border-radius: 50%;
+  color: var(--ink);
+}
+.android-settings[aria-current] { color: var(--accent-active-text); background: var(--accent-soft); }
+.android-header .learner-language-menu {
+  position: static;
+  width: auto;
+  margin: 0;
+  border: 0;
+}
+.android-header .learner-language-menu > summary { padding: .375rem .5rem; }
+.android-header .language-options {
+  position: absolute;
+  right: 1rem;
+  width: min(20rem, calc(100vw - 2rem));
+  box-shadow: var(--shadow-floating);
+}
+
+.android-section-tabs {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  width: min(calc(100% - 2rem), var(--android-content-max));
+  margin: .875rem auto 0;
+  padding: .25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+}
+
+.android-section-tabs a {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: var(--target-size);
+  padding: .25rem;
+  color: var(--ink-soft);
+  border-radius: .625rem;
+  text-align: center;
+  text-decoration: none;
+  font-size: .875rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.android-section-tabs a[aria-current] {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
+}
+
+.android-workspace .workspace {
+  width: min(calc(100% - 2rem), var(--android-content-max));
+  padding-top: 1.125rem;
+}
+.android-workspace .my-learning-navigation {
+  width: min(calc(100% - 2rem), var(--android-content-max));
+  padding-inline: 0;
+  margin-inline: auto;
+  gap: .625rem;
+}
+.android-workspace .my-learning-navigation-head { left: 0; }
+.android-workspace .my-learning-navigation-kicker { display: none; }
+.android-workspace .my-learning-tabs a { min-height: var(--target-size); }
+.android-workspace .workspace > .heading,
+.android-workspace .ask-page > .heading { margin-bottom: 1.125rem; }
+
+.android-page-title {
+  margin: 0 0 .875rem;
+  font-size: 1.625rem;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+.android-workspace .grammar-composer {
+  padding: .875rem;
+  border-radius: .875rem;
+  box-shadow: var(--shadow-sm);
+}
+.android-workspace .grammar-composer textarea { min-height: 7rem; font-size: 1rem; }
+.android-workspace .grammar-composer .composer-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: .625rem;
+  padding-top: .75rem;
+}
+.android-workspace .grammar-composer .composer-actions .primary {
+  width: 100%;
+  max-width: none;
+  min-height: 3rem;
+  justify-content: center;
+}
+.android-workspace .model-switch-error {
+  position: static;
+  max-width: 100%;
+  margin-top: .375rem;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+}
+.android-workspace .correction-detail { margin-top: 1.125rem; gap: .75rem; }
+.android-workspace .detail-section { padding: .875rem; border-radius: .875rem; }
+.android-workspace .detail-section h2 { text-transform: none; letter-spacing: 0; font-size: 1rem; }
+.android-workspace .detail-natural { background: var(--accent-soft); border-color: var(--accent-border); }
+
+.android-workspace :is(.express-composer, .lookup-form, .ask-composer) {
+  box-shadow: var(--shadow-sm);
+}
+.android-workspace .ask-composer-heading {
+  color: var(--ink);
+  background: var(--accent-soft);
+  margin-bottom: .875rem;
+  padding-block: .75rem;
+}
+.android-workspace .ask-composer-heading .assistant-badge { display: none; }
+.android-workspace .practice-config { grid-template-columns: minmax(0, 1fr); gap: .875rem; }
+.android-workspace .practice-guide { grid-row: 3; }
+.android-workspace .practice-generate { width: 100%; }
+.android-workspace .settings-tabs button { flex: 1 1 0; min-width: 0; }
+.android-workspace .settings-tabs button .guide-copy { min-width: 0; overflow-wrap: anywhere; }
+
+.android-dock {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 9;
+  padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+
+.android-dock-inner {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: var(--android-content-max);
+  margin-inline: auto;
+}
+
+.android-dock a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  min-height: calc(var(--android-dock-height) - 1px);
+  color: var(--ink-soft);
+  font-size: .6875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.android-dock-icon {
+  display: grid;
+  place-items: center;
+  width: 2.625rem;
+  height: 1.75rem;
+  border-radius: 2rem;
+}
+.android-dock-icon .icon { width: 1.25rem; height: 1.25rem; }
+.android-dock a[aria-current] { color: var(--accent-text); }
+.android-dock a[aria-current] .android-dock-icon { background: var(--accent-soft); }
+
+.android-workspace .page-scroll-controls,
+.android-workspace .floating-action-dock { bottom: calc(var(--android-bottom) + .75rem); }
+.android-workspace.shell:has(.page-scroll-controls) :is(.floating-action-dock-compact, .handbook-notes-dock) {
+  bottom: calc(var(--android-bottom) + 7.5rem);
+}
+
+/* Java reports IME insets on Android 11+. A short focused viewport covers older WebViews. */
+html[data-clearwrite-ime="true"] .android-workspace { --android-dock-height: 0px; }
+html[data-clearwrite-ime="true"] .android-dock { display: none; }
+
+@media (max-height: 32rem) {
+  html:not([data-clearwrite-ime]) .android-workspace:has(:is(textarea, input:not([type]), input[type="text"], input[type="search"], [contenteditable="true"]):focus) {
+    --android-dock-height: 0px;
+  }
+  html:not([data-clearwrite-ime]) .android-workspace:has(:is(textarea, input:not([type]), input[type="text"], input[type="search"], [contenteditable="true"]):focus) .android-dock {
+    display: none;
+  }
+}

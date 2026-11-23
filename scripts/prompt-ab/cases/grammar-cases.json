@@ -1,0 +1,104 @@
+[
+  {
+    "id": "g-agreement",
+    "label": "Subject-verb agreement (two clauses)",
+    "input": "My brother work in a bank and he enjoy his job.",
+    "expect": { "mustFix": ["work in", "enjoy his"] }
+  },
+  {
+    "id": "g-tense",
+    "label": "Present perfect with finished time expression",
+    "input": "I have seen him yesterday at the library.",
+    "expect": { "mustFix": ["have seen him yesterday"] }
+  },
+  {
+    "id": "g-article",
+    "label": "Missing articles (profession + instrument)",
+    "input": "She is teacher and she plays piano every evening.",
+    "expect": { "mustFix": ["is teacher", "plays piano"] }
+  },
+  {
+    "id": "g-verb-complement",
+    "label": "Verb complement patterns (want / allow)",
+    "input": "My parents want me to studying abroad, but they don't allow me go alone.",
+    "expect": { "mustFix": ["to studying", "allow me go"] }
+  },
+  {
+    "id": "g-preposition",
+    "label": "Preposition + gerund / transitive discuss",
+    "input": "I'm looking forward to meet you and discuss about the project.",
+    "expect": { "mustFix": ["to meet you", "discuss about"] }
+  },
+  {
+    "id": "g-clean",
+    "label": "Correct sentence — correction must stay empty",
+    "input": "The meeting has been moved to Friday afternoon.",
+    "expect": { "clean": true }
+  },
+  {
+    "id": "g-list",
+    "label": "Numbered list — completeness and numbering",
+    "input": "Here is my plan for the weekend:\n1.Go to the market and buy some vegetable.\n2.Clean my room and do the laundry.\n3.Visit my grandmother which lives nearby.",
+    "expect": { "mustFix": ["some vegetable", "which lives"], "mustKeep": ["1.", "2.", "3."] }
+  },
+  {
+    "id": "g-long-passage",
+    "label": "Multi-error travel paragraph",
+    "input": "Last summer I travel to Yunnan with my friends. We was very excited because none of us had been there before. The scenery was beautiful, and we took many photo. Although the altitude was high, we didn't felt any discomfort. I hope I can visit there again next year.",
+    "expect": { "mustFix": ["travel to", "We was", "many photo", "didn't felt"], "mustKeep": ["Yunnan"] }
+  },
+  {
+    "id": "g-spelling-punct",
+    "label": "Spelling, homophones and capitalization",
+    "input": "Their going to the libary tommorow, and i think its a good idea.",
+    "expect": { "mustFix": ["Their going", "libary", "tommorow", "its a good"] }
+  },
+  {
+    "id": "g-runon",
+    "label": "Run-on sentence with however",
+    "input": "I was tired I went to bed early, however I couldn't fall asleep.",
+    "expect": { "mustFix": ["tired I went"] }
+  },
+  {
+    "id": "g-zh-influenced",
+    "label": "Chinese-influenced double conjunctions",
+    "input": "Although it was raining, but we still went hiking. Because the trail was slippery, so we walked slowly.",
+    "expect": { "mustFix": ["but we still", "so we walked"] }
+  },
+  {
+    "id": "g-formal-clean",
+    "label": "Correct formal sentence — refine-only path",
+    "input": "I am writing to inquire about the position that was advertised on your website.",
+    "expect": { "clean": true }
+  },
+  {
+    "id": "g-cx-mixed-conditional",
+    "label": "Complex: mixed conditional (past condition, present result)",
+    "input": "If I would have taken the earlier train, I would be at home now instead of waiting in this cold station.",
+    "expect": { "mustFix": ["would have taken"], "mustKeep": ["earlier train", "at home now"] }
+  },
+  {
+    "id": "g-cx-inversion",
+    "label": "Complex: negative-adverbial inversion + concessive clause",
+    "input": "Not only she forgot to lock the door, but she also left the keys on the table, although I had reminded her twice.",
+    "expect": { "mustFix": ["Not only she forgot"], "mustKeep": ["twice"] }
+  },
+  {
+    "id": "g-cx-relative-stack",
+    "label": "Complex: stacked relative clauses with agreement inside",
+    "input": "The report that you sent me last Friday, which contain the figures that was missing from the earlier version, have already been reviewed by the manager.",
+    "expect": { "mustFix": ["contain the figures", "that was missing", "have already been"], "mustKeep": ["last Friday"] }
+  },
+  {
+    "id": "g-cx-subjunctive-cleft",
+    "label": "Complex: cleft sentence + mandative subjunctive",
+    "input": "It was the auditor who recommended that he resigns immediately, and what surprised us was that nobody were informed before the announcement.",
+    "expect": { "mustFix": ["he resigns", "nobody were"] }
+  },
+  {
+    "id": "g-cx-participle-clean",
+    "label": "Complex: perfect participle + concessive — correct, must stay empty",
+    "input": "Having reviewed the proposal twice, the committee decided to approve it, although several members who had raised objections earlier were still not entirely convinced.",
+    "expect": { "clean": true }
+  }
+]

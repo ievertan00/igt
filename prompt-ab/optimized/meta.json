@@ -1,0 +1,83 @@
+{
+  "version": "optimized-v1",
+  "created": "2026-11-22",
+  "status": "candidate-only; no production code, config, or existing file was modified",
+  "purpose": "Full-prompt rewrites of the Grammar, Ask and Coach prompts, banked for blind A/B comparison against the live production prompts.",
+  "baseline": {
+    "note": "SHA-256 of the exact strings used at runtime (template literals normalize CRLF to LF); the first 16 hex chars match the A/B harness manifest.",
+    "grammar/system": {
+      "source": "igt_config.json -> Prompts.SystemPrompt",
+      "chars": 2832,
+      "sha256": "970e79942846c442dce23a566a799af209d5379a7611f9f9284a98d2c58ce758"
+    },
+    "grammar/inputScope": {
+      "source": "lib/application/grammar.mjs -> INPUT_SCOPE",
+      "chars": 3155,
+      "sha256": "4b04da4145e032f4df18bd827a81f4f76b762f570f957fe20b7df9b66c41641d"
+    },
+    "ask/template": {
+      "source": "igt_config.json -> Prompts.AskPrompt",
+      "chars": 2050,
+      "sha256": "f854614a73c28ca5a13b335909407afbbd81c372226e5aa94df6c22d355c4c70"
+    },
+    "coach/system": {
+      "source": "lib/application/coach-report.mjs -> SYSTEM",
+      "chars": 8268,
+      "sha256": "8c3aa2ab3c31d6193c1f82de76e817676d03ae1e71541596481cd1979380ca5c"
+    }
+  },
+  "files": {
+    "hash-note": "sha256 is the raw file bytes; abManifestPrefix is the harness value (SHA-256 of the LF-normalized, trimmed text, first 16 hex chars) as printed by npm run ab:run.",
+    "grammar/system.txt": {
+      "bytes": 4132,
+      "sha256": "047b3f462d6d0d754852cb9a19f78eb24b9372dc1e88bbd916aed8551737b841",
+      "abManifestPrefix": "fb2e4be1f2c96b0b",
+      "replaces": "Prompts.SystemPrompt"
+    },
+    "grammar/inputScope.txt": {
+      "bytes": 2918,
+      "sha256": "443a96e25f406da5d04d208cb850264940fe9613d9ecf747675f7a4b0942d3c6",
+      "abManifestPrefix": "132d39c6b5cad259",
+      "replaces": "INPUT_SCOPE in lib/application/grammar.mjs"
+    },
+    "ask/ask.txt": {
+      "bytes": 3611,
+      "sha256": "00b47b726fdf09d295fe71abeb21128d74ef7d53bcdca1ce3e8b192143d2b46b",
+      "abManifestPrefix": "2c802682459a85a9",
+      "replaces": "Prompts.AskPrompt"
+    },
+    "coach/system.txt": {
+      "bytes": 9919,
+      "sha256": "6f337ecde2061221f534c7a310ef6f6dbc2405d9690c8adf14ed533e3f619f9f",
+      "abManifestPrefix": "e6f39121701fd1e1",
+      "replaces": "SYSTEM in lib/application/coach-report.mjs, via systemPromptOverride"
+    },
+    "strategy.json": {
+      "bytes": 1150,
+      "sha256": "09440ff83a8d62ae877eaf79dd97f208162c35c7a9d5960864481516601323e7",
+      "purpose": "Optional one-line delta instructions in variants.json shape, for the root generate.mjs harness. NOT a substitute for the full rewrites."
+    }
+  },
+  "assembly": {
+    "grammar": "analyzeGrammar joins [systemPrompt, inputScope] with a blank line. system.txt is self-contained and remains consistent with the production INPUT_SCOPE, so it can also be tested alone (root harness). inputScope.txt is the optimized companion for scripts/prompt-ab.",
+    "ask": "askStateless replaces {{history}}, then appends ASK_METADATA_PROMPT, askLanguagePrompt(language) and the no-table formatting rule. Those fragments stay production-fixed; ask.txt must not restate their values.",
+    "coach": "generateCoachReport prepends languageInstruction and appends outputRequirements. system.txt must not set the report language or relax the five-section / eight-subsection / citation validator."
+  },
+  "contracts-preserved": [
+    "Grammar: raw JSON with exactly correction, refine, evaluate, diagnoses, remember; non-empty refine; empty correction when clean; complete corrected passage; severity Minor/Moderate/Major; taxonomy unchanged.",
+    "Ask: {{history}} placeholder retained; six required JSON fields; Simplified Chinese title; tags/category from the supplied vocabularies; no markdown tables; explicit response language wins.",
+    "Coach: exactly ## 1.-## 5. headings, ### 4.1.-### 4.8. subsections, at least one valid [S#] citation, no invented ids, no study plan, no pipeline statistics in section 2, Markdown only."
+  ],
+  "mirrors": {
+    "root": "prompt-ab/optimized/ (authoritative copies)",
+    "scripts": "scripts/prompt-ab/variants/{grammar,ask,coach}/optimized/ (byte-identical copies for npm run ab:run; no harness code changed)"
+  },
+  "ab-commands": {
+    "scripts-harness": "npm run ab:run -- --variants \"grammar=baseline,optimized;ask=baseline,optimized;coach=baseline,optimized\" --no-judge",
+    "root-harness": "copy the three strings from strategy.json into prompt-ab/variants.json (or merge as an optimized key in candidates.json), then: node .\\generate.mjs --ollama --candidate optimized --split formal --pilot"
+  },
+  "out-of-scope": [
+    "lib/features/learning-diagnosis/coach-prompt.mjs COACH_PROMPT (separate JSON-schema diagnostic path, not the report generator targeted by both A/B harnesses)",
+    "Prompts.AskCompactPrompt and the other config prompt templates"
+  ]
+}

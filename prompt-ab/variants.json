@@ -1,0 +1,5 @@
+{
+  "grammar": "Before filling correction, review each proposed edit against the original. Keep it only if you can identify the objective error in context. Put an equally valid stylistic alternative only in refine.",
+  "ask": "Open with a direct answer to the current question in its conversational context. Add a contrasting example only when it changes how the learner would choose the form.",
+  "coach": "Before each major assessment, verify the learner's exact original against the cited record, distinguish retries and assisted work, and check the remaining records for counterexamples. Narrow the claim to what survives those checks."
+}

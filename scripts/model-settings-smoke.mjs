@@ -231,6 +231,27 @@ try {
   await manager.generate("hello", "test", { taskType: "grammar" });
   assert.equal(calls.at(-1).url, "/legacy/v1/chat/completions");
   assert.equal(calls.at(-1).authorization, "Bearer legacy-secret");
+
+  fs.writeFileSync(loader.envPath, `IGT_LLM_PROVIDER=custom\nIGT_DEFAULT_MODEL=one-default\nIGT_CUSTOM_API_BASE=${endpoint}/default/v1\n`);
+  process.env.IGT_LLM_PROVIDER = "custom";
+  const singleDefault = await request("GET", "/settings/llm");
+  assert.deepEqual(singleDefault.profiles[0].models, { flash: "one-default", pro: "one-default" });
+  for (const task of ["grammar", "coach"]) {
+    assert.equal((await routeModel({ "x-igt-cli-task": task }, task)).status, 200);
+    assert.equal(calls.at(-1).body.model, "one-default");
+  }
+  const scoped = await request("POST", "/settings/llm", {
+    action: "create", profileName: "Separate model", provider: "custom", defaultScope: "web",
+    models: { custom: { flash: "separate-model", pro: "separate-model" } },
+    baseUrls: { CustomApiBase: `${endpoint}/separate/v1` },
+  });
+  assert.equal(scoped.status, 200);
+  assert.equal((await routeModel({ "x-igt-model-profile": scoped.activeProfileId }, "coach")).status, 200);
+  assert.equal(calls.at(-1).body.model, "separate-model", "a saved profile overrides the environment default");
+  assert.equal(loader.load().DefaultModel, "one-default", "the Web default leaves the environment fallback alone");
+  assert.equal((await activate(scoped.activeProfileId)).status, 200);
+  assert.equal(loader.load().DefaultModel, "separate-model");
+  assert.ok(!Object.keys(loader.env).some(key => /_(FLASH|PRO)_MODEL$/.test(key)), "saving does not reintroduce split model fields");
   console.log("Model profiles: persistence, masked credentials, isolated keys, updates, provider/role switching, reload, validation and storage failure checks passed.");
 } finally {
   server.closeAllConnections();

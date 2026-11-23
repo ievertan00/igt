@@ -1,0 +1,104 @@
+[
+  {
+    "id": "a-present-perfect",
+    "label": "Tense contrast, Chinese response",
+    "question": "现在完成时和一般过去时有什么区别？什么时候必须用现在完成时？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["have"] }
+  },
+  {
+    "id": "a-affect-effect",
+    "label": "Word pair distinction, English response",
+    "question": "What's the difference between 'affect' and 'effect'? Give me examples.",
+    "language": "en",
+    "expect": { "mustMention": ["affect", "effect"] }
+  },
+  {
+    "id": "a-followup",
+    "label": "Multi-turn follow-up with history",
+    "question": "那 want 和 enjoy 后面分别接什么形式？能多给几个例句吗？",
+    "language": "zh-CN",
+    "history": [
+      {
+        "question": "为什么这句话用 to do 而不是 doing？",
+        "answer": "因为 decide 这类动词后面接 to-infinitive 作宾语，表示决定去做某事；而 enjoy 后面接动名词 doing。"
+      }
+    ],
+    "expect": { "mustMention": ["want", "enjoy"] }
+  },
+  {
+    "id": "a-comparison",
+    "label": "Comparison request — must not use tables",
+    "question": "比较一下 used to do 和 be used to doing 的用法。",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["used to"] }
+  },
+  {
+    "id": "a-out-of-scope",
+    "label": "Out-of-scope request handling",
+    "question": "Can you help me write a Python script to sort a list?",
+    "language": "en"
+  },
+  {
+    "id": "a-collocation",
+    "label": "Collocation reasoning, Chinese response",
+    "question": "为什么说 make a decision 而不是 do a decision？英语搭配有什么规律？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["make"] }
+  },
+  {
+    "id": "a-writing-polish",
+    "label": "Register upgrade request",
+    "question": "How can I make this sentence more formal: 'I want to ask you to help me with this thing'?",
+    "language": "en"
+  },
+  {
+    "id": "a-article-places",
+    "label": "Article use with institutional nouns",
+    "question": "When do I use 'the' with places like school, hospital, and bed? Sometimes I see 'go to school' and sometimes 'go to the school'.",
+    "language": "en",
+    "expect": { "mustMention": ["school"] }
+  },
+  {
+    "id": "a-zh-double-conjunction",
+    "label": "Chinese learner: although/but double conjunction",
+    "question": "为什么 'Although it was raining, but we still went out' 是错的？中文说'虽然……但是……'不是很自然吗？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["although", "but"] }
+  },
+  {
+    "id": "a-zh-third-person-s",
+    "label": "Chinese learner: missing third-person -s",
+    "question": "为什么 'He go to school every day' 不对？中文动词不用变化，英语什么时候要在动词后面加 s？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["goes"] }
+  },
+  {
+    "id": "a-zh-a-the",
+    "label": "Chinese learner: a vs the (no articles in Chinese)",
+    "question": "a 和 the 到底怎么区分？为什么 'I bought a book. The book is very interesting.' 第二句要用 the？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["the"] }
+  },
+  {
+    "id": "a-zh-very-like",
+    "label": "Chinese learner: very + verb (很喜欢直译)",
+    "question": "为什么不能说 'I very like English'？'我很喜欢英语'到底该怎么说？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["very much"] }
+  },
+  {
+    "id": "a-zh-tense-aspect",
+    "label": "Chinese learner: past vs experiential aspect (去了/去过)",
+    "question": "中文没有时态变化，'我昨天去了图书馆'和'我去过图书馆'用英语分别怎么说？为什么一个用 went 一个用 have been？",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["went", "have been"] }
+  },
+  {
+    "id": "a-zh-uncountable",
+    "label": "Chinese learner: uncountable nouns (advices/informations)",
+    "question": "为什么 'some advices' 和 'many informations' 是错的？advice 和 information 在中文里明明可以数。",
+    "language": "zh-CN",
+    "expect": { "mustMention": ["advice", "information"] }
+  }
+]

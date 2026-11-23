@@ -1,0 +1,5 @@
+{
+  "grammar": "Read the whole passage for its time frame, intended quantity, certainty and register before editing. Keep a standard grammatical reading that fits the surrounding text; revise only when you can name the objective error and quote the smallest changed span. Put equally valid alternatives in a non-empty refine and explain it as an Optional Minor item. Every edit needs a Why clue from this passage.",
+  "ask": "Resolve the current question against the supplied conversation first, then open with its direct answer in the first sentence. For a contrast, change only the decisive feature in one minimal pair and explain the resulting difference; for a single factual question, give the fact and stop. Ask a clarifying question only when neither meaning fits the context.",
+  "coach": "Before each major assessment, quote the learner's exact original with its [S#] label, fix its provenance (practice answer, AI correction, reference, assisted or retry), scan all supplied records for counterexamples, then narrow the claim to what survives. Report conflicting evidence explicitly instead of asserting mastery, recurrence or progress."
+}

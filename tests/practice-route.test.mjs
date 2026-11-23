@@ -6,6 +6,7 @@ import { runMigrations } from "../lib/db/migrations.mjs";
 import { selectPracticeQuestions, decodePracticeQuestion } from "../lib/features/practice/question-bank.mjs";
 import { registerPracticeRoutes } from "../lib/server/routes/practice.mjs";
 import { practiceQuestionId } from "../lib/features/practice/question-ids.mjs";
+import { evaluatePracticeAnswer } from "../lib/application/practice-evaluation.mjs";
 import { dispatch } from "../lib/server/router.mjs";
 
 const db = new Database(":memory:");
@@ -124,4 +125,58 @@ test("native seed evaluation uses canonical learning targets without legacy anno
   assert.equal(lastInput.practice_fields._legacy, undefined);
   assert.equal(attempts.at(-1).targetPattern, "Past condition with present result");
   assert.equal(attempts.at(-1).feedback.hints_used, 1);
+});
+
+
+const submission = { id: "practice-test", answer: "  I bought a book.  " };
+const question = {
+  id: submission.id,
+  prompt_zh: "我买了一本书。",
+  reference_answer: "I bought a book.",
+};
+
+function dependencies() {
+  return {
+    findQuestion: async () => question,
+    getLLMManager: async () => ({
+      generateWithFallback: async () => JSON.stringify({
+        score: 100, verdict: "correct", corrected_answer: question.reference_answer,
+      }),
+    }),
+  };
+}
+
+test("provider failure prevents both attempt and log writes", async () => {
+  const failure = new Error("Provider unavailable");
+  await assert.rejects(evaluatePracticeAnswer(submission, {
+    ...dependencies(),
+    getLLMManager: async () => { throw failure; },
+    persistPracticeAttempt: () => assert.fail("Unexpected attempt write"),
+    appendPracticeLog: () => assert.fail("Unexpected log write"),
+  }), failure);
+});
+
+test("attempt write failure prevents the practice log from running", async () => {
+  const failure = new Error("Database unavailable");
+  const appendPracticeLog = test.mock.fn();
+  await assert.rejects(evaluatePracticeAnswer(submission, {
+    ...dependencies(),
+    persistPracticeAttempt: async () => { throw failure; },
+    appendPracticeLog,
+  }), failure);
+  assert.equal(appendPracticeLog.mock.callCount(), 0);
+});
+
+test("a log failure preserves the evaluation and the persisted attempt", async () => {
+  const savedAttempts = [];
+  const result = await evaluatePracticeAnswer(submission, {
+    ...dependencies(),
+    persistPracticeAttempt: async (attempt) => { savedAttempts.push(attempt); },
+    appendPracticeLog: async () => { throw new Error("Log unavailable"); },
+  });
+  assert.equal(result.data.score, 100);
+  assert.equal(result.persistence.saved, false);
+  assert.match(result.persistence.warning, /Practice Log/);
+  assert.equal(savedAttempts.length, 1);
+  assert.equal(savedAttempts[0].learnerAnswer, "I bought a book.");
 });

@@ -54,6 +54,7 @@ tests/*
 !tests/practice-attempts.test.mjs
 !tests/request-guard.test.mjs
 !tests/runtime-lock.test.mjs
+!tests/prompt-ab.test.mjs
 CLAUDE.md
 GEMINI.md
 TODOS.md
@@ -77,6 +78,7 @@ practice.js
 assets/logo.jpg
 graphify-out/
 apps/web/dist/
+apps/android/build/
 output/
 tools/cosyvoice/server.py.container-bak
 
@@ -85,3 +87,7 @@ backups/
 
 # Runtime single-writer lock (next to the database)
 *.runtime-lock
+
+# Prompt A/B artifacts; live coach snapshots contain personal learning data
+prompt-ab-runs/
+scripts/prompt-ab/cases/coach/live-*.json

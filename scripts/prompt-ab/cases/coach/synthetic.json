@@ -1,0 +1,98 @@
+{
+  "id": "synthetic",
+  "label": "Synthetic benchmark: recurring verb-complement and article errors",
+  "language": "zh-CN",
+  "days": 0,
+  "sourceStatus": { "grammar": "available", "practice": "available" },
+  "entries": [
+    {
+      "entryId": "syn-g1",
+      "timestamp": "2026-10-08T09:30:00.000Z",
+      "source": "grammar",
+      "userInput": "My manager wants me to finishing the report before Friday.",
+      "correction": "My manager wants me to finish the report before Friday.",
+      "refine": "My manager would like me to finish the report by Friday.",
+      "diagnoses": [
+        { "error_type": "Verb Pattern", "severity": "Moderate", "explanation": "want + object + to-infinitive requires the base form 'finish', not the gerund." }
+      ],
+      "remember": "After want + object, use to + base verb."
+    },
+    {
+      "entryId": "syn-g2",
+      "timestamp": "2026-10-15T14:10:00.000Z",
+      "source": "grammar",
+      "userInput": "The company allows employees work from home twice a week.",
+      "correction": "The company allows employees to work from home twice a week.",
+      "refine": "Employees are allowed to work from home twice a week.",
+      "diagnoses": [
+        { "error_type": "Verb Pattern", "severity": "Moderate", "explanation": "allow + object takes a to-infinitive complement: allows employees to work." }
+      ],
+      "remember": "allow somebody to do something."
+    },
+    {
+      "entryId": "syn-g3",
+      "timestamp": "2026-10-22T08:45:00.000Z",
+      "source": "grammar",
+      "userInput": "She let her assistant to book the meeting room, but he forgot.",
+      "correction": "She let her assistant book the meeting room, but he forgot.",
+      "refine": "She had her assistant book the meeting room, but he forgot.",
+      "diagnoses": [
+        { "error_type": "Verb Pattern", "severity": "Moderate", "explanation": "let + object takes a bare infinitive: let her assistant book, without 'to'." }
+      ],
+      "remember": "let somebody do something — no 'to'."
+    },
+    {
+      "entryId": "syn-g4",
+      "timestamp": "2026-11-02T10:05:00.000Z",
+      "source": "grammar",
+      "userInput": "I bought new laptop last week, and the laptop is very fast.",
+      "correction": "I bought a new laptop last week, and the laptop is very fast.",
+      "refine": "I bought a new laptop last week, and it is very fast.",
+      "diagnoses": [
+        { "error_type": "Article", "severity": "Minor", "explanation": "A singular countable noun mentioned for the first time needs the indefinite article: a new laptop." }
+      ],
+      "remember": "First mention of a countable singular noun: a/an."
+    },
+    {
+      "entryId": "syn-p1",
+      "timestamp": "2026-10-18T19:20:00.000Z",
+      "source": "practice",
+      "userInput": "The teacher asked us to hand in the homework before Monday.",
+      "correction": "",
+      "diagnoses": [],
+      "practice": {
+        "mode": "translation",
+        "context": "School life",
+        "prompt": "老师要求我们在周一之前交作业。",
+        "referenceAnswer": "The teacher asked us to hand in the homework before Monday.",
+        "feedback": "Correct use of ask + object + to-infinitive. Natural word order.",
+        "hintsUsed": 0,
+        "question": "practice-syn-1",
+        "difficulty": "medium",
+        "style": "neutral",
+        "languageFocus": "verb complement"
+      }
+    },
+    {
+      "entryId": "syn-p2",
+      "timestamp": "2026-11-05T20:00:00.000Z",
+      "source": "practice",
+      "userInput": "My mother doesn't allow me to staying up late on weekdays.",
+      "correction": "",
+      "diagnoses": [],
+      "practice": {
+        "mode": "translation",
+        "context": "Family rules",
+        "prompt": "我妈妈不允许我工作日熬夜。",
+        "referenceAnswer": "My mother doesn't allow me to stay up late on weekdays.",
+        "feedback": "The complement after allow + object should be the to-infinitive 'to stay', not 'to staying'.",
+        "hintsUsed": 1,
+        "question": "practice-syn-2",
+        "difficulty": "medium",
+        "style": "neutral",
+        "languageFocus": "verb complement"
+      }
+    }
+  ],
+  "expect": { "mustMention": ["allow"] }
+}

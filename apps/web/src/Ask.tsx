@@ -3,6 +3,7 @@ import { IconButton } from "./IconButton";
 import { Icon } from "./Icon";
 import { FloatingAction } from "./FloatingAction";
 import { Heading } from "./Page";
+import { androidApp } from "./AndroidWorkspace";
 import { Markdown } from "./Markdown";
 import { webApi } from "./api/client";
 import { copyText } from "./clipboard";
@@ -301,7 +302,9 @@ export function Ask({ active, view }: { active: boolean; view: "ask" | "notes" }
   function clearFilters() { setCategory(""); setTag(""); setQuery(""); }
 
   return <div className={`ask-page${view === "ask" ? " is-asking" : ""}${hasConversation ? " has-conversation" : ""}`}>
-    {view === "ask" && <Heading eyebrow="ASK" title="Ask about your English." detail={<GuideText text="Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question." />} />}
+    {view === "ask" && (androidApp
+      ? <h1 className="android-page-title">{t("Ask about your English")}</h1>
+      : <Heading eyebrow="ASK" title="Ask about your English." detail={<GuideText text="Make sense of grammar, word choice, tone, and natural expressions. Bring a sentence or a question." />} />)}
     {view === "ask" && hasConversation && <div className="ask-view-bar"><button className="secondary ask-new-question" disabled={busy} onClick={() => start({ turns: [], question: "" })}><Icon name="ask" />{t("New question")}</button></div>}
     <section id="ask-panel-ask" aria-label={t("Ask a question")} hidden={view !== "ask"}>
       <div className="ask-reading-column">
