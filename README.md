@@ -135,9 +135,9 @@ This loop targets the most common gap in English learning: **it made sense at th
 | --- | --- | --- |
 | **Web interface (main)** | `npm run web:start` | Everyday learning, the full feature set, Chinese guidance and visual reports |
 | **CLI companion** | `node igt.mjs` | Terminal habits; type English for grammar feedback or Chinese for translation |
-| **Android development app** | ADB-connected to the computer running ClearWrite | Writing, vocabulary, practice, questions and records on a phone, using the same data and model settings |
+| **Android development app** | ADB-connected to the computer running ClearWrite | A phone-native interface — Today, Write, Ask, Words, Practice, My learning, Settings — with one-handed navigation, offline drafts, system share and dark mode, using the same data and model settings |
 
-All three share one set of learning records and model configuration. See the [Android installation and connection guide](apps/android/README.md) ([中文](apps/android/README.zh.md)).
+All three share one set of learning records and model configuration. The Android interface is an independent mobile client (`apps/mobile`), not a copy of the desktop layout; its colour palette follows the same ClearWrite design tokens as the desktop client. See the [Android installation and connection guide](apps/android/README.md) ([中文](apps/android/README.zh.md)).
 
 ---
 
@@ -161,9 +161,11 @@ git clone https://github.com/ievertan00/igt.git
 Set-Location igt
 npm ci
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
-npm run web:build
+npm run client:build
 npm run web:start
 ```
+
+`client:build` produces both the desktop bundle and the Android mobile bundle (served at `/mobile/`). Use `web:build` alone only if the phone app is not needed. To install the Android app, also run `npm run android:build` and follow the [Android guide](apps/android/README.md).
 
 1. Keep the terminal open and visit the local address printed after **Ready on**. The interface opens in English; turn on **中文引导** for Chinese guidance.
 2. Open **Settings → Model settings**, add a model you have access to and select it as the Web default, supplying the model ID, credentials and endpoint as applicable. For local Ollama, keep `IGT_LLM_PROVIDER=ollama` in `.env`, set `IGT_DEFAULT_MODEL` to an installed name from `ollama list`, start Ollama and restart ClearWrite.

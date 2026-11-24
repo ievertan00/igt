@@ -7,6 +7,10 @@
   },
   "scripts": {
     "android:build": "pwsh -NoProfile -File apps/android/build.ps1",
+    "mobile:build": "vite build --config apps/mobile/vite.config.ts",
+    "mobile:typecheck": "tsc -p apps/mobile/tsconfig.json --noEmit",
+    "mobile:dev": "vite --config apps/mobile/vite.config.ts",
+    "client:build": "npm run web:build && npm run mobile:build",
     "web:dev": "node scripts/web-dev.mjs",
     "dev:start": "node scripts/web-dev.mjs start",
     "dev:status": "node scripts/web-dev.mjs status",
@@ -26,6 +30,7 @@
     "test:my-learning": "node --test tests/my-learning.test.mjs tests/grammar-history.test.mjs tests/handbook-cli.test.mjs tests/handbook-delete.test.mjs",
     "test:my-learning-web": "node scripts/my-learning-web-smoke.mjs",
     "test:mobile-ui": "node scripts/mobile-ui-audit.mjs",
+    "test:mobile-app": "node scripts/mobile-app-smoke.mjs",
     "test:vocabulary-sync": "node scripts/vocabulary-sync-smoke.mjs",
     "test:review-log-contract": "node scripts/review-log-contract-smoke.mjs",
     "test:config-paths": "node scripts/config-path-smoke.mjs",

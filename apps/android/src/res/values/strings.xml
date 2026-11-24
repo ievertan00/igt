@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">ClearWrite</string>
     <string name="connecting">Connecting to ClearWrite…</string>
-    <string name="disconnected">Couldn’t connect to ClearWrite. Check that ClearWrite is running on your computer and that ADB port forwarding is active.</string>
+    <string name="disconnected">Couldn’t connect to ClearWrite.</string>
+    <string name="connection_steps">1. Start the ClearWrite Local Runtime on your computer.\n2. Connect this phone over USB with debugging enabled.\n3. Run  adb reverse tcp:5173 tcp:PORT  (PORT is on the Ready on line).\n4. Come back here and tap Retry.</string>
     <string name="retry">Retry</string>
 </resources>

@@ -19,7 +19,7 @@
 ## 2. 已核实的项目条件
 
 - `apps/local/server.mjs` 导入 `lib/server/index.mjs`，可独立于 CLI 运行。
-- `npm run web:build` 构建至 `apps/web/dist`；Runtime 已提供静态文件、SPA 回退和 API。
+- `npm run client:build` 构建至 `apps/web/dist`（桌面端）与 `apps/web/dist/mobile`（安卓端，挂 `/mobile/`）；Runtime 已提供静态文件、按前缀区分的 SPA 回退和 API。仅执行 `web:build` 会清空 `dist/`，导致 `/mobile/` 无产物。
 - `lib/server/routes/runtime.mjs` 返回固定 `local-user`；HTTP 入口与路由器未提供统一登录校验。
 - 存在修改模型配置、写入 `.env`、设置服务器文件路径和管理模型的接口；远程访问者获得的是服务器能力。
 - 路由存在宽泛 CORS 配置，POST 正文解析未设置大小上限。
@@ -73,7 +73,8 @@ Node 仅监听本机回环地址，固定端口由 `.env` 提供。Tailscale Ser
 ```powershell
 npm ci
 npm run web:typecheck
-npm run web:build
+npm run mobile:typecheck
+npm run client:build
 node --env-file=.env apps/local/server.mjs
 ```
 

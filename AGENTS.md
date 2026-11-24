@@ -17,7 +17,9 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `lib/features/` — feature workflows such as practice, handbook, modules, and text analysis
 - `lib/server/` — local HTTP server, routes, migrations, and LLM provider integration
 - `apps/local/` — independent Local Web Runtime entrypoint
-- `apps/web/` — Vite + React + TypeScript Web client
+- `apps/web/` — Vite + React + TypeScript desktop Web client
+- `apps/mobile/` — standalone Vite + React + TypeScript mobile client, emitted to `apps/web/dist/mobile/` and served at `/mobile/`
+- `apps/android/` — Java WebView shell (APK built by `apps/android/build.ps1`)
 - `lib/db/` — SQLite access and persistence
 - `scripts/` — database, import, indexing, and verification utilities
 - `tests/` — Node test-suite
@@ -32,11 +34,14 @@ Install dependencies with `npm install`.
 - Run the learning workflow tests: `npm run test:learning`
 - Verify local learning resources: `npm run verify-learning-resources`
 - Launch the CLI directly: `node igt.mjs`
-- Build the Web client: `npm run web:build`
+- Build both clients (desktop + mobile, in this order): `npm run client:build`. `web:build` alone clears `apps/web/dist/` and leaves no `/mobile/` build.
+- Build / type-check / hot-reload the mobile client: `npm run mobile:build`, `npm run mobile:typecheck`, `npm run mobile:dev`
+- Build the Android APK: `npm run android:build` (requires JDK 17 + Android SDK Platform 36 / Build Tools 36.0.0)
 - Type-check the Web client: `npm run web:typecheck`
 - Run the independent Web development chain: `npm run web:dev`
 - Run the production Local Web Runtime: `npm run web:start`
 - Run Web acceptance checks: `npm run test:web-dev`, `npm run test:runtime`, `npm run test:static`, `npm run test:web`, `npm run test:coach-cache`, `npm run test:vocabulary-sync`, `npm run test:review-log-contract`, and `npm run test:config-paths`
+- Run mobile acceptance checks: `npm run test:mobile-app` (static routing + 12 screens at 320–430 px, touch targets, dark mode, back/share/draft bridges; synthetic fixtures only)
 
 There is no single full-suite npm script; run individual tests with `node --test tests/<file>.test.mjs` when needed.
 
@@ -65,3 +70,4 @@ For UI-related tasks:
 - Do not independently introduce a new visual style.
 - Verify rendered results in a browser when available.
 - Check affected sibling pages after shared component changes.
+- **Exception — `apps/mobile/`**: the Android client keeps an independent, mobile-first **layout system** (`apps/mobile/src/styles.css`, "Pocket Studio"): one-hand bottom navigation, thumb-zone actions, full-screen focus modes and bottom sheets. Its **colour palette is aligned with the ClearWrite Design System** (`DESIGN.md` §2 / `apps/web/src/visual-system.css`): slate canvas, white cards, obsidian primary actions, brand-green accents and web semantic colours; night mode is derived from the same hues. Do not reflow it to match desktop layouts or import desktop components/CSS, and do not introduce a second colour system — only colour values and the Local Runtime HTTP contract are shared. Changes to the mobile UI are verified with `npm run test:mobile-app`, not the desktop `test:mobile-ui` audit.

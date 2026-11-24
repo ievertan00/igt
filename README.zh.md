@@ -135,9 +135,9 @@ ClearWrite 是一款以真实写作为起点的 AI 英语学习工具。你正�
 | --- | --- | --- |
 | **Web 界面（主入口）** | `npm run web:start` | 日常学习、完整功能、中文引导与可视化报告 |
 | **命令行工具** | `node igt.mjs` | 习惯终端；直接输入英文查语法、输入中文即翻译 |
-| **安卓开发版** | ADB 连接正在运行 ClearWrite 的电脑 | 手机上的写作、词汇、练习、问答与学习记录，共用同一份数据和模型设置 |
+| **安卓开发版** | ADB 连接正在运行 ClearWrite 的电脑 | 为手机重做的界面：今天、写作、提问、词汇、练习、我的、设置；单手底栏、离线草稿、系统分享与深色模式，共用同一份数据和模型设置 |
 
-三者共用同一套学习记录与模型配置。安卓安装与连接见[中文指南](apps/android/README.zh.md) / [English guide](apps/android/README.md)。
+三者共用同一套学习记录与模型配置。安卓界面是独立的移动端客户端（`apps/mobile`），并非桌面布局的缩放版；配色沿用桌面端同一套 ClearWrite 设计色值。安装与连接见[中文指南](apps/android/README.zh.md) / [English guide](apps/android/README.md)。
 
 ---
 
@@ -161,9 +161,11 @@ git clone https://github.com/ievertan00/igt.git
 Set-Location igt
 npm ci
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
-npm run web:build
+npm run client:build
 npm run web:start
 ```
+
+`client:build` 会同时构建桌面端与安卓移动端产物（移动端挂在 `/mobile/`）。只有不需要手机端时才可以单独用 `web:build`。安装安卓 App 还需执行 `npm run android:build`，详见[安卓指南](apps/android/README.zh.md)。
 
 1. 保持终端运行，打开启动信息中 **Ready on** 后的本地地址。界面默认英文，需要中文提示时开启「中文引导」。
 2. 打开 **Settings → Model settings**，添加你能使用的模型并设为 Web 默认；按所选服务填写模型 ID、密钥与接口地址。使用本机 Ollama 时，在 `.env` 保留 `IGT_LLM_PROVIDER=ollama`，把 `IGT_DEFAULT_MODEL` 填为 `ollama list` 中已安装的模型名，启动 Ollama 后重启 ClearWrite。

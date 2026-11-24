@@ -10,7 +10,9 @@ Run these commands in the project directory from PowerShell or CMD.
 | `npm run dev:restart` | Stop `dev` and start it again on its previous ports, in the foreground. |
 | `npm run dev:start -- --background` | Explicitly keep `dev` running after the launching terminal exits. |
 | `npm run dev:restart -- --background` | Restart `dev` and keep it in the background. |
-| `npm run web:preview` | Start the built frontend as the managed `preview` instance. Requires `npm run web:build`. |
+| `npm run mobile:dev` | Start the standalone mobile client (`/mobile/`, default port `5174`) for hot-reloading the Android UI. It proxies the API to `IGT_DEV_API_PORT`; run `npm run web:dev` or the Local Runtime first. Not managed as a dev-runtime instance. |
+| `npm run client:build` | Build the desktop bundle and the mobile bundle into `apps/web/dist/` in the correct order. |
+| `npm run web:preview` | Start the built frontend as the managed `preview` instance. Requires `npm run client:build` (or `web:build` when the phone app is not needed). |
 | `npm run dev:stop -- --instance preview` | Stop preview from another terminal. |
 | `npm run test:dev-lifecycle` | Run isolated Windows/process lifecycle regressions; no learner DB or model calls. Build the Web client first for the preview CLI check. |
 
