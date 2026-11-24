@@ -1,8 +1,8 @@
-# ClearWrite · Product guide
+# ClearWrite · Local AI for English Writing and Learning
 
 **English** · [简体中文](README.zh.md)
 
-> Learn English with your own sentences. ClearWrite is the local learning workspace inside IGT (Interactive Grammar Tool). It joins "I can't phrase this" → "I understand the edit" → "I remember the pattern" → "I can write it unaided" into one loop you can build on over time.
+> **Learn how native English speakers would phrase it, one draft at a time.** ClearWrite uses local AI to suggest natural wording and explain why it fits the situation.
 
 ## Contents
 
@@ -12,21 +12,13 @@
 
 ## 1. What it is
 
-ClearWrite is an English-learning workspace that runs on your own computer. **The Web interface is the main entry point**, with a command-line companion and an Android development app alongside it. What you submit is the English you actually need to write or read, and the Chinese ideas you actually need to express. Feedback is built around that material, and you decide what is worth keeping.
+ClearWrite is an AI tool for learning English through the writing you already do. Your emails, messages, and documents make good learning material because they contain the things you actually need to say. When a sentence gives you pause, you have a reason to work out which words go together and how to put them in order.
 
-- **Local first**: learning records are readable Markdown files plus a local SQLite database, and can point at your own Obsidian vault.
-- **Your choice of model**: add any model you have access to in **Model settings** — OpenAI, Anthropic, DeepSeek, Ollama, and OpenAI-compatible services such as Gemini, Qwen, LM Studio or vLLM. With local Ollama alone, nothing needs to leave the machine.
-- **Chinese guidance**: the interface is English by default; turn on **中文引导** for Chinese on-screen guidance while English examples, target expressions and your own writing stay in their original language.
-- **No inflated mastery claims**: one correction, one answer written with hints, or one self-rating of "Good" is never recorded as durable mastery. This evidence boundary runs through writing feedback, practice records and learning reports.
+Natural English depends on who you're writing to and what you want them to take from the message. ClearWrite helps you understand how native speakers choose words, sentence structures, and tone for a given situation. AI can explain how a phrasing is likely to land. You decide what best conveys your meaning and carry that judgment into the next thing you write.
 
-**Who it is for**
+Real drafts often contain personal or work information, so ClearWrite is designed to run locally. You can process drafts with a local AI model and decide what to keep.
 
-- You write English emails, documents or messages and often feel a sentence is off without being able to say why.
-- Your idea is clear in Chinese, but the English comes out as a literal translation and you want a more natural, better-judged phrasing.
-- Words you looked up and rules you asked about made sense at the time, then vanished a few days later.
-- You want to know whether you keep making the same kind of mistake, instead of fixing each instance from scratch.
-
-**What it is not**: not an essay grader, not a word-list streak app, and it neither records nor assesses your pronunciation. It turns real expression problems into searchable, revisable, reusable personal material. Learning English still takes regular reading, listening and real conversation.
+**Your learning material belongs to you.** Most of it, including saved vocabulary, writing corrections, notes, and practice logs, lives in Markdown (`.md`) files on your computer. Even if ClearWrite stops being maintained, you can keep opening, organising, and using those files with any text editor.
 
 ---
 
@@ -34,7 +26,7 @@ ClearWrite is an English-learning workspace that runs on your own computer. **Th
 
 | Area | Web entry | What it does | How it helps you learn |
 | --- | --- | --- | --- |
-| Writing and expression | **Writing → Grammar / Express** | Whole-passage feedback, optional refinements, error diagnosis, follow-up questions, two-way Chinese/English expression | Moves you from "it was corrected" to "I know why", with the edit kept inside your own sentence |
+| Writing and expression | **Writing → Refine / Express** | Whole-passage feedback, optional refinements, error diagnosis, follow-up questions, two-way Chinese/English expression | Moves you from "it was corrected" to "I know why", with the edit kept inside your own sentence |
 | Vocabulary and recall | **Vocabulary / Review / Saved words** | Two-way lookup, saved entries, active recall with four graded ratings and spaced review | Separates "I looked it up" from "I can produce it", and brings words back according to recall |
 | Sentence production | **Practice** | Chinese-to-English prompts from a local bank, difficulty and context filters, three progressive hints, answer feedback | Trains active production from meaning to sentence, and distinguishes unaided answers from hinted ones |
 | Questions and notes | **Ask / Saved notes** | Usage questions, examples, saving a single answer or a whole discussion as a structured note | Turns scattered questions into a searchable personal reference with categories and topics |
@@ -47,7 +39,7 @@ ClearWrite is an English-learning workspace that runs on your own computer. **Th
 
 ### 3.1 Writing and expression · Writing
 
-**Writing → Grammar** handles a single sentence or a whole passage, including paragraphs, numbered lists and bullet lists. Feedback is structured in five layers: **Evaluate** (overall assessment) → **Correction** (the necessary edit) → **More natural** (optional refinement) → **Why** (diagnosis by mistake type) → **Remember** (a memory cue, i.e. Tips). Required changes and "a more natural way to say it" are shown separately, so you can change one word and keep the meaning you intended.
+**Writing → Refine** handles a single sentence or a whole passage, including paragraphs, numbered lists and bullet lists. Feedback is structured in five layers: **Evaluate** (overall assessment) → **Correction** (the necessary edit) → **More natural** (optional refinement) → **Why** (diagnosis by mistake type) → **Remember** (a memory cue, i.e. Tips). Required changes and "a more natural way to say it" are shown separately, so you can change one word and keep the meaning you intended.
 
 **A complete example: the most common sentence in an email closing** (three necessary edits spanning gerunds, time prepositions and verb patterns, plus one optional refinement):
 
@@ -104,8 +96,8 @@ Save a single answer, or summarise the whole discussion into a Markdown note wit
 | Sub-page | What it shows | Use it to |
 | --- | --- | --- |
 | **Overview** | Saved-material inventory, performance snapshot versus the previous period, trends, error distribution, priorities and the practice log | See what you actually did in a period, then drill into the underlying records |
-| **Handbook** | Saved Grammar checks, filterable by time, keyword and mistake type | Revisit one class of correction in bulk — articles, for example |
-| **Learning reports** | Choose a time window and report language; Coach draws on saved Grammar checks and Practice attempts | Find recurring error patterns, likely gaps and a direction for practice; reopen saved reports or download Markdown |
+| **Handbook** | Saved Refine checks, filterable by time, keyword and mistake type | Revisit one class of correction in bulk — articles, for example |
+| **Learning reports** | Choose a time window and report language; Coach draws on saved Refine checks and Practice attempts | Find recurring error patterns, likely gaps and a direction for practice; reopen saved reports or download Markdown |
 
 **The evidence boundary is deliberate**: one AI correction, one hinted answer and one self-rating cannot establish durable mastery; reports only assess abilities supported by your writing records; **No diagnosed mistakes** means no issue was diagnosed in that check, not that the text is flawless. After understanding an edit, try the same structure in a new context a few days later without hints — that is the useful test.
 
@@ -114,7 +106,7 @@ Save a single answer, or summarise the whole discussion into a Markdown note wit
 - **Model settings**: save multiple named configurations, each built around a single model you define yourself — provider, endpoint, credentials and model ID are all up to you; choose a Web default or assign models per task.
   - **Web**: Writing, Translation, Word lookup, Practice, Coach and Ask each have their own model picker and remember their choice per browser, falling back to the default when unset.
   - **CLI**: `/model add` opens the model settings page, `/model list` shows all task assignments, `/model <task> name` assigns one, and `/model <task> reset` restores the default. Assignable tasks: grammar, translation, word, practice, text, ask, chat, coach.
-  - **Match the model to the task**: point high-frequency, structured jobs like Grammar at a local model (such as Ollama) to avoid spending online tokens, and point reasoning-heavy jobs like Ask and Coach at a paid state-of-the-art model for more reliable explanations and advice. The Web app and CLI share the same saved configurations, but keep their assignments separately (Web in the browser, CLI in `IGT_CLI_MODELS` in `.env`), without overwriting each other.
+  - **Match the model to the task**: point high-frequency, structured jobs like Refine at a local model (such as Ollama) to avoid spending online tokens, and point reasoning-heavy jobs like Ask and Coach at a paid state-of-the-art model for more reliable explanations and advice. The Web app and CLI share the same saved configurations, but keep their assignments separately (Web in the browser, CLI in `IGT_CLI_MODELS` in `.env`), without overwriting each other.
 - **Markdown file settings**: choose where vocabulary, corrections, notes, the practice log and reports are saved, including an Obsidian vault.
 - **Selection lookup**: select English or Chinese text on any page to look it up without switching pages.
 - **Optional audio**: read-aloud for words and chat voice through a local OpenAI-compatible `/v1/audio/speech` service. The app does not record or assess pronunciation.
@@ -126,7 +118,7 @@ Save a single answer, or summarise the whole discussion into a Markdown note wit
 The modules are not a row of unrelated tools; they follow one language problem from start to finish:
 
 1. **Write** — your email draft contains *I look forward to meet you on Friday.*
-2. **Understand** — Grammar points out *meet → meeting*; a follow-up clarifies the two roles of *to*.
+2. **Understand** — Refine points out *meet → meeting*; a follow-up clarifies the two roles of *to*.
 3. **Save** — Save to review log files the original, the edit and the explanation in Handbook.
 4. **Extend** — Express handles the same situation from Chinese ("politely ask to move the meeting"); Vocabulary adds *follow up on*.
 5. **Practise** — write invitation and follow-up sentences unaided in a work-context Practice session; Review brings the phrase back a few days later.
@@ -175,7 +167,7 @@ npm run web:start
 
 1. Keep the terminal open and visit the local address printed after **Ready on**. The interface opens in English; turn on **中文引导** for Chinese guidance.
 2. Open **Settings → Model settings**, add a model you have access to and select it as the Web default, supplying the model ID, credentials and endpoint as applicable. For local Ollama, keep `IGT_LLM_PROVIDER=ollama` in `.env`, set `IGT_DEFAULT_MODEL` to an installed name from `ollama list`, start Ollama and restart ClearWrite.
-3. Try the email sentence above in **Writing → Grammar**. For later sessions, run `npm run web:start` from the project folder.
+3. Try the email sentence above in **Writing → Refine**. For later sessions, run `npm run web:start` from the project folder.
 
 ### Start from the command line
 
@@ -194,7 +186,7 @@ After registering, you no longer need to return to the project folder to start a
 
 ## 8. CLI command reference
 
-Run `node igt.mjs` from the project folder. At the prompt, **typing an English sentence checks its grammar** and **typing Chinese translates it**; everything else uses `/` commands. Use `/help <command>` for full options.
+Run `node igt.mjs` from the project folder. At the prompt, **typing an English sentence checks its grammar** and **typing Chinese translates it**; everything else uses `/` commands. Use `/help <command>` for full options. The Web feature **Refine** is the same grammar workflow; the CLI keeps the grammar name.
 
 | What you want to do | Try |
 | --- | --- |

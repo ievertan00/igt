@@ -11,7 +11,7 @@ const destinations = [
   { href: "#dashboard", label: "Learning", zh: "学习", icon: "dashboard" },
 ] as const;
 
-const writing = [["grammar", "Grammar"], ["translation", "Express"]] as const;
+const writing = [["grammar", "Refine"], ["translation", "Express"]] as const;
 const vocabulary = [["word-lookup", "Look up"], ["word-review", "Review"], ["word-library", "Saved words"]] as const;
 
 export function AndroidHeader({ settings }: { settings: boolean }) {

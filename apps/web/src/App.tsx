@@ -35,7 +35,7 @@ type Route =
   | "coach"
   | "settings";
 const items: Array<[Route, string]> = [
-  ["grammar", "Grammar"],
+  ["grammar", "Refine"],
   ["translation", "Express"],
   ["word-lookup", "Vocabulary"],
   ["word-review", "Review"],
@@ -141,7 +141,7 @@ function Grammar() {
 
   return (
     <div className={`grammar-page${result ? " has-result" : ""}`}>
-      {androidApp ? <h1 className="android-page-title">{t("Grammar check")}</h1> : <div className="grammar-intro">
+      {androidApp ? <h1 className="android-page-title">{t("Refine check")}</h1> : <div className="grammar-intro">
         <span className="writing-badge"><Icon name="spark" /><GuideText text="AI-Powered Writing Enhancer" /></span>
         <h1>
           Write with clarity<span className="accent-dot">.</span>
@@ -1212,7 +1212,7 @@ function Handbook() {
       const result = await webApi.getHandbook(errorType, { days, search: appliedSearch, diagnosis, offset, entryId });
       if (id === requestId.current) setData(result);
     } catch {
-      if (id === requestId.current) setError("Your saved Grammar checks could not be loaded. Please try again.");
+      if (id === requestId.current) setError("Your saved Refine checks could not be loaded. Please try again.");
     } finally {
       if (id === requestId.current) setBusy(false);
     }
@@ -1275,7 +1275,7 @@ function Handbook() {
       {busy && <p role="status">{t("Loading saved checks…")}</p>}
       {data && <>
         {data.coverage.undated > 0 && days !== 0 && <p className="handbook-evidence">{t("Some records have no usable date and cannot be placed in this time window.")}</p>}
-        <div className="panel-heading handbook-log-heading"><h2>{t("Grammar check log")}</h2></div>
+        <div className="panel-heading handbook-log-heading"><h2>{t("Refine check log")}</h2></div>
         <div className="handbook-log-layout">
           <div className="handbook-log-main">
             <Panel className="handbook-log">
@@ -1283,7 +1283,7 @@ function Handbook() {
                 <header className="handbook-source">
                   <span className="handbook-entry-meta"><time><Icon name="word-review" />{timestampLabel(entry.timestamp)}</time>
                     {[...new Set(entry.diagnoses.map(item => item.error_type))].map(type => <span className="handbook-type" key={type}>{type}</span>)}
-                    <span className="handbook-origin">{entry.source === "grammar" ? t("Writing · Grammar") : t("Historical check")}</span>
+                    <span className="handbook-origin">{entry.source === "grammar" ? t("Writing · Refine") : t("Historical check")}</span>
                   </span>
                   <span className="handbook-entry-tools">
                     {entry.correction && <HandbookCopy text={entry.correction} />}
@@ -1302,9 +1302,9 @@ function Handbook() {
                   {entry.remember && <section className="handbook-remember"><h3><Icon name="idea" />Remember</h3><p>{Array.isArray(entry.remember) ? entry.remember.join("\n") : entry.remember}</p></section>}
                   {!entry.evaluate && !entry.diagnoses.length && !entry.refine && !entry.remember && <p>{t("No additional notes were saved.")}</p>}
                 </details>
-              </article>) : <div className="handbook-empty"><State title={t("No saved checks to show.")} detail={data.coverage.grammar ? t("Try another search, clear your filters or return to the first page.") : t("Save a Grammar check to start your log, or choose a longer time window.")} /><a href="#grammar">{t("Check a sentence")}</a></div>}
+              </article>) : <div className="handbook-empty"><State title={t("No saved checks to show.")} detail={data.coverage.grammar ? t("Try another search, clear your filters or return to the first page.") : t("Save a Refine check to start your log, or choose a longer time window.")} /><a href="#grammar">{t("Check a sentence")}</a></div>}
             </Panel>
-            {(data.pagination.total > 0 || offset > 0) && <nav className="handbook-pagination" aria-label="Grammar check pages"><span>{data.entries.length ? `${data.pagination.offset + 1}–${data.pagination.offset + data.entries.length} of ${data.pagination.total} checks` : t("No checks on this page")}</span><button disabled={busy || offset === 0} onClick={() => navigate({ offset: Math.max(0, offset - data.pagination.limit) })}>{t("Previous")}</button><button disabled={busy || !data.pagination.hasMore} onClick={() => navigate({ offset: offset + data.pagination.limit })}>{t("Next")}</button></nav>}
+            {(data.pagination.total > 0 || offset > 0) && <nav className="handbook-pagination" aria-label="Refine check pages"><span>{data.entries.length ? `${data.pagination.offset + 1}–${data.pagination.offset + data.entries.length} of ${data.pagination.total} checks` : t("No checks on this page")}</span><button disabled={busy || offset === 0} onClick={() => navigate({ offset: Math.max(0, offset - data.pagination.limit) })}>{t("Previous")}</button><button disabled={busy || !data.pagination.hasMore} onClick={() => navigate({ offset: offset + data.pagination.limit })}>{t("Next")}</button></nav>}
           </div>
           <aside className="handbook-rail" aria-label={t("Log summary")}>
             <section className="handbook-rail-card">
@@ -2057,7 +2057,7 @@ const navigationGroups: Array<{ label: string; routes: Array<[Route, string]> }>
   {
     label: "Writing",
     routes: [
-      ["grammar", "Grammar"],
+      ["grammar", "Refine"],
       ["translation", "Express"],
     ],
   },
@@ -2112,7 +2112,7 @@ export function App() {
   const practiceLogView = route === "dashboard" && new URLSearchParams(routeHash.split("?")[1]).get("view") === "practice-log";
   const hasScrollNavigation = route === "word-library" || route === "coach" || route === "handbook" || (route === "ask" && askView === "notes");
   const title =
-    practiceLogView ? "Practice log" : route === "ask" && askView === "notes" ? "Saved notes" : route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Grammar";
+    practiceLogView ? "Practice log" : route === "ask" && askView === "notes" ? "Saved notes" : route === "dashboard" ? "Overview" : items.find(([key]) => key === route)?.[1] || "Refine";
   useEffect(() => {
     document.title = title + " · ClearWrite";
   }, [title]);

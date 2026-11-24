@@ -17,7 +17,7 @@ const day = (time: number) => new Date(time + 8 * 3600000).toISOString().slice(0
 const pct = (n: number | null | undefined) => n == null ? '—' : `${n.toFixed(1)}%`;
 const number = (n: number | null | undefined) => n == null ? '—' : n.toLocaleString();
 const statusLabels: Record<string, string> = { new: 'New', learning: 'Learning', 'needs-reinforcement': 'Needs reinforcement', retained: 'Retained', 'well-retained': 'Well retained', 'insufficient-history': 'Insufficient history', unavailable: 'Status unavailable' };
-const moduleLabels: Record<string, string> = { all: 'All modules', grammar: 'Grammar checks', text: 'Text analysis', review: 'Vocabulary review', practice: 'Chinese → English', vocabulary: 'Saved words', ask: 'Ask notes', coach: 'Learning reports', unclassified: 'Learning record', 'practice-log': 'Practice log', 'practice-choice': 'Choice practice', 'practice-word': 'Word practice', 'practice-expression': 'Expression practice' };
+const moduleLabels: Record<string, string> = { all: 'All modules', grammar: 'Refine checks', text: 'Text analysis', review: 'Vocabulary review', practice: 'Chinese → English', vocabulary: 'Saved words', ask: 'Ask notes', coach: 'Learning reports', unclassified: 'Learning record', 'practice-log': 'Practice log', 'practice-choice': 'Choice practice', 'practice-word': 'Word practice', 'practice-expression': 'Expression practice' };
 const metricLabels: Record<string, string> = { recall: 'Unaided word recall', score: 'Translation score', errors: 'Saved diagnosis share', effort: 'Recorded sentence work' };
 const ratingLabels: Record<string, string> = { again: 'Again', hard: 'Hard', good: 'Good', easy: 'Easy' };
 const kindIcons = { word: 'bookmark', grammar: 'grammar', note: 'ask', report: 'document', practice: 'practice', review: 'word-review', 'practice-log': 'document' } as const;
@@ -158,7 +158,7 @@ export function Dashboard() {
     {saved && <nav className="growth-saved-section" aria-label={t('Your saved material')}>
       <div className="growth-saved-heading"><h2>{t('Saved material')}</h2><div className="growth-heading-actions"><a className="growth-inline-link" href="#dashboard?view=practice-log">{t('Open practice log')}<Icon name="arrow" /></a><button type="button" className="growth-inline-link growth-heading-action" onClick={() => list(t('Recent activity'))}>{t('View recent activity')}<Icon name="arrow" /></button></div></div>
       <div className="growth-saved-grid">{([
-        ['words', 'Saved words', 'bookmark', '#word-library'], ['grammar', 'Grammar corrections', 'grammar', '#handbook?days=0'],
+        ['words', 'Saved words', 'bookmark', '#word-library'], ['grammar', 'Refine corrections', 'grammar', '#handbook?days=0'],
         ['notes', 'Ask notes', 'ask', '#ask?view=notes'], ['reports', 'Learning reports', 'trend', '#coach'],
       ] as const).map(([key, label, icon, href]) => {
         const detail = saved[key];

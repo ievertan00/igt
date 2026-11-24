@@ -13,7 +13,7 @@ const translations: Record<string, string> = {
   'Saved checks in this period': '所选时段的检查记录', 'Retained + Well retained': 'Retained + Well retained',
   'Last 7 days': '近 7 天', 'Last 30 days': '近 30 天', 'Last 90 days': '近 90 天', 'All history': '全部记录',
   'Start date': '开始日期', 'End date': '结束日期', 'Apply dates': '应用日期', 'Learning module': '学习模块',
-  'All modules': '全部模块', 'Grammar checks': '语法纠错', 'Text analysis': '文本分析', 'Vocabulary review': '词汇复习',
+  'All modules': '全部模块', 'Refine checks': 'Refine 纠错', 'Text analysis': '文本分析', 'Vocabulary review': '词汇复习',
   'Chinese → English': '中文转英文', 'All categories': '全部分类', 'Error category': '错误分类', 'Error type': '具体错误类型',
   'All error types': '全部具体类型', 'Reset filters': '重置筛选', 'Compare previous period': '对比上一时段',
   'Current period': '当前时段', 'Previous period': '上一时段', 'Show data and denominators': '查看数据与分母',

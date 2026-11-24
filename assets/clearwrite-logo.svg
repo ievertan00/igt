@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" role="img" aria-labelledby="cw-logo-title">
+  <title id="cw-logo-title">ClearWrite</title>
+  <!-- ClearWrite 横排标志：图标 + 品牌字标，置于浅色画布上 -->
+  <rect width="720" height="200" fill="#f6f8fb"/>
+  <!-- 图标：钢笔尖 + 无限环 -->
+  <g transform="translate(24 24)">
+    <rect width="152" height="152" rx="34" fill="#101827"/>
+    <g transform="translate(16 16) scale(0.234375)">
+      <path d="M256 104 L330 248 C341 273 337 302 317 319 L256 352 L195 319 C175 302 171 273 182 248 Z" fill="#2fbe63"/>
+      <path d="M112 416 C112 362 186 362 256 416 C326 470 400 470 400 416 C400 362 326 362 256 416 C186 470 112 470 112 416" fill="none" stroke="#2fbe63" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M256 112 L256 292" fill="none" stroke="#101827" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="256" cy="300" r="13" fill="#101827"/>
+    </g>
+  </g>
+  <!-- 品牌字标 -->
+  <text x="204" y="98" font-family="Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="64" font-weight="700" letter-spacing="-1.5" fill="#101827">ClearWrite</text>
+  <text x="206" y="134" font-family="Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="21" font-weight="500" letter-spacing="2.4" fill="#64748b">WRITE WITH CLARITY</text>
+</svg>

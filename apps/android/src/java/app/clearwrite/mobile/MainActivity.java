@@ -41,7 +41,6 @@ public final class MainActivity extends Activity {
         super.onCreate(savedState);
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.WHITE);
-        configureInsets(root);
         webView = new WebView(this);
         configureWebView();
         root.addView(webView, new FrameLayout.LayoutParams(-1, -1));
@@ -63,6 +62,7 @@ public final class MainActivity extends Activity {
         connectionPanel.addView(retry);
         root.addView(connectionPanel, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
+        configureInsets(root);
 
         String savedPage = savedState == null ? null : savedState.getString("page");
         loadPage(savedPage != null && isAppUrl(Uri.parse(savedPage)) ? savedPage : HOME);

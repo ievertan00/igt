@@ -172,7 +172,7 @@ export function Coach() {
       </aside>
       <div className="coach-reading">
     {busy && <p className="coach-progress" role="status">Reviewing saved sentences and feedback. This may take a few minutes.</p>}
-    {!report && !busy && <State title="A report grounded in your Grammar and Practice records" detail="Review your proficiency, individual error patterns, underlying knowledge gaps and personalized improvement directions using saved Grammar checks and 02_Practice_Log. Only abilities supported by your writing are assessed; AI corrections and assisted answers do not establish mastery." />}
+    {!report && !busy && <State title="A report grounded in your Refine and Practice records" detail="Review your proficiency, individual error patterns, underlying knowledge gaps and personalized improvement directions using saved Refine checks and 02_Practice_Log. Only abilities supported by your writing are assessed; AI corrections and assisted answers do not establish mastery." />}
     {report && <Panel title={coachReportTitle} icon="document" className="coach-report">
       <div className="coach-report-meta">
         <span><Icon name="calendar" />{report.cached ? "Cached report" : "Generated on"} {new Date(report.generatedAt).toLocaleString()}</span>
@@ -180,7 +180,7 @@ export function Coach() {
       <div className="coach-report-provenance">
       {report.saveError && <p role="alert">The report could not be saved. Try generating it again.</p>}
       {report.sourceStatus && report.sourceStatus.practice !== "available" && <p className="handbook-evidence">Practice records could not be read. This report uses the available learning records.</p>}
-      {report.sourceStatus?.grammar === "unavailable" && <p className="handbook-evidence">Grammar records could not be read. This report uses available Practice evidence.</p>}
+      {report.sourceStatus?.grammar === "unavailable" && <p className="handbook-evidence">Refine records could not be read. This report uses available Practice evidence.</p>}
       </div>
       <Markdown source={reportMarkdown} />
     </Panel>}

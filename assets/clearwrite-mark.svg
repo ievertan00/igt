@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="cw-mark-title">
+  <title id="cw-mark-title">ClearWrite mark</title>
+  <!-- ClearWrite 图标：钢笔尖写出的无限环，象征「写 → 懂 → 记 → 再写」的学习闭环 -->
+  <rect width="512" height="512" rx="112" fill="#101827"/>
+  <!-- 笔尖 -->
+  <path d="M256 104 L330 248 C341 273 337 302 317 319 L256 352 L195 319 C175 302 171 273 182 248 Z" fill="#2fbe63"/>
+  <!-- 笔尖写出的墨迹：无限环 -->
+  <path d="M112 416 C112 362 186 362 256 416 C326 470 400 470 400 416 C400 362 326 362 256 416 C186 470 112 470 112 416" fill="none" stroke="#2fbe63" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 中缝与墨水孔 -->
+  <path d="M256 112 L256 292" fill="none" stroke="#101827" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="256" cy="300" r="13" fill="#101827"/>
+</svg>
