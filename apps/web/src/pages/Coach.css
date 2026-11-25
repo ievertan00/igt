@@ -10,8 +10,9 @@
 .coach-select > .icon { position: absolute; top: .75rem; left: .875rem; pointer-events: none; width: 18px; height: 18px; }
 .coach-select select { padding-left: 3rem; }
 .coach-model .model-switcher { width: 100%; max-width: 100%; height: 44px; font-weight: 500; }
+.coach-model .model-switch-error { position: static; max-width: 100%; margin-block-start: .35rem; }
 .coach-actions { display: flex; align-items: center; gap: 1.25rem; padding-left: 1.75rem; border-left: 1px solid var(--line); }
-.coach-page .coach-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .75rem; min-height: 44px; padding: .625rem 1.25rem; font-size: .875rem; white-space: nowrap; overflow-wrap: normal; }
+.coach-page .coach-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .75rem; min-width: 0; min-height: 44px; padding: .625rem 1.25rem; font-size: .875rem; white-space: nowrap; overflow-wrap: normal; }
 .coach-actions .primary { background: color-mix(in srgb, var(--accent-text) 65%, var(--ink)); color: var(--on-dark); }
 .coach-actions .primary:hover:not(:disabled) { background: var(--accent-text); }
 .coach-actions .primary:disabled { background: var(--disabled-bg); color: var(--disabled-text); }
