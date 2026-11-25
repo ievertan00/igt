@@ -24,7 +24,7 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `migrations/` — schema migrations applied by `lib/db/migrations.mjs`
 - `scripts/` — development and verification utilities: `scripts/smoke/` (Web/CLI acceptance smokes), `scripts/db/` (database, import, and indexing utilities), `scripts/deploy/`, `scripts/dev-runtime/`, `scripts/prompt-ab/` (auto and blind A/B harnesses); dev-only scratch scripts live in the ignored `scripts/dev/`
 - `tests/` — Node test-suite
-- `docs/` — project documentation and design notes
+- `docs/` — local-private project documentation and design notes (gitignored, not versioned; keep shareable guidance at the repo root)
 - `DESIGN.md` — UI design guidelines
 
 ## Development commands
