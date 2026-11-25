@@ -67,10 +67,10 @@ test("dedicated CLI runs without a provider or database and leaves learning file
     const configPath = path.join(folder, "igt_config.json");
     fs.writeFileSync(envPath, `IGT_REVIEW_PATH=${reviewPath}\n`);
     fs.writeFileSync(configPath, "{}");
-    const script = fileURLToPath(new URL("../tools/igt-handbook.mjs", import.meta.url));
+    const script = fileURLToPath(new URL("../lib/cli/commands/entrypoints/igt-handbook.mjs", import.meta.url));
     // ConfigLoader deliberately reads the project .env rather than process env overrides.
     // Redirect only this child process to isolated configuration before running the real tool.
-    const bootstrap = `import config from ${JSON.stringify(new URL("../lib/shared/config-loader.mjs", import.meta.url).href)}; config.envPath=${JSON.stringify(envPath)}; config.configPath=${JSON.stringify(configPath)}; process.argv=['node',${JSON.stringify(script)},...process.argv.slice(1)]; await import(${JSON.stringify(new URL("../tools/igt-handbook.mjs", import.meta.url).href)});`;
+    const bootstrap = `import config from ${JSON.stringify(new URL("../lib/shared/config-loader.mjs", import.meta.url).href)}; config.envPath=${JSON.stringify(envPath)}; config.configPath=${JSON.stringify(configPath)}; process.argv=['node',${JSON.stringify(script)},...process.argv.slice(1)]; await import(${JSON.stringify(new URL("../lib/cli/commands/entrypoints/igt-handbook.mjs", import.meta.url).href)});`;
     const launch = (args) => spawnSync(process.execPath, ["--input-type=module", "-e", bootstrap, "--", ...args], { cwd: folder, encoding: "utf8", timeout: 10000 });
     const result = launch(["--days=0", "--diagnosis=none"]);
     assert.equal(result.status, 0, result.stderr);
