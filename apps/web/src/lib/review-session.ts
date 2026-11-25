@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { webApi } from "./api/client";
+import { webApi } from "../api/client";
 
 export const REVIEW_SESSION_KEY = "igt.review.daily-session.v2";
 export type ReviewRating = "again" | "hard" | "good" | "easy";

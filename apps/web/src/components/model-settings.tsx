@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { webApi } from "./api/client";
+import { webApi } from "../api/client";
 import { useGuideCopy } from "./learner-language";
 import "./ModelSettings.css";
 import { Icon } from "./Icon";
-import { currentModelPage, modelPages, readModelSelections, setDefaultModelProfile, writeModelSelections, type ModelPage, type ModelSelections } from "./api/model-selection";
+import { currentModelPage, modelPages, readModelSelections, setDefaultModelProfile, writeModelSelections, type ModelPage, type ModelSelections } from "../api/model-selection";
 
 export type ModelProfile = {
   id: string; name: string; provider: string; baseUrl: string;

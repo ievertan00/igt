@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { webApi } from './api/client';
-import type { GrowthDetail, GrowthError, GrowthFilters, GrowthOverview, GrowthPoint, GrowthRecord, GrowthRecords } from './api/learning-growth';
-import { Icon } from './Icon';
-import { Markdown } from './Markdown';
-import { State } from './Page';
-import { useLearningCopy } from './LearningCopy';
-import { asText, object, markdownBody } from './LearningPresentation';
+import { webApi } from '../api/client';
+import type { GrowthDetail, GrowthError, GrowthFilters, GrowthOverview, GrowthPoint, GrowthRecord, GrowthRecords } from '../api/learning-growth';
+import { Icon } from '../components/Icon';
+import { Markdown } from '../components/Markdown';
+import { State } from '../components/Page';
+import { useLearningCopy } from '../lib/LearningCopy';
+import { asText, object, markdownBody } from '../lib/LearningPresentation';
 import './LearningDashboard.css';
 
 type Query = Partial<GrowthFilters> & { days?: number };

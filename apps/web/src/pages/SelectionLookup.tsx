@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Icon } from "./Icon";
+import { Icon } from "../components/Icon";
 import "./SelectionLookup.css";
 
 type SelectedText = { text: string; left: number; top: number };

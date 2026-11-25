@@ -1,4 +1,4 @@
-import { useGuideCopy } from './learner-language';
+import { useGuideCopy } from '../components/learner-language';
 
 const translations: Record<string, string> = {
   'Select a point to inspect its saved records. Values and observation counts are included in each point label.': '选择图表上的数据点以查看对应记录。每个数据点的标签包含数值和样本量。',

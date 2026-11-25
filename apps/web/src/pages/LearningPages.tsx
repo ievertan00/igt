@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { webApi, type CoachReport, type CoachReportSummary } from "./api/client";
-import { Heading, Panel, State } from "./Page";
-import { Icon } from "./Icon";
-import { Markdown } from "./Markdown";
-import { ModelSwitcher } from "./model-settings";
-import { useGuideCopy } from "./learner-language";
-import { coachReportDisplayMarkdown, coachReportTitle } from "../../../lib/domain/coach-report-display.mjs";
+import { webApi, type CoachReport, type CoachReportSummary } from "../api/client";
+import { Heading, Panel, State } from "../components/Page";
+import { Icon } from "../components/Icon";
+import { Markdown } from "../components/Markdown";
+import { ModelSwitcher } from "../components/model-settings";
+import { useGuideCopy } from "../components/learner-language";
+import { coachReportDisplayMarkdown, coachReportTitle } from "../../../../lib/domain/coach-report-display.mjs";
 import "./Coach.css";
 
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");

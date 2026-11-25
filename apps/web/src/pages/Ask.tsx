@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { IconButton } from "./IconButton";
-import { Icon } from "./Icon";
-import { FloatingAction } from "./FloatingAction";
-import { Heading } from "./Page";
+import { IconButton } from "../components/IconButton";
+import { Icon } from "../components/Icon";
+import { FloatingAction } from "../components/FloatingAction";
+import { Heading } from "../components/Page";
 import { androidApp } from "./AndroidWorkspace";
-import { Markdown } from "./Markdown";
-import { webApi } from "./api/client";
-import { copyText } from "./clipboard";
-import { GuideText, useGuideCopy, type LearnerLanguage } from "./learner-language";
+import { Markdown } from "../components/Markdown";
+import { webApi } from "../api/client";
+import { copyText } from "../lib/clipboard";
+import { GuideText, useGuideCopy, type LearnerLanguage } from "../components/learner-language";
 import "./Ask.css";
-import { ModelSwitcher } from "./model-settings";
+import { ModelSwitcher } from "../components/model-settings";
 
 type Turn = { question: string; answer: string; title?: string; related?: string[]; tags?: string[]; category?: string; language?: LearnerLanguage };
 type Note = { id: string; modifiedAt: string; bytes: number; content: string; title?: string; tags?: string[]; category?: string };

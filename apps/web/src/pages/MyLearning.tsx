@@ -1,6 +1,6 @@
 import { Fragment, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
-import { useGuideCopy } from './learner-language';
-import { Icon } from './Icon';
+import { useGuideCopy } from '../components/learner-language';
+import { Icon } from '../components/Icon';
 import './MyLearning.css';
 
 export const myLearningRoutes = [

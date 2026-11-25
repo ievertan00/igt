@@ -1,8 +1,8 @@
-import { useGuideCopy } from "./learner-language";
+import { useGuideCopy } from "../components/learner-language";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { webApi } from "./api/client";
-import { Icon } from "./Icon";
-import { FloatingAction } from "./FloatingAction";
+import { webApi } from "../api/client";
+import { Icon } from "../components/Icon";
+import { FloatingAction } from "../components/FloatingAction";
 import "./VocabularyLibrary.css";
 
 export type SavedVocabularyEntry = {

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { webApi } from "./api/client";
-import { Icon } from "./Icon";
-import { Markdown } from "./Markdown";
-import { useGuideCopy, type LearnerLanguage } from "./learner-language";
+import { webApi } from "../api/client";
+import { Icon } from "../components/Icon";
+import { Markdown } from "../components/Markdown";
+import { useGuideCopy, type LearnerLanguage } from "../components/learner-language";
 import "./GrammarFollowUp.css";
 
 type Turn = { question: string; answer: string; title?: string; tags?: string[]; category?: string };

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { androidApp } from "./AndroidWorkspace";
-import { webApi } from "./api/client";
-import { Icon } from "./Icon";
-import { GuideText, useGuideCopy } from "./learner-language";
-import { ModelSwitcher } from "./model-settings";
-import { Heading, Panel, State } from "./Page";
+import { webApi } from "../api/client";
+import { Icon } from "../components/Icon";
+import { GuideText, useGuideCopy } from "../components/learner-language";
+import { ModelSwitcher } from "../components/model-settings";
+import { Heading, Panel, State } from "../components/Page";
 
 const practiceContextIcons: Record<string, React.ComponentProps<typeof Icon>["name"]> = {
   all: "dashboard",

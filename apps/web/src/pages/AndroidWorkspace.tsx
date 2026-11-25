@@ -1,5 +1,5 @@
-import { Icon } from "./Icon";
-import { LearnerLanguageSwitch, useGuideCopy } from "./learner-language";
+import { Icon } from "../components/Icon";
+import { LearnerLanguageSwitch, useGuideCopy } from "../components/learner-language";
 
 export const androidApp = /\bClearWriteAndroid\/[0-9]+\b/.test(navigator.userAgent);
 

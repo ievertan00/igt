@@ -1,26 +1,26 @@
-import { Practice } from "./Practice";
-import { Coach, PracticeLog } from "./LearningPages";
-import { Dashboard } from "./LearningDashboard";
-import { MyLearningNavigation, myLearningRoutes } from "./MyLearning";
-import { Heading, Panel, State } from "./Page";
-import { useGuideCopy, LearnerLanguageSwitch, GuideText } from "./learner-language";
+import { Practice } from "./pages/Practice";
+import { Coach, PracticeLog } from "./pages/LearningPages";
+import { Dashboard } from "./pages/LearningDashboard";
+import { MyLearningNavigation, myLearningRoutes } from "./pages/MyLearning";
+import { Heading, Panel, State } from "./components/Page";
+import { useGuideCopy, LearnerLanguageSwitch, GuideText } from "./components/learner-language";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Icon } from "./Icon";
-import { IconButton } from "./IconButton";
-import { Ask } from "./Ask";
-import { GrammarFollowUp } from "./GrammarFollowUp";
-import { SelectionLookup } from "./SelectionLookup";
+import { Icon } from "./components/Icon";
+import { IconButton } from "./components/IconButton";
+import { Ask } from "./pages/Ask";
+import { GrammarFollowUp } from "./pages/GrammarFollowUp";
+import { SelectionLookup } from "./pages/SelectionLookup";
 import { webApi } from "./api/client";
-import { useDailyReviewSession } from "./review-session";
-import { copyText } from "./clipboard";
-import { reviewExampleParts } from "./review-example";
-import { VocabularyLibrary } from "./VocabularyLibrary";
-import { PageScrollControls } from "./PageScrollControls";
+import { useDailyReviewSession } from "./lib/review-session";
+import { copyText } from "./lib/clipboard";
+import { reviewExampleParts } from "./lib/review-example";
+import { VocabularyLibrary } from "./pages/VocabularyLibrary";
+import { PageScrollControls } from "./components/PageScrollControls";
 import "./Writing.css";
 import "./Handbook.css";
-import { CorrectionText } from "./CorrectionText";
-import { ModelSwitcher, useModelSettings, type ModelProfile } from "./model-settings";
-import { androidApp, AndroidDock, AndroidHeader, AndroidSectionTabs } from "./AndroidWorkspace";
+import { CorrectionText } from "./components/CorrectionText";
+import { ModelSwitcher, useModelSettings, type ModelProfile } from "./components/model-settings";
+import { androidApp, AndroidDock, AndroidHeader, AndroidSectionTabs } from "./pages/AndroidWorkspace";
 
 type Route =
   | "dashboard"
