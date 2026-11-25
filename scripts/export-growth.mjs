@@ -3,7 +3,7 @@ import path from 'node:path';
 import { exportGrowthData } from '../lib/application/growth-export.mjs';
 import { closeAll } from '../lib/db/connection.mjs';
 
-const target = path.resolve(process.argv[2] || '.tmp/clearwrite-growth.json');
+const target = path.resolve(process.argv[2] || '.cache/tmp/clearwrite-growth.json');
 try {
   const data = await exportGrowthData();
   fs.mkdirSync(path.dirname(target), { recursive: true });

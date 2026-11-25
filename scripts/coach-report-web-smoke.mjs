@@ -8,7 +8,7 @@ import { dispatch } from "../lib/server/router.mjs";
 import { registerCoachRoutes } from "../lib/server/routes/coach.mjs";
 import { parseCoachPracticeLog } from "../lib/application/coach-sources.mjs";
 
-const output = path.join(process.cwd(), ".tmp", "coach-report-ui");
+const output = path.join(process.cwd(), ".cache", "tmp", "coach-report-ui");
 fs.mkdirSync(output, { recursive: true });
 const reportDirectory = fs.mkdtempSync(path.join(output, "reports-"));
 const timestamp = new Date().toISOString();

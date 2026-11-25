@@ -269,8 +269,8 @@ test("report validates evidence, caches, refreshes and rejects bad input and emp
   await assert.rejects(generateCoachReport({ refresh: true }, { ...deps, timeoutMs: 5 }), { status: 503 });
 });
 test("HTTP report route returns report and actionable empty-window errors", async () => {
-  fs.mkdirSync(path.join(process.cwd(), ".tmp-coach-runtime"), { recursive: true });
-  const reportDirectory = fs.mkdtempSync(path.join(process.cwd(), ".tmp-coach-runtime", "route-test-"));
+  fs.mkdirSync(path.join(process.cwd(), ".cache", "coach-runtime"), { recursive: true });
+  const reportDirectory = fs.mkdtempSync(path.join(process.cwd(), ".cache", "coach-runtime", "route-test-"));
   registerCoachRoutes({ reportDirectory, now, loadData: () => ({ entries: [entry(0)] }), getLLMManager: async () => ({ config: {}, getCurrentProviderName: () => "custom", generateWithFallback: async () => ({ markdown: diagnostic("建议检查单数可数名词前的限定词 [0]"), evidenceIds: ["0"] }) }) });
   const server = createServer(dispatch);
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));

@@ -14,8 +14,8 @@ test("report display removes citations and their empty table columns while prese
 });
 
 test("reports retain source data while exported Markdown omits citations and source records", () => {
-  fs.mkdirSync(path.join(process.cwd(), ".tmp-coach-runtime"), { recursive: true });
-  const directory = fs.mkdtempSync(path.join(process.cwd(), ".tmp-coach-runtime", "store-test-"));
+  fs.mkdirSync(path.join(process.cwd(), ".cache", "coach-runtime"), { recursive: true });
+  const directory = fs.mkdtempSync(path.join(process.cwd(), ".cache", "coach-runtime", "store-test-"));
   const report = { version: "v1", days: 0, language: "zh-CN", generatedAt: "2026-11-03T01:00:00Z", totalChecks: 1, sampled: false, truncated: false,
     markdown: "## 学习报告\n名词需要限定词。[review-private-id]", evidenceIds: ["review-private-id"], evidence: [{ entryId: "review-private-id", timestamp: "2026-11-02", original: "I read book.", correction: "I read a book." }] };
   try {

@@ -5,7 +5,6 @@ node_modules/
 .env
 .qwen/
 .cache/
-.tmp-coach-runtime/
 *.db
 *.db-wal
 *.db-shm
@@ -33,7 +32,6 @@ scripts/dev/
 # Local scratch / QA artifacts
 .tmp/
 .workbuddy/
-tmp-shots/
 artifacts/
 
 practice.js
