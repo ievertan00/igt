@@ -4,6 +4,7 @@ node_modules/
 .superpowers/
 .env
 .qwen/
+.qoder/
 .cache/
 *.db
 *.db-wal
