@@ -4,15 +4,16 @@ import { createHash, randomInt, randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 import dotenv from "dotenv";
 import cases from "./cases.mjs";
-import { analyzeGrammar } from "../lib/application/grammar.mjs";
-import { askStateless } from "../lib/application/ask.mjs";
-import { generateCoachReport } from "../lib/application/coach-report.mjs";
-import { parseDiagnosis } from "../lib/domain/parse-diagnosis.mjs";
-import * as errorTypes from "../lib/domain/error-types.mjs";
-import configLoader from "../lib/shared/config-loader.mjs";
-import { resolveModel } from "../lib/server/llm/model-resolver.mjs";
+import { analyzeGrammar } from "../../../lib/application/grammar.mjs";
+import { askStateless } from "../../../lib/application/ask.mjs";
+import { generateCoachReport } from "../../../lib/application/coach-report.mjs";
+import { parseDiagnosis } from "../../../lib/domain/parse-diagnosis.mjs";
+import * as errorTypes from "../../../lib/domain/error-types.mjs";
+import configLoader from "../../../lib/shared/config-loader.mjs";
+import { resolveModel } from "../../../lib/server/llm/model-resolver.mjs";
 
 const dir = import.meta.dirname;
+const projectRoot = path.resolve(dir, "../../..");
 const { values } = parseArgs({options:{ live:{type:"boolean"}, ollama:{type:"boolean"}, candidate:{type:"string"}, pilot:{type:"boolean"}, split:{type:"string",default:"calibration"}, task:{type:"string",default:"all"} }});
 if (!["calibration","formal"].includes(values.split) || !["all","grammar","ask","coach"].includes(values.task)) throw Error("Invalid split or task");
 const pool = cases.filter(c => c.split === values.split && (values.task === "all" || c.task === values.task));
@@ -20,15 +21,15 @@ const selected = values.pilot ? pool.filter((c,i)=>pool.findIndex(other=>other.t
 const variants = values.candidate ? JSON.parse(fs.readFileSync(path.join(dir,"candidates.json"),"utf8"))[values.candidate] : JSON.parse(fs.readFileSync(path.join(dir,"variants.json"),"utf8"));
 if (!variants?.grammar || !variants.ask || !variants.coach) throw Error("Unknown candidate");
 const config = configLoader.load();
-const grammarPrompt = config.Prompts?.SystemPrompt || fs.readFileSync(path.resolve(dir,"..",config.SystemPromptPath || "system_prompt.txt"),"utf8");
+const grammarPrompt = config.Prompts?.SystemPrompt || fs.readFileSync(path.resolve(projectRoot,config.SystemPromptPath || "system_prompt.txt"),"utf8");
 const envFile = path.join(dir,".env");
 const env = fs.existsSync(envFile) ? dotenv.parse(fs.readFileSync(envFile)) : {};
 const live = Boolean(values.live || values.ollama);
-if (live && !values.ollama && !(env.AB_BASE_URL && env.AB_MODEL)) throw Error("Set AB_BASE_URL and AB_MODEL in prompt-ab/.env");
+if (live && !values.ollama && !(env.AB_BASE_URL && env.AB_MODEL)) throw Error("Set AB_BASE_URL and AB_MODEL in scripts/prompt-ab/blind/.env");
 for (const field of ["AB_INPUT_PRICE","AB_OUTPUT_PRICE"]) {
   if (env[field] && !(Number.isFinite(Number(env[field])) && Number(env[field]) >= 0)) throw Error("Invalid " + field);
 }
-const run = path.join(dir,"runs",(live?"live-":"mock-")+randomUUID());
+const run = path.join(projectRoot,"prompt-ab-runs","blind-"+(live?"live-":"mock-")+randomUUID());
 fs.mkdirSync(path.join(run,"private"),{recursive:true});
 const save = (file,data) => fs.writeFileSync(path.join(run,file),JSON.stringify(data,null,2)+"\n");
 const model = values.ollama ? resolveModel("ollama","handbook",config).model : live ? env.AB_MODEL : "mock";

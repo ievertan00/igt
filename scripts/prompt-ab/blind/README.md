@@ -1,13 +1,13 @@
 # Grammar、Ask、Coach 提示词配对盲测
 
-本目录包含两个运行入口。generate.mjs 生成同题双答案，score.mjs 在人工评审后揭盲。所有运行产物保存在本目录的 runs 下，每次生成使用新的目录。本实验随 IGT 仓库运行，使用项目已安装的 Node.js 依赖。
+本目录包含两个运行入口。generate.mjs 生成同题双答案，score.mjs 在人工评审后揭盲。所有运行产物保存在仓库根目录的 prompt-ab-runs 下（blind- 前缀），每次生成使用新的目录。本实验随 IGT 仓库运行，使用项目已安装的 Node.js 依赖。
 
 ## 快速开始
 
 在 PowerShell 中运行：
 
 ```powershell
-Set-Location 'C:\Users\Evertan\.igt\prompt-ab'
+Set-Location 'C:\Users\Evertan\.igt\scripts\prompt-ab\blind'
 node .\generate.mjs
 ```
 
@@ -47,7 +47,7 @@ node .\generate.mjs --ollama --candidate teaching --split formal --pilot
 按 [评审手册](RUBRIC.md) 逐题填写 ballot.json。两位评审各用一份副本，分歧在揭盲前裁决。以下示例选取最近一轮真实运行；如同时进行多轮，请将 $runDir 设为生成脚本打印的绝对路径。
 
 ```powershell
-$runDir = (Get-ChildItem -LiteralPath '.\runs' -Directory -Filter 'live-*' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+$runDir = (Get-ChildItem -LiteralPath '..\..\..\prompt-ab-runs' -Directory -Filter 'blind-live-*' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
 node .\score.mjs $runDir
 ```
 
