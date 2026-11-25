@@ -21,7 +21,7 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `apps/mobile/` — standalone Vite + React + TypeScript mobile client, emitted to `apps/web/dist/mobile/` and served at `/mobile/`
 - `apps/android/` — Java WebView shell (APK built by `apps/android/build.ps1`)
 - `lib/db/` — SQLite access and persistence
-- `scripts/` — database, import, indexing, and verification utilities
+- `scripts/` — development and verification utilities: `scripts/smoke/` (Web/CLI acceptance smokes), `scripts/db/` (database, import, and indexing utilities), `scripts/deploy/`, `scripts/dev-runtime/`, `scripts/prompt-ab/` (auto and blind A/B harnesses); dev-only scratch scripts live in the ignored `scripts/dev/`
 - `tests/` — Node test-suite
 - `docs/` — project documentation and design notes
 - `DESIGN.md` — UI design guidelines
