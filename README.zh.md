@@ -32,7 +32,6 @@ ClearWrite 是一款以真实写作为起点的 AI 英语学习工具。你正�
 | 问答与笔记 | **Ask / Saved notes** | 用法追问、举例、保存单条回答或整段对话为结构化笔记 | 把零散疑问沉淀成带分类和主题、可反复检索的个人语料 |
 | 学习记录与诊断 | **My learning**（Overview / Saved words / Saved notes / Handbook / Learning reports） | 库存与趋势、按错误类型筛选、基于真实记录的 Coach 报告 | 把「我好像总错冠词」变成可核对的记录，决定下一步练什么 |
 | 设置与辅助 | **Settings**、划词查词、语音朗读 | 模型与 Markdown 位置配置、选中英文即可查词、可选朗读 | 降低操作成本，让注意力留在语言本身 |
-
 ---
 
 ## 3. 功能详解
