@@ -13,8 +13,8 @@ type NavItem = { path: string; icon: string; zh: string; en: string; fab?: boole
 
 const NAV: NavItem[] = [
   { path: "/home", icon: "home", zh: "今天", en: "Today" },
-  { path: "/write", icon: "pen", zh: "写作", en: "Write" },
-  { path: "/ask", icon: "sparkles", zh: "提问", en: "Ask", fab: true },
+  { path: "/ask", icon: "sparkles", zh: "提问", en: "Ask" },
+  { path: "/write", icon: "pen", zh: "写作", en: "Write", fab: true },
   { path: "/words", icon: "book", zh: "词汇", en: "Words" },
   { path: "/practice", icon: "target", zh: "练习", en: "Practice" },
 ];
@@ -55,10 +55,13 @@ export function App() {
   const [pull, setPull] = useState(0);
 
   const root = "/" + (route.path.split("/")[1] || "home");
-  const immersive = route.path === "/ask" || route.path === "/review" || route.params.get("immersive") === "1";
-  const isSub = immersive || route.path === "/settings" || route.path.split("/").length > 2;
+  const wordCard = route.path === "/words" && route.params.get("view") === "card";
+  const wordLookup = route.path === "/words" && route.params.get("tab") === "lookup";
+  const immersive = wordCard || route.path === "/ask" || route.path === "/review" || route.params.get("immersive") === "1";
+  const isSub = immersive || wordLookup || route.path === "/settings" || route.path.split("/").length > 2;
   const hideNav = immersive;
-  const title = TITLES[route.path] || TITLES[root] || ["ClearWrite", "ClearWrite"];
+  const title = wordCard ? ["单词卡片", "Word cards"] : wordLookup ? ["查词", "Look up"]
+    : TITLES[route.path] || TITLES[root] || ["ClearWrite", "ClearWrite"];
   const activeNav = route.path === "/review" ? "/words" : root === "/me" ? "" : root;
 
   useEffect(() => {
@@ -81,20 +84,23 @@ export function App() {
   };
 
   return <div className={`app${hideNav ? " app--no-nav" : ""}`}>
-    <header className={`appbar${isSub ? " appbar--raised" : ""}`}>
-      {isSub && <button type="button" className="icon-button" onClick={back} aria-label={t("返回", "Back")}>
+    <header className="appbar">
+      {isSub && <button type="button" className="icon-button" onClick={wordCard || wordLookup ? () => {
+        if (!window.__igtBack?.()) go("/words");
+      } : back} aria-label={t("返回", "Back")}>
         <Icon name="back" />
       </button>}
       <div className="appbar-title">
         {root === "/home" && !isSub ? <div className="brand-row">
           <span className="brand-mark"><Icon name="wand" size={21} /></span>
-          <div><div className="brand-name">ClearWrite <span className="brand-sub">mobile</span></div>
+          <div><h1>ClearWrite</h1>
             <div className="brand-sub">{new Date().toLocaleDateString(lang === "zh" ? "zh-CN" : "en", { month: "long", day: "numeric", weekday: "long" })}</div>
           </div>
         </div> : <><h1>{lang === "zh" ? title[0] : title[1]}</h1></>}
       </div>
       <div className="appbar-actions">
-        {!isSub && <button type="button" className="icon-button icon-button--soft" onClick={() => go("/me")}
+        {!isSub && <button type="button" className={`icon-button ${root === "/me" ? "icon-button--primary" : "icon-button--soft"}`} onClick={() => go("/me")}
+          aria-current={root === "/me" ? "page" : undefined}
           aria-label={t("我的学习", "My learning")}><Icon name="user" size={20} /></button>}
         {isSub && root !== "/settings" && <button type="button" className="icon-button" onClick={() => go("/settings")}
           aria-label={t("设置", "Settings")}><Icon name="settings" size={20} /></button>}
@@ -113,7 +119,7 @@ export function App() {
       {NAV.map((item) => {
         const active = activeNav === item.path;
         return <button key={item.path} type="button"
-          className={`nav-item${active ? " is-active" : ""}${item.fab ? " nav-item--fab" : ""}`}
+          className={`nav-item${active ? " is-active" : ""}`}
           aria-current={active ? "page" : undefined}
           onClick={() => { go(item.path); }}>
           {item.fab ? <span className="nav-fab"><Icon name={item.icon} size={23} /></span>

@@ -68,6 +68,19 @@ function staticHostingChecks() {
 
 const metric = { recall: { value: null, correct: 0, n: 0 }, translation: { value: null, n: 0 }, diagnosed: { count: 0, n: 0 } };
 const pagination = { total: 0, limit: 10, offset: 0, hasMore: false };
+const savedWord = {
+  id: "follow-up", word: "follow up on", pos: "phrasal verb", phonetic: "ˈfɒləʊ ʌp ɒn",
+  zh: "跟进", meaning: "To take further action on something.", synonyms: "check in on",
+  collocations: "follow up on a request", example: "I’ll follow up on your request tomorrow.",
+  example2: "She followed up on the email this morning.", learningStatus: "learning",
+  note: "Use after an earlier conversation or request.",
+  srs: { id: 1, total_reviews: 2, due_date: "2026-11-24", interval_days: 3 },
+};
+const savedWords = [savedWord,
+  { id: "make-room", word: "make room for", pos: "phrase", zh: "为……腾出空间", meaning: "To make space for something." },
+  { id: "revisit", word: "revisit", pos: "verb", zh: "重新审视", meaning: "To consider something again." },
+  ...Array.from({ length: 18 }, (_, index) => ({ id: `word-${index + 1}`, word: `word ${index + 1}`, zh: "示例词条" })),
+];
 const FIXTURES = {
   "/runtime": { runtime: "local", storage: { database: "sqlite", assets: "markdown" } },
   "/status-message": { content: "" },
@@ -85,14 +98,15 @@ const FIXTURES = {
   "/dashboard/records": { records: [], total: 0, offset: 0, limit: 10, hasMore: false },
   "/dashboard/record": { record: null, history: [] },
   "/dashboard/practice-log": { count: 0, markdown: "" },
-  "/review/due": { cards: [] },
-  "/review/check": { correct: true, answer: "", request_id: "fixture" },
-  "/review/grade": { ok: true, next_due: "" },
+  "/review/due": { cards: [{ ...savedWord, id: 1, prompt: savedWord.zh, answer: savedWord.word,
+    masked_example: "I’ll ____ your request tomorrow.", vocab_details: { phonetic: savedWord.phonetic,
+      collocations: savedWord.collocations, examples: [savedWord.example, savedWord.example2] } }] },
+  "/review/check": { correct: true, answer: savedWord.word,
+    ratings: Object.fromEntries(["again", "hard", "good", "easy"].map((rating, index) => [rating, { intervalDays: index + 1 }])) },
+  "/review/grade": { persistence: { saved: true } },
   "/vocab/seed": { ok: true },
-  "/vocab/words": { words: [], total: 0, totalSaved: 0, sourceAvailable: true, limit: 20, offset: 0, hasMore: false, overview: {} },
-  "/vocab/history": { records: [], total: 0, offset: 0, hasMore: false },
-  "/word/lookup": { word: "follow up on", phonetic: "", definitions: [], examples: [], translations: [], phrases: [] },
-  "/word/add": { ok: true },
+  "/word/lookup": { data: savedWord },
+  "/word/add": { persistence: { saved: true } },
   "/ask/notes": { notes: [] },
   "/ask/notes/read": { notes: [], content: "" },
   "/ask/notes/delete": { ok: true },
@@ -129,10 +143,10 @@ const screenshotDir = screenshotArg ? path.resolve(process.cwd(), screenshotArg.
 
 const WIDTHS = [320, 360, 390, 430];
 const ROUTES = [
-  "/home", "/write", "/words", "/practice", "/ask", "/review",
+  "/home", "/write", "/words", "/words?tab=lookup", "/words?view=card", "/practice", "/ask", "/review",
   "/me", "/me/overview", "/me/handbook", "/me/coach", "/me/notes", "/settings",
 ];
-const IMMERSIVE = new Set(["/ask", "/review"]);
+const IMMERSIVE = new Set(["/ask", "/review", "/words?view=card"]);
 
 function resolveChrome() {
   const explicit = process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -159,7 +173,15 @@ async function attachFixtures(page, origin) {
       // With base "/mobile/" every app asset is under that prefix; everything
       // else on this origin is a Local Runtime endpoint and gets a fixture.
       if (url.pathname.startsWith("/mobile/")) { await request.continue(); return; }
-      const body = FIXTURES[url.pathname] ?? { ok: true };
+      let body = FIXTURES[url.pathname] ?? { ok: true };
+      if (url.pathname === "/vocab/words") {
+        const query = url.searchParams.get("q")?.toLowerCase() ?? "";
+        const limit = Number(url.searchParams.get("limit"));
+        const offset = Number(url.searchParams.get("offset"));
+        const matches = savedWords.filter((word) => word.word.includes(query));
+        body = { words: matches.slice(offset, offset + limit), total: matches.length,
+          totalSaved: savedWords.length, offset, limit, overview: { due: 1, retained: 0 } };
+      }
       await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
     } catch (error) {
       if (!request.isInterceptResolutionHandled()) {
@@ -354,8 +376,22 @@ try {
   assert.equal(backResult.hash, "#/home");
 
   // Drafts survive a WebView reload; shared text from another app lands in the composer.
-  await page.evaluate(() => location.hash = "#/write");
+  await page.$eval(".bottom-nav .nav-fab", (icon) => icon.closest("button").click());
+  await page.waitForFunction(() => location.hash === "#/write", { timeout: 3000 });
   await page.waitForSelector("textarea.field-textarea", { timeout: 5000 });
+  await page.setViewport({ width: 320, height: 400, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const writingNav = await page.$eval(".bottom-nav .nav-fab", (icon) => {
+    const { left, width } = icon.getBoundingClientRect();
+    return { centered: Math.abs(left + width / 2 - innerWidth / 2) < 1, current: icon.closest("button").getAttribute("aria-current") };
+  });
+  assert.deepEqual(writingNav, { centered: true, current: "page" });
+  const writingActionReachable = await page.$eval(".dock-actions .btn--primary", (button) => {
+    const { left, width, top, height, bottom } = button.getBoundingClientRect();
+    const navTop = document.querySelector(".bottom-nav").getBoundingClientRect().top;
+    return bottom <= navTop && button.contains(document.elementFromPoint(left + width / 2, top + height / 2));
+  });
+  assert.ok(writingActionReachable, "Writing's sticky action must remain tappable above the bottom bar on a short screen");
+  await page.setViewport({ width: 390, height: 780, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   await page.type("textarea.field-textarea", "Draft survives a reload");
   const persisted = await page.evaluate(() => localStorage.getItem("igt.mobile.draft.write") || "");
   assert.match(persisted, /Draft survives a reload/);
@@ -372,9 +408,61 @@ try {
   await page.waitForSelector("textarea.field-textarea", { timeout: 5000 });
   await page.waitForFunction(() => document.querySelector("textarea.field-textarea")?.value === "Shared from Android", { timeout: 5000 });
 
+  await page.evaluate(() => { location.hash = "#/words"; });
+  await page.waitForSelector(".words-row:not(:disabled)");
+  await page.click(".words-row:nth-of-type(20)");
+  await page.waitForFunction(() => document.querySelector(".word-card h2")?.textContent === "word 17");
+  await page.click(".words-dock .btn:last-child");
+  await page.waitForFunction(() => document.querySelector(".word-card h2")?.textContent === "word 18");
+  assert.match(await page.$eval(".words-dock", (el) => el.textContent), /21 \/ 21/);
+  assert.equal(await page.evaluate(() => window.__igtBack()), true);
+  await page.waitForSelector(".words-search input");
+  await page.type(".words-search input", "follow");
+  await page.waitForFunction(() => {
+    const rows = document.querySelectorAll(".words-row");
+    return rows.length === 1 && !rows[0].disabled && rows[0].textContent.includes("follow up on");
+  });
+  await page.click(".words-row");
+  await page.waitForFunction((word) => document.querySelector(".word-card h2")?.textContent === word, {}, savedWord.word);
+  assert.equal(await page.$(".word-card details"), null, "word cards must omit review history");
+  const cardAccents = await page.$eval(".word-card", (card) => ({
+    rail: getComputedStyle(card.querySelector(".word-card-heading")).borderInlineStartWidth,
+    labels: Array.from(card.querySelectorAll(".word-field h3"), (label) => getComputedStyle(label).color),
+  }));
+  assert.equal(cardAccents.rail, "3px");
+  assert.equal(new Set(cardAccents.labels).size, 5, "word card field titles use five distinct accents");
+  assert.equal(cardAccents.labels[0], cardAccents.labels[4], "Meaning and Examples share the vocabulary accent");
+  assert.equal(await page.evaluate(() => window.__igtBack()), true);
+  await page.waitForSelector(".words-search input");
+  assert.equal(await page.$eval(".words-search input", (input) => input.value), "follow");
+
+  await page.click(".words-list-heading .btn");
+  await page.waitForSelector(".words-layout .field-wrap input");
+  await page.type(".words-layout .field-wrap input", "follow up on");
+  await page.click(".words-layout .btn--primary");
+  await page.waitForSelector(".word-card .btn--primary");
+  await page.click(".word-card .btn--primary");
+  await page.waitForSelector(".word-card > div > .badge");
+  assert.equal(await page.evaluate(() => window.__igtBack()), true);
+  await page.waitForSelector(".words-search input");
+
+  await page.click(".words-action-card .btn--primary:not(:disabled)");
+  await page.waitForSelector(".review-prompt");
+  assert.doesNotMatch(await page.$eval(".review-prompt", (el) => el.textContent), /fɒləʊ|follow up on/);
+  await page.click(".review-prompt .chip:first-child");
+  await page.waitForFunction(() => document.querySelector(".review-hint-text")?.textContent.includes("fɒləʊ"));
+  await page.type(".review-prompt input", savedWord.word);
+  await page.click(".review-dock .btn--primary");
+  await page.waitForSelector(".review-dock .grade--good");
+  assert.equal(await page.$eval(".word-card h2", (el) => el.textContent), savedWord.word);
+  await page.click(".review-dock .grade--good");
+  await page.waitForSelector(".metric-grid .metric");
+  assert.match(await page.$eval(".metric-grid", (el) => el.textContent), /1good/);
+
   interactions = {
     darkMode: darkMode.theme, insetTop, imeHidden, imeVisible,
-    backHandled: backResult.handled, draftRestored: true, shareIntake: true,
+    backHandled: backResult.handled, writingActionReachable, draftRestored: true, shareIntake: true,
+    vocabularyPaging: true, wordCardOmitsHistory: true, vocabularyLookup: true, vocabularyReview: true,
   };
 
   // Real browser captures at a representative phone size. Purely additive:
@@ -409,8 +497,26 @@ try {
     await page.waitForSelector(".result-text--strong", { timeout: 8000 });
     await shot("03-writing-result");
 
+    await page.evaluate(() => localStorage.removeItem("igt.mobile.draft.word.search"));
     await open("/words");
+    await page.waitForSelector(".words-row:not(:disabled)");
     await shot("04-vocabulary");
+    await page.click(".words-row");
+    await page.waitForSelector(".word-card");
+    await shot("08-word-card");
+    await page.evaluate(() => window.__igtTheme?.("dark"));
+    await shot("12-word-card-dark");
+    await page.evaluate(() => window.__igtTheme?.("light"));
+    await open("/review");
+    await page.waitForSelector(".review-prompt");
+    await shot("09-review-prompt");
+    await page.type(".review-prompt input", savedWord.word);
+    await page.click(".review-dock .btn--primary");
+    await page.waitForSelector(".review-dock .grade");
+    await shot("10-review-answer");
+    await page.evaluate(() => window.__igtTheme?.("dark"));
+    await shot("11-review-answer-dark");
+    await page.evaluate(() => window.__igtTheme?.("light"));
     await open("/practice");
     await shot("05-practice");
     await open("/me");

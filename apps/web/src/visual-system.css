@@ -38,6 +38,27 @@
   --warning-border: #fde7a0;
   --info: #315b84;
   --info-bg: #edf4fc;
+  /* v2.18 module colour ramps: deep ink text, main figure, soft inner surface, same-hue edge. Cards stay white. */
+  --data-blue: #2f6ac9;
+  --data-blue-ink: #1c4f9c;
+  --data-blue-soft: #eef4ff;
+  --data-blue-edge: #d5e4fb;
+  --data-violet: #7b4bc9;
+  --data-violet-ink: #6230a8;
+  --data-violet-soft: #f5effd;
+  --data-violet-edge: #e5d7f7;
+  --data-amber: #a5660d;
+  --data-amber-ink: #90500c;
+  --data-amber-soft: #fff5e7;
+  --data-amber-edge: #f5ddb7;
+  --data-teal: #128577;
+  --data-teal-ink: #0d6558;
+  --data-teal-soft: #e9f7f3;
+  --data-teal-edge: #c6e9df;
+  --data-rose: #c2436c;
+  --data-rose-ink: #a32b54;
+  --data-rose-soft: #fff0f4;
+  --data-rose-edge: #f7d5e0;
   --error: #a82d2d;
   --error-bg: #fbefec;
   --on-dark: #ffffff;

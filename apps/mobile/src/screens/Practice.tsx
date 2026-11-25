@@ -61,7 +61,7 @@ export function PracticeScreen() {
   const hasMoreHints = hintsUsed < 3 && hintKeys.some((key, index) => index >= hintsUsed && hints[key]);
 
   return <div className="stack">
-    <Card className="card--tint">
+    <Card>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
         <div>
           <p className="card-kicker" style={{ margin: 0 }}>{t("中译英 · 单句练习", "SENTENCE TRANSLATION")}</p>
@@ -75,11 +75,10 @@ export function PracticeScreen() {
     </Card>
 
     {!question && !busy && <Card className="card--hero">
-      <p className="card-kicker">{t("一次只练一句", "ONE SENTENCE AT A TIME")}</p>
       <h3 style={{ fontSize: 20, margin: "4px 0 6px" }}>{t("看中文，写英文", "Read Chinese, write English")}</h3>
       <p className="card-note">{t("按需取提示，提交后由模型给出评分与更自然的表达。",
         "Reveal hints only when you need them, then get a score and a natural alternative.")}</p>
-      <div style={{ marginTop: 16 }}><Button variant="secondary" icon="play" onClick={start} block>
+      <div className="hero-action"><Button variant="secondary" icon="play" onClick={start} block>
         {t("出一道题", "Start practice")}
       </Button></div>
     </Card>}

@@ -135,14 +135,15 @@ export function Input({ value, onChange, placeholder, type = "text", onEnter, di
   </label>;
 }
 
-export function TextArea({ value, onChange, placeholder, rows = 5, label, disabled }: {
-  value: string; onChange: (value: string) => void; placeholder?: string; rows?: number; label?: string; disabled?: boolean;
+export function TextArea({ id, value, onChange, placeholder, rows = 5, label, disabled }: {
+  id?: string; value: string; onChange: (value: string) => void; placeholder?: string; rows?: number; label?: string; disabled?: boolean;
 }) {
-  return <label className="field">
+  const Field = label ? "label" : "div";
+  return <Field className="field">
     {label && <span className="field-label">{label}</span>}
-    <textarea className="field-textarea" value={value} rows={rows} disabled={disabled} placeholder={placeholder}
+    <textarea id={id} className="field-textarea" value={value} rows={rows} disabled={disabled} placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)} />
-  </label>;
+  </Field>;
 }
 
 export function Sheet({ open, onClose, title, children, footer }: {

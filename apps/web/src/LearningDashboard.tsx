@@ -67,10 +67,29 @@ function TrendChart({ current, previous, compare, countMetric, title, onPoint, t
     const path = points.map((p, i) => { if (p.value === null) { open = false; return ''; } const command = open ? 'L' : 'M'; open = true; return `${command}${x(i)},${y(p.value)}`; }).join(' ');
     return <g className={previousLine ? 'growth-series is-previous' : 'growth-series'}><path d={path} />{points.map((p, i) => p.value === null ? null : <g key={p.start} role="button" tabIndex={0} aria-label={`${p.start} – ${p.end}: ${p.value.toFixed(1)}, n=${p.denominator}`} onClick={() => onPoint(p)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onPoint(p); } }}><title>{p.start} – {p.end}: {p.value.toFixed(1)} · n={p.denominator}</title><circle className="growth-point-hit" cx={x(i)} cy={y(p.value)} r="12" /><circle cx={x(i)} cy={y(p.value)} r="4" /></g>)}</g>;
   }
+  function area(points: GrowthPoint[]) {
+    const baseline = height - bottom, paths: string[] = [];
+    let run: { x: number; y: number }[] = [];
+    const flush = () => {
+      if (run.length > 1) paths.push(`M${run[0].x},${baseline} L${run.map(point => `${point.x},${point.y}`).join(' L')} L${run[run.length - 1].x},${baseline} Z`);
+      // A single isolated observation still gets a soft marker instead of an empty plot.
+      else if (run.length === 1) {
+        const start = Math.max(left, run[0].x - 6), end = Math.min(width - right, run[0].x + 6);
+        paths.push(`M${start},${baseline} L${start},${run[0].y} L${end},${run[0].y} L${end},${baseline} Z`);
+      }
+      run = [];
+    };
+    points.forEach((point, index) => {
+      if (point.value === null) { flush(); return; }
+      run.push({ x: x(index), y: y(point.value) });
+    });
+    flush();
+    return paths.length ? <g className="growth-series-fill" aria-hidden="true">{paths.map((path, index) => <path d={path} key={index} />)}</g> : null;
+  }
   return <svg className="growth-chart" viewBox={`0 0 ${width} ${height}`} role="group" aria-label={title}>
     <g aria-hidden="true">{[0, 1, 2, 3, 4].map(i => { const value = max * i / 4; return <g key={i}><line x1={left} y1={y(value)} x2={width - right} y2={y(value)} /><text x={left - 10} y={y(value) + 4} textAnchor="end">{value}</text></g>; })}
       {current.map((point, i) => i === 0 || i === current.length - 1 || i % Math.ceil(current.length / 5) === 0 ? <text key={point.start} x={x(i)} y={height - 4} textAnchor="middle">{point.start.slice(5).replace('-', '/')}</text> : null)}</g>
-    {compare && line(previous, true)}{line(current)}
+    {area(current)}{compare && line(previous, true)}{line(current)}
     <desc>{t('Select a point to inspect its saved records. Values and observation counts are included in each point label.')}</desc>
   </svg>;
 }
@@ -162,7 +181,7 @@ export function Dashboard() {
         ['notes', 'Ask notes', 'ask', '#ask?view=notes'], ['reports', 'Learning reports', 'trend', '#coach'],
       ] as const).map(([key, label, icon, href]) => {
         const detail = saved[key];
-        return <a className="growth-saved-card" key={key} href={href}>
+        return <a className="growth-saved-card" data-source={key} key={key} href={href}>
           <span className="growth-saved-icon"><Icon name={icon} /></span>
           <span className="growth-saved-label">{t(label)}</span>
           <strong className={detail.total == null ? 'is-empty' : undefined}>{number(detail.total)}</strong>
@@ -176,13 +195,13 @@ export function Dashboard() {
       {unavailable.length > 0 && <p className="growth-notice" role="status">{t('Some sources could not be read. Counts and comparisons may be incomplete.')}</p>}
       <div className="growth-snapshot-heading"><h2>{t('Performance snapshot')}</h2><span className="growth-snapshot-caption">{t('Compared with the previous {n} days').replace('{n}', String(previousDays))}</span></div>
       <div className="growth-metric-strip">
-        <button className="growth-metric-card" type="button" onClick={() => list(t('Unaided word recall'), { group: 'recall' })}><span>{t('Unaided word recall')}</span><div><strong className={data.metrics.recall.value == null ? 'is-empty' : undefined}>{pct(data.metrics.recall.value)}</strong>{compare && <Delta current={data.metrics.recall.value} previous={data.previous.metrics.recall.value} />}</div><small>{data.metrics.recall.correct} / {data.metrics.recall.n} · {t('No recorded audio hint')}</small>{meter(data.metrics.recall.value)}</button>
-        <button className="growth-metric-card" type="button" onClick={() => list(t('Translation score'), { group: 'practice' })}><span>{t('Translation score')}</span><div><strong className={data.metrics.translation.value == null ? 'is-empty' : undefined}>{data.metrics.translation.value?.toFixed(1) ?? '—'}<small> / 100</small></strong>{compare && <Delta current={data.metrics.translation.value} previous={data.previous.metrics.translation.value} unit={language === 'zh-CN' ? '分' : 'pts'} />}</div><small>{data.metrics.translation.n} {t('Scored translation attempts')}</small>{meter(data.metrics.translation.value)}</button>
-        <button className="growth-metric-card" type="button" onClick={() => list(t('Checks with saved diagnoses'), { group: 'grammar', diagnosis: 'with' })}><span>{t('Checks with saved diagnoses')}</span><div><strong className={isAvailable('Grammar corrections') ? undefined : 'is-empty'}>{isAvailable('Grammar corrections') ? data.metrics.diagnosed.count : '—'}<small> / {data.metrics.diagnosed.n}</small></strong>{compare && isAvailable('Grammar corrections') && <Delta current={data.metrics.diagnosed.count} previous={data.previous.metrics.diagnosed.count} unit={language === 'zh-CN' ? '条' : 'records'} />}</div><small>{t('Saved checks in this period')}</small>{meter(data.metrics.diagnosed.n ? data.metrics.diagnosed.count / data.metrics.diagnosed.n * 100 : 0)}</button>
-        <button className="growth-metric-card" type="button" onClick={() => list(t('Current word retention'), { group: 'retained', status: 'all' })}><span>{t('Current word retention')}</span><div><strong className={data.retention.available ? undefined : 'is-empty'}>{data.retention.available ? number((data.retention.distribution.retained || 0) + (data.retention.distribution['well-retained'] || 0)) : '—'}<small> / {number(data.retention.total)}</small></strong></div><small>{t('Retained + Well retained')}</small>{meter(data.retention.available && data.retention.total ? retainedCount / data.retention.total * 100 : 0)}</button>
+        <button className="growth-metric-card" data-metric="recall" type="button" onClick={() => list(t('Unaided word recall'), { group: 'recall' })}><span>{t('Unaided word recall')}</span><div><strong className={data.metrics.recall.value == null ? 'is-empty' : undefined}>{pct(data.metrics.recall.value)}</strong>{compare && <Delta current={data.metrics.recall.value} previous={data.previous.metrics.recall.value} />}</div><small>{data.metrics.recall.correct} / {data.metrics.recall.n} · {t('No recorded audio hint')}</small>{meter(data.metrics.recall.value)}</button>
+        <button className="growth-metric-card" data-metric="score" type="button" onClick={() => list(t('Translation score'), { group: 'practice' })}><span>{t('Translation score')}</span><div><strong className={data.metrics.translation.value == null ? 'is-empty' : undefined}>{data.metrics.translation.value?.toFixed(1) ?? '—'}<small> / 100</small></strong>{compare && <Delta current={data.metrics.translation.value} previous={data.previous.metrics.translation.value} unit={language === 'zh-CN' ? '分' : 'pts'} />}</div><small>{data.metrics.translation.n} {t('Scored translation attempts')}</small>{meter(data.metrics.translation.value)}</button>
+        <button className="growth-metric-card" data-metric="errors" type="button" onClick={() => list(t('Checks with saved diagnoses'), { group: 'grammar', diagnosis: 'with' })}><span>{t('Checks with saved diagnoses')}</span><div><strong className={isAvailable('Grammar corrections') ? undefined : 'is-empty'}>{isAvailable('Grammar corrections') ? data.metrics.diagnosed.count : '—'}<small> / {data.metrics.diagnosed.n}</small></strong>{compare && isAvailable('Grammar corrections') && <Delta current={data.metrics.diagnosed.count} previous={data.previous.metrics.diagnosed.count} unit={language === 'zh-CN' ? '条' : 'records'} />}</div><small>{t('Saved checks in this period')}</small>{meter(data.metrics.diagnosed.n ? data.metrics.diagnosed.count / data.metrics.diagnosed.n * 100 : 0)}</button>
+        <button className="growth-metric-card" data-metric="retention" type="button" onClick={() => list(t('Current word retention'), { group: 'retained', status: 'all' })}><span>{t('Current word retention')}</span><div><strong className={data.retention.available ? undefined : 'is-empty'}>{data.retention.available ? number((data.retention.distribution.retained || 0) + (data.retention.distribution['well-retained'] || 0)) : '—'}<small> / {number(data.retention.total)}</small></strong></div><small>{t('Retained + Well retained')}</small>{meter(data.retention.available && data.retention.total ? retainedCount / data.retention.total * 100 : 0)}</button>
       </div>
       <div className="growth-insights-grid">
-        <section className="growth-panel growth-trend" aria-busy={trendBusy}><SectionTitle title={t('How performance changes')} detail={`${(trend || data).filters.start} — ${(trend || data).filters.end}`} action={<label><span className="sr-only">{t('Metric')}</span><select aria-label={t('Metric')} value={metric} onChange={event => setMetric(event.target.value)}>{Object.entries(metricLabels).map(([key, label]) => <option value={key} key={key}>{t(label)}</option>)}</select></label>} />
+        <section className="growth-panel growth-trend" data-metric={metric} aria-busy={trendBusy}><SectionTitle title={t('How performance changes')} detail={`${(trend || data).filters.start} — ${(trend || data).filters.end}`} action={<label><span className="sr-only">{t('Metric')}</span><select aria-label={t('Metric')} value={metric} onChange={event => setMetric(event.target.value)}>{Object.entries(metricLabels).map(([key, label]) => <option value={key} key={key}>{t(label)}</option>)}</select></label>} />
           <div className="growth-trend-controls" aria-label={t('Period')}><div className="growth-periods" role="group" aria-label={t('Period')}>{[7, 30, 90, 0].map(days => <button key={days} type="button" aria-pressed={trendQuery.days === days && !trendQuery.start} onClick={() => preset(days)}>{t(days ? `Last ${days} days` : 'All history')}</button>)}</div>
         <form className="growth-date-range" onSubmit={event => { event.preventDefault(); if (!trendDraftStart || !trendDraftEnd || trendDraftStart > trendDraftEnd || Date.parse(trendDraftEnd) - Date.parse(trendDraftStart) > 3650 * DAY) { setDateError(t('Choose a valid date range of at most ten years.')); return; } setDateError(''); setTrendQuery(q => ({ ...q, start: trendDraftStart, end: trendDraftEnd })); }}><label><span className="sr-only">{t('Start date')}</span><input aria-label={t('Start date')} type="date" required value={trendDraftStart} onChange={event => setTrendDraftStart(event.target.value)} /></label><span aria-hidden="true">–</span><label><span className="sr-only">{t('End date')}</span><input aria-label={t('End date')} type="date" required value={trendDraftEnd} onChange={event => setTrendDraftEnd(event.target.value)} /></label><button type="submit" className="growth-text-button">{t('Apply dates')}</button></form>
           </div>
@@ -195,8 +214,8 @@ export function Dashboard() {
         <section className="growth-panel growth-distribution">
           <div className="growth-distribution-heading"><h2>{t('Error distribution')}</h2><span className="growth-total-badge">{flaggedTotal} {t('total')}</span></div>
           <p className="growth-distribution-subtitle">{t('Flagged issues in this period')}</p>
-          <div className="growth-bar-list">{categories.map(row => <button type="button" key={row.category} className={`growth-bar-row${row.count > 0 && row.count === largestCategory ? ' is-leading' : ''}${row.count ? '' : ' is-empty'}`} title={t('View all records')} onClick={() => list(row.category, { category: row.category, errorType: 'all', group: 'grammar' })}><span>{row.category}</span><span className="growth-bar-track"><i style={{ width: `${row.count / Math.max(1, largestCategory) * 100}%` }} /></span><b>{row.count}</b></button>)}</div>
-          {leadingCategory && <div className="growth-focus">
+          <div className="growth-bar-list">{categories.map(row => <button type="button" key={row.category} data-category={row.category} className={`growth-bar-row${row.count > 0 && row.count === largestCategory ? ' is-leading' : ''}${row.count ? '' : ' is-empty'}`} title={t('View all records')} onClick={() => list(row.category, { category: row.category, errorType: 'all', group: 'grammar' })}><span>{row.category}</span><span className="growth-bar-track"><i style={{ width: `${row.count / Math.max(1, largestCategory) * 100}%` }} /></span><b>{row.count}</b></button>)}</div>
+          {leadingCategory && <div className="growth-focus" data-category={leadingCategory.category}>
             <span className="growth-focus-icon"><Icon name="info" /></span>
             <div className="growth-focus-copy">
               <strong>{t('Focus area: {category}').replace('{category}', leadingCategory.category)}</strong>

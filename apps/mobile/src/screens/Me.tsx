@@ -29,11 +29,10 @@ export function MeScreen() {
     {error && !stale && <ErrorNote message={error} onRetry={reload} retryLabel={t("重试", "Retry")} />}
 
     <Card className="card--hero">
-      <p className="card-kicker">{t("我的学习", "MY LEARNING")}</p>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 16 }}>
+      <div className="hero-stat">
         <div><div className="big-number">{momentum.current ?? "–"}</div>
           <div style={{ fontWeight: 650 }}>{t("近 30 天记录", "records in 30 days")}</div></div>
-        <span className="brand-mark" style={{ background: "rgba(255,255,255,.2)", color: "inherit", width: 44, height: 44 }}>
+        <span className="hero-icon">
           <Icon name="chart" size={23} />
         </span>
       </div>

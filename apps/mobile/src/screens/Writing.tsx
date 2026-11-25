@@ -84,17 +84,17 @@ export function WritingScreen() {
       ]} />
 
     <Card>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <p className="card-kicker" style={{ margin: 0 }}>
-          {mode === "refine" ? t("写一句英文", "YOUR SENTENCE") : t("输入想法或段落", "YOUR TEXT")}
-        </p>
-        <div style={{ display: "flex", gap: 2 }}>
+      <div className="editor-toolbar">
+        <label className="card-kicker" htmlFor="writing-draft">
+          {mode === "refine" ? t("写一句英文", "Your sentence") : t("输入想法或段落", "Your text")}
+        </label>
+        <div className="editor-tools">
           <IconButton name="clipboard" label={t("粘贴", "Paste")} onClick={paste} size={19} />
           <IconButton name="share" label={t("分享", "Share")} onClick={() => native.share(text)} size={19} />
           <IconButton name="trash" label={t("清空", "Clear")} onClick={clearText} size={19} />
         </div>
       </div>
-      <TextArea value={text} onChange={setText} rows={6}
+      <TextArea id="writing-draft" value={text} onChange={setText} rows={5}
         placeholder={mode === "refine"
           ? t("例如：She go to work by train every day.", "e.g. She go to work by train every day.")
           : t("例如：我想约他明天下午讨论一下方案。", "e.g. 我想约他明天下午讨论一下方案。")} />
@@ -125,9 +125,10 @@ export function WritingScreen() {
           <p className="card-kicker">{t("修正", "CORRECTED")}</p>
           <div className="result-text result-text--strong break" style={{ marginTop: 4 }}>{data.correction}</div>
         </>}
-        <div className="divider" />
-        <p className="card-kicker">{t("更自然的说法", "MORE NATURAL")}</p>
-        <div className="result-text result-text--strong break" style={{ marginTop: 4 }}>{data.refine || "—"}</div>
+        <div className="result-alternative">
+          <p className="card-kicker">{t("更自然的说法", "MORE NATURAL")}</p>
+          <div className="result-text result-text--strong break">{data.refine || "—"}</div>
+        </div>
       </Card>
 
       {data.evaluate && <Card className="card--tint">

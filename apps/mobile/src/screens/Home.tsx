@@ -1,7 +1,7 @@
 import React from "react";
 import { api } from "../api";
 import { go, useApp, useRefresh, useResource } from "../core";
-import { Badge, Busy, Button, Card, Empty, Icon, Progress, SectionTitle, relativeTime } from "../ui";
+import { Badge, Busy, Button, Card, Empty, Icon, SectionTitle, relativeTime } from "../ui";
 
 type HomeData = { dash: any; dueCount: number; status: any };
 const EMPTY: HomeData = { dash: null, dueCount: 0, status: null };
@@ -38,21 +38,21 @@ export function HomeScreen() {
     {error && !stale && <div className="error-note"><Icon name="alert" size={18} /><span>{error}</span>
       <button type="button" onClick={reload}>{t("重试", "Retry")}</button></div>}
 
-    <Card className="card--hero" padded>
+    <Card className="card--hero">
       <p className="card-kicker">{t("今日计划", "TODAY'S FOCUS")}</p>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
+      <div className="hero-stat">
         <div>
           <div className="big-number">{loading && !data.dash ? "–" : data.dueCount}</div>
-          <div style={{ fontWeight: 650, marginTop: 2 }}>{t("个单词待复习", "words due for review")}</div>
+          <div className="strong">{t("个单词待复习", "words due for review")}</div>
         </div>
-        <span className="brand-mark" style={{ background: "rgba(255,255,255,.2)", color: "inherit", width: 44, height: 44 }}>
+        <span className="hero-icon">
           <Icon name="layers" size={24} />
         </span>
       </div>
       <p className="card-note">{data.dueCount > 0
         ? t("先回忆，再核对，一次只专注一张卡。", "Recall first, then check — one card at a time.")
         : t("今天的复习已清空，可以练一句或查个词。", "All caught up. Try a sentence or look up a word.")}</p>
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+      <div className="hero-action">
         <Button variant="secondary" icon="play" onClick={() => go("/review")}>
           {t("开始复习", "Start review")}
         </Button>
@@ -60,7 +60,7 @@ export function HomeScreen() {
     </Card>
 
     <div>
-      <SectionTitle title={t("快捷开始", "Quick start")} kicker={t("常用动作", "SHORTCUTS")} />
+      <SectionTitle title={t("快捷开始", "Quick start")} />
       <div className="quick-grid">
         <button type="button" className="quick-tile" onClick={() => go("/write")}>
           <span className="tile-icon"><Icon name="pen" size={19} /></span>
@@ -86,7 +86,7 @@ export function HomeScreen() {
     </div>
 
     <div>
-      <SectionTitle title={t("最近 7 天", "Last 7 days")} kicker={t("学习节奏", "ACTIVITY")} />
+      <SectionTitle title={t("最近 7 天", "Last 7 days")} />
       <Card>
         <div className="activity-bars">
           {(last7.length ? last7 : Array.from({ length: 7 }, (_, i) => ({ date: String(i), count: 0 }))).map((item, index) =>

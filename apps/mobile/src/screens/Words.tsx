@@ -3,39 +3,107 @@ import { api, type ReviewCard, type ReviewRating } from "../api";
 import { errorMessage, go, native, useApp, useDraft, useRefresh, useResource } from "../core";
 import {
   Badge, Busy, Button, Card, Chip, Empty, ErrorNote, Icon, IconButton, Input,
-  ListRow, Progress, SectionTitle, Segmented, Sheet, Skeleton, relativeTime,
+  Progress, Sheet, Skeleton,
 } from "../ui";
 
-type Tab = "lookup" | "review" | "library";
+type WordEntry = {
+  word: string;
+  pos?: string;
+  phonetic?: string;
+  zh?: string;
+  meaning?: string;
+  synonyms?: string;
+  collocations?: string;
+  verbForms?: string;
+  plural?: string;
+  comparative?: string;
+  example?: string;
+  example2?: string;
+  example3?: string;
+  note?: string;
+  memory?: string;
+};
 
-/* ------------------------------------------------------------------ words -- */
+type SavedWord = WordEntry & {
+  id: string;
+};
+
+type WordPage = {
+  words: SavedWord[];
+  total: number;
+  totalSaved: number;
+  offset: number;
+  overview: { due: number; retained: number } | null;
+};
+
+function formatIpa(value: string) {
+  return `/${value.replace(/^\/|\/$/g, "")}/`;
+}
+
+function WordCard({ entry, onSpeak, onSpeakExample = onSpeak, children }: {
+  entry: WordEntry; onSpeak: (text: string) => void; onSpeakExample?: (text: string) => void; children?: React.ReactNode;
+}) {
+  const { t } = useApp();
+  const examples = [entry.example, entry.example2, entry.example3].filter((value): value is string => Boolean(value));
+  const facts = [
+    [t("英文释义", "Meaning"), entry.meaning, "meaning"],
+    [t("中文释义", "Chinese"), entry.zh, "translation"],
+    [t("近义词", "Synonyms"), entry.synonyms, "synonyms"],
+    [t("常见搭配", "Collocations"), entry.collocations, "usage"],
+    [t("动词变化", "Verb forms"), entry.verbForms, "usage"],
+    [t("复数", "Plural"), entry.plural, "usage"],
+    [t("比较级", "Comparative"), entry.comparative, "usage"],
+  ];
+  return <Card className="word-card">
+    <div className="word-card-heading">
+      <div className="word-card-title">
+        <h2 className="break">{entry.word}</h2>
+        <IconButton name="volume" label={t("朗读单词", "Speak word")} size={22} onClick={() => onSpeak(entry.word)} />
+      </div>
+      {(entry.pos || entry.phonetic) && <div className="word-card-meta">
+        {entry.pos && <Badge>{entry.pos}</Badge>}
+        {entry.phonetic && <span className="word-phonetic mono break">{formatIpa(entry.phonetic)}</span>}
+      </div>}
+    </div>
+    {facts.map(([label, value, tone]) => value && <div className={`word-field word-field--${tone}`} key={label}>
+      <h3>{label}</h3><p>{value}</p>
+    </div>)}
+    {examples.length > 0 && <div className="word-field">
+      <h3>{t("例句", "Examples")}</h3>
+      <ol className="word-examples">{examples.map((example, index) => <li key={index}>
+        <div><span>{example}</span><IconButton name="volume" size={17}
+          label={t(`朗读例句 ${index + 1}`, `Speak example ${index + 1}`)} onClick={() => onSpeakExample(example)} /></div>
+      </li>)}</ol>
+    </div>}
+    {entry.note && <div className="word-field word-field--note"><h3>{t("备注", "Note")}</h3><p>{entry.note}</p></div>}
+    {entry.memory && <div className="word-field word-field--note"><h3>{t("记忆提示", "Memory aid")}</h3><p>{entry.memory}</p></div>}
+    {children}
+  </Card>;
+}
+
+async function speakWord(text: string, onError: () => void) {
+  if (!(await native.speak(text))) onError();
+}
+
 export function WordsScreen() {
-  const { route, t, lang, toast } = useApp();
-  const [tab, setTab] = useState<Tab>(() => {
-    const value = route.params.get("tab");
-    return value === "library" || value === "review" ? value : "lookup";
-  });
-  return <div className="stack">
-    <Segmented<Tab> value={tab} onChange={setTab} items={[
-      { value: "lookup", label: t("查词", "Look up") },
-      { value: "review", label: t("复习", "Review") },
-      { value: "library", label: t("词库", "Saved") },
-    ]} />
-    {tab === "lookup" ? <Lookup /> : tab === "review" ? <ReviewIntro onStart={() => go("/review")} /> : <Library />}
-    <div className="hero-space" />
+  const { route } = useApp();
+  if (route.params.get("tab") === "lookup") return <div className="stack words-layout">
+    <Lookup />
   </div>;
+  return <Library viewing={route.params.get("view") === "card"} />;
 }
 
 /* ----------------------------------------------------------------- lookup -- */
 function Lookup() {
-  const { t, lang, toast } = useApp();
+  const { t, toast } = useApp();
   const [query, setQuery, clearQuery] = useDraft("word.query");
-  const [entry, setEntry] = useState<any>(null);
+  const [entry, setEntry] = useState<(WordEntry & { translated?: boolean; lookup?: string; existing?: boolean }) | null>(null);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
 
   async function lookup() {
+    if (busy) return;
     const value = query.trim();
     if (!value) { toast(t("输入一个单词或中文", "Enter a word or Chinese phrase"), "err"); return; }
     setBusy(true); setError(""); setEntry(null);
@@ -53,23 +121,11 @@ function Lookup() {
       const response = await api.addWord(entry);
       const saved = response?.persistence?.saved;
       toast(saved ? t("已加入词库", "Added to your word bank") : t("这个词已经在词库里", "Already in your word bank"));
+      setEntry((current) => current === entry ? { ...entry, existing: true } : current);
       if (saved) native.haptic("ok");
     } catch (reason) { toast(errorMessage(reason), "err"); }
     finally { setAdding(false); }
   }
-
-  async function speak(text: string) {
-    const ok = await native.speak(text);
-    if (!ok) toast(t("语音服务不可用", "Speech is unavailable"), "err");
-  }
-
-  const examples = [entry?.example, entry?.example2, entry?.example3].filter(Boolean);
-  const facts: Array<[string, string]> = [
-    [t("词性", "POS"), entry?.pos], [t("近义词", "Synonyms"), entry?.synonyms],
-    [t("搭配", "Collocations"), entry?.collocations], [t("动词变化", "Verb forms"), entry?.verbForms],
-    [t("复数", "Plural"), entry?.plural], [t("比较级", "Comparative"), entry?.comparative],
-    [t("备注", "Note"), entry?.note],
-  ].filter(([, value]) => Boolean(value)) as Array<[string, string]>;
 
   return <>
     <Card>
@@ -83,199 +139,170 @@ function Lookup() {
     {error && <ErrorNote message={error} onRetry={lookup} retryLabel={t("重试", "Retry")} />}
     {busy && <Card><Skeleton lines={4} /></Card>}
 
-    {entry && <>
-      <Card>
-        <div className="word-hero">
-          <div style={{ minWidth: 0 }}>
-            <h2 className="break">{entry.word}</h2>
-            {entry.phonetic && <p className="word-phonetic mono">/{String(entry.phonetic).replace(/^\/|\/$/g, "")}/</p>}
-          </div>
-          <IconButton name="volume" label={t("朗读", "Speak")} tone="soft" onClick={() => speak(entry.word)} />
-        </div>
-        <p className="word-zh">{entry.zh || t("暂无中文释义", "No Chinese gloss")}</p>
-        {entry.meaning && <p className="card-note">{entry.meaning}</p>}
-        {entry.translated && <p className="card-note">{t("已按中文输入解析为", "Resolved from Chinese input")} · {entry.lookup}</p>}
-        {entry.existing && <div style={{ marginTop: 10 }}><Badge tone="primary">{t("已在词库", "Already saved")}</Badge></div>}
-        <div style={{ marginTop: 16 }}>
-          <Button icon="plus" onClick={add} loading={adding} block>{t("加入词库", "Add to word bank")}</Button>
-        </div>
-      </Card>
-
-      {examples.length > 0 && <Card>
-        <p className="card-kicker">{t("例句", "EXAMPLES")}</p>
-        {examples.map((example: string, index: number) => <div key={index} className="example-item">
-          <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-            <span style={{ flex: 1 }}>{example}</span>
-            <IconButton name="volume" label={t("朗读", "Speak")} size={17} onClick={() => speak(example)} />
-          </div>
-        </div>)}
-      </Card>}
-
-      {facts.length > 0 && <Card>
-        <p className="card-kicker">{t("词条细节", "DETAILS")}</p>
-        {facts.map(([label, value]) => <div key={label} className="kv"><strong>{label}</strong><span>{value}</span></div>)}
-      </Card>}
-    </>}
+    {entry && <WordCard entry={entry} onSpeak={(text) => speakWord(text, () => toast(t("语音服务不可用", "Speech is unavailable"), "err"))}>
+      {entry.translated && <p className="muted tiny">{t("已按中文输入解析为", "Resolved from Chinese input")} · {entry.lookup}</p>}
+      {entry.existing ? <div><Badge tone="primary">{t("已在词库", "Already saved")}</Badge></div>
+        : <Button icon="plus" onClick={add} loading={adding} block>{t("加入词库", "Add to word bank")}</Button>}
+    </WordCard>}
 
     {!entry && !busy && <Empty icon="search" title={t("查一个词，看看它怎么用", "Look up a word")}
       hint={t("支持英文单词或中文短语，结果可以一键加入词库并进入复习。", "English words or Chinese phrases. Save a result to review it later.")} />}
   </>;
 }
 
-/* ------------------------------------------------------------ review intro -- */
-function ReviewIntro({ onStart }: { onStart: () => void }) {
-  const { t } = useApp();
-  const { data, loading, error, reload } = useResource<{ count: number }>("words.due.v1", async (signal) => {
-    const response = await api.reviewDue(100, signal);
-    return { count: Array.isArray(response?.cards) ? response.cards.length : 0 };
-  }, [], { count: 0 });
-  useRefresh(reload);
-  return <>
-    <Card className="card--hero">
-      <p className="card-kicker">{t("间隔复习", "SPACED REVIEW")}</p>
-      <div className="big-number">{loading && !data.count ? "–" : data.count}</div>
-      <div style={{ fontWeight: 650 }}>{t("张卡片到期", "cards due")}</div>
-      <p className="card-note">{t("先自己回忆，再核对答案，最后按回忆难度给一个评价。",
-        "Recall first, check the answer, then rate how hard it was to remember.")}</p>
-      <div style={{ marginTop: 16 }}><Button variant="secondary" icon="play" onClick={onStart} disabled={loading || data.count === 0} block>
-        {t("开始一组复习", "Start a session")}
-      </Button></div>
-    </Card>
-    {error && <ErrorNote message={error} onRetry={reload} retryLabel={t("重试", "Retry")} />}
-    <Card>
-      <p className="card-kicker">{t("四个评价档位", "FOUR RATINGS")}</p>
-      <div className="kv"><strong>{t("Again", "Again")}</strong><span>{t("完全没想起来，今天再来一次", "Did not recall — repeat today")}</span></div>
-      <div className="kv"><strong>{t("Hard", "Hard")}</strong><span>{t("想得很费力，明天再见", "Recalled with effort")}</span></div>
-      <div className="kv"><strong>{t("Good", "Good")}</strong><span>{t("正常想起来了", "Recalled normally")}</span></div>
-      <div className="kv"><strong>{t("Easy", "Easy")}</strong><span>{t("很轻松，间隔拉长", "Effortless — longer interval")}</span></div>
-    </Card>
-    <Card className="card--tint">
-      <p style={{ margin: 0, fontSize: 13 }}>{t("评分只是安排下次复习时间，不代表已经长期掌握。",
-        "A rating schedules the next review; it does not prove durable mastery.")}</p>
-    </Card>
-  </>;
-}
-
 /* ---------------------------------------------------------------- library -- */
-const STATUS_TONE: Record<string, string> = {
-  new: "primary", learning: "warning", "needs-reinforcement": "danger",
-  retained: "success", "well-retained": "success", "insufficient-history": "neutral", unavailable: "neutral",
-};
+const EMPTY_WORD_PAGE: WordPage = { words: [], total: 0, totalSaved: 0, offset: 0, overview: null };
 
-function Library() {
-  const { t, lang, toast } = useApp();
+function Library({ viewing }: { viewing: boolean }) {
+  const { t, toast } = useApp();
   const [search, setSearch] = useDraft("word.search");
   const [sort, setSort] = useState("az");
   const [status, setStatus] = useState("all");
   const [schedule, setSchedule] = useState("all");
   const [offset, setOffset] = useState(0);
+  const [position, setPosition] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [detail, setDetail] = useState<any>(null);
-  const [history, setHistory] = useState<any[]>([]);
-  const [historyBusy, setHistoryBusy] = useState(false);
   const limit = 20;
 
-  const { data, loading, error, stale, reload } = useResource<any>(
+  const { data, loading, error, stale, reload } = useResource<WordPage>(
     `words.library.v1.${search}.${sort}.${status}.${schedule}.${offset}`,
     (signal) => api.listWords({ q: search, sort, status, schedule, offset, limit }, signal),
     [search, sort, status, schedule, offset],
-    { words: [], total: 0, overview: null },
+    EMPTY_WORD_PAGE,
   );
   useRefresh(reload);
 
-  useEffect(() => { setOffset(0); }, [search, sort, status, schedule]);
+  const { words, total, totalSaved, overview } = data;
+  const activeFilters = Boolean(search.trim()) || status !== "all" || schedule !== "all";
+  const due = overview?.due;
+  const currentPosition = Math.min(position, Math.max(0, total - 1));
+  const waitingForPage = data.offset !== offset && (loading || Boolean(error));
+  const word = waitingForPage ? undefined : words[currentPosition - data.offset];
 
-  async function openDetail(word: any) {
-    setDetail(word);
-    setHistory([]);
-    const cardId = word?.srs?.id;
-    if (!cardId) return;
-    setHistoryBusy(true);
-    try {
-      const response = await api.wordHistory(cardId, 0);
-      setHistory(response?.records || []);
-    } catch { /* history is optional */ }
-    finally { setHistoryBusy(false); }
+  function setPagePosition(next: number) {
+    setPosition(next);
+    setOffset(Math.floor(next / limit) * limit);
   }
 
-  const words: any[] = data?.words || [];
-  const overview = data?.overview || {};
+  function openCard(next: number) {
+    setPagePosition(next);
+    go("/words?view=card");
+  }
 
-  return <>
-    <Card>
-      <Input value={search} onChange={setSearch} icon="search" placeholder={t("搜索已保存的词", "Search saved words")} />
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10 }}>
-        <Button variant="secondary" icon="filter" onClick={() => setFilterOpen(true)}>{t("筛选", "Filters")}</Button>
-        <div className="chip-row" style={{ flex: 1 }}>
-          <Chip selected={schedule === "due"} onClick={() => setSchedule(schedule === "due" ? "all" : "due")}>{t("待复习", "Due")}</Chip>
-          <Chip selected={status === "retained"} onClick={() => setStatus(status === "retained" ? "all" : "retained")}>{t("已记住", "Retained")}</Chip>
+  function changeCard(next: number) {
+    setPagePosition(next);
+    document.querySelector(".screen")?.scrollTo(0, 0);
+  }
+
+  function changeFilter(update: (value: string) => void, value: string) {
+    update(value);
+    setOffset(0);
+  }
+
+  if (viewing) return <div className="stack words-layout words-reader">
+    {error && !word ? <ErrorNote message={error} onRetry={reload} retryLabel={t("重试", "Retry")} />
+      : !word && loading ? <Card><Skeleton lines={5} /></Card>
+      : word ? <>
+        <WordCard key={word.id} entry={word} onSpeak={(text) => speakWord(text, () => toast(t("语音服务不可用", "Speech is unavailable"), "err"))} />
+        <nav className="words-dock words-pager" aria-label={t("词卡翻页", "Word card navigation")}>
+          <Button variant="secondary" icon="back" onClick={() => changeCard(currentPosition - 1)} disabled={currentPosition === 0 || loading}>
+            {t("上一张", "Previous")}
+          </Button>
+          <span aria-live="polite">{currentPosition + 1} / {total}</span>
+          <Button variant="secondary" icon="forward" onClick={() => changeCard(currentPosition + 1)} disabled={currentPosition + 1 >= total || loading}>
+            {t("下一张", "Next")}
+          </Button>
+        </nav>
+      </> : <Empty icon="book" title={t("没有可浏览的词卡", "No cards to browse")}
+        action={t("返回词库", "Back to vocabulary")} onAction={() => go("/words")} />}
+  </div>;
+
+  return <div className="stack words-layout">
+    <Card className="words-action-card">
+      <div className="words-action-heading">
+        <span className="words-symbol"><Icon name="clock" /></span>
+        <div>
+          <h2>{t("今日待复习", "Today’s due")}</h2>
+          <p>{due == null ? t("查看今天的复习队列", "See today’s review queue")
+            : due > 0 ? t(`${due} 个单词待复习`, `${due} words due`) : t("今天的待复习单词已清空", "You’re all caught up today")}</p>
         </div>
       </div>
-      {overview && <div className="metric-grid metric-grid--3" style={{ marginTop: 12 }}>
-        <div className="metric"><strong>{overview.due ?? 0}</strong><span>{t("待复习", "Due")}</span></div>
-        <div className="metric"><strong>{overview.retained ?? 0}</strong><span>{t("已记住", "Retained")}</span></div>
-        <div className="metric"><strong>{data?.totalSaved ?? 0}</strong><span>{t("总词条", "Saved")}</span></div>
-      </div>}
+      <Button icon="play" onClick={() => go("/review")} disabled={due === 0} block>{t("开始复习", "Start review")}</Button>
     </Card>
 
-    {stale && <div className="stale-note"><Icon name="offline" size={16} />{t("离线，显示缓存词库", "Offline — cached word bank")}</div>}
-    {error && !stale && <ErrorNote message={error} onRetry={reload} retryLabel={t("重试", "Retry")} />}
-    {loading && words.length === 0 ? <Card><Skeleton lines={5} /></Card> : words.length === 0 ?
-      <Empty icon="book" title={t("词库还是空的", "No saved words yet")}
-        hint={t("查词后点「加入词库」，词条会出现在这里并进入复习。", "Save a lookup result to see it here.")}
-        action={t("去查词", "Look up a word")} onAction={() => go("/words?tab=lookup")} />
-      : <>
-        <SectionTitle title={t("已保存", "Saved words")} kicker={`${data?.total ?? words.length}`} />
-        {words.map((word: any) => <ListRow key={word.id || word.word} icon="book" title={`${word.word}${word.phonetic ? `  /${word.phonetic}/` : ""}`}
-          sub={word.zh || word.meaning || ""} onClick={() => openDetail(word)}
-          right={<Badge tone={STATUS_TONE[word.learningStatus] || "neutral"}>{word.learningStatus || "—"}</Badge>} />)}
-        {(offset + limit < (data?.total ?? 0)) && <Button variant="secondary" onClick={() => setOffset(offset + limit)} block>
-          {t("加载更多", "Load more")}
-        </Button>}
-      </>}
+    <Card className="words-action-card">
+      <div className="words-action-heading">
+        <span className="words-symbol"><Icon name="layers" /></span>
+        <div>
+          <h2>{t("浏览词卡", "Browse cards")}</h2>
+          <p>{t(`${totalSaved} 个已保存的单词`, `${totalSaved} saved words`)}{overview && ` · ${t(`${overview.retained} 个已记住`, `${overview.retained} retained`)}`}</p>
+        </div>
+      </div>
+      <Button variant="soft" icon="forward" onClick={() => openCard(0)} disabled={total === 0 || loading} block>
+        {activeFilters ? t("浏览筛选结果", "Browse matching cards") : t("浏览全部词卡", "Browse all cards")}
+      </Button>
+    </Card>
+
+    <section className="stack stack--tight" aria-labelledby="saved-words-title">
+      <div className="words-list-heading">
+        <h2 id="saved-words-title">{t("所有单词", "All words")} <span>{total}</span></h2>
+        <Button variant="secondary" icon="search" onClick={() => go("/words?tab=lookup")}>{t("查词", "Look up")}</Button>
+      </div>
+      <div className="words-search">
+        <Input value={search} onChange={(value) => changeFilter(setSearch, value)} icon="search"
+          label={t("搜索词库", "Search vocabulary")} placeholder={t("单词或释义", "Word or meaning")} />
+        <IconButton name="filter" label={t("筛选与排序", "Filter & sort")} tone="soft" onClick={() => setFilterOpen(true)} />
+      </div>
+      <div className="words-hints">
+        <Chip selected={schedule === "due"} onClick={() => changeFilter(setSchedule, schedule === "due" ? "all" : "due")}>{t("待复习", "Due")}</Chip>
+        <Chip selected={status === "retained"} onClick={() => changeFilter(setStatus, status === "retained" ? "all" : "retained")}>{t("已记住", "Retained")}</Chip>
+      </div>
+      {stale && words.length > 0 && <div className="stale-note"><Icon name="offline" size={16} />{t("离线，显示缓存词库", "Offline — cached word bank")}</div>}
+      {error && <ErrorNote message={error} onRetry={reload} retryLabel={t("重试", "Retry")} />}
+      {loading && (words.length === 0 || waitingForPage) ? <Card><Skeleton lines={5} /></Card>
+        : words.length > 0 ? <Card className="words-list" padded={false}>
+          {words.map((item, index) => <button key={item.id} type="button" className="words-row" disabled={loading}
+            onClick={() => openCard(data.offset + index)}>
+            <span className="words-symbol" aria-hidden="true">{Array.from(item.word.trim())[0]?.toUpperCase() || "?"}</span>
+            <span className="words-row-text">
+              <strong>{item.word}</strong>
+              <small>{[item.pos, item.zh || item.meaning].filter(Boolean).join(" · ")}</small>
+            </span>
+            <Icon name="forward" size={18} />
+          </button>)}
+        </Card> : !error && <Empty icon="book"
+          title={activeFilters ? t("没有匹配的单词", "No matching words") : t("词库还是空的", "No saved words yet")}
+          hint={activeFilters ? t("试试其他关键词或筛选条件。", "Try another search or filter.") : t("查词后可以把结果加入词库。", "Look up a word to add it to your library.")}
+          action={activeFilters ? undefined : t("去查词", "Look up a word")} onAction={() => go("/words?tab=lookup")} />}
+      {(data.offset > 0 || data.offset + limit < total) && <div className="words-pager">
+        <Button variant="secondary" icon="back" disabled={data.offset === 0 || loading} onClick={() => setOffset(data.offset - limit)}>{t("上一页", "Previous")}</Button>
+        <span>{Math.floor(data.offset / limit) + 1} / {Math.ceil(total / limit)}</span>
+        <Button variant="secondary" icon="forward" disabled={data.offset + limit >= total || loading} onClick={() => setOffset(data.offset + limit)}>{t("下一页", "Next")}</Button>
+      </div>}
+    </section>
 
     <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title={t("筛选与排序", "Filter & sort")}
       footer={<Button onClick={() => setFilterOpen(false)} block>{t("完成", "Done")}</Button>}>
       <p className="eyebrow">{t("排序", "SORT")}</p>
       <div className="chip-row" style={{ flexWrap: "wrap", marginBottom: 16 }}>
         {[["az", t("按字母", "A–Z")], ["newest", t("最近添加", "Newest")], ["next-review", t("下次复习", "Next review")]].map(([value, label]) =>
-          <Chip key={value} selected={sort === value} onClick={() => setSort(value)}>{label}</Chip>)}
+          <Chip key={value} selected={sort === value} onClick={() => changeFilter(setSort, value)}>{label}</Chip>)}
       </div>
       <p className="eyebrow">{t("复习状态", "STATUS")}</p>
       <div className="chip-row" style={{ flexWrap: "wrap", marginBottom: 16 }}>
         {[["all", t("全部", "All")], ["new", t("新词", "New")], ["learning", t("学习中", "Learning")],
           ["needs-reinforcement", t("需强化", "Reinforce")], ["retained", t("已记住", "Retained")],
           ["well-retained", t("牢固", "Well retained")]].map(([value, label]) =>
-          <Chip key={value} selected={status === value} onClick={() => setStatus(value)}>{label}</Chip>)}
+          <Chip key={value} selected={status === value} onClick={() => changeFilter(setStatus, value)}>{label}</Chip>)}
       </div>
       <p className="eyebrow">{t("复习计划", "SCHEDULE")}</p>
       <div className="chip-row" style={{ flexWrap: "wrap" }}>
         {[["all", t("全部", "All")], ["due", t("已到期", "Due")], ["upcoming", t("即将到期", "Upcoming")], ["unscheduled", t("未安排", "Unscheduled")]].map(([value, label]) =>
-          <Chip key={value} selected={schedule === value} onClick={() => setSchedule(value)}>{label}</Chip>)}
+          <Chip key={value} selected={schedule === value} onClick={() => changeFilter(setSchedule, value)}>{label}</Chip>)}
       </div>
     </Sheet>
 
-    <Sheet open={Boolean(detail)} onClose={() => setDetail(null)} title={detail?.word || ""}>
-      {detail && <>
-        {detail.phonetic && <p className="mono muted">/{String(detail.phonetic).replace(/^\/|\/$/g, "")}/</p>}
-        <h3 style={{ margin: "6px 0 12px", fontSize: 20 }}>{detail.zh}</h3>
-        {detail.meaning && <p>{detail.meaning}</p>}
-        {detail.example && <div className="example-item">{detail.example}</div>}
-        <div className="divider" />
-        <div className="kv"><strong>{t("状态", "Status")}</strong><span>{detail.learningStatus || "—"}</span></div>
-        <div className="kv"><strong>{t("复习次数", "Reviews")}</strong><span>{detail.srs?.total_reviews ?? 0}</span></div>
-        <div className="kv"><strong>{t("下次复习", "Next")}</strong><span>{detail.srs?.due_date || "—"}</span></div>
-        <div className="kv"><strong>{t("间隔", "Interval")}</strong><span>{detail.srs?.interval_days ?? 0} {t("天", "days")}</span></div>
-        <div className="divider" />
-        <p className="eyebrow">{t("复习记录", "REVIEW HISTORY")}</p>
-        {historyBusy ? <Busy /> : history.length === 0 ? <p className="muted tiny">{t("暂无记录", "No review history yet")}</p> :
-          history.slice(0, 8).map((record: any) => <div key={record.id} className="example-item">
-            <strong>{record.learner_answer || "—"}</strong>
-            <div className="muted tiny">{relativeTime(record.created_at, lang)} · {record.feedback || ""}</div>
-          </div>)}
-      </>}
-    </Sheet>
-  </>;
+  </div>;
 }
 
 /* --------------------------------------------------------- review session -- */
@@ -284,7 +311,7 @@ function makeSessionId(): string {
 }
 
 export function ReviewSession() {
-  const { t, lang, toast, back } = useApp();
+  const { t, toast, back } = useApp();
   const { data, loading, error, reload } = useResource<{ cards: ReviewCard[] }>("review.session.v1",
     (signal) => api.reviewDue(20, signal).then((response) => ({ cards: response?.cards || [] })),
     [], { cards: [] });
@@ -293,6 +320,7 @@ export function ReviewSession() {
   const [checked, setChecked] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [grading, setGrading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [revealIpa, setRevealIpa] = useState(false);
   const [showExample, setShowExample] = useState(false);
@@ -302,9 +330,12 @@ export function ReviewSession() {
   const cards = data.cards;
   const card = cards[index];
   const done = !loading && cards.length > 0 && index >= cards.length;
+  const ratedCount = Object.values(grades).reduce((sum, count) => sum + count, 0);
+
+  useEffect(() => { document.querySelector(".screen")?.scrollTo(0, 0); }, [index, checked]);
 
   async function check() {
-    if (!card) return;
+    if (!card || busy || removing) return;
     const value = answer.trim();
     if (!value) { toast(t("先试着回忆一下", "Try to recall it first"), "err"); return; }
     setBusy(true);
@@ -317,7 +348,7 @@ export function ReviewSession() {
   }
 
   async function grade(rating: ReviewRating) {
-    if (!card || !checked) return;
+    if (!card || !checked || grading || removing) return;
     setGrading(true);
     try {
       const response = await api.gradeReview(card.id, answer.trim(), `${sessionId}-${index}`, audioPlayed, rating);
@@ -331,13 +362,15 @@ export function ReviewSession() {
   }
 
   async function skip() {
-    if (!card) return;
+    if (!card || busy || grading || removing) return;
+    setRemoving(true);
     try {
       await api.deleteReview(card.id);
       setIndex((value) => value + 1);
-      setAnswer(""); setChecked(null); setRevealIpa(false); setShowExample(false);
+      setAnswer(""); setChecked(null); setAudioPlayed(false); setRevealIpa(false); setShowExample(false);
       toast(t("已移除这张卡片", "Card removed"));
     } catch (reason) { toast(errorMessage(reason), "err"); }
+    finally { setRemoving(false); }
   }
 
   async function speak(text: string) {
@@ -352,11 +385,13 @@ export function ReviewSession() {
     hint={t("查词并加入词库后，卡片会出现在这里。", "Save a few words to build your review queue.")}
     action={t("返回词汇", "Back to words")} onAction={() => go("/words")} />;
 
-  if (done) return <div className="stack">
-    <Card className="card--hero center">
-      <p className="card-kicker">{t("本组完成", "SESSION COMPLETE")}</p>
-      <div className="big-number">{cards.length}</div>
-      <div style={{ fontWeight: 650 }}>{t("张卡片", "cards reviewed")}</div>
+  if (done) return <div className="stack words-layout">
+    <Card className="words-action-card">
+      <div className="words-action-heading">
+        <span className="words-symbol"><Icon name="check" /></span>
+        <div><h2>{t("本组完成", "Session complete")}</h2>
+          <p>{t(`已评分 ${ratedCount} 张卡片`, `Rated ${ratedCount} cards`)}</p></div>
+      </div>
     </Card>
     <div className="metric-grid">
       {(["again", "hard", "good", "easy"] as ReviewRating[]).map((rating) =>
@@ -371,66 +406,71 @@ export function ReviewSession() {
   if (!card) return <Busy />;
 
   const details = card.vocab_details || {};
-  const phonetic = String((details as any).phonetic || "");
+  const examples = Array.isArray(details.examples)
+    ? details.examples.filter((example): example is string => typeof example === "string" && Boolean(example.trim()))
+    : [];
+  const phonetic = typeof details.phonetic === "string" ? details.phonetic : "";
+  const exampleHint = card.masked_example;
+  const reviewEntry = {
+    ...card, ...details, word: card.word || card.answer, phonetic,
+    example: examples[0] || card.example, example2: examples[1], example3: examples[2],
+  };
   const ratings = checked?.ratings || {};
 
-  return <div className="stack">
-    <div className="session-bar">
-      <Progress value={(index / cards.length) * 100} />
+  return <div className="stack words-layout words-reader">
+    <div className="review-progress">
+      <span>{t("复习进度", "Review progress")}</span>
       <span>{index + 1} / {cards.length}</span>
+      <Progress value={(index / cards.length) * 100} />
     </div>
 
-    <Card className="focus-card">
-      <p className="card-kicker">{t("请回忆这个单词", "RECALL THE WORD")}</p>
-      <div className="prompt break">{card.zh || card.prompt}</div>
-      <div className="hint">{card.pos ? `${card.pos}` : t("输入英文单词", "Type the English word")}</div>
-      <div className="chip-row" style={{ marginTop: 12 }}>
+    {!checked ? <Card className="review-prompt">
+      <div className="word-field">
+        <h3>{t("回忆英文单词", "Recall the English word")}</h3>
+        <p className="review-clue">{card.zh || card.prompt}</p>
+        {card.pos && <Badge tone="primary">{card.pos}</Badge>}
+      </div>
+      {(phonetic || exampleHint) && <div className="words-hints">
         {phonetic && <Chip selected={revealIpa} onClick={() => setRevealIpa(!revealIpa)} icon="volume">
-          {revealIpa ? <span className="mono">/{phonetic.replace(/^\/|\/$/g, "")}/</span> : t("显示音标", "Show IPA")}
+          {t("显示音标", "Show IPA")}
         </Chip>}
-        <Chip selected={showExample} onClick={() => setShowExample(!showExample)} icon="bulb">
+        {exampleHint && <Chip selected={showExample} onClick={() => setShowExample(!showExample)} icon="bulb">
           {t("例句提示", "Example hint")}
-        </Chip>
-      </div>
-      {showExample && <p className="mono muted tiny" style={{ marginTop: 6 }}>{card.masked_example || card.example || "—"}</p>}
-    </Card>
-
-    {!checked ? <Card>
-      <Input value={answer} onChange={setAnswer} onEnter={check} placeholder={t("输入你回忆出的单词", "Type the word you recall")} />
-      <div className="dock-actions" style={{ position: "static", padding: "10px 0 0" }}>
-        <Button icon="check" onClick={check} loading={busy} block>{t("核对答案", "Check answer")}</Button>
-      </div>
+        </Chip>}
+      </div>}
+      {(revealIpa || showExample) && <div className="review-hint-text" role="status">
+        {revealIpa && <div className="mono break">{formatIpa(phonetic)}</div>}
+        {showExample && <div>{exampleHint}</div>}
+      </div>}
+      <Input value={answer} onChange={setAnswer} onEnter={check}
+        label={t("你的答案", "Your answer")} placeholder={t("输入回忆出的单词", "Type the word you recall")} />
     </Card> : <>
-      <Card className={checked.correct ? "card--tint" : "card--accent"}>
-        <p className="card-kicker">{checked.correct ? t("回忆正确", "RECALLED") : t("参考答案", "ANSWER")}</p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <h2 className="break" style={{ margin: 0, fontSize: 27 }}>{card.word || card.answer}</h2>
-          <IconButton name="volume" label={t("朗读", "Speak")} tone="soft" onClick={() => speak(card.word || card.answer)} />
-        </div>
-        {phonetic && <p className="word-phonetic mono">/{phonetic.replace(/^\/|\/$/g, "")}/</p>}
-        <p className="word-zh">{card.zh}</p>
-        {card.meaning && <p className="card-note">{card.meaning}</p>}
-        {card.example && <div className="example-item" style={{ marginTop: 10 }}>{card.example}</div>}
-      </Card>
+      <p className="review-feedback" role="status">
+        <Badge tone={checked.correct ? "success" : "warning"}>{checked.correct ? t("回忆正确", "Recalled correctly") : t("参考答案", "Correct answer")}</Badge>
+        <span>{t("你的答案", "Your answer")} · <strong>{answer.trim()}</strong></span>
+      </p>
+      <WordCard entry={reviewEntry} onSpeak={speak}
+        onSpeakExample={(text) => speakWord(text, () => toast(t("语音服务不可用", "Speech is unavailable"), "err"))} />
+    </>}
 
-      <div>
-        <p className="eyebrow" style={{ margin: "6px 2px 8px" }}>{t("这次回忆有多难？", "HOW HARD WAS IT TO RECALL?")}</p>
+    <div className="review-utilities">
+      <Button variant="ghost" icon="trash" loading={removing} disabled={busy || grading} onClick={skip}>{t("移除此卡", "Remove card")}</Button>
+      <Button variant="ghost" onClick={back}>{t("结束本组", "End session")}</Button>
+    </div>
+
+    <div className="words-dock review-dock">
+      {!checked ? <Button icon="check" onClick={check} loading={busy} disabled={removing || !answer.trim()} block>{t("核对答案", "Check answer")}</Button> : <>
+        <h2>{t("这次回忆有多难？", "How hard was it to recall?")}</h2>
         <div className="grade-grid">
-          {(["again", "hard", "good", "easy"] as ReviewRating[]).map((rating) =>
-            <button key={rating} type="button" className={`grade grade--${rating}`} disabled={grading}
+          {(["again", "hard", "good", "easy"] as const).map((rating) =>
+            <button key={rating} type="button" className={`grade grade--${rating}`} disabled={grading || removing}
               onClick={() => grade(rating)}>
               <strong>{rating}</strong>
               <small>{ratings[rating]?.intervalDays != null ? `${ratings[rating].intervalDays}d` : "—"}</small>
             </button>)}
         </div>
-        <p className="card-note">{t("数字是下一次复习的间隔天数。", "Numbers are the next interval in days.")}</p>
-      </div>
-    </>}
-
-    <div style={{ display: "flex", gap: 8 }}>
-      <Button variant="ghost" icon="trash" onClick={skip}>{t("移除此卡", "Remove card")}</Button>
-      <Button variant="ghost" onClick={back}>{t("结束本组", "End session")}</Button>
+        <p className="tiny muted">{t("数字表示距离下次复习的天数。", "Numbers show the days until the next review.")}</p>
+      </>}
     </div>
-    <div className="hero-space" />
   </div>;
 }

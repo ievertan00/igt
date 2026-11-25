@@ -165,8 +165,6 @@ export const api = {
   seedVocabulary: () => requestJson<any>("/vocab/seed", { method: "POST", body: "{}" }),
   listWords: (options: { q?: string; sort?: string; schedule?: string; status?: string; offset?: number; limit?: number }, signal?: AbortSignal) =>
     requestJson<any>(`/vocab/words${qs({ q: options.q ?? "", sort: options.sort ?? "az", schedule: options.schedule ?? "all", status: options.status ?? "all", offset: options.offset ?? 0, limit: options.limit ?? 20 })}`, { signal }),
-  wordHistory: (cardId: number, offset = 0, signal?: AbortSignal) =>
-    requestJson<any>(`/vocab/history${qs({ card_id: cardId, offset })}`, { signal }),
 
   /* review */
   reviewDue: async (limit = 20, signal?: AbortSignal) => {
