@@ -15,12 +15,13 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `lib/cli/` — command dispatch, help, rendering, and API client
 - `lib/domain/` — reusable learning and parsing rules
 - `lib/features/` — feature workflows such as practice, handbook, modules, and text analysis
-- `lib/server/` — local HTTP server, routes, migrations, and LLM provider integration
+- `lib/server/` — local HTTP server, routes, and LLM provider integration
 - `apps/local/` — independent Local Web Runtime entrypoint
 - `apps/web/` — Vite + React + TypeScript desktop Web client
 - `apps/mobile/` — standalone Vite + React + TypeScript mobile client, emitted to `apps/web/dist/mobile/` and served at `/mobile/`
 - `apps/android/` — Java WebView shell (APK built by `apps/android/build.ps1`)
 - `lib/db/` — SQLite access and persistence
+- `migrations/` — schema migrations applied by `lib/db/migrations.mjs`
 - `scripts/` — development and verification utilities: `scripts/smoke/` (Web/CLI acceptance smokes), `scripts/db/` (database, import, and indexing utilities), `scripts/deploy/`, `scripts/dev-runtime/`, `scripts/prompt-ab/` (auto and blind A/B harnesses); dev-only scratch scripts live in the ignored `scripts/dev/`
 - `tests/` — Node test-suite
 - `docs/` — project documentation and design notes
