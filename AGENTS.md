@@ -17,7 +17,7 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `lib/features/` — feature workflows such as practice, handbook, modules, and text analysis
 - `lib/server/` — local HTTP server, routes, and LLM provider integration
 - `apps/local/` — independent Local Web Runtime entrypoint
-- `apps/web/` — Vite + React + TypeScript desktop Web client
+- `apps/web/` — Vite + React + TypeScript desktop Web client (`src/pages/` route surfaces with co-located CSS, `src/components/` shared UI, `src/lib/` helpers, `src/api/` client; `App.tsx` is the routing shell)
 - `apps/mobile/` — standalone Vite + React + TypeScript mobile client, emitted to `apps/web/dist/mobile/` and served at `/mobile/`
 - `apps/android/` — Java WebView shell (APK built by `apps/android/build.ps1`)
 - `lib/db/` — SQLite access and persistence
