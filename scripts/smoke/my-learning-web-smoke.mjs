@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import puppeteer from 'puppeteer';
 import { preview } from 'vite';
-import { getGrowthOverview, getGrowthRecords, getGrowthRecord } from '../lib/application/learning-growth.mjs';
-import { buildGrammarHistory } from '../lib/application/grammar-history.mjs';
-import { getErrorTypesByCategory } from '../lib/domain/error-types.mjs';
+import { getGrowthOverview, getGrowthRecords, getGrowthRecord } from '../../lib/application/learning-growth.mjs';
+import { buildGrammarHistory } from '../../lib/application/grammar-history.mjs';
+import { getErrorTypesByCategory } from '../../lib/domain/error-types.mjs';
 
 // Synthetic data only; never start the Local Runtime, migrate a DB or call a model.
 const now = Date.now(), HOUR = 3600000;
@@ -127,26 +127,68 @@ try {
   await page.evaluate(() => window.scrollTo(0, 0));
   assert.equal(await page.$$eval('.growth-saved-card', nodes => nodes.length), 4);
   assert.equal(await page.$$eval('.growth-metric-card', nodes => nodes.length), 4);
-  // v2.18: card containers stay white; the colour ramp lives on inner icon tiles, figure chips, fonts, meters and charts.
+  // The overview uses green for summary data and blue for the current trend series.
   const savedIconColors = await page.$$eval('.growth-saved-icon', nodes => nodes.map(node => getComputedStyle(node).backgroundColor));
-  assert.deepEqual(savedIconColors, ['rgb(47, 106, 201)', 'rgb(165, 102, 13)', 'rgb(123, 75, 201)', 'rgb(194, 67, 108)'], 'saved-material icon tiles follow their source palette');
+  assert.deepEqual(savedIconColors, ['rgb(210, 238, 217)', ...Array(3).fill('rgb(226, 232, 240)')], 'the saved-word tile is green and the other source tiles are slate');
   assert.equal(await page.$$eval('.growth-saved-chip', nodes => nodes.length), 4, 'each saved-material card carries a period delta chip');
   const meterColors = await page.$$eval('.growth-metric-progress i', nodes => nodes.map(node => getComputedStyle(node).backgroundColor));
-  assert.deepEqual(meterColors, ['rgb(47, 106, 201)', 'rgb(123, 75, 201)', 'rgb(165, 102, 13)', 'rgb(18, 133, 119)'], 'snapshot meters follow their metric palette');
+  assert.deepEqual(meterColors, Array(4).fill('rgb(25, 117, 50)'), 'snapshot meters share the same green');
+  const activePeriod = await page.$eval('.growth-periods button[aria-pressed="true"]', node => { const style = getComputedStyle(node); return { surface: style.backgroundColor, ink: style.color }; });
+  assert.deepEqual(activePeriod, { surface: 'rgb(25, 117, 50)', ink: 'rgb(255, 255, 255)' }, 'the selected period uses solid green and white text');
+  const cdp = await page.createCDPSession();
+  try {
+    await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] });
+    const selectedPeriodSelector = '.growth-periods button[aria-pressed="true"]';
+    const periodStyles = () => page.$eval(selectedPeriodSelector, node => {
+      const style = getComputedStyle(node);
+      return { border: style.border, outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth, outlineOffset: style.outlineOffset };
+    });
+    const selectedOnly = await periodStyles();
+    await page.$eval(selectedPeriodSelector, node => {
+      const previousButton = node.previousElementSibling;
+      (previousButton || document.querySelector('.growth-trend select')).focus();
+    });
+    await page.keyboard.press('Tab');
+    assert.equal(await page.$eval(selectedPeriodSelector, node => node.matches(':focus-visible')), true);
+    const selectedAndFocused = await periodStyles();
+    assert.equal(selectedAndFocused.border, selectedOnly.border, 'selection remains visible on focus');
+    assert.equal(selectedOnly.outlineStyle, 'none');
+    assert.equal(selectedAndFocused.outlineStyle, 'solid');
+    assert.equal(selectedAndFocused.outlineWidth, '2px');
+    assert.equal(selectedAndFocused.outlineOffset, '3px');
+    await page.$eval(selectedPeriodSelector, node => node.blur());
+  } finally {
+    await cdp.send('Emulation.setEmulatedMedia', { features: [] });
+    await cdp.detach();
+  }
+  const emptyReportsFigure = await page.$eval('.growth-saved-card[data-source="reports"] strong', node => {
+    const style = getComputedStyle(node);
+    return { value: node.textContent, ink: style.color, surface: style.backgroundColor };
+  });
+  assert.deepEqual(emptyReportsFigure, { value: '0', ink: 'rgb(71, 85, 105)', surface: 'rgb(241, 245, 249)' });
   const ramps = await page.evaluate(() => {
     const style = node => getComputedStyle(node);
     const cards = [...document.querySelectorAll('.growth-saved-card')].map(node => ({
       surface: style(node).backgroundColor, edge: style(node).borderTopColor, rail: style(node).boxShadow,
-      iconInk: style(node.querySelector('.growth-saved-icon')).color, figure: style(node.querySelector('strong')).color,
+      figure: style(node.querySelector('strong')).color,
       figureSurface: style(node.querySelector('strong')).backgroundColor,
     }));
     const metrics = [...document.querySelectorAll('.growth-metric-card')].map(node => ({
       surface: style(node).backgroundColor, rail: style(node).boxShadow, figure: style(node.querySelector('strong')).color,
       figureSurface: style(node.querySelector('strong')).backgroundColor,
     }));
-    const bars = [...document.querySelectorAll('.growth-bar-row')].map(node => style(node.querySelector('.growth-bar-track i')).backgroundColor);
+    const bars = Object.fromEntries([...document.querySelectorAll('.growth-bar-row')].map(row => [row.dataset.category, style(row.querySelector('.growth-bar-track i')).backgroundColor]));
+    const retentionColors = { Grammar: 'well-retained', Vocabulary: 'learning', Mechanics: 'needs-reinforcement', Style: 'retained', Clarity: 'new' };
+    const sample = document.body.appendChild(document.createElement('span'));
+    const expectedBars = Object.fromEntries(Object.entries(retentionColors).map(([category, status]) => {
+      sample.style.backgroundColor = `color-mix(in srgb, var(--learning-status-${status}) 80%, var(--ink))`;
+      return [category, style(sample).backgroundColor];
+    }));
+    sample.remove();
+    const emptyTracks = [...document.querySelectorAll('.growth-bar-row.is-empty .growth-bar-track')].map(node => style(node).backgroundColor);
+    const ranks = [...document.querySelectorAll('.growth-rank')].map(node => style(node).backgroundColor);
     const area = document.querySelector('.growth-series-fill path');
-    return { cards, metrics, bars, paper: style(document.querySelector('.growth-panel')).backgroundColor,
+    return { cards, metrics, bars, expectedBars, emptyTracks, ranks, paper: style(document.querySelector('.growth-panel')).backgroundColor,
       strip: style(document.querySelector('.growth-metric-strip')).backgroundColor,
       observationInk: style(document.querySelector('.growth-diagnosis-copy p')).color,
       areaFill: area ? style(area).fill : null, areaPaths: document.querySelectorAll('.growth-series-fill path').length,
@@ -161,14 +203,13 @@ try {
   assert.ok(ramps.cards.every(card => !card.rail.includes('inset')), 'saved-material cards carry no coloured top rail');
   assert.ok(ramps.metrics.every(metric => !metric.rail.includes('inset')), 'snapshot readouts carry no coloured top rail');
   assert.ok(ramps.panels.every(shadow => !shadow.includes('inset')), 'analysis panels carry no coloured top rail');
-  assert.ok(ramps.cards.every(card => card.iconInk === 'rgb(255, 255, 255)'), 'solid icon tiles keep white glyphs');
-  assert.equal(distinct(ramps.cards.map(card => card.figure)), 4, 'saved-material totals follow their module hue');
-  assert.equal(distinct(ramps.metrics.map(metric => metric.figure)), 4, 'snapshot figures follow their module hue');
-  assert.equal(distinct(ramps.cards.map(card => card.figureSurface)), 4, 'inner saved-material figure chips carry four soft hues');
-  assert.equal(distinct(ramps.metrics.map(metric => metric.figureSurface)), 4, 'inner snapshot figure chips carry four soft hues');
-  assert.equal(distinct(ramps.bars), 5, 'the five error categories use five distinct hues');
+  assert.ok(ramps.cards.slice(0, 3).every(card => card.figure === 'rgb(14, 107, 42)' && card.figureSurface === 'rgb(237, 248, 238)'), 'populated saved totals use the soft green treatment');
+  assert.ok(ramps.metrics.every(metric => metric.figure === 'rgb(14, 107, 42)' && metric.figureSurface === 'rgba(0, 0, 0, 0)'), 'metric figures use green directly on the card');
+  assert.deepEqual(ramps.bars, ramps.expectedBars, 'error categories use shaded colors from the retention palette');
+  assert.ok(ramps.emptyTracks.length && ramps.emptyTracks.every(color => color === 'rgb(241, 245, 249)'), 'empty error tracks stay neutral');
+  assert.deepEqual(ramps.ranks, ['rgb(152, 89, 17)', 'rgb(184, 76, 32)', 'rgb(25, 117, 50)'], 'priority ranks use amber, orange and green');
   assert.equal(ramps.observationInk, 'rgb(16, 24, 39)', 'observation prose stays ink on the white conclusion card');
-  assert.ok(ramps.areaPaths >= 1 && ramps.areaFill && ramps.areaFill.startsWith('rgb('), 'the current trend series carries a soft area wash');
+  assert.ok(ramps.areaPaths >= 1 && ramps.areaFill === 'rgb(34, 137, 201)', 'the current trend series carries a sky-blue area wash');
   assert.equal(await page.$$eval('.growth-bar-row', nodes => nodes.length), 5);
   assert.equal(await page.$$eval('.growth-distribution .growth-total-badge', nodes => nodes.length), 1, 'error distribution states the period total');
   assert.equal(await page.$$eval('.growth-distribution .growth-focus', nodes => nodes.length), 1, 'the leading category becomes a focus callout');
@@ -232,7 +273,7 @@ try {
     assert.equal(plotPoints[key].hitFill, 'rgba(0, 0, 0, 0)', `the ${key} hit area is invisible`);
     assert.equal(plotPoints[key].hitStroke, 'none', `the ${key} hit area has no outline`);
   }
-  assert.equal(plotPoints.current.fill, meterColors[0], 'current recall points match the recall meter');
+  assert.equal(plotPoints.current.fill, 'rgb(34, 137, 201)', 'current recall points use the sky-blue trend colour');
   assert.equal(plotPoints.previous.fill, plotPoints.paper, 'previous-period points are hollow (no filled outer circle)');
   assert.equal(plotPoints.previous.stroke, plotPoints.muted, 'previous-period points have a neutral outline');
   assert.ok(plotPoints.previous.strokeWidth >= 2, 'the hollow comparison ring is clearly visible');
@@ -290,8 +331,8 @@ try {
   await page.keyboard.press('Escape');
   await page.focus('select[aria-label="Metric"]'); await page.select('select[aria-label="Metric"]', 'score');
   assert.equal(await page.$eval('select[aria-label="Metric"]', node => node === document.activeElement), true);
-  assert.equal(await page.$eval('.growth-series:not(.is-previous) path', node => getComputedStyle(node).stroke), meterColors[1], 'the trend line follows the selected metric');
-  assert.equal(await page.$eval('.growth-chart-legend i:not(.is-previous)', node => getComputedStyle(node).backgroundColor), meterColors[1], 'the trend legend follows the selected metric');
+  assert.equal(await page.$eval('.growth-series:not(.is-previous) path', node => getComputedStyle(node).stroke), 'rgb(34, 137, 201)', 'the trend line stays sky blue when the metric changes');
+  assert.equal(await page.$eval('.growth-chart-legend i:not(.is-previous)', node => getComputedStyle(node).backgroundColor), 'rgb(34, 137, 201)', 'the legend continues to match the sky-blue trend line');
   assert.equal(await page.$('.growth-filters'), null);
   assert.equal(await page.$('.growth-data-table'), null);
   // Trend controls: one full-width period row, compact date inputs, and no descriptive footnotes.
@@ -358,7 +399,7 @@ try {
   assert.equal(await page.$('.growth-distribution .growth-tag'), null, 'Error distribution n= badge is removed');
   assert.equal(await page.$$eval('.growth-section-title p', nodes => nodes.length), 1, 'only the trend date range remains as a section detail');
   assert.doesNotMatch(await page.$eval('.learning-dashboard', node => node.textContent), /Compare evidence|Sources and evidence boundaries|counted once per category|Based on locally saved records|do not prove mastery|independent of the time filter|Click a bar to inspect/);
-  const output = path.resolve('.tmp/my-learning-integration-qa'); fs.mkdirSync(output, { recursive: true });
+  const output = path.resolve('.cache/tmp/my-learning-integration-qa'); fs.mkdirSync(output, { recursive: true });
   const titleAnchor = {};
   for (const route of ['dashboard', 'word-library', 'ask?view=notes', 'handbook', 'coach']) {
     await page.goto(`${base}/#${route}`); await ready();
