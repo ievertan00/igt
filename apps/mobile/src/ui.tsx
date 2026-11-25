@@ -68,7 +68,7 @@ export function IconButton({ name, label, onClick, disabled, tone = "plain", siz
 }
 
 export function Button({ children, onClick, variant = "primary", icon, disabled, loading, block, type = "button", name }: {
-  children?: React.ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "ghost" | "danger" | "soft";
+  children?: React.ReactNode; onClick?: React.MouseEventHandler<HTMLButtonElement>; variant?: "primary" | "secondary" | "ghost" | "danger" | "soft";
   icon?: string; disabled?: boolean; loading?: boolean; block?: boolean; type?: "button" | "submit"; name?: string;
 }) {
   return <button type={type} name={name} className={`btn btn--${variant}${block ? " btn--block" : ""}`}

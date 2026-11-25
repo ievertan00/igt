@@ -180,7 +180,7 @@ async function attachFixtures(page, origin) {
         const offset = Number(url.searchParams.get("offset"));
         const matches = savedWords.filter((word) => word.word.includes(query));
         body = { words: matches.slice(offset, offset + limit), total: matches.length,
-          totalSaved: savedWords.length, offset, limit, overview: { due: 1, retained: 0 } };
+          totalSaved: savedWords.length, offset, limit, overview: { due: 0, retained: 0 } };
       }
       await request.respond({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
     } catch (error) {
@@ -410,13 +410,26 @@ try {
 
   await page.evaluate(() => { location.hash = "#/words"; });
   await page.waitForSelector(".words-row:not(:disabled)");
-  await page.click(".words-row:nth-of-type(20)");
+  const listScroll = await page.$eval(".words-row:nth-of-type(20)", (row) => {
+    row.scrollIntoView({ block: "center" });
+    const scrollTop = row.closest(".screen").scrollTop;
+    row.click();
+    return scrollTop;
+  });
+  assert.ok(listScroll > 0, "the card opens from a scrolled list");
   await page.waitForFunction(() => document.querySelector(".word-card h2")?.textContent === "word 17");
+  await page.waitForSelector(".words-dock .btn:last-child:not(:disabled)");
   await page.click(".words-dock .btn:last-child");
   await page.waitForFunction(() => document.querySelector(".word-card h2")?.textContent === "word 18");
   assert.match(await page.$eval(".words-dock", (el) => el.textContent), /21 \/ 21/);
   assert.equal(await page.evaluate(() => window.__igtBack()), true);
-  await page.waitForSelector(".words-search input");
+  await page.waitForSelector(".words-search input", { visible: true });
+  const restoredList = await page.$eval(".words-row:nth-of-type(20)", (row) => ({
+    page: document.querySelector(".words-layout .words-pager > span").textContent,
+    scrollTop: row.closest(".screen").scrollTop,
+    focused: document.activeElement === row,
+  }));
+  assert.deepEqual(restoredList, { page: "1 / 2", scrollTop: listScroll, focused: true });
   await page.type(".words-search input", "follow");
   await page.waitForFunction(() => {
     const rows = document.querySelectorAll(".words-row");
@@ -446,6 +459,10 @@ try {
   assert.equal(await page.evaluate(() => window.__igtBack()), true);
   await page.waitForSelector(".words-search input");
 
+  await page.waitForFunction(() => {
+    const review = document.querySelector(".words-action-card");
+    return /1 word due|1 个单词待复习/.test(review?.textContent) && !review.querySelector(".btn--primary").disabled;
+  });
   await page.click(".words-action-card .btn--primary:not(:disabled)");
   await page.waitForSelector(".review-prompt");
   assert.doesNotMatch(await page.$eval(".review-prompt", (el) => el.textContent), /fɒləʊ|follow up on/);

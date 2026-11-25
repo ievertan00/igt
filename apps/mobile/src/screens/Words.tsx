@@ -33,7 +33,7 @@ type WordPage = {
   total: number;
   totalSaved: number;
   offset: number;
-  overview: { due: number; retained: number } | null;
+  overview: { retained: number } | null;
 };
 
 function formatIpa(value: string) {
@@ -85,12 +85,12 @@ async function speakWord(text: string, onError: () => void) {
   if (!(await native.speak(text))) onError();
 }
 
-export function WordsScreen() {
+export function WordsScreen({ onOpenCard }: { onOpenCard: (trigger: HTMLButtonElement) => void }) {
   const { route } = useApp();
   if (route.params.get("tab") === "lookup") return <div className="stack words-layout">
     <Lookup />
   </div>;
-  return <Library viewing={route.params.get("view") === "card"} />;
+  return <Library viewing={route.params.get("view") === "card"} onOpenCard={onOpenCard} />;
 }
 
 /* ----------------------------------------------------------------- lookup -- */
@@ -152,54 +152,38 @@ function Lookup() {
 
 /* ---------------------------------------------------------------- library -- */
 const EMPTY_WORD_PAGE: WordPage = { words: [], total: 0, totalSaved: 0, offset: 0, overview: null };
+const WORD_PAGE_SIZE = 20;
+const DUE_COUNT_LIMIT = 100;
 
-function Library({ viewing }: { viewing: boolean }) {
-  const { t, toast } = useApp();
-  const [search, setSearch] = useDraft("word.search");
-  const [sort, setSort] = useState("az");
-  const [status, setStatus] = useState("all");
-  const [schedule, setSchedule] = useState("all");
-  const [offset, setOffset] = useState(0);
-  const [position, setPosition] = useState(0);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const limit = 20;
-
-  const { data, loading, error, stale, reload } = useResource<WordPage>(
+function useWordPage(search: string, sort: string, status: string, schedule: string, offset: number, initial = EMPTY_WORD_PAGE) {
+  return useResource<WordPage>(
     `words.library.v1.${search}.${sort}.${status}.${schedule}.${offset}`,
-    (signal) => api.listWords({ q: search, sort, status, schedule, offset, limit }, signal),
+    (signal) => api.listWords({ q: search, sort, status, schedule, offset, limit: WORD_PAGE_SIZE }, signal),
     [search, sort, status, schedule, offset],
-    EMPTY_WORD_PAGE,
+    initial,
   );
+}
+
+function WordReader({ start, initial, search, sort, status, schedule }: {
+  start: number; initial: WordPage; search: string; sort: string; status: string; schedule: string;
+}) {
+  const { t, toast } = useApp();
+  const [position, setPosition] = useState(start);
+  const offset = Math.floor(position / WORD_PAGE_SIZE) * WORD_PAGE_SIZE;
+  const { data, loading, error, reload } = useWordPage(search, sort, status, schedule, offset, initial);
   useRefresh(reload);
 
-  const { words, total, totalSaved, overview } = data;
-  const activeFilters = Boolean(search.trim()) || status !== "all" || schedule !== "all";
-  const due = overview?.due;
+  const { total } = data;
   const currentPosition = Math.min(position, Math.max(0, total - 1));
   const waitingForPage = data.offset !== offset && (loading || Boolean(error));
-  const word = waitingForPage ? undefined : words[currentPosition - data.offset];
-
-  function setPagePosition(next: number) {
-    setPosition(next);
-    setOffset(Math.floor(next / limit) * limit);
-  }
-
-  function openCard(next: number) {
-    setPagePosition(next);
-    go("/words?view=card");
-  }
+  const word = waitingForPage ? undefined : data.words[currentPosition - data.offset];
 
   function changeCard(next: number) {
-    setPagePosition(next);
+    setPosition(next);
     document.querySelector(".screen")?.scrollTo(0, 0);
   }
 
-  function changeFilter(update: (value: string) => void, value: string) {
-    update(value);
-    setOffset(0);
-  }
-
-  if (viewing) return <div className="stack words-layout words-reader">
+  return <div className="stack words-layout words-reader">
     {error && !word ? <ErrorNote message={error} onRetry={reload} retryLabel={t("重试", "Retry")} />
       : !word && loading ? <Card><Skeleton lines={5} /></Card>
       : word ? <>
@@ -216,15 +200,56 @@ function Library({ viewing }: { viewing: boolean }) {
       </> : <Empty icon="book" title={t("没有可浏览的词卡", "No cards to browse")}
         action={t("返回词库", "Back to vocabulary")} onAction={() => go("/words")} />}
   </div>;
+}
 
-  return <div className="stack words-layout">
+function Library({ viewing, onOpenCard }: { viewing: boolean; onOpenCard: (trigger: HTMLButtonElement) => void }) {
+  const { t } = useApp();
+  const [search, setSearch] = useDraft("word.search");
+  const [sort, setSort] = useState("az");
+  const [status, setStatus] = useState("all");
+  const [schedule, setSchedule] = useState("all");
+  const [offset, setOffset] = useState(0);
+  const [readerStart, setReaderStart] = useState(0);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const limit = WORD_PAGE_SIZE;
+  const { data, loading, error, stale, reload } = useWordPage(search, sort, status, schedule, offset);
+  const { data: dueCount, loading: dueLoading, error: dueError, reload: reloadDue } = useResource<number | null>(
+    "words.due-count",
+    async (signal) => (await api.reviewDue(DUE_COUNT_LIMIT, signal)).cards.length,
+    [],
+    null,
+  );
+  useRefresh(() => {
+    if (!viewing) {
+      reload();
+      reloadDue();
+    }
+  });
+
+  const { words, total, totalSaved, overview } = data;
+  const activeFilters = Boolean(search.trim()) || status !== "all" || schedule !== "all";
+  const due = dueLoading || dueError ? null : dueCount;
+  const dueLabel = due === DUE_COUNT_LIMIT ? `${due}+` : due;
+  const waitingForPage = data.offset !== offset && (loading || Boolean(error));
+  function openCard(next: number, trigger: HTMLButtonElement) {
+    setReaderStart(next);
+    onOpenCard(trigger);
+  }
+
+  function changeFilter(update: (value: string) => void, value: string) {
+    update(value);
+    setOffset(0);
+  }
+
+  const list = <div className={viewing ? undefined : "stack words-layout"} hidden={viewing}>
     <Card className="words-action-card">
       <div className="words-action-heading">
         <span className="words-symbol"><Icon name="clock" /></span>
         <div>
           <h2>{t("今日待复习", "Today’s due")}</h2>
           <p>{due == null ? t("查看今天的复习队列", "See today’s review queue")
-            : due > 0 ? t(`${due} 个单词待复习`, `${due} words due`) : t("今天的待复习单词已清空", "You’re all caught up today")}</p>
+            : due > 0 ? t(`${dueLabel} 个单词待复习`, due === 1 ? "1 word due" : `${dueLabel} words due`)
+              : t("今天的待复习单词已清空", "You’re all caught up today")}</p>
         </div>
       </div>
       <Button icon="play" onClick={() => go("/review")} disabled={due === 0} block>{t("开始复习", "Start review")}</Button>
@@ -238,7 +263,7 @@ function Library({ viewing }: { viewing: boolean }) {
           <p>{t(`${totalSaved} 个已保存的单词`, `${totalSaved} saved words`)}{overview && ` · ${t(`${overview.retained} 个已记住`, `${overview.retained} retained`)}`}</p>
         </div>
       </div>
-      <Button variant="soft" icon="forward" onClick={() => openCard(0)} disabled={total === 0 || loading} block>
+      <Button variant="soft" icon="forward" onClick={(event) => openCard(0, event.currentTarget)} disabled={total === 0 || loading} block>
         {activeFilters ? t("浏览筛选结果", "Browse matching cards") : t("浏览全部词卡", "Browse all cards")}
       </Button>
     </Card>
@@ -262,7 +287,7 @@ function Library({ viewing }: { viewing: boolean }) {
       {loading && (words.length === 0 || waitingForPage) ? <Card><Skeleton lines={5} /></Card>
         : words.length > 0 ? <Card className="words-list" padded={false}>
           {words.map((item, index) => <button key={item.id} type="button" className="words-row" disabled={loading}
-            onClick={() => openCard(data.offset + index)}>
+            onClick={(event) => openCard(data.offset + index, event.currentTarget)}>
             <span className="words-symbol" aria-hidden="true">{Array.from(item.word.trim())[0]?.toUpperCase() || "?"}</span>
             <span className="words-row-text">
               <strong>{item.word}</strong>
@@ -303,6 +328,10 @@ function Library({ viewing }: { viewing: boolean }) {
     </Sheet>
 
   </div>;
+  return <>
+    {list}
+    {viewing && <WordReader start={readerStart} initial={data} search={search} sort={sort} status={status} schedule={schedule} />}
+  </>;
 }
 
 /* --------------------------------------------------------- review session -- */

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { go, useApp } from "./core";
 import { Icon } from "./ui";
 import { HomeScreen } from "./screens/Home";
@@ -34,7 +34,6 @@ function screenFor(path: string): React.ReactNode {
   switch (path) {
     case "/home": return <HomeScreen />;
     case "/write": return <WritingScreen />;
-    case "/words": return <WordsScreen />;
     case "/practice": return <PracticeScreen />;
     case "/ask": return <AskScreen />;
     case "/review": return <ReviewSession />;
@@ -51,6 +50,8 @@ function screenFor(path: string): React.ReactNode {
 export function App() {
   const { route, t, lang, back } = useApp();
   const screenRef = useRef<HTMLDivElement>(null);
+  const backButtonRef = useRef<HTMLButtonElement>(null);
+  const wordListReturn = useRef<{ scrollTop: number; trigger: HTMLButtonElement } | null>(null);
   const pullStart = useRef(-1);
   const [pull, setPull] = useState(0);
 
@@ -64,10 +65,27 @@ export function App() {
     : TITLES[route.path] || TITLES[root] || ["ClearWrite", "ClearWrite"];
   const activeNav = route.path === "/review" ? "/words" : root === "/me" ? "" : root;
 
+  useLayoutEffect(() => {
+    const returnPoint = route.path === "/words" && !wordLookup && !wordCard ? wordListReturn.current : null;
+    screenRef.current?.scrollTo(0, returnPoint?.scrollTop ?? 0);
+    if (returnPoint) {
+      returnPoint.trigger.focus({ preventScroll: true });
+      wordListReturn.current = null;
+    } else if (wordCard) {
+      backButtonRef.current?.focus({ preventScroll: true });
+    } else {
+      wordListReturn.current = null;
+    }
+  }, [route.path, route.params.toString(), wordLookup, wordCard]);
+
   useEffect(() => {
-    screenRef.current?.scrollTo(0, 0);
     document.title = `ClearWrite · ${lang === "zh" ? title[0] : title[1]}`;
   }, [route.path, route.params.toString(), lang]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function openWordCard(trigger: HTMLButtonElement) {
+    wordListReturn.current = { scrollTop: screenRef.current?.scrollTop ?? 0, trigger };
+    go("/words?view=card");
+  }
 
   const onTouchStart = (event: React.TouchEvent) => {
     pullStart.current = (screenRef.current?.scrollTop ?? 0) <= 0 ? event.touches[0].clientY : -1;
@@ -85,7 +103,7 @@ export function App() {
 
   return <div className={`app${hideNav ? " app--no-nav" : ""}`}>
     <header className="appbar">
-      {isSub && <button type="button" className="icon-button" onClick={wordCard || wordLookup ? () => {
+      {isSub && <button ref={backButtonRef} type="button" className="icon-button" onClick={wordCard || wordLookup ? () => {
         if (!window.__igtBack?.()) go("/words");
       } : back} aria-label={t("返回", "Back")}>
         <Icon name="back" />
@@ -112,7 +130,9 @@ export function App() {
         <Icon name={pull > 46 ? "refresh" : "down"} size={18} />
         <span>{pull > 46 ? t("松开刷新", "Release to refresh") : t("下拉刷新", "Pull to refresh")}</span>
       </div>}
-      <React.Fragment key={route.path}>{screenFor(route.path)}</React.Fragment>
+      <React.Fragment key={route.path}>
+        {route.path === "/words" ? <WordsScreen onOpenCard={openWordCard} /> : screenFor(route.path)}
+      </React.Fragment>
     </main>
 
     <nav className="bottom-nav" aria-label={t("主导航", "Main navigation")}>
