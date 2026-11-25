@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildCoachPatterns, getCoachPatterns, explainCoachPattern, clearGrammarCoachCache } from "../lib/application/grammar-coach.mjs";
-import { buildLearningOverview, buildEffortTrend, buildOverviewPriorities, loadLearningActivity, getLearningOverview } from "../lib/application/learning-overview.mjs";
+import { buildLearningOverview, buildEffortTrend, buildOverviewPriorities, loadLearningActivity, getLearningOverview, getOverviewPracticeLog } from "../lib/application/learning-overview.mjs";
 import { runCoach, runOverview, parseLearningArgs } from "../lib/cli/commands/learning.mjs";
 
 const now = Date.parse("2026-10-30T12:00:00Z");
@@ -45,6 +45,24 @@ test("failed or fabricated explanations are not cached", async () => {
   await assert.rejects(explainCoachPattern({ errorType: "Articles" }, deps), { status: 503 });
   assert.equal((await explainCoachPattern({ errorType: "Articles" }, deps)).cached, false);
   assert.equal(calls, 2);
+});
+
+test("Overview Practice Log sorts whole Markdown entries by timestamp", () => {
+  const header = "# Practice Log\r\n\r\n";
+  const block = (date, answer) => `## Practice · ${date}\r\n- Your answer: ${answer}\r\n- Feedback: First line\r\n  Second line`;
+  const older = block("2026-11-24T22:00:00.000Z", "Earlier answer");
+  const latest = block("2026-11-25T08:00:00.000Z", "Latest answer");
+  const middle = block("2026-11-24T23:00:00+08:00", "Middle answer");
+  const undated = block("unknown", "Undated answer");
+  const separator = "\r\n\r\n";
+  const readFile = () => header + [older, undated, latest, middle].join(separator);
+  assert.deepEqual(getOverviewPracticeLog({}, { readFile }), {
+    count: 4,
+    markdown: header + [latest, middle, older, undated].join(separator),
+  });
+  assert.deepEqual(getOverviewPracticeLog({}, { readFile, summary: true }), { count: 4 });
+  assert.equal(getOverviewPracticeLog({}, { readFile: () => [older, latest].join(separator) }).markdown,
+    [latest, older].join(separator));
 });
 
 test("Overview keeps source identities, separate measures, dates and pagination", () => {
