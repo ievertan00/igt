@@ -2,6 +2,9 @@
   "name": "igt",
   "version": "3.7.0",
   "type": "module",
+  "engines": {
+    "node": "^24.16.0"
+  },
   "bin": {
     "igt": "./igt.mjs"
   },
