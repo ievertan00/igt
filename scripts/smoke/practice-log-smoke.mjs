@@ -17,7 +17,7 @@ try {
       referenceAnswer: "Could you clarify the deadline?",
       score: 82,
       targetPattern: "Polite requesting",
-      feedback: { feedback_zh: "表达清楚，可以继续练习语气。", question_id: "language-p01-3", difficulty: "standard", style: "formal", focus_id: "P01", hints_used: 2 }
+      feedback: { feedback_zh: "表达清楚，可以继续练习语气。", corrected_answer: "Please clarify the enquiry deadline.", strengths_zh: ["句子结构完整。", "语义传达准确。"], improvements_zh: ["英式拼写用 enquiry。", "正式邮件可用 get back to。"], question_id: "language-p01-3", difficulty: "standard", style: "formal", focus_id: "P01", hints_used: 2 }
     }
   });
   assert.equal(result.saved, true);
@@ -27,6 +27,9 @@ try {
   assert.match(markdown, /Score: 82/);
   assert.match(markdown, /Language focus: P01 · Polite requesting/);
   assert.match(markdown, /Hints used: 2\/3/);
+  assert.match(markdown, /- Correct answer: Please clarify the enquiry deadline\./, 'corrected_answer survives into the Markdown log');
+  assert.match(markdown, /- Strengths: 句子结构完整。; 语义传达准确。/, 'strengths_zh array is flattened onto one line');
+  assert.match(markdown, /- Improvements: 英式拼写用 enquiry。; 正式邮件可用 get back to。/, 'improvements_zh array is flattened onto one line');
   console.log("practice log smoke ok");
 } finally {
   fs.rmSync(root, { recursive: true, force: true });

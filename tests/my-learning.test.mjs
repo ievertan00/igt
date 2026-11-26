@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildCoachPatterns, getCoachPatterns, explainCoachPattern, clearGrammarCoachCache } from "../lib/application/grammar-coach.mjs";
-import { buildLearningOverview, buildEffortTrend, buildOverviewPriorities, loadLearningActivity, getLearningOverview, getOverviewPracticeLog } from "../lib/application/learning-overview.mjs";
+import { buildLearningOverview, buildEffortTrend, buildOverviewPriorities, loadLearningActivity, getLearningOverview, getOverviewPracticeLog, enrichPracticeLogMarkdown, getEnrichedOverviewPracticeLog } from "../lib/application/learning-overview.mjs";
 import { runCoach, runOverview, parseLearningArgs } from "../lib/cli/commands/learning.mjs";
 
 const now = Date.parse("2026-10-30T12:00:00Z");
@@ -63,6 +63,47 @@ test("Overview Practice Log sorts whole Markdown entries by timestamp", () => {
   assert.deepEqual(getOverviewPracticeLog({}, { readFile, summary: true }), { count: 4 });
   assert.equal(getOverviewPracticeLog({}, { readFile: () => [older, latest].join(separator) }).markdown,
     [latest, older].join(separator));
+});
+
+test("Practice log hydrates evaluation fields from stored practice attempts", async () => {
+  const markdown = [
+    "## Practice · 2026-11-26T10:21:09.383Z",
+    "- Prompt: 我没看到通知，他也没看到。",
+    "- Your answer: I haven't see the notice neither has him",
+    "- Reference answer: I haven't seen the notice, and neither has he.",
+    "- Score: 60",
+    "",
+  ].join("\n");
+  const attempts = [{ learner_answer: "I haven't see the notice neither has him", feedback: JSON.stringify({
+    corrected_answer: "I haven't seen the notice, nor has he.",
+    feedback_zh: "完成时与否定搭配有误。",
+    strengths_zh: ["尝试使用了现在完成时。", "尝试构建并列结构。"],
+    improvements_zh: ["助动词后接过去分词。", "区分 neither/nor 与 not...either。"],
+  }) }];
+  const enriched = enrichPracticeLogMarkdown(markdown, attempts);
+  assert.match(enriched, /- Correct answer: I haven't seen the notice, nor has he\./);
+  assert.match(enriched, /- Feedback: 完成时与否定搭配有误。/);
+  assert.match(enriched, /- Strengths: 尝试使用了现在完成时。; 尝试构建并列结构。/);
+  assert.match(enriched, /- Improvements: 助动词后接过去分词。; 区分/);
+
+  // Existing lines are the source of truth and must never be overwritten.
+  const handEdited = markdown.replace("- Score: 60", "- Score: 60\n- Strengths: 手工记录。");
+  const kept = enrichPracticeLogMarkdown(handEdited, attempts);
+  assert.match(kept, /- Strengths: 手工记录。/);
+  assert.doesNotMatch(kept, /- Strengths: 尝试/);
+
+  // Unmatched entries and raw-key logs stay untouched.
+  assert.equal(enrichPracticeLogMarkdown(markdown, []), markdown);
+  assert.equal(enrichPracticeLogMarkdown(markdown.replace("Your answer: I", "Your answer: X"), attempts),
+    markdown.replace("Your answer: I", "Your answer: X"));
+
+  const viaApi = await getEnrichedOverviewPracticeLog({}, { readFile: () => markdown, readAttempts: async () => attempts });
+  assert.equal(typeof viaApi.count, "number");
+  assert.match(viaApi.markdown, /- Improvements:/);
+  const summary = await getEnrichedOverviewPracticeLog({}, { readFile: () => markdown, summary: true, readAttempts: async () => { throw new Error("must not query attempts"); } });
+  assert.deepEqual(summary, { count: viaApi.count });
+  const degraded = await getEnrichedOverviewPracticeLog({}, { readFile: () => markdown, readAttempts: async () => { throw new Error("db unavailable"); } });
+  assert.equal(degraded.markdown, markdown);
 });
 
 test("Overview keeps source identities, separate measures, dates and pagination", () => {
