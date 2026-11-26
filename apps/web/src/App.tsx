@@ -233,7 +233,7 @@ export function App() {
         </nav>
       </header>}
       {androidApp && <AndroidSectionTabs route={route} />}
-      {isMyLearning && (!androidApp || (route !== "word-library" && route !== "word-review")) && <MyLearningNavigation route={route} />}
+      {isMyLearning && (!androidApp || (route !== "word-library" && route !== "word-review")) && <MyLearningNavigation route={route} titleOverride={practiceLogView ? "Practice log" : undefined} />}
       <main
         ref={mainRef}
         id="main-content"

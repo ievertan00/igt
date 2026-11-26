@@ -14,7 +14,7 @@ export const myLearningRoutes = [
 /* Overview / Library / Insight: a divider opens each group so the tabs read as three places, not five. */
 const groupStarts = new Set<string>(['word-library', 'coach']);
 
-export function MyLearningNavigation({ route }: { route: string }) {
+export function MyLearningNavigation({ route, titleOverride }: { route: string; titleOverride?: string }) {
   const { t, language } = useGuideCopy();
   const current = route === 'word-review' ? 'word-library' : route;
   // The strip names the sub-page as well as switching between them; the active tab supplies the title.
@@ -49,7 +49,7 @@ export function MyLearningNavigation({ route }: { route: string }) {
   return <div className="my-learning-navigation">
     <div className="my-learning-navigation-head">
       <span className="my-learning-navigation-kicker">{t('My learning')}</span>
-      <h1 className="my-learning-navigation-title">{t(activeLabel)}</h1>
+      <h1 className="my-learning-navigation-title">{t(titleOverride ?? activeLabel)}</h1>
     </div>
     <nav ref={tabsRef} className="my-learning-tabs" aria-label={language === 'zh-CN' ? 'My learning 页面' : 'My learning pages'} onKeyDown={moveFocus}>
       {myLearningRoutes.map(([key, label, icon, href]) => <Fragment key={key}>
