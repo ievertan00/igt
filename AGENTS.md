@@ -27,6 +27,26 @@ IGT is a Node.js CLI for English learning: grammar feedback, translation, vocabu
 - `docs/` — local-private project documentation and design notes (gitignored, not versioned; keep shareable guidance at the repo root)
 - `DESIGN.md` — UI design guidelines
 
+## Directory layout principle
+
+`lib/` and `apps/` use different, deliberate cut lines:
+
+- `apps/` — independently buildable or launchable products. The test is "does this produce its own artifact or process?" `web` and `mobile` produce Vite bundles, `android` produces an APK, `local` is the standalone Runtime entrypoint.
+- `lib/` — Node-side implementation with no separate build artifact. This includes the CLI's terminal presentation layer (`lib/cli/`) and the Local Runtime (`lib/server/`).
+- Repository root — bin entrypoints invoked directly by the user: `igt.mjs`, `igt.cmd`, `igt.sh`.
+
+Do not move `lib/cli/` into `apps/` just because it is a client. A TUI is not a browser frontend: CLI, Web and Mobile are peers at the *architectural* role but differ in delivery form, and the directory split follows delivery form, not audience.
+
+### Module dependency direction
+
+- Clients (`lib/cli/`, `apps/web/`, `apps/mobile/`) consume the Local Runtime over its HTTP contract. They do not import internal layers.
+- `lib/cli/` may import `lib/cli/**`, `lib/shared/**`, `lib/contracts/**`, and pure `lib/domain/**` helpers.
+- `lib/cli/` must not import `lib/db/**`, `lib/application/**`, `lib/server/**`, `lib/features/**`, or `apps/**`. `tests/architecture-boundaries.test.mjs` enforces this (`npm run test:architecture`). Existing violations are grandfathered with a stated reason and must be removed when the file is touched.
+- Grandfathered exception: `lib/cli/server-manager.mjs` importing `lib/db/runtime-lock.mjs` is intentional — process discovery needs the lock path. Keep it; do not add more of this kind.
+- Intentional offline exceptions: `igt-coach.mjs` / `igt-handbook.mjs` must browse saved Markdown with no runtime, provider or database; `igt.mjs` reads CLI model config locally to render the status bar before the runtime is up and on every prompt. Keep these local; do not route them through HTTP.
+- Boundary enforcement scans `lib/cli/**` plus the root `igt.mjs`. `npm run test:architecture` also verifies the CLI model settings contract and the `igt-add` HTTP flow.
+- Shared domain rules stay I/O-free. Persistence and provider access belong behind adapters in `lib/db/` and `lib/server/llm/`.
+
 ## Development commands
 
 Install dependencies with `npm install`.
