@@ -1,0 +1,39 @@
+name: Core CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  core-checks:
+    name: Core checks (Windows)
+    runs-on: windows-2025
+    timeout-minutes: 15
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.16.0
+          cache: npm
+      - run: npm ci
+      - run: npm run test:learning
+      - run: npm run web:typecheck
+      - run: npm run mobile:typecheck
+      - run: npm run client:build
+      - name: Smoke-test Local Runtime with a disposable database
+        shell: pwsh
+        run: |
+          $dataDir = Join-Path $env:RUNNER_TEMP "clearwrite-data"
+          New-Item -ItemType Directory -Path $dataDir | Out-Null
+          "IGT_DATA_DIR=$dataDir" | Set-Content -LiteralPath .env -Encoding utf8
+          npm run test:runtime
