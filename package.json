@@ -37,6 +37,7 @@
     "test:vocabulary-sync": "node scripts/smoke/vocabulary-sync-smoke.mjs",
     "test:review-log-contract": "node scripts/smoke/review-log-contract-smoke.mjs",
     "test:config-paths": "node scripts/smoke/config-path-smoke.mjs",
+    "test:architecture": "node --test tests/architecture-boundaries.test.mjs tests/cli-models-route.test.mjs && node scripts/smoke/igt-add-http-smoke.mjs",
     "test:web-dev": "node --test scripts/dev-runtime/lifecycle.test.mjs",
     "test:practice-log": "node scripts/smoke/practice-log-smoke.mjs",
     "test:practice-web": "node scripts/smoke/practice-web-smoke.mjs",

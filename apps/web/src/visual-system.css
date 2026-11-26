@@ -654,7 +654,6 @@ p { overflow-wrap: anywhere; }
 .overview-section-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
 .overview-section-header .panel-heading, .overview-quick > .panel-heading { gap: .75rem; margin-bottom: 0; }
 .overview-quick > .panel-heading { margin-bottom: 1rem; }
-.practice-log-panel { overflow-wrap: anywhere; }
 .overview-page .panel-heading > .icon { width: 2.75rem; height: 2.75rem; padding: .625rem; }
 .overview-page .panel-heading h2 { font-size: 1.25rem; }
 .overview-page .panel-heading p { font-size: .875rem; }

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { webApi, type CoachReport, type CoachReportSummary } from "../api/client";
-import { Heading, Panel, State } from "../components/Page";
+import { Panel, State } from "../components/Page";
 import { Icon } from "../components/Icon";
 import { Markdown } from "../components/Markdown";
 import { ModelSwitcher } from "../components/model-settings";
 import { useGuideCopy } from "../components/learner-language";
 import { coachReportDisplayMarkdown, coachReportTitle } from "../../../../lib/domain/coach-report-display.mjs";
 import "./Coach.css";
+import "./PracticeLog.css";
 
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
 function windowDays(fallback: number) {
@@ -75,31 +76,196 @@ function WindowSelect({
   );
 }
 
+const PRACTICE_LOG_FIELDS = [
+  "Mode", "Context", "Handbook target", "Evidence", "Question", "Difficulty", "Style",
+  "Language focus", "Hints used", "Prompt", "Your answer", "Correct answer", "Reference answer",
+  "Score", "Feedback", "Strengths", "Improvements",
+] as const;
+type PracticeLogField = (typeof PRACTICE_LOG_FIELDS)[number];
+const PRACTICE_LOG_FIELD_SET = new Set<string>(PRACTICE_LOG_FIELDS);
+// Older / hand-edited logs may carry the raw evaluation keys. Accept both spellings;
+// the display key always wins when both are present.
+const PRACTICE_LOG_FIELD_ALIASES: Record<string, PracticeLogField> = {
+  corrected_answer: "Correct answer",
+  feedback_zh: "Feedback",
+  strengths_zh: "Strengths",
+  improvements_zh: "Improvements",
+};
+
+type PracticeEntry = {
+  id: string;
+  title: string;
+  fields: Partial<Record<PracticeLogField, string>>;
+  extra: string[];
+  prose: string[];
+};
+
+// The Markdown file stays the source of truth. Only the log writer's `## …` + `- Key: value`
+// shape is turned into structured entries; anything else is preserved verbatim through the Markdown renderer.
+function parsePracticeLog(source: string): { preamble: string; entries: PracticeEntry[] } {
+  const preamble: string[] = [];
+  const entries: PracticeEntry[] = [];
+  let current: PracticeEntry | null = null;
+  let feedbackContinuation = false;
+  source.replace(/\r\n?/g, "\n").split("\n").forEach((line, index) => {
+    const heading = line.match(/^##\s+(.*)$/);
+    if (heading) {
+      current = { id: `practice-entry-${index}`, title: heading[1].trim(), fields: {}, extra: [], prose: [] };
+      entries.push(current);
+      feedbackContinuation = false;
+      return;
+    }
+    if (!current) {
+      if (line.trim()) preamble.push(line);
+      return;
+    }
+    const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+    if (bullet) {
+      const pair = bullet[1].match(/^([^:]+):\s*(.*)$/);
+      const rawKey = pair?.[1].trim();
+      const key = rawKey && (PRACTICE_LOG_FIELD_SET.has(rawKey) ? rawKey : PRACTICE_LOG_FIELD_ALIASES[rawKey]);
+      if (pair && key && PRACTICE_LOG_FIELD_SET.has(key)) {
+        if (!current.fields[key as PracticeLogField]) current.fields[key as PracticeLogField] = pair[2].trim();
+        feedbackContinuation = key === "Feedback";
+      } else if (feedbackContinuation) current.fields.Feedback += `\n${line}`;
+      else current.extra.push(bullet[1]);
+      return;
+    }
+    if (feedbackContinuation) current.fields.Feedback += `\n${line}`;
+    else if (line.trim()) current.prose.push(line);
+  });
+  return { preamble: preamble.join("\n"), entries };
+}
+
+const PRACTICE_LOG_META_FIELDS: PracticeLogField[] = [
+  "Context", "Difficulty", "Style", "Language focus", "Hints used", "Handbook target",
+];
+
+// The log writer flattens evaluation arrays onto one `; `-separated line.
+function splitPracticeNotes(value: string): string[] {
+  return value.split(/;\s*/).map((item) => item.trim()).filter(Boolean);
+}
+
+function PracticeLogEntries({ preamble, entries }: { preamble: string; entries: PracticeEntry[] }) {
+  const { t } = useGuideCopy();
+  return (
+    <div className="practice-log-entries">
+      {preamble && <Markdown source={preamble} />}
+      {entries.map((entry) => {
+        const fields = entry.fields;
+        const strengths = splitPracticeNotes(fields.Strengths ?? "");
+        const improvements = splitPracticeNotes(fields.Improvements ?? "");
+        const scoreText = fields.Score || "";
+        const score = /^\d+$/.test(scoreText) ? Number(scoreText) : null;
+        const timestamp = entry.title.match(/\d{4}-\d{2}-\d{2}T[^\s]+/)?.[0];
+        const title = timestamp
+          ? entry.title.replace(timestamp, "").replace(/\s*[·–-]\s*$/, "").trim()
+          : entry.title;
+        return (
+          <article className="practice-log-entry" key={entry.id} aria-label={entry.title}>
+            <header className="practice-log-entry-head">
+              <div className="practice-log-entry-titles">
+                <p className="practice-log-eyebrow">
+                  {timestamp ? <time dateTime={timestamp}>{dateLabel(timestamp, t)}</time> : t("Practice entry")}
+                </p>
+                <h2>{title && !/^practice$/i.test(title) ? title : t("Sentence translation")}</h2>
+              </div>
+              {score !== null && (
+                <div className="practice-log-score" aria-label={`${t("Score")}: ${score} / 100`}>
+                  <span className="practice-log-score-label">{t("Score")}</span>
+                  <strong>{score}</strong>
+                  <span className="practice-log-score-total">/ 100</span>
+                </div>
+              )}
+            </header>
+            <ul className="practice-log-meta">
+              {PRACTICE_LOG_META_FIELDS.filter((key) => fields[key]).map((key) => (
+                <li key={key}><span>{t(key)}</span><strong>{fields[key]}</strong></li>
+              ))}
+            </ul>
+            {fields.Prompt && <dl className="practice-log-prompt"><dt>{t("Prompt")}</dt><dd>{fields.Prompt}</dd></dl>}
+            {(fields["Your answer"] || fields["Correct answer"] || fields["Reference answer"]) && (
+              <div className="practice-log-detail">
+                {(fields["Your answer"] || fields["Correct answer"]) && <div className="practice-log-comparison">
+                  {fields["Your answer"] && <dl className="practice-log-answer"><dt>{t("Your answer")}</dt><dd>{fields["Your answer"]}</dd></dl>}
+                  {fields["Correct answer"] && <dl className="practice-log-answer practice-log-answer-corrected"><dt>{t("Corrected answer")}</dt><dd>{fields["Correct answer"]}</dd></dl>}
+                </div>}
+                {fields["Reference answer"] && (
+                  <div className="practice-log-reference">
+                    <span className="practice-log-reference-label">{t("Reference answer")}</span>
+                    <p>{fields["Reference answer"]}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {(fields.Feedback || fields.Strengths || fields.Improvements || fields.Prompt || score !== null) && (
+              <div className="practice-log-feedback">
+                <span className="practice-log-feedback-label">{t("Feedback")}</span>
+                <div className="practice-log-feedback-body">{fields.Feedback?.trim() ? <Markdown source={fields.Feedback} /> : <p className="practice-log-note-empty">{t("Not recorded")}</p>}</div>
+                <div className="practice-log-notes">
+                  <dl className="practice-log-notes-col">
+                    <dt>{t("Strengths")}</dt>
+                    {strengths.length > 0
+                      ? <dd><ul>{strengths.map((item, index) => <li key={index}><Markdown source={item} /></li>)}</ul></dd>
+                      : <dd className="practice-log-note-empty">{t("Not recorded")}</dd>}
+                  </dl>
+                  <dl className="practice-log-notes-col">
+                    <dt>{t("Improvements")}</dt>
+                    {improvements.length > 0
+                      ? <dd><ul>{improvements.map((item, index) => <li key={index}><Markdown source={item} /></li>)}</ul></dd>
+                      : <dd className="practice-log-note-empty">{t("Not recorded")}</dd>}
+                  </dl>
+                </div>
+              </div>
+            )}
+            {fields.Evidence && <p className="practice-log-evidence">{t("Evidence")}: {fields.Evidence}</p>}
+            {entry.extra.length > 0 && (
+              <ul className="practice-log-extra">{entry.extra.map((line, index) => <li key={index}>{line}</li>)}</ul>
+            )}
+            {entry.prose.length > 0 && <Markdown source={entry.prose.join("\n\n")} />}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PracticeLog() {
   const { t } = useGuideCopy();
   const [markdown, setMarkdown] = useState<string>();
+  const [count, setCount] = useState<number>();
   const [error, setError] = useState(false);
   useEffect(() => {
     let active = true;
     void webApi.getOverviewPracticeLog().then(
       (result) => {
         if (!active) return;
-        if (typeof result.markdown === "string") setMarkdown(result.markdown);
-        else setError(true);
+        if (typeof result.markdown === "string") {
+          setMarkdown(result.markdown);
+          if (typeof result.count === "number") setCount(result.count);
+        } else setError(true);
       },
       () => { if (active) setError(true); },
     );
     return () => { active = false; };
   }, []);
+  const parsed = markdown ? parsePracticeLog(markdown) : null;
+  const structured = !!parsed && parsed.entries.some((entry) => Object.keys(entry.fields).length > 0);
   return (
-    <div>
-      <Heading eyebrow={t("Overview")} title={t("Practice log")} detail={<a href="#dashboard">{t("Back to Overview")}</a>} />
-      <Panel className="practice-log-panel">
+    <div className="practice-log-page">
+      <div className="practice-log-heading-detail">
+        <a href="#dashboard"><span aria-hidden="true">←</span> {t("Back to Overview")}</a>
+        {count !== undefined && <span className="practice-log-count">{t("{count} entries", { count })}</span>}
+      </div>
+      <section className={`practice-log-panel${structured ? " is-structured" : " panel"}`}>
         {error ? <div role="alert"><State title={t("Practice log is unavailable")} /></div>
           : markdown === undefined ? <p role="status">{t("Loading…")}</p>
-            : markdown.trim() ? <Markdown source={markdown} />
+            : markdown.trim()
+              ? structured && parsed
+                ? <PracticeLogEntries preamble={parsed.preamble} entries={parsed.entries} />
+                : <Markdown source={markdown} />
               : <State title={t("No saved practice entries yet")} />}
-      </Panel>
+      </section>
     </div>
   );
 }

@@ -28,6 +28,24 @@ const snapshot = { format: 'clearwrite-growth', version: 1, exportedAt: stamp(0)
   coverage: ['Grammar corrections', 'Practice & vocabulary reviews', 'Vocabulary schedules', 'Saved words', 'Ask notes', 'Coach reports', 'Practice Markdown', 'Live Practice targets'].map(source => ({ source, status: 'available' })),
   reviews, words, cards: [], attempts, notes, reports: [], practiceLog: [], practiceTargets: { 100: ['Verb Tense'], 101: ['Verb Tense'] } };
 const deps = { now, loadData: async () => snapshot };
+const practiceLogMarkdown = [
+  '## Practice · 2026-11-26T09:12:00+08:00',
+  '- Mode: practice-sentence', '- Context: work update', '- Question: language-p01-3',
+  '- Difficulty: standard', '- Style: formal', '- Language focus: P01 · Polite requesting', '- Hints used: 2/3',
+  '- Prompt: 请说明截止日期', '- Your answer: Please clarify the deadline.',
+  '- Correct answer: Please clarify the enquiry deadline.',
+  '- Reference answer: Could you clarify the deadline?', '- Score: 82', '- Feedback: 表达清楚，可以继续练习语气。',
+  '', 'Use **polite requests** when asking for information in a formal context.',
+  '- Strengths: 句子结构完整。; 语义传达准确。', '- Improvements: 英式拼写用 enquiry。; 正式邮件可用 get back to。',
+  '',
+  '## Practice · 2026-11-25T18:30:00+08:00',
+  '- Mode: practice-sentence', '- Context: dining', '- Difficulty: easy',
+  '- Prompt: 我想要一杯水', '- Your answer: I want a water.',
+  '- Reference answer: I would like a glass of water.', '- Score: 60', '- Feedback: Consider a polite request.',
+  '- strengths_zh: 尝试使用了礼貌请求。; 语义传达清楚。',
+  '',
+  '## Saved practice', '', 'A fixture entry.',
+].join('\n');
 let failRecords = false, failHistory = false, browser, server;
 try {
   server = await preview({ configFile: 'apps/web/vite.config.ts', preview: { host: '127.0.0.1', port: 0, open: false } });
@@ -64,7 +82,7 @@ try {
       else if (url.pathname === '/runtime') await json({ runtime: 'local', storage: { database: 'sqlite', assets: 'markdown' } });
       else if (url.pathname === '/status-message') await json({ content: '' });
       else if (url.pathname === '/handbook/reports') await json({ reports: [] });
-      else if (url.pathname === '/dashboard/practice-log') await json({ count: 1, markdown: '## Saved practice\n\nA fixture entry.' });
+      else if (url.pathname === '/dashboard/practice-log') await json({ count: 3, markdown: practiceLogMarkdown });
       else if (url.pathname.startsWith('/settings/')) await request.respond({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Fixture model unavailable' }) });
       else await request.continue();
     } catch (error) { if (!request.isInterceptResolutionHandled()) await request.respond({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: error.message }) }); }
@@ -399,9 +417,74 @@ try {
   assert.equal(await page.$('.growth-distribution .growth-tag'), null, 'Error distribution n= badge is removed');
   assert.equal(await page.$$eval('.growth-section-title p', nodes => nodes.length), 1, 'only the trend date range remains as a section detail');
   assert.doesNotMatch(await page.$eval('.learning-dashboard', node => node.textContent), /Compare evidence|Sources and evidence boundaries|counted once per category|Based on locally saved records|do not prove mastery|independent of the time filter|Click a bar to inspect/);
+  // Practice log: the append-only Markdown is laid out as quiet entries, not a raw dump.
+  await page.evaluate(() => { location.hash = '#dashboard?view=practice-log'; }); await ready();
+  const logShape = await page.evaluate(() => {
+    const entries = [...document.querySelectorAll('.practice-log-entry')];
+    const first = entries[0];
+    return {
+      count: entries.length,
+      title: first.querySelector('h2').textContent.trim(),
+      score: first.querySelector('.practice-log-score strong').textContent.trim(),
+      reference: first.querySelector('.practice-log-reference p').textContent.trim(),
+      meta: [...first.querySelectorAll('.practice-log-meta li')].map(node => node.textContent.trim()),
+      detailLabels: [...first.querySelectorAll('.practice-log-detail dt')].map(node => node.textContent.trim()),
+      detailColumns: getComputedStyle(first.querySelector('.practice-log-detail')).gridTemplateColumns,
+      feedback: first.querySelector('.practice-log-feedback')?.textContent.trim(),
+      borderLeft: getComputedStyle(first.querySelector('.practice-log-reference')).borderLeftWidth,
+      accent: getComputedStyle(first.querySelector('.practice-log-reference')).backgroundColor,
+      panel: getComputedStyle(first).backgroundColor,
+      pageTitle: document.querySelector('.my-learning-navigation-title').textContent.trim(),
+      noteHeights: [...first.querySelectorAll('.practice-log-notes-col')].map(node => node.getBoundingClientRect().height),
+      comparison: !!first.querySelector('.practice-log-comparison'),
+      feedbackParagraphs: first.querySelectorAll('.practice-log-feedback-body p').length,
+      feedbackAlignment: getComputedStyle(first.querySelector('.practice-log-feedback-body p')).textAlign,
+      feedbackWidthDelta: Math.abs(first.querySelector('.practice-log-feedback-body p').getBoundingClientRect().width - first.querySelector('.practice-log-feedback').getBoundingClientRect().width),
+      badge: document.querySelector('.practice-log-count')?.textContent.trim(),
+      noteLabels: entries.map(entry => [...entry.querySelectorAll('.practice-log-notes-col dt')].map(node => node.textContent.trim())),
+      legacyNotes: entries[1].querySelector('.practice-log-notes')?.textContent.trim(),
+      separator: getComputedStyle(entries[1]).borderTopColor,
+      lineToken: (() => { const probe = document.createElement('div'); probe.style.borderTop = '1px solid var(--line)'; document.body.appendChild(probe); const color = getComputedStyle(probe).borderTopColor; probe.remove(); return color; })(),
+      legacy: entries[entries.length - 1].textContent,
+    };
+  });
+  assert.equal(logShape.count, 3);
+  assert.equal(logShape.title, 'Sentence translation');
+  assert.equal(logShape.score, '82');
+  assert.equal(logShape.reference, 'Could you clarify the deadline?');
+  assert.ok(logShape.meta.some(text => text.includes('P01 · Polite requesting')), 'the language focus stays visible as a meta chip');
+  assert.equal(logShape.pageTitle, 'Practice log');
+  assert.ok(logShape.comparison, 'answers share one comparison container');
+  assert.equal(logShape.feedbackParagraphs, 2, 'multiline feedback stays in its reading section');
+  assert.equal(logShape.feedbackAlignment, 'justify', 'desktop feedback paragraphs are justified');
+  assert.ok(logShape.feedbackWidthDelta < 1, 'feedback paragraphs fill the record content width');
+  assert.ok(Math.abs(logShape.noteHeights[0] - logShape.noteHeights[1]) < 1, 'feedback columns are equal height');
+  assert.ok(logShape.meta.every(text => !/^(Mode|Question)/.test(text)), 'internal metadata is hidden');
+  assert.deepEqual(logShape.detailLabels, ['Your answer', 'Corrected answer'], 'the evaluation revision is shown under the learner answer');
+  assert.equal(logShape.detailColumns.trim().split(/\s+/).length, 1, 'the three answers stack in one column');
+  assert.doesNotMatch(logShape.feedback, /_zh/, 'the UI labels never expose evaluation key names');
+  assert.match(logShape.feedback, /表达清楚，可以继续练习语气。/, 'feedback_zh survives into the entry');
+  assert.match(logShape.feedback, /句子结构完整。/, 'strengths_zh survives into the entry');
+  assert.match(logShape.feedback, /英式拼写用 enquiry。/, 'improvements_zh survives into the entry');
+  assert.deepEqual(logShape.noteLabels.slice(0, 2), [['Strengths', 'Improvements'], ['Strengths', 'Improvements']], 'Strengths and Improvements stay present even in legacy entries without notes');
+  assert.match(logShape.legacyNotes, /尝试使用了礼貌请求。/, 'raw strengths_zh from a hand-edited log is normalized into the Strengths column');
+  assert.doesNotMatch(logShape.legacyNotes, /strengths_zh/, 'the raw key name itself never leaks into the UI');
+  assert.deepEqual(logShape.noteLabels[2], [], 'free-form saved entries get no fabricated feedback sections');
+  assert.match(logShape.legacyNotes, /Not recorded/, 'missing notes show a neutral empty state instead of hiding the sections');
+  assert.equal(logShape.separator, logShape.lineToken, 'entry cards use the shared hairline token');
+  assert.equal(logShape.borderLeft, '1px', 'the reference answer uses a quiet border');
+  assert.equal(logShape.accent, 'rgb(237, 251, 242)', 'the strip uses the soft green token');
+  assert.equal(logShape.panel, 'rgb(255, 255, 255)', 'entry cards use white surfaces');
+  assert.equal(logShape.badge, '3 entries');
+  assert.match(logShape.legacy, /A fixture entry\./, 'unrecognized Markdown survives the structured rewrite');
+  await page.setViewport({ width: 390, height: 844 }); await ready();
+  assert.equal(await page.$eval('.practice-log-feedback-body p', node => getComputedStyle(node).textAlign), 'start', 'narrow feedback stays naturally aligned');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'practice log has no horizontal overflow at 390px');
+  await page.setViewport({ width: 1440, height: 1000 }); await ready();
+
   const output = path.resolve('.cache/tmp/my-learning-integration-qa'); fs.mkdirSync(output, { recursive: true });
   const titleAnchor = {};
-  for (const route of ['dashboard', 'word-library', 'ask?view=notes', 'handbook', 'coach']) {
+  for (const route of ['dashboard', 'word-library', 'ask?view=notes', 'handbook', 'coach', 'dashboard?view=practice-log']) {
     await page.goto(`${base}/#${route}`); await ready();
     assert.equal(await page.$$eval('.my-learning-tabs a[aria-current="page"]', nodes => nodes.length), 1);
     for (const width of [1440, 768, 390, 320]) {
@@ -432,6 +515,7 @@ try {
       });
       assert.equal(clipped, false, `${route} active tab clipped at ${width}`);
       if (route === 'dashboard' && [1440, 390].includes(width)) await page.screenshot({ path: path.join(output, `overview-${width}.png`), fullPage: true });
+      if (route === 'dashboard?view=practice-log' && [1440, 390].includes(width)) await page.screenshot({ path: path.join(output, `practice-log-${width}.png`), fullPage: true });
       if (process.env.IGT_MY_LEARNING_SHOTS === 'top' && [1440, 768, 390].includes(width)) await page.screenshot({ path: path.join(output, `top-${route.replace('?', '-')}-${width}.png`) });
     }
     await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
